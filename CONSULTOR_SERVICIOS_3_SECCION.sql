@@ -3240,7 +3240,7 @@ BEGIN
                          ELSE '' END+
                 '</td>'+ 
                 '<td data-label="Servicio" data-vct-sort-value="'+REPLACE(REPLACE(ISNULL(N.SERVICIO,''),'"','&quot;'),'''','&#39;')+'">'+
-                    CASE WHEN ISNULL(N.SERVICIO,'')='' THEN '-' ELSE '<span class="vct-360-badge is-neutral">'+REPLACE(REPLACE(REPLACE(N.SERVICIO,'&','&amp;'),'<','&lt;'),'>','&gt;')+'</span>' END+
+                    CASE WHEN ISNULL(N.SERVICIO,'')='' THEN '-' ELSE '<span class="vct-serv-chip '+CASE WHEN UPPER(N.SERVICIO) LIKE '%AUDITOR%' THEN 'is-auditoria' WHEN UPPER(N.SERVICIO) LIKE '%CAPACIT%' THEN 'is-capacitacion' WHEN UPPER(N.SERVICIO) LIKE '%CONSULT%' THEN 'is-consultoria' ELSE 'is-neutral' END+'">'+REPLACE(REPLACE(REPLACE(N.SERVICIO,'&','&amp;'),'<','&lt;'),'>','&gt;')+'</span>' END+
                 '</td>'+
                 CASE WHEN @NormHasEstado=1 THEN
                     '<td class="vct-text-center" data-label="'+@NORMA_ESTADO_LABEL+'"><span class="vct-360-badge '+
@@ -3291,7 +3291,7 @@ BEGIN
                 'data-vct-id="'+CONVERT(VARCHAR(100),S.ID)+'" '+
                 'data-vct-idservicio="'+ISNULL(CONVERT(VARCHAR(100),S.ID_SERVICIO),'')+'" '+
                 'data-vct-observaciones="'+REPLACE(REPLACE(ISNULL(S.OBSERVACIONES,''),'"','&quot;'),'''','&#39;')+'">'+
-                '<td data-label="Servicio"><span class="vct-360-badge is-neutral">'+REPLACE(REPLACE(REPLACE(ISNULL(NULLIF(S.SERVICIO,''),'-'),'&','&amp;'),'<','&lt;'),'>','&gt;')+'</span></td>'+
+                '<td data-label="Servicio"><span class="vct-serv-chip '+CASE WHEN UPPER(ISNULL(S.SERVICIO,'')) LIKE '%AUDITOR%' THEN 'is-auditoria' WHEN UPPER(ISNULL(S.SERVICIO,'')) LIKE '%CAPACIT%' THEN 'is-capacitacion' WHEN UPPER(ISNULL(S.SERVICIO,'')) LIKE '%CONSULT%' THEN 'is-consultoria' ELSE 'is-neutral' END+'">'+REPLACE(REPLACE(REPLACE(ISNULL(NULLIF(S.SERVICIO,''),'-'),'&','&amp;'),'<','&lt;'),'>','&gt;')+'</span></td>'+
                 '<td class="vct-360-wrap-cell" data-label="Observaciones">'+REPLACE(REPLACE(REPLACE(ISNULL(NULLIF(S.OBSERVACIONES,''),'-'),'&','&amp;'),'<','&lt;'),'>','&gt;')+'</td>'+
                 '<td class="vct-text-center" data-label="Desde">'+CASE WHEN S.FECHA_ALTA IS NULL THEN '-' ELSE CONVERT(VARCHAR(10),S.FECHA_ALTA,103) END+'</td>'+
                 '<td class="vct-360-action-cell vct-table-action-cell" data-label="Acciones" data-vct-export-ignore="true">'+
@@ -4128,6 +4128,12 @@ BEGIN
   overflow-wrap:break-word !important;
   word-break:break-word !important;
 }
+/* Color caracteristico por servicio (consistente donde aparezca el chip). */
+.vct-serv-chip{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;line-height:1.6;border:1px solid transparent;white-space:nowrap;}
+.vct-serv-chip.is-consultoria{background:#E7F0FD;color:#1D63C7;border-color:#CFE0FB;}
+.vct-serv-chip.is-auditoria{background:#F3E8FB;color:#7F43C0;border-color:#E6D2F6;}
+.vct-serv-chip.is-capacitacion{background:#E3F6EC;color:#0E9F6E;border-color:#C7EBD8;}
+.vct-serv-chip.is-neutral{background:#EEF2F6;color:#64748B;border-color:#E2E8F0;}
 </style>
 <div class="vct-page vct-page-main"
      data-vct-page

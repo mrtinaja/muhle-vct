@@ -13,7 +13,7 @@ GO
 
 UPDATE dbo.VCT_PRM_EMAIL_TEMPLATES
    SET DESTINO_TIPO  = 'LIBRE',
-       DESTINO_LIBRE = 'martin.aja@squad.com.ar; esteban.de.marco@squad.com.ar',
+       DESTINO_LIBRE = 'martin.aja@squad.com.ar; e.de.marco@squad.com.ar',
        CC_TIPO       = 'NINGUNO',
        CC_LIBRE      = NULL,
        HTML_CONTENIDO =

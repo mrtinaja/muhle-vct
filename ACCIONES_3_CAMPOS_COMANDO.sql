@@ -1,6 +1,8 @@
 /* ACCIONES_3_CAMPOS_COMANDO: el boton Cumplida / Reabrir de Acciones no llegaba
    al SP: el salto (goto) envia los campos del formulario y la pagina no tenia
    SP.TEXTO30 / IDSELEC03 / TEXTO11 / FLAG01. Se agregan como ocultos.
+   Probado en desa el 09/10 (avocaturo): Cumplida y Reabrir graban, recargan
+   Acciones con el aviso y actualizan los indicadores.
    Se puede volver a correr. */
 USE [MuhlePROD];
 GO

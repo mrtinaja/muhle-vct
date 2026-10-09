@@ -47,14 +47,14 @@ GO
 
 /* ---------------- 0. parametria ---------------- */
 /* Template del aviso de cambio de fecha. MODO PRUEBA: destino LIBRE
-   (martin.aja + esteban.de.marco). Al salir a produccion: DESTINO_TIPO = ANALISTA. */
+   (martin.aja + e.de.marco). Al salir a produccion: DESTINO_TIPO = ANALISTA. */
 IF NOT EXISTS (SELECT 1 FROM dbo.VCT_PRM_EMAIL_TEMPLATES WHERE UPPER(LTRIM(RTRIM(CODIGO)))='PLAN_CAMBIO_FECHA')
 INSERT INTO dbo.VCT_PRM_EMAIL_TEMPLATES
     (CODIGO, DESCRIPCION, TIPO_ENVIO, DESTINO_TIPO, DESTINO_LIBRE, CC_TIPO, CC_LIBRE, ESTADO, ASUNTO, HTML_CONTENIDO, DISENO_JSON, FECHA_ALTA, USUARIO_ALTA)
 VALUES
     ('PLAN_CAMBIO_FECHA',
      'Aviso automatico al analista cuando se cambian las fechas de un item del Plan Estrategico.',
-     'AUTOMATICO', 'LIBRE', 'martin.aja@squad.com.ar; esteban.de.marco@squad.com.ar', 'NINGUNO', NULL, 'ACTIVO',
+     'AUTOMATICO', 'LIBRE', 'martin.aja@squad.com.ar; e.de.marco@squad.com.ar', 'NINGUNO', NULL, 'ACTIVO',
      'Cambio de fecha en el plan: ({{CODIGO_PROYECTO}}) {{PROYECTO}}',
        '<!doctype html><html><head><meta charset="utf-8"><style>html,body{overflow-x:hidden;}</style></head>'
      + '<body style="margin:0;padding:0;background:#f3f5f7;">'

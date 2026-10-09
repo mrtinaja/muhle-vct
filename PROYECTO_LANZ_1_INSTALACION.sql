@@ -6,7 +6,7 @@
      1. Permiso PROYECTOS.EDIT (ya existe en Actions) para GERENCIA,
         ADMINISTRACION, SQUAD y PROYECTOS.
      2. Template de mail PROYECTO_INICIO_CONSULTOR (formato del editor,
-        banner bordo). MODO PRUEBA: destino martin.aja + e.de.marco.
+        banner bordo). MODO PRUEBA: destino martin.aja + esteban.de.marco.
      3. Funciones: dbo.VCT_HTML_ESC, dbo.VCT_PROYECTO_MINUTAS,
         dbo.VCT_PROYECTO_LANZ_ESTADO.
      4. dbo.VCT_PROYECTO_LANZ_ACCION: graba equipo, datos de entrada,
@@ -48,7 +48,7 @@ INSERT INTO dbo.VCT_PRM_EMAIL_TEMPLATES
 VALUES
     ('PROYECTO_INICIO_CONSULTOR',
      'Aviso automatico al consultor lider cuando el analista inicia el proyecto (armar el Plan Estrategico).',
-     'AUTOMATICO', 'LIBRE', 'martin.aja@squad.com.ar; e.de.marco@squad.com.ar', 'NINGUNO', NULL, 'ACTIVO',
+     'AUTOMATICO', 'LIBRE', 'martin.aja@squad.com.ar; esteban.de.marco@squad.com.ar', 'NINGUNO', NULL, 'ACTIVO',
      'Proyecto en curso: ({{CODIGO_PROYECTO}}) {{PROYECTO}}',
        '<!doctype html><html><head><meta charset="utf-8"><style>html,body{overflow-x:hidden;}</style></head>'
      + '<body style="margin:0;padding:0;background:#f3f5f7;">'

@@ -6,7 +6,7 @@
    alta completa {{CODIGO_PROYECTO}}, {{SERVICIOS}}, {{NORMAS}} y
    {{FECHA_LANZAMIENTO}} y envia con sp_send_dbmail (VocaturoProfile).
    Modo prueba: el template queda con destino fijo martin.aja@squad.com.ar y
-   e.de.marco@squad.com.ar.
+   esteban.de.marco@squad.com.ar.
    Resto del SP: sin cambios.
    ======================================================================== */
 USE [MuhlePROD];
@@ -17,7 +17,7 @@ GO
    PROYECTO_ANALISTA_ASIGNADO > Destino = Analista. */
 UPDATE dbo.VCT_PRM_EMAIL_TEMPLATES
    SET DESTINO_TIPO = 'LIBRE',
-       DESTINO_LIBRE = 'martin.aja@squad.com.ar;e.de.marco@squad.com.ar',
+       DESTINO_LIBRE = 'martin.aja@squad.com.ar;esteban.de.marco@squad.com.ar',
        CC_TIPO = 'NINGUNO',
        CC_LIBRE = NULL,
        /* VCT_MAIN_SEND_EMAIL deja {{NOMBRE}} vacio cuando el destino es LIBRE */
@@ -25,7 +25,7 @@ UPDATE dbo.VCT_PRM_EMAIL_TEMPLATES
        FECHA_UPD = GETDATE(),
        USUARIO_UPD = 'PROYECTO_ALTA'
  WHERE UPPER(LTRIM(RTRIM(CODIGO))) = 'PROYECTO_ANALISTA_ASIGNADO';
-PRINT 'Template PROYECTO_ANALISTA_ASIGNADO en modo prueba: destino martin.aja@squad.com.ar y e.de.marco@squad.com.ar.';
+PRINT 'Template PROYECTO_ANALISTA_ASIGNADO en modo prueba: destino martin.aja@squad.com.ar y esteban.de.marco@squad.com.ar.';
 GO
 /* ---------------- 3. SP de guardado ---------------- */
 CREATE OR ALTER PROCEDURE dbo.VCT_PROYECTO_ALTA_GUARDAR

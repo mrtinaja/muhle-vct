@@ -1,0 +1,401 @@
+/* ==========================================================================
+   VOCATURO PLATFORM - COMPLETE CORE TABLE STYLESHEET
+   Archivo: vctTable.css (Versión 6.5.0 - Fully Agnostic Engine Styles)
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. DESPLEGABLES NATIVOS ESTILIZADOS CON FLECHA BORDÓ
+   -------------------------------------------------------------------------- */
+select.vct-select, 
+select.vct-select-custom, 
+select.vct-select-input {
+    height: 40px !important;
+    min-width: 280px !important;
+    padding: 0 36px 0 14px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #0f172a !important;
+    background-color: #ffffff !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2366062D' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 12px center !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    outline: none !important;
+    cursor: pointer !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+select.vct-select:hover, 
+select.vct-select-custom:hover, 
+select.vct-select-input:hover {
+    border-color: #66062D !important;
+}
+
+select.vct-select:focus, 
+select.vct-select-custom:focus, 
+select.vct-select-input:focus {
+    border-color: #66062D !important;
+    box-shadow: 0 0 0 3px rgba(102, 6, 45, 0.12) !important;
+}
+
+/* --------------------------------------------------------------------------
+   2. ANULACIÓN DE CONTENEDORES Y TABLAS HEREDADAS DE MÜHLE
+   -------------------------------------------------------------------------- */
+#mainContainer table.datatable,
+#mainContainer table.datatable > tbody,
+#mainContainer table.datatable > tbody > tr,
+#mainContainer table.datatable > tbody > tr > td {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+}
+
+#mainContainer table.datatable > thead {
+    display: none !important;
+}
+
+/* Base global de la tabla VCT */
+table.vct-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    background-color: #ffffff !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    margin-bottom: 12px !important;
+}
+
+table.vct-table thead th {
+    background-color: #f8fafc !important;
+    color: #475569 !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    padding: 12px 10px !important;
+    border-bottom: 2px solid #e2e8f0 !important;
+    text-align: left !important;
+}
+
+table.vct-table tbody tr {
+    border-bottom: 1px solid #f1f5f9 !important;
+    transition: background-color 0.15s ease !important;
+}
+
+table.vct-table tbody tr:hover {
+    background-color: #f8fafc !important;
+}
+
+table.vct-table tbody td {
+    padding: 10px !important;
+    font-size: 13px !important;
+    color: #0f172a !important;
+    vertical-align: middle !important;
+}
+
+/* --------------------------------------------------------------------------
+   3. BARRA SUPERIOR DE CONTROLES (TOOLBAR)
+   -------------------------------------------------------------------------- */
+.vct-table-toolbar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 16px !important;
+    margin-bottom: 16px !important;
+    width: 100% !important;
+}
+
+.vct-toolbar-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+
+.vct-toolbar-right {
+    display: flex !important;
+    align-items: center !important;
+}
+
+.vct-page-size-select,
+.vct-select-page-size {
+    height: 38px !important;
+    padding: 0 12px !important;
+    border-radius: 8px !important;
+    border: 1px solid #cbd5e1 !important;
+    background-color: #ffffff !important;
+    color: #334155 !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    outline: none !important;
+    cursor: pointer !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03) !important;
+    transition: all 0.2s ease !important;
+}
+
+.vct-export-actions,
+.vct-export-buttons-group {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.vct-export-btn,
+.vct-btn-export {
+    height: 38px !important;
+    padding: 0 14px !important;
+    border-radius: 8px !important;
+    border: 1px solid #cbd5e1 !important;
+    background-color: #ffffff !important;
+    color: #334155 !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+}
+
+.vct-export-btn:hover,
+.vct-btn-export:hover {
+    background-color: #fff5f8 !important;
+    border-color: #66062D !important;
+    color: #66062D !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 3px 6px rgba(102, 6, 45, 0.12) !important;
+}
+
+.vct-table-search,
+.vct-table-search-wrapper {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+}
+
+.vct-input-search,
+.vct-table-search-input {
+    height: 38px !important;
+    padding: 0 36px 0 12px !important;
+    border-radius: 8px !important;
+    border: 1px solid #cbd5e1 !important;
+    background-color: #ffffff !important;
+    color: #1e293b !important;
+    font-size: 13px !important;
+    outline: none !important;
+    width: 240px !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03) !important;
+}
+
+.vct-input-search:focus,
+.vct-table-search-input:focus {
+    border-color: #66062D !important;
+    box-shadow: 0 0 0 3px rgba(102, 6, 45, 0.1) !important;
+}
+
+/* --------------------------------------------------------------------------
+   4. BOTONES DE ACCIÓN Y COLORES CROMÁTICOS (Por Índice y por Icono)
+   -------------------------------------------------------------------------- */
+table.vct-table th:first-child,
+table.vct-table td:first-child {
+    width: 1% !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+}
+
+.vct-action-btn,
+.vct-btn-edit-cell {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 6px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    border: 1px solid #e2e8f0 !important;
+    background-color: #ffffff !important;
+    color: #475569 !important;
+    transition: all 0.15s ease-in-out !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+    margin: 0 2px !important;
+}
+
+.vct-action-btn svg,
+.vct-action-btn svg path,
+.vct-action-btn svg line,
+.vct-action-btn svg polygon,
+.vct-action-btn svg circle {
+    stroke: currentColor !important;
+}
+
+/* 1. EDICIÓN / LÁPIZ (Slate / Bordó) -> aindex="0" */
+.vct-action-btn[data-aindex="0"],
+.vct-action-btn[data-icon="pen-line"],
+.vct-action-btn[data-icon="edit"] {
+    background-color: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+    color: #475569 !important;
+}
+.vct-action-btn[data-aindex="0"]:hover,
+.vct-action-btn[data-icon="pen-line"]:hover,
+.vct-action-btn[data-icon="edit"]:hover {
+    background-color: #66062d !important;
+    border-color: #66062d !important;
+    color: #ffffff !important;
+}
+
+/* 2. USUARIOS (Azul) -> aindex="1" */
+.vct-action-btn[data-aindex="1"],
+.vct-action-btn[data-icon="users"] {
+    background-color: #eff6ff !important;
+    border-color: #bfdbfe !important;
+    color: #2563eb !important;
+}
+.vct-action-btn[data-aindex="1"]:hover,
+.vct-action-btn[data-icon="users"]:hover {
+    background-color: #2563eb !important;
+    border-color: #2563eb !important;
+    color: #ffffff !important;
+}
+
+/* 3. MÓDULOS / CAJAS (Naranja) -> aindex="2" */
+.vct-action-btn[data-aindex="2"],
+.vct-action-btn[data-icon="boxes"] {
+    background-color: #fffbeb !important;
+    border-color: #fde68a !important;
+    color: #d97706 !important;
+}
+.vct-action-btn[data-aindex="2"]:hover,
+.vct-action-btn[data-icon="boxes"]:hover {
+    background-color: #d97706 !important;
+    border-color: #d97706 !important;
+    color: #ffffff !important;
+}
+
+/* 4. NAVEGACIÓN / PERMISOS (Verde) -> aindex="3" */
+.vct-action-btn[data-aindex="3"],
+.vct-action-btn[data-icon="navigation"] {
+    background-color: #ecfdf5 !important;
+    border-color: #a7f3d0 !important;
+    color: #059669 !important;
+}
+.vct-action-btn[data-aindex="3"]:hover,
+.vct-action-btn[data-icon="navigation"]:hover {
+    background-color: #059669 !important;
+    border-color: #059669 !important;
+    color: #ffffff !important;
+}
+
+/* --------------------------------------------------------------------------
+   5. FOOTER Y PAGINACIÓN ALINEADA
+   -------------------------------------------------------------------------- */
+.vct-table-footer {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 14px 4px 0 4px !important;
+    margin-top: 8px !important;
+}
+
+.vct-table-info {
+    font-size: 12px !important;
+    color: #64748b !important;
+    font-weight: 500 !important;
+}
+
+.vct-table-pagination,
+.vct-pagination-controls {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+.vct-pagination-btn,
+.vct-pagination-controls button,
+.vct-page-num,
+.vct-prev,
+.vct-next {
+    min-width: 32px !important;
+    height: 32px !important;
+    padding: 0 8px !important;
+    border-radius: 6px !important;
+    border: 1px solid #cbd5e1 !important;
+    background: #ffffff !important;
+    color: #334155 !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.15s ease !important;
+}
+
+.vct-pagination-btn.active,
+.vct-pagination-btn.is-active,
+.vct-pagination-controls button.is-active,
+.vct-page-num.is-active {
+    background: #66062D !important;
+    color: #ffffff !important;
+    border-color: #66062D !important;
+    box-shadow: 0 2px 4px rgba(102, 6, 45, 0.2) !important;
+}
+
+/* --------------------------------------------------------------------------
+   ALINEACIÓN HORIZONTAL DE ACCIONES (LÁPIZ A LA IZQ / 3 ICONOS A LA DER)
+   -------------------------------------------------------------------------- */
+table.vct-table td:first-child,
+.vct-table td:first-child {
+    white-space: nowrap !important;
+    vertical-align: middle !important;
+    padding: 8px 12px !important;
+    min-width: 170px !important;
+}
+
+.vct-action-cell {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    gap: 8px !important;
+    box-sizing: border-box !important;
+}
+
+.vct-primary-actions {
+    display: flex !important;
+    align-items: center !important;
+}
+
+.vct-secondary-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    margin-left: auto !important; /* EMPUJA LOS 3 BOTONES A LA DERECHA DE LA COLUMNA */
+}
+
+/* Alineación de columna Acciones */
+table.vct-table td:first-child,
+.vct-table td:first-child {
+    white-space: nowrap !important;
+    vertical-align: middle !important;
+    padding: 8px 12px !important;
+    width: 1% !important;
+}
+
+/* Separar el botón de edición de las 3 acciones secundarias */
+.vct-action-btn[data-aindex="1"] {
+    margin-left: 12px !important;
+}
+
+

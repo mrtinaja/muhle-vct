@@ -1,0 +1,219 @@
+﻿/* ==========================================================================
+   VCT MODAL SYSTEM - VOCATURO BRANDING
+   ========================================================================== */
+
+.vct-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.vct-modal-backdrop.is-open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.vct-modal-card {
+    background: #ffffff !important;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    width: 90%;
+    max-width: 420px;
+    padding: 24px;
+    transform: scale(0.95) translateY(10px);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid #e2e8f0;
+    text-align: left;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.vct-modal-backdrop.is-open .vct-modal-card {
+    transform: scale(1) translateY(0);
+}
+
+.vct-modal-title {
+    font-size: 1.15rem !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    margin: 0 0 8px 0 !important;
+    line-height: 1.3 !important;
+    display: block !important;
+}
+
+.vct-modal-text {
+    font-size: 0.9rem !important;
+    color: #475569 !important;
+    margin: 0 0 24px 0 !important;
+    line-height: 1.5 !important;
+    display: block !important;
+}
+
+.vct-modal-actions {
+    display: flex !important;
+    gap: 10px !important;
+    justify-content: flex-end !important;
+}
+
+.vct-modal-btn {
+    padding: 8px 18px !important;
+    border-radius: 6px !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    border: 1px solid transparent !important;
+    transition: all 0.15s ease !important;
+}
+
+/* Botón Cancelar */
+.vct-modal-btn-cancel {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #475569 !important;
+}
+
+.vct-modal-btn-cancel:hover {
+    background: #f8fafc !important;
+    border-color: #94a3b8 !important;
+}
+
+/* Botón Confirmar (Bordó Vocaturo) */
+.vct-modal-btn-confirm {
+    background: #6b0f34 !important;
+    color: #ffffff !important;
+}
+
+.vct-modal-btn-confirm:hover {
+    background: #4a0a24 !important;
+}
+
+/* Botón Advertencia / Alerta */
+.vct-modal-btn-warning {
+    background: #0f172a !important;
+    color: #ffffff !important;
+}
+
+.vct-modal-btn-warning:hover {
+    background: #1e293b !important;
+}
+
+/* ==========================================================================
+   VCT MODAL SYSTEM - VOCATURO BRANDING
+   ========================================================================== */
+
+.vct-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.vct-modal-backdrop.is-open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.vct-modal-card {
+    background: #ffffff !important;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    width: 90%;
+    max-width: 420px;
+    padding: 24px;
+    transform: scale(0.95) translateY(10px);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid #e2e8f0;
+    text-align: left;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.vct-modal-backdrop.is-open .vct-modal-card {
+    transform: scale(1) translateY(0);
+}
+
+.vct-modal-title {
+    font-size: 1.15rem !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    margin: 0 0 8px 0 !important;
+    line-height: 1.3 !important;
+    display: block !important;
+}
+
+.vct-modal-text {
+    font-size: 0.9rem !important;
+    color: #475569 !important;
+    margin: 0 0 24px 0 !important;
+    line-height: 1.5 !important;
+    display: block !important;
+}
+
+.vct-modal-actions {
+    display: flex !important;
+    gap: 10px !important;
+    justify-content: flex-end !important;
+}
+
+.vct-modal-btn {
+    padding: 8px 18px !important;
+    border-radius: 6px !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    border: 1px solid transparent !important;
+    transition: all 0.15s ease !important;
+}
+
+/* Botón Cancelar */
+.vct-modal-btn-cancel {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #475569 !important;
+}
+
+.vct-modal-btn-cancel:hover {
+    background: #f8fafc !important;
+    border-color: #94a3b8 !important;
+}
+
+/* Botón Confirmar (Bordó Vocaturo) */
+.vct-modal-btn-confirm {
+    background: #6b0f34 !important;
+    color: #ffffff !important;
+}
+
+.vct-modal-btn-confirm:hover {
+    background: #4a0a24 !important;
+}
+
+/* Botón Advertencia / Alerta */
+.vct-modal-btn-warning {
+    background: #0f172a !important;
+    color: #ffffff !important;
+}
+
+.vct-modal-btn-warning:hover {
+    background: #1e293b !important;
+}

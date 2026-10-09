@@ -35,3 +35,7 @@ desktop.ini
 # --- Copias locales sueltas de los assets: la version buena es assets/ (bajada del servidor) ---
 /vct-*.css
 /vct-*.js
+
+# --- Respaldos de base de datos: nunca al repo ---
+Base_BK/
+*.bak

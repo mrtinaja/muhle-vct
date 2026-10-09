@@ -1,0 +1,981 @@
+/* ========================================================================
+   VCT FRAMEWORK SHELL - HEADER + SIDEBAR
+   ------------------------------------------------------------------------
+   Cargar DESPUES de vct-main.css.
+
+   Paleta institucional:
+   - Pantone Black 7 C -> #333233
+   - Pantone 7421 C    -> #66062D
+   - Bright White      -> #FFFFFF
+   ======================================================================== */
+
+:root{
+    --vct-shell-header-h:62px;
+    --vct-shell-charcoal:#333233;
+    --vct-shell-burgundy:#66062D;
+    --vct-shell-white:#FFFFFF;
+    --vct-shell-ink:#17233A;
+    --vct-shell-muted:#68758A;
+    --vct-shell-user-space:316px;
+    --vct-sidebar-top:var(--vct-shell-header-h);
+}
+
+html,
+body{
+    min-height:100%;
+    margin:0 !important;
+    padding:0 !important;
+    border:0 !important;
+}
+
+body{
+    padding-top:0 !important;
+}
+
+html::before,
+body::before{
+    display:none !important;
+    content:none !important;
+}
+
+/* ------------------------------------------------------------------------
+   HEADER VCT
+   ------------------------------------------------------------------------ */
+#vctAppHeader.vct-app-header{
+    position:fixed !important;
+    top:0 !important;
+    left:0 !important;
+    right:0 !important;
+    z-index:1090 !important;
+
+    height:var(--vct-shell-header-h) !important;
+    min-height:var(--vct-shell-header-h) !important;
+
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) var(--vct-shell-user-space) !important;
+    align-items:center !important;
+    column-gap:18px !important;
+
+    box-sizing:border-box !important;
+    margin:0 !important;
+    padding:0 18px 0 20px !important;
+
+    color:var(--vct-shell-ink) !important;
+    background:linear-gradient(
+        100deg,
+        #FFFFFF 0%,
+        #FFFFFF 31%,
+        #FCF9FA 41%,
+        #F4E9ED 53%,
+        #E5C8D3 65%,
+        #C4869F 77%,
+        #93405F 89%,
+        #66062D 100%
+    ) !important;
+
+    border:0 !important;
+    border-bottom:1px solid rgba(102,6,45,.10) !important;
+    box-shadow:inset 0 1px 0 rgba(102,6,45,.20), 0 4px 16px rgba(31,33,38,.09) !important;
+    overflow:hidden !important;
+}
+
+.vct-app-header-left{
+    min-width:0 !important;
+    height:100% !important;
+    display:flex !important;
+    align-items:center !important;
+    gap:18px !important;
+}
+
+.vct-app-header-brand{
+    flex:0 0 auto !important;
+    min-width:182px !important;
+    height:100% !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+}
+
+/* Imagen existente del servidor: ../img/logo.jpg. */
+.vct-app-header-logo{
+    display:block !important;
+    width:auto !important;
+    height:auto !important;
+    height:34px !important;
+    max-width:170px !important;
+    max-height:34px !important;
+    object-fit:contain !important;
+}
+
+.vct-app-header-divider{
+    flex:0 0 1px !important;
+    width:1px !important;
+    height:34px !important;
+    background:rgba(102,6,45,.22) !important;
+}
+
+.vct-app-header-copy{
+    min-width:0 !important;
+    max-width:760px !important;
+    display:flex !important;
+    flex-direction:column !important;
+    justify-content:center !important;
+    gap:2px !important;
+}
+
+.vct-app-header-title{
+    margin:0 !important;
+    padding:0 !important;
+    color:#3A2630 !important;
+    font-family:var(--vct-font,Arial,sans-serif) !important;
+    font-size:17px !important;
+    font-weight:760 !important;
+    line-height:1.10 !important;
+    letter-spacing:-.15px !important;
+    white-space:nowrap !important;
+    overflow:visible !important;
+    text-overflow:clip !important;
+}
+
+.vct-app-header-subtitle{
+    margin:0 !important;
+    padding:0 !important;
+    color:#68758A !important;
+    font-family:var(--vct-font,Arial,sans-serif) !important;
+    font-size:11px !important;
+    font-weight:500 !important;
+    line-height:1.20 !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+}
+
+/* El buscador fue retirado. Esto también neutraliza markup cacheado. */
+.vct-app-header-search{
+    display:none !important;
+}
+
+.vct-app-header-user-reserve{
+    min-width:0 !important;
+    height:1px !important;
+}
+
+/* ------------------------------------------------------------------------
+   TOPBAR NATIVO: usuario + logout
+   ------------------------------------------------------------------------ */
+#muhleTopBar.w3-muhle-topbar{
+    position:fixed !important;
+    top:0 !important;
+    right:14px !important;
+    left:auto !important;
+    z-index:1110 !important;
+    width:calc(var(--vct-shell-user-space) - 8px) !important;
+    height:var(--vct-shell-header-h) !important;
+    min-height:var(--vct-shell-header-h) !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:flex-end !important;
+    box-sizing:border-box !important;
+    margin:0 !important;
+    padding:2px 0 0 0 !important;
+    color:#fff !important;
+    background:transparent !important;
+    border:0 !important;
+    box-shadow:none !important;
+    overflow:visible !important;
+}
+
+#muhleTopBar .vct-header-right-container{
+    width:100% !important;
+    height:100% !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:flex-end !important;
+    gap:12px !important;
+    box-sizing:border-box !important;
+    margin:0 !important;
+    padding:0 !important;
+}
+
+#muhleTopBar .vct-user-widget{
+    min-width:0 !important;
+    height:40px !important;
+    display:flex !important;
+    align-items:center !important;
+    gap:9px !important;
+    box-sizing:border-box !important;
+    margin:0 !important;
+    padding:0 !important;
+    color:#fff !important;
+    background:transparent !important;
+    border:0 !important;
+    box-shadow:none !important;
+    cursor:default !important;
+    pointer-events:none !important;
+}
+
+/* Iniciales: texto, no imagen/avatar. */
+#muhleTopBar .vct-user-initials{
+    flex:0 0 36px !important;
+    width:36px !important;
+    height:36px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    box-sizing:border-box !important;
+    color:#fff !important;
+    font-family:var(--vct-font,Arial,sans-serif) !important;
+    font-size:12px !important;
+    font-weight:800 !important;
+    line-height:1 !important;
+    border:1px solid rgba(255,255,255,.34) !important;
+    border-radius:50% !important;
+    background:rgba(102,6,45,.54) !important;
+    box-shadow:0 2px 7px rgba(45,3,20,.12) !important;
+}
+
+#muhleTopBar .vct-user-details{
+    min-width:0 !important;
+    display:block !important;
+    margin:0 !important;
+    padding:0 !important;
+}
+
+#muhleTopBar .vct-user-fullname{
+    display:block !important;
+    max-width:150px !important;
+    overflow:hidden !important;
+    color:#fff !important;
+    font-family:var(--vct-font,Arial,sans-serif) !important;
+    font-size:12.5px !important;
+    font-weight:700 !important;
+    line-height:1.2 !important;
+    white-space:nowrap !important;
+    text-overflow:ellipsis !important;
+}
+
+/* #fullname/lblAgentValue permanecen en DOM para el framework sin duplicar texto. */
+#muhleTopBar #fullname.vct-framework-fullname{
+    position:absolute !important;
+    width:1px !important;
+    height:1px !important;
+    overflow:hidden !important;
+    clip:rect(0 0 0 0) !important;
+    clip-path:inset(50%) !important;
+    white-space:nowrap !important;
+}
+
+#muhleTopBar .vct-header-user-divider{
+    flex:0 0 1px !important;
+    width:1px !important;
+    height:28px !important;
+    background:rgba(255,255,255,.44) !important;
+}
+
+#muhleTopBar .vct-logout-button{
+    flex:0 0 auto !important;
+    height:38px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:7px !important;
+    box-sizing:border-box !important;
+    margin:0 !important;
+    padding:0 8px !important;
+    color:#fff !important;
+    font-family:var(--vct-font,Arial,sans-serif) !important;
+    font-size:12.5px !important;
+    font-weight:700 !important;
+    border:1px solid transparent !important;
+    border-radius:8px !important;
+    background:transparent !important;
+    box-shadow:none !important;
+    cursor:pointer !important;
+    transition:background .16s ease,border-color .16s ease,transform .16s ease !important;
+}
+
+#muhleTopBar .vct-logout-button:hover{
+    background:rgba(255,255,255,.10) !important;
+    border-color:rgba(255,255,255,.18) !important;
+}
+
+#muhleTopBar .vct-logout-button:active{
+    transform:translateY(1px) !important;
+}
+
+#muhleTopBar .vct-logout-icon{
+    width:19px !important;
+    height:19px !important;
+    display:block !important;
+    flex:0 0 19px !important;
+}
+
+/* ------------------------------------------------------------------------
+   CONTENIDO GENERAL
+   ------------------------------------------------------------------------ */
+#main{
+    box-sizing:border-box !important;
+    padding-top:calc(var(--vct-shell-header-h) + 22px) !important;
+    padding-right:10px !important;
+}
+
+#mainContainer{
+    min-height:calc(100vh - var(--vct-shell-header-h) - 22px) !important;
+    width:100% !important;
+}
+
+#muhleSideBar.vct-sidebar{
+    top:var(--vct-shell-header-h) !important;
+    height:calc(100vh - var(--vct-shell-header-h)) !important;
+}
+
+.vct-sidebar-backdrop{
+    top:var(--vct-shell-header-h) !important;
+}
+
+.vct-sidebar-mobile-trigger{
+    top:calc(var(--vct-shell-header-h) + 10px) !important;
+}
+
+
+#main .w3-container{
+    width:100% !important;
+    max-width:none !important;
+    padding-right:0 !important;
+}
+
+#mainContainer .vct-page,
+#mainContainer .vct-module,
+#mainContainer .vct-container{
+    max-width:none !important;
+}
+
+@media (min-width:821px){
+    #mainContainer .vct-page{
+        padding-top:0 !important;
+        padding-right:10px !important;
+        padding-left:12px !important;
+    }
+}
+
+/* ------------------------------------------------------------------------
+   TABLET
+   ------------------------------------------------------------------------ */
+@media (max-width:1100px){
+    :root{ --vct-shell-user-space:280px; }
+
+    #vctAppHeader.vct-app-header{
+        padding-left:16px !important;
+        column-gap:12px !important;
+    }
+
+    .vct-app-header-brand{ min-width:156px !important; justify-content:center !important; }
+    .vct-app-header-logo{ height:31px !important; max-width:150px !important; max-height:31px !important; }
+    .vct-app-header-title{ font-size:17px !important; }
+
+    .vct-app-header-copy{
+        max-width:520px !important;
+        overflow:hidden !important;
+    }
+
+    .vct-app-header-title{
+        overflow:hidden !important;
+        text-overflow:ellipsis !important;
+    }
+
+    #muhleTopBar .vct-user-fullname{ max-width:120px !important; }
+}
+
+@media (max-width:820px){
+    :root{
+        --vct-shell-header-h:60px;
+        --vct-shell-user-space:196px;
+    }
+
+    #vctAppHeader.vct-app-header{
+        padding:0 8px 0 12px !important;
+    }
+
+    .vct-app-header-left{ gap:10px !important; }
+    .vct-app-header-brand{ min-width:122px !important; justify-content:center !important; }
+    .vct-app-header-logo{ height:28px !important; max-width:118px !important; max-height:28px !important; }
+    .vct-app-header-divider{ height:30px !important; }
+    .vct-app-header-title{ font-size:15px !important; }
+    .vct-app-header-subtitle{ display:none !important; }
+
+    #muhleTopBar{ right:8px !important; }
+    #muhleTopBar .vct-user-initials{
+        flex-basis:32px !important;
+        width:32px !important;
+        height:32px !important;
+        font-size:11px !important;
+    }
+    #muhleTopBar .vct-user-fullname{ max-width:82px !important; font-size:11.5px !important; }
+    #muhleTopBar .vct-logout-button span{ display:none !important; }
+    #muhleTopBar .vct-logout-button{ width:34px !important; padding:0 !important; }
+    #muhleTopBar .vct-header-user-divider{ display:none !important; }
+}
+
+/* ------------------------------------------------------------------------
+   MOBILE
+   ------------------------------------------------------------------------ */
+@media (max-width:620px){
+    :root{
+        --vct-shell-header-h:56px;
+        --vct-shell-user-space:78px;
+    }
+
+    #vctAppHeader.vct-app-header{
+        padding:0 6px 0 8px !important;
+        column-gap:6px !important;
+    }
+
+    .vct-app-header-brand{ min-width:110px !important; justify-content:center !important; }
+    .vct-app-header-logo{ height:26px !important; max-width:108px !important; max-height:26px !important; }
+    .vct-app-header-divider,
+    .vct-app-header-copy{ display:none !important; }
+
+    #muhleTopBar{
+        right:6px !important;
+        width:72px !important;
+    }
+
+    #muhleTopBar .vct-user-fullname{ display:none !important; }
+    #muhleTopBar .vct-user-initials{
+        flex-basis:30px !important;
+        width:30px !important;
+        height:30px !important;
+    }
+    #muhleTopBar .vct-header-right-container{ gap:6px !important; }
+    #muhleTopBar .vct-logout-button{ width:30px !important; height:32px !important; }
+    #muhleTopBar .vct-logout-icon{ width:18px !important; height:18px !important; }
+}
+
+/* =========================================================================
+   VCT OPCION B - INTEGRACION SHELL / SIDEBAR (PARTE 1)
+   ========================================================================= */
+@media (min-width:1025px){
+    :root{ --vct-sidebar-option-b-w:188px; }
+
+    #vctAppHeader.vct-app-header{
+        left:var(--vct-sidebar-option-b-w) !important;
+        width:auto !important;
+    }
+
+    #main{
+        padding-left:var(--vct-sidebar-option-b-w) !important;
+    }
+
+    #muhleSideBar.vct-sidebar.vct-sidebar-option-b{
+        top:0 !important;
+        height:100vh !important;
+    }
+}
+
+@media (max-width:1024px){
+    #vctAppHeader.vct-app-header{
+        left:0 !important;
+        width:auto !important;
+    }
+
+    #main{
+        padding-left:0 !important;
+    }
+}
+
+/* ========================================================================
+   VCT SHELL - SIDEBAR OPCION B DEFINITIVO
+   El layout desktop se mantiene desde 769px para no caer en el rail antiguo
+   cuando el navegador usa zoom o viewport logico menor a 1025px.
+   ======================================================================== */
+@media (min-width:769px){
+    :root{ --vct-sidebar-option-b-w:188px; }
+
+    #vctAppHeader.vct-app-header{
+        left:var(--vct-sidebar-option-b-w) !important;
+        right:0 !important;
+        width:auto !important;
+    }
+
+    #muhleTopBar.w3-muhle-topbar{
+        right:14px !important;
+    }
+
+    #main{
+        padding-left:var(--vct-sidebar-option-b-w) !important;
+    }
+
+    #muhleSideBar.vct-sidebar.vct-sidebar-option-b{
+        top:0 !important;
+        height:100vh !important;
+    }
+}
+
+@media (max-width:768px){
+    #vctAppHeader.vct-app-header{
+        left:0 !important;
+        right:0 !important;
+        width:auto !important;
+    }
+
+    #main{
+        padding-left:0 !important;
+    }
+}
+
+
+/* ========================================================================
+   VCT SHELL - ALINEACION EXACTA CON SIDEBAR OPCION B
+   ======================================================================== */
+@media (min-width:769px){
+    #muhleSideBar.vct-sidebar.vct-sidebar-option-b{
+        top:0 !important;
+        height:100vh !important;
+    }
+
+    #vctAppHeader.vct-app-header,
+    #muhleTopBar.w3-muhle-topbar{
+        top:0 !important;
+    }
+}
+
+/* ========================================================================
+   VCT OPCION B - HEADER DEFINITIVO DESKTOP + MOBILE
+   ------------------------------------------------------------------------
+   Desktop: logo + titulo/subtitulo + usuario completo + salir.
+   Mobile : logo + iniciales + salir + menu; titulo/subtitulo en segunda fila.
+   ======================================================================== */
+:root{
+    --vct-shell-header-h:68px;
+    --vct-shell-user-space:300px;
+}
+
+#vctAppHeader.vct-app-header{
+    min-height:var(--vct-shell-header-h) !important;
+    height:var(--vct-shell-header-h) !important;
+    grid-template-columns:minmax(0,1fr) var(--vct-shell-user-space) !important;
+    column-gap:16px !important;
+    padding:0 18px 0 18px !important;
+    color:#333233 !important;
+    background:linear-gradient(105deg,#FFFFFF 0%,#FFFFFF 62%,#FBF6F8 78%,#F2DFE7 100%) !important;
+    border:0 !important;
+    border-bottom:1px solid rgba(102,6,45,.13) !important;
+    box-shadow:0 5px 18px rgba(45,35,39,.07) !important;
+    overflow:hidden !important;
+}
+
+.vct-app-header-left{
+    gap:16px !important;
+}
+
+.vct-app-header-brand{
+    flex:0 0 154px !important;
+    min-width:154px !important;
+    width:154px !important;
+    height:100% !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+}
+
+.vct-app-header-logo{
+    display:block !important;
+    width:auto !important;
+    height:29px !important;
+    max-width:150px !important;
+    max-height:29px !important;
+    object-fit:contain !important;
+}
+
+.vct-app-header-divider{
+    width:1px !important;
+    height:34px !important;
+    background:rgba(102,6,45,.20) !important;
+}
+
+.vct-app-header-copy{
+    min-width:0 !important;
+    max-width:720px !important;
+    gap:2px !important;
+}
+
+.vct-app-header-title{
+    color:#3A2630 !important;
+    font-family:var(--vct-font,"Gotham","Montserrat","Segoe UI",Arial,sans-serif) !important;
+    font-size:18px !important;
+    font-weight:700 !important;
+    line-height:1.08 !important;
+    letter-spacing:-.15px !important;
+}
+
+.vct-app-header-subtitle{
+    color:#68758A !important;
+    font-family:var(--vct-font,"Gotham","Montserrat","Segoe UI",Arial,sans-serif) !important;
+    font-size:11px !important;
+    font-weight:500 !important;
+    line-height:1.18 !important;
+}
+
+.vct-header-mobile-menu{
+    display:none !important;
+}
+
+#muhleTopBar.w3-muhle-topbar{
+    top:0 !important;
+    right:14px !important;
+    width:286px !important;
+    height:var(--vct-shell-header-h) !important;
+    min-height:var(--vct-shell-header-h) !important;
+    padding:0 !important;
+    color:#333233 !important;
+}
+
+#muhleTopBar .vct-header-right-container{
+    gap:10px !important;
+}
+
+#muhleTopBar .vct-user-widget{
+    height:40px !important;
+    gap:8px !important;
+    color:#333233 !important;
+}
+
+#muhleTopBar .vct-user-initials{
+    flex:0 0 34px !important;
+    width:34px !important;
+    height:34px !important;
+    color:#fff !important;
+    border:0 !important;
+    background:#8C184B !important;
+    box-shadow:0 2px 8px rgba(102,6,45,.16) !important;
+}
+
+#muhleTopBar .vct-user-fullname{
+    max-width:145px !important;
+    color:#3A2630 !important;
+    font-size:12px !important;
+    font-weight:650 !important;
+}
+
+#muhleTopBar .vct-header-user-divider{
+    height:28px !important;
+    background:rgba(102,6,45,.20) !important;
+}
+
+#muhleTopBar .vct-logout-button{
+    height:36px !important;
+    gap:6px !important;
+    padding:0 7px !important;
+    color:#66062D !important;
+    background:transparent !important;
+    border:1px solid transparent !important;
+}
+
+#muhleTopBar .vct-logout-button:hover{
+    color:#66062D !important;
+    background:rgba(102,6,45,.06) !important;
+    border-color:rgba(102,6,45,.10) !important;
+}
+
+#main{
+    padding-top:calc(var(--vct-shell-header-h) + 12px) !important;
+}
+
+@media (min-width:769px){
+    #vctAppHeader.vct-app-header{
+        left:var(--vct-sidebar-option-b-w,188px) !important;
+        right:0 !important;
+    }
+
+    #main{
+        padding-left:var(--vct-sidebar-option-b-w,188px) !important;
+    }
+}
+
+@media (max-width:768px){
+    :root{
+        --vct-shell-header-h:96px;
+        --vct-shell-user-space:76px;
+    }
+
+    #vctAppHeader.vct-app-header{
+        left:0 !important;
+        right:0 !important;
+        width:auto !important;
+        height:var(--vct-shell-header-h) !important;
+        min-height:var(--vct-shell-header-h) !important;
+        display:block !important;
+        padding:0 12px !important;
+        background:linear-gradient(110deg,#FFFFFF 0%,#FFFFFF 66%,#FAEFF3 100%) !important;
+        overflow:visible !important;
+    }
+
+    .vct-app-header-left{
+        position:relative !important;
+        width:100% !important;
+        height:100% !important;
+        display:block !important;
+        margin:0 !important;
+        padding:0 !important;
+    }
+
+    .vct-app-header-brand{
+        position:absolute !important;
+        top:0 !important;
+        left:0 !important;
+        width:132px !important;
+        min-width:132px !important;
+        height:52px !important;
+        display:flex !important;
+        align-items:center !important;
+        justify-content:flex-start !important;
+    }
+
+    .vct-app-header-logo{
+        width:auto !important;
+        height:24px !important;
+        max-width:126px !important;
+        max-height:24px !important;
+    }
+
+    .vct-app-header-divider{
+        display:none !important;
+    }
+
+    .vct-app-header-copy{
+        position:absolute !important;
+        left:0 !important;
+        right:0 !important;
+        top:52px !important;
+        height:44px !important;
+        display:flex !important;
+        flex-direction:column !important;
+        justify-content:flex-start !important;
+        gap:1px !important;
+        max-width:none !important;
+        padding:3px 0 0 !important;
+        box-sizing:border-box !important;
+        overflow:hidden !important;
+    }
+
+    .vct-app-header-title{
+        display:block !important;
+        margin:0 !important;
+        color:#66062D !important;
+        font-size:18px !important;
+        line-height:1.08 !important;
+        white-space:nowrap !important;
+        overflow:hidden !important;
+        text-overflow:ellipsis !important;
+    }
+
+    .vct-app-header-subtitle{
+        display:block !important;
+        margin:1px 0 0 !important;
+        color:#68758A !important;
+        font-size:10.5px !important;
+        line-height:1.15 !important;
+        white-space:nowrap !important;
+        overflow:hidden !important;
+        text-overflow:ellipsis !important;
+    }
+
+    .vct-app-header-user-reserve{
+        display:none !important;
+    }
+
+    .vct-header-mobile-menu{
+        position:absolute !important;
+        top:10px !important;
+        right:8px !important;
+        z-index:1125 !important;
+        width:34px !important;
+        height:34px !important;
+        display:flex !important;
+        align-items:center !important;
+        justify-content:center !important;
+        margin:0 !important;
+        padding:0 !important;
+        color:#333233 !important;
+        background:transparent !important;
+        border:0 !important;
+        border-radius:8px !important;
+        box-shadow:none !important;
+        cursor:pointer !important;
+    }
+
+    .vct-header-mobile-menu:hover{
+        background:rgba(102,6,45,.06) !important;
+    }
+
+    .vct-header-mobile-menu svg{
+        width:20px !important;
+        height:20px !important;
+        fill:none !important;
+        stroke:currentColor !important;
+        stroke-width:1.8 !important;
+        stroke-linecap:round !important;
+    }
+
+    #muhleTopBar.w3-muhle-topbar{
+        top:0 !important;
+        right:48px !important;
+        left:auto !important;
+        width:76px !important;
+        height:52px !important;
+        min-height:52px !important;
+        padding:0 !important;
+        overflow:visible !important;
+    }
+
+    #muhleTopBar .vct-header-right-container{
+        width:76px !important;
+        height:52px !important;
+        gap:4px !important;
+    }
+
+    #muhleTopBar .vct-user-widget{
+        width:32px !important;
+        min-width:32px !important;
+        height:32px !important;
+        display:flex !important;
+        gap:0 !important;
+    }
+
+    #muhleTopBar .vct-user-initials{
+        flex:0 0 30px !important;
+        width:30px !important;
+        height:30px !important;
+        font-size:10px !important;
+    }
+
+    #muhleTopBar .vct-user-details,
+    #muhleTopBar .vct-user-fullname,
+    #muhleTopBar .vct-header-user-divider{
+        display:none !important;
+    }
+
+    #muhleTopBar .vct-logout-button{
+        flex:0 0 32px !important;
+        width:32px !important;
+        min-width:32px !important;
+        height:32px !important;
+        padding:0 !important;
+        border-radius:8px !important;
+    }
+
+    #muhleTopBar .vct-logout-button span{
+        display:none !important;
+    }
+
+    #muhleTopBar .vct-logout-icon{
+        width:17px !important;
+        height:17px !important;
+        flex-basis:17px !important;
+    }
+
+    #main{
+        padding-left:0 !important;
+        padding-top:calc(var(--vct-shell-header-h) + 8px) !important;
+    }
+}
+
+/* ========================================================================
+   VCT SHELL - BODY GENERICO / POSICIONAMIENTO DEFINITIVO
+   ------------------------------------------------------------------------
+   Una sola regla de ubicacion para cualquier SP/pantalla.
+   Desktop: sidebar fijo + header fijo + gutter uniforme.
+   Mobile : header de dos niveles + contenido + bottom-nav.
+   ======================================================================== */
+:root{
+    --vct-shell-content-gap-x:16px;
+    --vct-shell-content-gap-y:14px;
+    --vct-shell-mobile-bottom-nav-h:64px;
+}
+
+#main{
+    position:relative !important;
+    width:100% !important;
+    max-width:none !important;
+    min-height:100vh !important;
+    margin:0 !important;
+    box-sizing:border-box !important;
+    overflow-x:hidden !important;
+    background:transparent !important;
+}
+
+#main > .w3-container{
+    width:100% !important;
+    max-width:none !important;
+    min-width:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+    box-sizing:border-box !important;
+}
+
+#mainContainer{
+    width:100% !important;
+    max-width:none !important;
+    min-width:0 !important;
+    margin:0 !important;
+    padding:var(--vct-shell-content-gap-y) var(--vct-shell-content-gap-x) 26px !important;
+    box-sizing:border-box !important;
+    overflow-x:hidden !important;
+    background:transparent !important;
+}
+
+#mainContainer > .vct-page,
+#mainContainer > .vct-page.vct-page-main,
+#mainContainer > .vct-module,
+#mainContainer > .vct-container{
+    width:100% !important;
+    max-width:none !important;
+    min-width:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+    box-sizing:border-box !important;
+}
+
+@media (min-width:769px){
+    #main{
+        padding-top:var(--vct-shell-header-h,68px) !important;
+        padding-left:var(--vct-sidebar-option-b-w,188px) !important;
+        padding-right:0 !important;
+    }
+
+    #mainContainer{
+        min-height:calc(100vh - var(--vct-shell-header-h,68px)) !important;
+    }
+}
+
+@media (max-width:768px){
+    :root{
+        --vct-shell-content-gap-x:10px;
+        --vct-shell-content-gap-y:10px;
+    }
+
+    html,
+    body{
+        width:100% !important;
+        max-width:100% !important;
+        overflow-x:hidden !important;
+    }
+
+    #main{
+        padding-top:var(--vct-shell-header-h,96px) !important;
+        padding-left:0 !important;
+        padding-right:0 !important;
+        padding-bottom:0 !important;
+    }
+
+    #mainContainer{
+        min-height:calc(100vh - var(--vct-shell-header-h,96px)) !important;
+        padding:var(--vct-shell-content-gap-y) var(--vct-shell-content-gap-x)
+                calc(var(--vct-shell-mobile-bottom-nav-h) + 14px + env(safe-area-inset-bottom)) !important;
+    }
+
+    #mainContainer > .vct-page,
+    #mainContainer > .vct-page.vct-page-main{
+        overflow:visible !important;
+    }
+}

@@ -1,0 +1,47 @@
+ 
+/* Minutas de gestion (datos de entrada) que corresponden al proyecto:
+   una por tipo de servicio, segun el codigo del documento parametrizado. */
+CREATE   FUNCTION dbo.VCT_PROYECTO_MINUTAS (@ID_PROYECTO INT)
+RETURNS TABLE
+AS
+RETURN
+(
+    SELECT
+        X.ID_PROYECTO_SERVICIO,
+        X.ID_SERVICIO,
+        X.SERVICIO,
+        D.ID AS ID_DOCUMENTO,
+        D.DESCRIPCION AS DOCUMENTO,
+        PD.ID AS ID_PROYECTO_DOCUMENTO,
+        (SELECT COUNT(*) FROM dbo.VCT_PRM_DOCUMENTOS_ITEMS I
+          WHERE I.ID_DOCUMENTO = D.ID AND I.ACTIVO = 1
+            AND UPPER(ISNULL(I.GRUPO,'')) <> 'CIERRE') AS ITEMS_TOTAL,
+        (SELECT COUNT(*) FROM dbo.VCT_PROYECTOS_DOCUMENTOS_ITEMS PI
+          WHERE PI.ID_PROYECTO_DOCUMENTO = PD.ID
+            AND LTRIM(RTRIM(ISNULL(PI.VALOR,''))) <> '') AS ITEMS_OK
+    FROM
+    (
+        SELECT PS.ID AS ID_PROYECTO_SERVICIO, PS.ID_SERVICIO, S.DESCRIPCION AS SERVICIO, UPPER(S.CODIGO) AS CODIGO_SERVICIO,
+               ROW_NUMBER() OVER (PARTITION BY PS.ID_SERVICIO ORDER BY PS.PRINCIPAL DESC, PS.ID) AS RN
+        FROM dbo.VCT_PROYECTOS_SERVICIOS PS
+        INNER JOIN dbo.VCT_PRM_SERVICIOS S ON S.ID = PS.ID_SERVICIO
+        WHERE PS.ID_PROYECTO = @ID_PROYECTO
+    ) X
+    INNER JOIN dbo.VCT_PRM_DOCUMENTOS D
+            ON D.CODIGO = CASE X.CODIGO_SERVICIO
+                              WHEN 'CONSULTORIA'  THEN 'RE-PP-022-CO'
+                              WHEN 'AUDITORIA'    THEN 'RE-PP-022-A'
+                              WHEN 'CAPACITACION' THEN 'RE-PP-022-CA'
+                          END
+           AND D.ACTIVO = 1
+    OUTER APPLY
+    (
+        SELECT TOP 1 PDX.ID
+        FROM dbo.VCT_PROYECTOS_DOCUMENTOS PDX
+        WHERE PDX.ID_PROYECTO = @ID_PROYECTO
+          AND PDX.ID_DOCUMENTO = D.ID
+          AND PDX.TIPO = 'MG'
+        ORDER BY PDX.ID DESC
+    ) PD
+    WHERE X.RN = 1
+)

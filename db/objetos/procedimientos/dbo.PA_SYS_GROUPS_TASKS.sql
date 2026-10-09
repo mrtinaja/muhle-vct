@@ -1,0 +1,19 @@
+CREATE PROCEDURE [dbo].[PA_SYS_GROUPS_TASKS]
+	(@USER_ID AS VARCHAR(30), @TASK_CODE AS VARCHAR(20))
+AS
+BEGIN
+	SET NOCOUNT ON;
+ 
+SELECT UCT.UNIT_CODE as GroupId, G.name as GroupName
+FROM CALL_TYPE CT INNER JOIN UNIT_CALL_TYPE UCT ON CT.PKEY=UCT.PKEY_CALL_TYPE 
+INNER JOIN Groups G ON G.Id=UCT.UNIT_CODE
+WHERE CT.CALL_TYPE_CODE = @TASK_CODE
+intersect
+(SELECT id as GroupId, name as GroupName 
+from Groups g
+INNER JOIN GroupsUserMembers gu on gu.GroupId=g.Id
+ and gu.UserMemberId=@USER_ID)
+ order by GroupName
+ 
+END
+ 

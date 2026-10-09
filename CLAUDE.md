@@ -14,7 +14,7 @@ Plataforma de gestión de la consultora **Vocaturo** (proyectos de normas ISO: c
 
 ## Reglas de trabajo (importantes)
 
-1. **El servidor es la fuente.** La copia local puede estar vieja. Antes de modificar un SP o asset existente, partir de la definición vigente del servidor (`DUMP_SP_DEFINICION.sql`, `db/objetos/`, o `tools/pull_assets.ps1` para css/js).
+1. **El servidor es la fuente.** La copia local puede estar vieja. Antes de modificar un SP o un css/js existente, partir de la versión vigente del servidor (`DUMP_SP_DEFINICION.sql`, `db/objetos/`, o `tools/pull_assets.ps1` para css/js).
 2. **Las personas corren los scripts**, no Claude: los SQL se pegan en SSMS y los assets se suben a mano al servidor web. Entregar el script completo listo para pegar.
 3. **Sin credenciales:** Claude no usa ni guarda contraseñas de la base ni del servidor, y no se loguea en el navegador (lo hace la persona).
 4. **Diagnósticos:** todo `DIAG_*.sql` empieza con `:OUT <carpeta del repo>\_diag\<NOMBRE>.txt` (SSMS en Query > SQLCMD Mode); la persona corre F5 y Claude lee el .txt.
@@ -44,7 +44,7 @@ Plataforma de gestión de la consultora **Vocaturo** (proyectos de normas ISO: c
 ## Estructura del repo
 
 - Raíz: scripts de entrega numerados en orden de ejecución (`PROYECTO_ALTA_1..5`, `PROYECTO_LANZ_1..5`, `PROYECTO_PLAN_1..3`, `PROYECTO_VISITAS_1..3`, `INICIO_PERFIL_1..4`, `ACCIONES_1..3`, `PULIDO_*`, `FIX_*`) y diagnósticos `DIAG_*`.
-- `assets/css`, `assets/js`: copias de los assets `vct-*` bajadas del servidor (las copias sueltas en la raíz NO son la fuente).
+- **Espejo del servidor** (`C:\inetpub\wwwroot\muhle-vct`): `css/`, `js/`, `main/`, `task/`, `login/`, `profile/`, `admin/`, `img/`, `lib/`, `Bin/`, los `.aspx`… con la misma estructura. `css/` y `js/` se actualizan con `tools/pull_assets.ps1` (lee el listado de carpetas del servidor y baja todo, salvo `tools/assets_excluir.txt`). Nunca van al repo `web.config` (machineKey) ni `Log/`. Las copias sueltas `vct-*.css/js` de la raíz NO son la fuente. Ojo: si un css/js se cambió en el repo y todavía no se subió al servidor, correr el script lo pisa; subirlo antes o restaurarlo con git.
 - `db/objetos/`: definiciones de SPs/funciones volcadas de la base (`db/DUMP_OBJETOS.sql` + `tools/split_dump.py`).
 - `db/AUDITORIA_*`: trigger de auditoría DDL (mail en cada cambio de estructura) y vigilante de archivos del servidor web (`tools/vigilante`).
 

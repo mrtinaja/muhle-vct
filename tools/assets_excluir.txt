@@ -1,0 +1,3 @@
+# Archivos de /css/ y /js/ del servidor que pull_assets.ps1 NO baja (ruta relativa, una por linea).
+# El repo es espejo del servidor: solo se excluye lo que no es contenido.
+js/vssver2.scc

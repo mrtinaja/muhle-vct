@@ -1,0 +1,90 @@
+ 
+CREATE PROCEDURE [dbo].[HOME_ADD_FERIADO]
+(@IPKEYJOB	AS VARCHAR(100),
+ @IAGENTE	AS VARCHAR(100),
+ @OCODE		AS VARCHAR(2) OUTPUT,
+ @OMENSAJE	AS VARCHAR(400) OUTPUT)
+AS
+ 
+DECLARE @VFECHA			VARCHAR(50),
+		@VDESCRIPCION	VARCHAR(300),
+		@VT_FERIADO		VARCHAR(10),
+		@VERROR			VARCHAR(50),
+		@VCANT			INT
+ 
+BEGIN	
+ 
+	SET @OCODE = '0'
+	SET @OMENSAJE = ''
+ 
+	SELECT	@VFECHA = ISNULL(FECHA_SELEC,''),
+			@VDESCRIPCION = ISNULL(DESCRIP_FERIADO,''),
+			@VT_FERIADO = ISNULL(TIPO_FERIADO,''),
+			@VERROR = ISNULL(ERROR,'')
+	FROM	XAGENDA
+	WHERE	PAR_KEY = @IPKEYJOB
+	
+	/*IF @VERROR = '' BEGIN
+		SET @OCODE = '0'
+		SET @OMENSAJE = ''
+ 
+	END ELSE BEGIN*/
+ 
+		IF (@VDESCRIPCION = '') BEGIN
+			SET @OCODE = '1'
+			--SET @OMENSAJE = 'Debe completar el Campo Descripcion'
+									
+			UPDATE	XAGENDA
+			SET		ERROR = 'SI', DESC_ERROR = 'Debe completar el Campo Descripcion'
+			WHERE	PAR_KEY = @IPKEYJOB
+			RETURN
+		END
+ 
+		IF (@VT_FERIADO = '') BEGIN
+			SET @OCODE = '1'
+			--SET @OMENSAJE = 'Debe completar el Campo Tipo Feriado'
+									
+			UPDATE	XAGENDA
+			SET		ERROR = 'SI', DESC_ERROR = 'Debe completar el Campo Tipo Feriado'
+			WHERE	PAR_KEY = @IPKEYJOB
+			RETURN
+		END
+		--VALIDO QUE NO EXISTA EL MISMO CODIGO EN LK_DOCUMENTACION--
+		SELECT	@VCANT = COUNT(1)
+		FROM	Calendar
+		WHERE	Fecha = @VFECHA
+		AND		IsHoliday = 1
+ 
+		IF (@VCANT > 0) BEGIN
+		
+			SET @OCODE = '1'
+			--SET @OMENSAJE = 'Ya Existe un Feriado cargado para esa Fecha'
+									
+			UPDATE	XAGENDA
+			SET		ERROR = 'SI', DESC_ERROR = 'Ya Existe un Feriado cargado para esa Fecha'
+			WHERE	PAR_KEY = @IPKEYJOB
+			RETURN
+ 
+		END ELSE BEGIN
+ 
+			UPDATE	Calendar
+			SET		IsHoliday = 1,
+					HolidayText = @VDESCRIPCION,
+					Feriado = CONVERT(TINYINT,@VT_FERIADO)
+			WHERE	Fecha = @VFECHA
+ 
+			UPDATE	XAGENDA
+			SET		FECHA_SELEC = NULL
+			WHERE	PAR_KEY = @IPKEYJOB
+ 
+		END
+	--END
+	
+	IF (@OCODE = '0') BEGIN
+		UPDATE	XAGENDA
+		SET		ERROR = 'NO', DESC_ERROR = NULL
+		WHERE	PAR_KEY = @IPKEYJOB
+	END
+ 
+END
+ 

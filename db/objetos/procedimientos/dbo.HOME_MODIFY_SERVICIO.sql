@@ -1,0 +1,764 @@
+CREATE PROCEDURE [dbo].[HOME_MODIFY_SERVICIO]
+(@IPKEYJOB	AS VARCHAR(100),
+ @IAGENTE	AS VARCHAR(100),
+ @OCODE		AS VARCHAR(2) OUTPUT,
+ @OMENSAJE	AS VARCHAR(400) OUTPUT,
+ @OSERVICIO	AS VARCHAR(50) OUTPUT)
+AS
+ 
+DECLARE	@VID_SERVICIO		VARCHAR(50),
+		@VPROYECTO			VARCHAR(50),
+		@VTIPOSERVICIO		VARCHAR(50),
+		@VFECHA_INI			DATETIME,
+		@VFECHA_FIN			DATETIME,
+		@VHORAS				INT,
+		@VMONTO				VARCHAR(50),
+		@VERROR				VARCHAR(50),
+		@VFECHA_INI_PROY	DATETIME,
+		@VFECHA_FIN_PROY	DATETIME,
+		@VHORAS_PROY		INT,
+		@VHORAS_SERVICIOS	INT,
+		@VCIERRE			VARCHAR(50),
+		@VCANT_MC			INT,
+		@VCANT_PE			INT,
+		@VCANT_AGENDAS		INT,
+		@VCANT_TOTAL_AGENDAS INT,
+		@VID_AGENDA			VARCHAR(50),
+		@VCANT_MV			INT,
+		@VCANT_TOTAL_MV		INT,
+		@VCANT_PA			INT,
+		@VCANT_IA			INT,
+		@VCANT_TOTAL_IA		INT,
+		@VCANT_IC			INT,
+		@VCANT_TOTAL_IC		INT,
+		@VCANT_ESTADO		INT,
+		@VNOMBRE			VARCHAR(300),
+		@VLUGAR				VARCHAR(300),
+		@VGRABA				VARCHAR(50),
+		@VTIPO_SERVICIO		VARCHAR(50),
+		@VALIDA_HORA		VARCHAR(50),
+		@VESTADO_HOJA		VARCHAR(50),
+		@VTOTAL_HOJA		VARCHAR(50)
+ 
+BEGIN	
+	
+	SET @OCODE = '0'
+ 
+	SELECT	@VID_SERVICIO = ISNULL(PROYECTO_SERV_ID,''),
+			@VPROYECTO = ISNULL(PROYECTO_ID,''),
+			@VFECHA_INI = ISNULL(FECHA_INICIO_SERV,''),
+			@VFECHA_FIN = ISNULL(FECHA_FIN_SERV,''),
+			@VHORAS = NULLIF(ISNULL(HORAS_SERV,''),''),
+			@VMONTO = REPLACE(ISNULL(MONTO_SERV,'0'),'.',''),
+			@VCIERRE = ISNULL(CIERRE_SERVICIO,'NO'),
+			@VNOMBRE = ISNULL(NOMBRE_SERV,''),
+			@VLUGAR = ISNULL(LUGAR_SERV,'')
+	FROM	XAGENDA
+	WHERE	PAR_KEY = @IPKEYJOB
+ 
+	SELECT	@VFECHA_INI_PROY = FECHA_INICIO_REAL,
+			@VFECHA_FIN_PROY = FECHA_FIN_REAL,
+			@VHORAS_PROY = TOTAL_HORAS_PROYECTADAS
+	FROM	LK_PROYECTO
+	WHERE	ID_PROYECTO = @VPROYECTO
+ 
+	SELECT	@VTIPO_SERVICIO = ISNULL(ID_TIPO_SERVICIO,'')
+	FROM	LK_PROYECTO_SERVICIO
+	WHERE	ID_PROYECTO_SERVICIO = @VID_SERVICIO
+ 
+	SELECT	@VHORAS_SERVICIOS = ISNULL(SUM(TOTAL_HORAS_PROYECTADAS),0)
+	FROM	LK_PROYECTO_SERVICIO
+	WHERE	ID_PROYECTO = @VPROYECTO
+	AND		ID_PROYECTO_SERVICIO <> @VID_SERVICIO
+ 
+	IF (@VNOMBRE = '') BEGIN
+		
+		SET @OCODE = '1'
+			
+		UPDATE	XAGENDA
+		SET		DESC_ERROR = 'Debe Completar el Campo Nombre'
+		WHERE	PAR_KEY = @IPKEYJOB
+		RETURN
+	END
+ 
+	IF (@VLUGAR = '') BEGIN
+		
+		SET @OCODE = '1'
+			
+		UPDATE	XAGENDA
+		SET		DESC_ERROR = 'Debe Completar el Campo Lugar'
+		WHERE	PAR_KEY = @IPKEYJOB
+		RETURN
+	END
+ 
+	IF (@VFECHA_INI = '') BEGIN
+		
+		SET @OCODE = '1'
+			
+		UPDATE	XAGENDA
+		SET		DESC_ERROR = 'Debe Completar el Campo Fecha Inicio'
+		WHERE	PAR_KEY = @IPKEYJOB
+		RETURN
+	END
+ 
+	IF (@VFECHA_FIN = '') BEGIN
+		
+		SET @OCODE = '1'
+			
+		UPDATE	XAGENDA
+		SET		DESC_ERROR = 'Debe Completar el Campo Fecha Fin'
+		WHERE	PAR_KEY = @IPKEYJOB
+		RETURN
+	END
+ 
+	IF (@VFECHA_INI > @VFECHA_FIN) BEGIN
+		SET @OCODE = '1'
+			
+		UPDATE	XAGENDA
+		SET		DESC_ERROR = 'La Fecha Inicio del Servicio NO Puede ser Mayor que la Fecha Fin'
+		WHERE	PAR_KEY = @IPKEYJOB
+		RETURN
+	END
+ 
+	--VALIDO QUE LA FECHA INICIO DEL SERVICIO NO SE MENOR A LA FECHA INICIO DEL PROYECTO NI MAYOR A LA FECHA FIN
+	IF (@VFECHA_INI < @VFECHA_INI_PROY) BEGIN
+		SET @OCODE = '1'
+			
+		UPDATE	XAGENDA
+		SET		DESC_ERROR = 'La Fecha Inicio del Servicio NO Puede ser Menor que la Fecha Inicio del Proyecto. Fecha Inicio Proyecto: '+CONVERT(VARCHAR,@VFECHA_INI_PROY,103)
+		WHERE	PAR_KEY = @IPKEYJOB
+		RETURN
+	END
+ 
+	IF (@VFECHA_INI > @VFECHA_FIN_PROY) BEGIN
+		SET @OCODE = '1'
+			
+		UPDATE	XAGENDA
+		SET		DESC_ERROR = 'La Fecha Inicio del Servicio NO Puede ser Mayor que la Fecha Fin del Proyecto. Fecha Fin Proyecto: '+CONVERT(VARCHAR,@VFECHA_FIN_PROY,103)
+		WHERE	PAR_KEY = @IPKEYJOB
+		RETURN
+	END
+ 
+	--VALIDO QUE LA FECHA FIN DEL SERVICIO NO SE MENOR A LA FECHA INICIO DEL PROYECTO NI MAYOR A LA FECHA FIN
+	IF (@VFECHA_FIN < @VFECHA_INI_PROY) BEGIN
+		SET @OCODE = '1'
+			
+		UPDATE	XAGENDA
+		SET		DESC_ERROR = 'La Fecha Fin del Servicio NO Puede ser Menor que la Fecha Inicio del Proyecto. Fecha Inicio Proyecto: '+CONVERT(VARCHAR,@VFECHA_INI_PROY,103)
+		WHERE	PAR_KEY = @IPKEYJOB
+		RETURN
+	END
+ 
+	IF (@VFECHA_FIN > @VFECHA_FIN_PROY) BEGIN
+		SET @OCODE = '1'
+ 
+		UPDATE	XAGENDA
+		SET		DESC_ERROR = 'La Fecha Fin del Servicio NO Puede ser Mayor que la Fecha Fin del Proyecto. Fecha Fin Proyecto: '+CONVERT(VARCHAR,@VFECHA_FIN_PROY,103)
+		WHERE	PAR_KEY = @IPKEYJOB
+		RETURN
+	END	
+	
+	IF (@VHORAS = '') BEGIN
+		SET @OCODE = '1'
+			
+		UPDATE	XAGENDA
+		SET		DESC_ERROR = 'Debe Completar el Campo Horas Proyectadas'
+		WHERE	PAR_KEY = @IPKEYJOB
+		RETURN
+	END
+ 
+	--VALIDO QUE LA SUMA DE TODOS LOS SERVICIOS NO SUPERE EL TOTAL DE HORAS DEL PROYECTO
+	IF (@VHORAS_PROY < (@VHORAS_SERVICIOS + @VHORAS)) BEGIN
+		SET @OCODE = '1'
+			
+		UPDATE	XAGENDA
+		SET		DESC_ERROR = 'La Cantidad de Horas Proyectadas de los Servicios NO Puede Superar el Total de Horas Proyectadas del Proyecto. Total de Horas: '+CONVERT(VARCHAR,@VHORAS_PROY)
+		WHERE	PAR_KEY = @IPKEYJOB
+		RETURN
+	END
+ 
+	IF CHARINDEX(@VMONTO,',') > 0  BEGIN
+		SET @OCODE = '1'
+ 
+		UPDATE	XAGENDA
+		SET		DESC_ERROR = 'El Campo Monto Presupuestado NO puede tener Decimales'
+		WHERE	PAR_KEY = @IPKEYJOB
+		RETURN
+	END
+ 
+	--VALIDACIONES CIERRE DEL SERVICIO--
+	IF (@VCIERRE = 'SI') BEGIN
+			
+			--VALIDO POR TIPO DE SERVICIO--
+			/* Servicio Consultoria
+				- Al menos una minuta de cierre a Nivel Servicio
+				- Al menos un plan estartegico a Nivel Servicio
+				- Que no haya agenda futuras
+				- Que todas las agendas tengan Minuta de Visita
+				- Que todas las agendas tengan la Hoja de Ruta colorcito Verde
+			   Servicio Auditoria
+			    - Al menos un Plan de Auditoria a Nivel Servicio
+				- Al menos un Informe de Auditoria a Nivel Servicio
+				- Que no haya agenda futuras
+				- Que todas las agendas tengan la Hoja de Ruta colorcito Verde
+			   Servicio Capacitacion
+				- Al menos un Informe de Capacitacion a Nivel Servicio
+				- certificados (a futuro)
+				- Que no haya agendas futuras
+				- Que todas las agendas tengan la Hoja de Ruta colorcito Verde
+			*/
+ 
+			DECLARE @VCANT_MG		INT,
+					@VID_DOCUM_MG	VARCHAR(50),
+					@VTIPO_SERV_MG	VARCHAR(50),
+					@VCOMPLETA_MG	VARCHAR(50),
+					@VOTRO_SERV		INT,
+					@VCANT_ANEXOS	INT,
+					@VID_ANEXO		VARCHAR(50),
+					@VCOMPLETA_ANEX	VARCHAR(50)
+ 
+			--RECUPERO EL TIPO DE SERVICIO DE LA MINUTA DE GESTION--
+			SELECT	@VCANT_MG = COUNT(1), 
+					@VID_DOCUM_MG = ISNULL(ID_PROYECTO_DOCUM,''), 
+					@VTIPO_SERV_MG  = ISNULL(ID_TIPO_SERVICIO,'')
+			FROM	LK_PROYECTO_DOCUM 
+			WHERE	ID_PROYECTO = @VPROYECTO
+			AND		TIPO = 'MG'
+			GROUP BY ID_PROYECTO_DOCUM, ID_TIPO_SERVICIO
+ 
+			--CONSULTORIA
+			IF (@VTIPO_SERVICIO = '1') BEGIN
+				
+				--ES PROYECTO VIEJO SI NO TIENE MINUTA DE GESTION-- VALIDA MINUTA DE CIERRE
+				IF (@VCANT_MG = 0) BEGIN
+					--Minuta de Cierre
+					SELECT	@VCANT_MC = COUNT(1)
+					FROM	LK_PROYECTO_DOCUM
+					WHERE	ID_PROYECTO = @VPROYECTO
+					AND		ID_TIPO_SERVICIO = @VTIPO_SERVICIO
+					AND		PROYECTO_SERV_ID = @VID_SERVICIO
+					AND		TIPO = 'MC'
+ 
+					IF (@VCANT_MC = 0) BEGIN
+						SET @OCODE = '1'
+			
+						UPDATE	XAGENDA
+						SET		DESC_ERROR = 'NO Puede Cerrar el Servicio si NO Tiene al menos una Minuta de Cierre'
+						WHERE	PAR_KEY = @IPKEYJOB
+						RETURN
+					END
+				
+				END ELSE BEGIN
+					--ES PROYECTO NUEVO--
+ 
+					--SI EL SERVICIO ES IGUAL AL DE LA MINUTA DE GESTION NUEVA, VALIDO QUE ESTE COMPLETA--
+					IF (@VTIPO_SERV_MG = @VTIPO_SERVICIO) BEGIN
+						SELECT @VCOMPLETA_MG = [dbo].[FN_GET_OBLIGA_MINUTA_GESTION] (@VPROYECTO)
+					
+						IF (@VCOMPLETA_MG <> 'NO') BEGIN
+							SET @OCODE = '1'
+			
+							UPDATE	XAGENDA
+							SET		DESC_ERROR = 'NO Puede Cerrar el Servicio si NO Tiene la Minuta de Gestion completa'
+							WHERE	PAR_KEY = @IPKEYJOB
+							RETURN
+						END
+					END
+ 
+					--RECUPERO SI TIENE ANEXO DE CONSULTORIA COMO OTRO SERVICIO--
+					SELECT	@VCANT_ANEXOS = COUNT(1)
+					FROM	LK_PROYECTO_DOCUM 
+					WHERE	ID_PROYECTO = @VPROYECTO
+					AND		PROYECTO_SERV_ID = @VID_SERVICIO
+					AND		TIPO = 'Anex-Co'
+ 
+					IF (@VCANT_ANEXOS > 0) BEGIN
+					
+						SET @VCOMPLETA_ANEX = ''
+					
+						DECLARE Anexos CURSOR FOR 
+							SELECT	ID_PROYECTO_DOCUM
+							FROM	LK_PROYECTO_DOCUM
+							WHERE	ID_PROYECTO = @VPROYECTO
+							AND		PROYECTO_SERV_ID = @VID_SERVICIO
+							AND		TIPO = 'Anex-Co'
+ 
+ 
+						OPEN Anexos  
+						FETCH NEXT FROM Anexos INTO @VID_ANEXO
+ 
+						WHILE @@FETCH_STATUS = 0  
+						BEGIN  
+						
+							SELECT	@VCOMPLETA_ANEX = [dbo].[FN_GET_OBLIGA_ANEXO_GESTION] (@VID_ANEXO)
+ 
+							IF (@VCOMPLETA_ANEX <> 'NO') BEGIN
+								SET @OCODE = '1'
+			
+								UPDATE	XAGENDA
+								SET		DESC_ERROR = 'NO Puede Cerrar el Servicio si NO Tiene el Anexo del Servicio completo'
+								WHERE	PAR_KEY = @IPKEYJOB
+								RETURN
+							END
+ 
+							FETCH NEXT FROM Anexos INTO @VID_ANEXO
+						END 
+ 
+						CLOSE Anexos  
+						DEALLOCATE Anexos
+					END
+				END
+ 
+				--Plan estrategico
+				SELECT	@VCANT_PE = COUNT(1)
+				FROM	LK_PROYECTO_DOCUM
+				WHERE	ID_PROYECTO = @VPROYECTO
+				AND		ID_TIPO_SERVICIO = @VTIPO_SERVICIO
+				AND		PROYECTO_SERV_ID = @VID_SERVICIO
+				AND		TIPO = 'PE'
+ 
+				IF (@VCANT_PE = 0) BEGIN
+					SET @OCODE = '1'
+			
+					UPDATE	XAGENDA
+					SET		DESC_ERROR = 'NO Puede Cerrar el Servicio si NO Tiene al menos un Plan Estrategico'
+					WHERE	PAR_KEY = @IPKEYJOB
+					RETURN
+				END
+ 
+				--agendas Futuras
+				SELECT	@VCANT_AGENDAS = COUNT(1)
+				FROM	LK_AGENDA
+				WHERE	ID_PROYECTO = @VPROYECTO
+				AND		ID_SERVICIO = @VTIPO_SERVICIO
+				AND		PROYECTO_SERV_ID = @VID_SERVICIO
+				AND		FECHA > GETDATE()
+ 
+				IF (@VCANT_AGENDAS > 0) BEGIN
+					SET @OCODE = '1'
+			
+					UPDATE	XAGENDA
+					SET		DESC_ERROR = 'NO Puede Cerrar el Servicio SI Tiene Visitas Cargadas a Futuro'
+					WHERE	PAR_KEY = @IPKEYJOB
+					RETURN
+				END
+ 
+				SET @VCANT_TOTAL_MV = 0
+				SET @VCANT_MV = 0
+				SET	@VTOTAL_HOJA = ''
+ 
+				--Recupero todas las visitas del servicio--
+				DECLARE Agendas CURSOR FOR 
+					SELECT	ID_AGENDA
+					FROM	LK_AGENDA
+					WHERE	ID_PROYECTO = @VPROYECTO
+					AND		ID_SERVICIO = @VTIPO_SERVICIO
+					AND		PROYECTO_SERV_ID = @VID_SERVICIO
+			
+				OPEN Agendas  
+				FETCH NEXT FROM Agendas INTO @VID_AGENDA
+ 
+				WHILE @@FETCH_STATUS = 0  
+				BEGIN  
+					
+					--valido: 
+					-- Que todas las agendas tengan Minuta de Visita
+					-- Que todas las agendas tengas la Hoja de Ruta en Verde
+ 
+					SELECT	@VCANT_MV = COUNT(1)
+					FROM	LK_PROYECTO_DOCUM
+					WHERE	ID_PROYECTO = @VPROYECTO
+					AND		ID_TIPO_SERVICIO = @VTIPO_SERVICIO
+					AND		PROYECTO_SERV_ID = @VID_SERVICIO
+					AND		ID_AGENDA = @VID_AGENDA
+					AND		TIPO = 'MV'
+ 
+					SET @VCANT_TOTAL_MV = @VCANT_TOTAL_MV + @VCANT_MV
+ 
+					--Hojas de Rutas
+					SET @VESTADO_HOJA = [dbo].[FN_GET_STATUS_AGENDA] (@VID_AGENDA) 
+ 
+					IF (@VESTADO_HOJA = 'V' AND @VTOTAL_HOJA <> 'NO') BEGIN
+						SET @VTOTAL_HOJA = 'SI'
+					END ELSE BEGIN
+						SET @VTOTAL_HOJA = 'NO'
+					END
+					
+					FETCH NEXT FROM Agendas INTO @VID_AGENDA
+				END 
+ 
+				CLOSE Agendas  
+				DEALLOCATE Agendas
+ 
+				SELECT	@VCANT_TOTAL_AGENDAS = COUNT(1)
+				FROM	LK_AGENDA
+				WHERE	ID_PROYECTO = @VPROYECTO
+				AND		ID_SERVICIO = @VTIPO_SERVICIO
+				AND		PROYECTO_SERV_ID = @VID_SERVICIO
+ 
+				IF (@VCANT_TOTAL_AGENDAS <> @VCANT_TOTAL_MV) BEGIN
+					SET @OCODE = '1'
+			
+					UPDATE	XAGENDA
+					SET		DESC_ERROR = 'NO Puede Cerrar el Servicio SI Todas las Visitas NO Tienen una Minuta de Visita'
+					WHERE	PAR_KEY = @IPKEYJOB
+					RETURN
+				END
+ 
+				IF (@VTOTAL_HOJA = 'NO') BEGIN
+					SET @OCODE = '1'
+			
+					UPDATE	XAGENDA
+					SET		DESC_ERROR = 'NO Puede Cerrar el Servicio SI Todas las Visitas NO Tienen la Hoja de Ruta Completa'
+					WHERE	PAR_KEY = @IPKEYJOB
+					RETURN
+				END
+ 
+			END
+ 
+			--AUDITORIA
+			IF (@VTIPO_SERVICIO = '2') BEGIN
+				
+				--ES PROYECTO VIEJO SI NO TIENE MINUTA DE GESTION-- VALIDA MINUTA DE CIERRE
+				IF (@VCANT_MG = 0) BEGIN
+					--SI EL SERVICIO ES IGUAL AL DE LA MINUTA DE GESTION NUEVA, VALIDO QUE ESTE COMPLETA--
+					IF (@VTIPO_SERV_MG = @VTIPO_SERVICIO) BEGIN
+						SELECT @VCOMPLETA_MG = [dbo].[FN_GET_OBLIGA_MINUTA_GESTION] (@VPROYECTO)
+					
+						IF (@VCOMPLETA_MG <> 'NO') BEGIN
+							SET @OCODE = '1'
+			
+							UPDATE	XAGENDA
+							SET		DESC_ERROR = 'NO Puede Cerrar el Servicio si NO Tiene la Minuta de Gestion completa'
+							WHERE	PAR_KEY = @IPKEYJOB
+							RETURN
+						END
+					END
+ 
+					--RECUPERO SI TIENE ANEXO DE CONSULTORIA--
+					SELECT	@VCANT_ANEXOS = COUNT(1)
+					FROM	LK_PROYECTO_DOCUM 
+					WHERE	ID_PROYECTO = @VPROYECTO
+					AND		PROYECTO_SERV_ID = @VID_SERVICIO
+					AND		TIPO = 'Anex-A'
+ 
+					IF (@VCANT_ANEXOS > 0) BEGIN
+					
+						SET @VCOMPLETA_ANEX = ''
+					
+						DECLARE Anexos CURSOR FOR 
+							SELECT	ID_PROYECTO_DOCUM
+							FROM	LK_PROYECTO_DOCUM
+							WHERE	ID_PROYECTO = @VPROYECTO
+							AND		PROYECTO_SERV_ID = @VID_SERVICIO
+							AND		TIPO = 'Anex-A'
+ 
+						OPEN Anexos  
+						FETCH NEXT FROM Anexos INTO @VID_ANEXO
+ 
+						WHILE @@FETCH_STATUS = 0  
+						BEGIN  
+						
+							SELECT	@VCOMPLETA_ANEX = [dbo].[FN_GET_OBLIGA_ANEXO_GESTION] (@VID_ANEXO)
+ 
+							IF (@VCOMPLETA_ANEX <> 'NO') BEGIN
+								SET @OCODE = '1'
+			
+								UPDATE	XAGENDA
+								SET		DESC_ERROR = 'NO Puede Cerrar el Servicio si NO Tiene el Anexo del Servicio completo'
+								WHERE	PAR_KEY = @IPKEYJOB
+								RETURN
+							END
+ 
+							FETCH NEXT FROM Anexos INTO @VID_ANEXO
+						END 
+ 
+						CLOSE Anexos  
+						DEALLOCATE Anexos
+					END
+				END
+ 
+				--Plan Auditoria
+				SELECT	@VCANT_PA = COUNT(1)
+				FROM	LK_PROYECTO_DOCUM
+				WHERE	ID_PROYECTO = @VPROYECTO
+				AND		ID_TIPO_SERVICIO = @VTIPO_SERVICIO
+				AND		PROYECTO_SERV_ID = @VID_SERVICIO
+				AND		TIPO = 'PA'
+ 
+				IF (@VCANT_PA = 0) BEGIN
+					SET @OCODE = '1'
+			
+					UPDATE	XAGENDA
+					SET		DESC_ERROR = 'NO Puede Cerrar el Servicio si NO Tiene al menos un Plan de Auditoria'
+					WHERE	PAR_KEY = @IPKEYJOB
+					RETURN
+				END
+ 
+				--Informe Auditoria
+				SELECT	@VCANT_IA = COUNT(1)
+				FROM	LK_PROYECTO_DOCUM
+				WHERE	ID_PROYECTO = @VPROYECTO
+				AND		ID_TIPO_SERVICIO = @VTIPO_SERVICIO
+				AND		PROYECTO_SERV_ID = @VID_SERVICIO
+				AND		TIPO = 'IA'
+ 
+				IF (@VCANT_IA = 0) BEGIN
+					SET @OCODE = '1'
+					
+					UPDATE	XAGENDA
+					SET		DESC_ERROR = 'NO Puede Cerrar el Servicio si NO Tiene al menos un Informe de Auditoria'
+					WHERE	PAR_KEY = @IPKEYJOB
+					RETURN
+				END
+ 
+				--agendas Futuras
+				SELECT	@VCANT_AGENDAS = COUNT(1)
+				FROM	LK_AGENDA
+				WHERE	ID_PROYECTO = @VPROYECTO
+				AND		ID_SERVICIO = @VTIPO_SERVICIO
+				AND		PROYECTO_SERV_ID = @VID_SERVICIO
+				AND		FECHA > GETDATE()
+ 
+				IF (@VCANT_AGENDAS > 0) BEGIN
+					SET @OCODE = '1'
+ 
+					UPDATE	XAGENDA
+					SET		DESC_ERROR = 'NO Puede Cerrar el Servicio SI Tiene Visitas Cargadas a Futuro'
+					WHERE	PAR_KEY = @IPKEYJOB
+					RETURN
+				END
+ 
+				
+				--SET @VCANT_TOTAL_IA = 0
+				--SET @VCANT_IA = 0
+				SET	@VTOTAL_HOJA = ''
+ 
+				--Recupero todas las visitas del servicio--
+				DECLARE Agendas CURSOR FOR 
+					SELECT	ID_AGENDA
+					FROM	LK_AGENDA
+					WHERE	ID_PROYECTO = @VPROYECTO
+					AND		ID_SERVICIO = @VTIPO_SERVICIO
+					AND		PROYECTO_SERV_ID = @VID_SERVICIO
+			
+				OPEN Agendas  
+				FETCH NEXT FROM Agendas INTO @VID_AGENDA
+ 
+				WHILE @@FETCH_STATUS = 0  
+				BEGIN  
+					/*
+					SELECT	@VCANT_IA = COUNT(1)
+					FROM	LK_PROYECTO_DOCUM
+					WHERE	ID_PROYECTO = @VPROYECTO
+					AND		ID_AGENDA = @VID_AGENDA
+					AND		TIPO = 'IA'
+ 
+					SET @VCANT_TOTAL_IA = @VCANT_TOTAL_IA + @VCANT_IA
+					*/
+ 
+					--Hojas de Rutas
+					SET @VESTADO_HOJA = [dbo].[FN_GET_STATUS_AGENDA] (@VID_AGENDA) 
+ 
+					IF (@VESTADO_HOJA = 'V' AND @VTOTAL_HOJA <> 'NO') BEGIN
+						SET @VTOTAL_HOJA = 'SI'
+					END ELSE BEGIN
+						SET @VTOTAL_HOJA = 'NO'
+					END
+ 
+					FETCH NEXT FROM Agendas INTO @VID_AGENDA
+				END 
+ 
+				CLOSE Agendas  
+				DEALLOCATE Agendas
+ 
+				IF (@VTOTAL_HOJA = 'NO') BEGIN
+					SET @OCODE = '1'
+			
+					UPDATE	XAGENDA
+					SET		DESC_ERROR = 'NO Puede Cerrar el Servicio SI Todas las Visitas NO Tienen la Hoja de Ruta Completa'
+					WHERE	PAR_KEY = @IPKEYJOB
+					RETURN
+				END
+ 
+			END
+ 
+			--CAPACITACION
+			IF (@VTIPO_SERVICIO = '3') BEGIN
+ 
+				--ES PROYECTO VIEJO SI NO TIENE MINUTA DE GESTION-- VALIDA MINUTA DE CIERRE
+				IF (@VCANT_MG = 0) BEGIN
+				
+					--SI EL SERVICIO ES IGUAL AL DE LA MINUTA DE GESTION NUEVA, VALIDO QUE ESTE COMPLETA--
+					IF (@VTIPO_SERV_MG = @VTIPO_SERVICIO) BEGIN
+						SELECT @VCOMPLETA_MG = [dbo].[FN_GET_OBLIGA_MINUTA_GESTION] (@VPROYECTO)
+					
+						IF (@VCOMPLETA_MG <> 'NO') BEGIN
+							SET @OCODE = '1'
+			
+							UPDATE	XAGENDA
+							SET		DESC_ERROR = 'NO Puede Cerrar el Servicio si NO Tiene la Minuta de Gestion completa'
+							WHERE	PAR_KEY = @IPKEYJOB
+							RETURN
+						END
+					END
+ 
+					--RECUPERO SI TIENE ANEXO DE CONSULTORIA--
+					SELECT	@VCANT_ANEXOS = COUNT(1)
+					FROM	LK_PROYECTO_DOCUM 
+					WHERE	ID_PROYECTO = @VPROYECTO
+					AND		PROYECTO_SERV_ID = @VID_SERVICIO
+					AND		TIPO = 'Anex-Ca'
+ 
+					IF (@VCANT_ANEXOS > 0) BEGIN
+					
+						SET @VCOMPLETA_ANEX = ''
+					
+						DECLARE Anexos CURSOR FOR 
+							SELECT	ID_PROYECTO_DOCUM
+							FROM	LK_PROYECTO_DOCUM
+							WHERE	ID_PROYECTO = @VPROYECTO
+							AND		PROYECTO_SERV_ID = @VID_SERVICIO
+							AND		TIPO = 'Anex-Ca'
+ 
+						OPEN Anexos  
+						FETCH NEXT FROM Anexos INTO @VID_ANEXO
+ 
+						WHILE @@FETCH_STATUS = 0  
+						BEGIN  
+						
+							SELECT	@VCOMPLETA_ANEX = [dbo].[FN_GET_OBLIGA_ANEXO_GESTION] (@VID_ANEXO)
+ 
+							IF (@VCOMPLETA_ANEX <> 'NO') BEGIN
+								SET @OCODE = '1'
+			
+								UPDATE	XAGENDA
+								SET		DESC_ERROR = 'NO Puede Cerrar el Servicio si NO Tiene el Anexo del Servicio completo'
+								WHERE	PAR_KEY = @IPKEYJOB
+								RETURN
+							END
+ 
+							FETCH NEXT FROM Anexos INTO @VID_ANEXO
+						END 
+ 
+						CLOSE Anexos  
+						DEALLOCATE Anexos
+					END
+				END
+ 
+				--Informe Capacitacion
+				SELECT	@VCANT_IC = COUNT(1)
+				FROM	LK_PROYECTO_DOCUM
+				WHERE	ID_PROYECTO = @VPROYECTO
+				AND		ID_TIPO_SERVICIO = @VTIPO_SERVICIO
+				AND		PROYECTO_SERV_ID = @VID_SERVICIO
+				AND		TIPO = 'IC'
+ 
+				IF (@VCANT_IC = 0) BEGIN
+					SET @OCODE = '1'
+			
+					UPDATE	XAGENDA
+					SET		DESC_ERROR = 'NO Puede Cerrar el Servicio si NO Tiene al menos un Informe de Capacitacion'
+					WHERE	PAR_KEY = @IPKEYJOB
+					RETURN
+				END
+ 
+				--agendas Futuras
+				SELECT	@VCANT_AGENDAS = COUNT(1)
+				FROM	LK_AGENDA
+				WHERE	ID_PROYECTO = @VPROYECTO
+				AND		ID_SERVICIO = @VTIPO_SERVICIO
+				AND		PROYECTO_SERV_ID = @VID_SERVICIO
+				AND		FECHA > GETDATE()
+ 
+				IF (@VCANT_AGENDAS > 0) BEGIN
+					SET @OCODE = '1'
+								
+					UPDATE	XAGENDA
+					SET		DESC_ERROR = 'NO Puede Cerrar el Servicio SI Tiene Visitas Cargadas a Futuro'
+					WHERE	PAR_KEY = @IPKEYJOB
+					RETURN
+				END
+ 
+				--SET @VCANT_TOTAL_IC = 0
+				--SET @VCANT_IC = 0
+				SET	@VTOTAL_HOJA = ''
+ 
+				--Recupero todas las visitas del servicio--
+				DECLARE Agendas CURSOR FOR 
+					SELECT	ID_AGENDA
+					FROM	LK_AGENDA
+					WHERE	ID_PROYECTO = @VPROYECTO
+					AND		ID_SERVICIO = @VTIPO_SERVICIO
+					AND		PROYECTO_SERV_ID = @VID_SERVICIO
+			
+				OPEN Agendas  
+				FETCH NEXT FROM Agendas INTO @VID_AGENDA
+ 
+				WHILE @@FETCH_STATUS = 0  
+				BEGIN  
+					
+					--Hojas de Rutas
+					SET @VESTADO_HOJA = [dbo].[FN_GET_STATUS_AGENDA] (@VID_AGENDA) 
+ 
+					IF (@VESTADO_HOJA = 'V' AND @VTOTAL_HOJA <> 'NO') BEGIN
+						SET @VTOTAL_HOJA = 'SI'
+					END ELSE BEGIN
+						SET @VTOTAL_HOJA = 'NO'
+					END
+ 
+					FETCH NEXT FROM Agendas INTO @VID_AGENDA
+				END 
+ 
+				CLOSE Agendas  
+				DEALLOCATE Agendas
+ 
+				IF (@VTOTAL_HOJA = 'NO') BEGIN
+					SET @OCODE = '1'
+			
+					UPDATE	XAGENDA
+					SET		DESC_ERROR = 'NO Puede Cerrar el Servicio SI Todas las Visitas NO Tienen la Hoja de Ruta Completa'
+					WHERE	PAR_KEY = @IPKEYJOB
+					RETURN
+				END
+ 
+			END
+				
+		END
+ 
+	UPDATE	LK_PROYECTO_SERVICIO
+	SET		FECHA_INICIO_REAL = @VFECHA_INI,
+			FECHA_FIN_REAL = @VFECHA_FIN,
+			TOTAL_HORAS_PROYECTADAS = @VHORAS,
+			MONTO_PRESUP = @VMONTO,
+			CIERRE = @VCIERRE,
+			FECHA_FIN = CASE WHEN @VCIERRE = 'SI' THEN GETDATE() ELSE FECHA_FIN_REAL END,
+			ESTADO_PROYECTO = CASE WHEN @VCIERRE = 'SI' THEN 'TERMINADO' ELSE 'ENCURSO' END,
+			NOMBRE = @VNOMBRE,
+			LUGAR = @VLUGAR
+	WHERE	ID_PROYECTO_SERVICIO = @VID_SERVICIO
+ 
+	--ACTUALIZO LOS PORCENTAJES
+	UPDATE	LK_PROYECTO_SERVICIO
+	SET		PORCENTAJE_AVANCE = CASE WHEN TOTAL_HORAS_PROYECTADAS = 0 THEN 0 ELSE CONVERT(INT,[dbo].[FN_GET_TOTAL_HS_EJECUTADAS] ('PS', NULL, NULL, ID_PROYECTO_SERVICIO)) * 100 / TOTAL_HORAS_PROYECTADAS END
+	WHERE	ID_PROYECTO_SERVICIO = @VID_SERVICIO
+ 
+	SELECT	@VCANT_ESTADO = COUNT(1)
+	FROM	LK_PROYECTO_SERVICIO
+	WHERE	ID_PROYECTO = @VPROYECTO
+	--AND		ID_TIPO_SERVICIO = @VTIPO_SERVICIO
+	AND		ESTADO_PROYECTO <> 'TERMINADO'
+ 
+	--IF (@VCANT_ESTADO = 0) BEGIN
+	UPDATE	LK_PROYECTO
+	SET		FECHA_FIN_TOTAL = CASE WHEN @VCANT_ESTADO = 0 THEN GETDATE() ELSE FECHA_FIN_TOTAL END ,
+			ESTADO_PROYECTO_TOTAL = CASE WHEN @VCANT_ESTADO = 0 THEN 'TERMINADO' ELSE 'ENCURSO' END
+	WHERE	ID_PROYECTO = @VPROYECTO
+	--END		
+	
+	IF (@OCODE = '0') BEGIN
+		UPDATE	XAGENDA
+		SET		DESC_ERROR = 'El Servicio Fue Actualizado Correctamente'
+		WHERE	PAR_KEY = @IPKEYJOB
+	END
+END

@@ -13,7 +13,7 @@ algo, se baja la version vigente; despues de publicarlo, se vuelve a bajar y se 
 | --- | --- |
 | `db/objetos/` | Un `.sql` por SP, funcion, vista y trigger, tal como estan en el servidor (los genera `tools/split_dump.py`) |
 | `db/DUMP_OBJETOS.sql` | Script de solo lectura que baja todas las definiciones |
-| `assets/css`, `assets/js` | CSS/JS propios de MAIN, bajados del servidor (`tools/pull_assets.ps1`) |
+| `css/`, `js/`, `main/`, `task/`... | Espejo de `C:\inetpub\wwwroot\muhle-vct` (css/js se bajan con `tools/pull_assets.ps1`) |
 | raiz (`*.sql`) | Scripts de entrega (`PROYECTO_*`, `INICIO_*`, `PERMISOS_*`...) y diagnosticos (`DIAG_*`) |
 | `tools/` | Herramientas para sincronizar con el servidor |
 
@@ -29,7 +29,7 @@ No se versionan: `Bin/`, `lib/`, `img/`, `fonts/`, `web.config` (tiene la machin
      alguien toco el servidor directo: commitearlos aparte ("sync servidor") antes de seguir.
    - Assets: `powershell -ExecutionPolicy Bypass -File tools\pull_assets.ps1`.
 3. **Hacer el cambio** y publicarlo en desarrollo (ALTER en SSMS / subir el asset, subiendo el `?v=` en el SP que lo carga).
-4. **Volver a bajar** (paso 2) y commitear: el diff de `db/objetos/` y `assets/` es exactamente lo que cambio en el servidor.
+4. **Volver a bajar** (paso 2) y commitear: el diff de `db/objetos/`, `css/` y `js/` es exactamente lo que cambio en el servidor.
    El script de entrega va en la raiz con el mismo commit.
 5. **Pasaje a produccion:** se hace desde un commit con tag (`prod-AAAA-MM-DD`), asi se sabe que version esta en cada ambiente.
 

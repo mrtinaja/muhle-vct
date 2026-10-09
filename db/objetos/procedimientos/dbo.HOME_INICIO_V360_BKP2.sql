@@ -1,0 +1,2014 @@
+CREATE PROCEDURE [dbo].[HOME_INICIO_V360_BKP2]
+(@IPKEYJOB	AS VARCHAR(100),
+ @FORM_ID	AS VARCHAR(100),
+ @OHEADER	AS VARCHAR(MAX) OUTPUT,
+ @OCLIENTE	AS VARCHAR(MAX) OUTPUT,
+ @ODETALLE	AS VARCHAR(MAX) OUTPUT,
+ @OBUTTON	AS VARCHAR(MAX) OUTPUT,
+ @OPOPUP	AS VARCHAR(MAX) OUTPUT)
+AS
+ 
+DECLARE @VCUIT			VARCHAR(50),
+		@VRAZON_SOCIAL	VARCHAR(300),
+		@VCALLE			VARCHAR(100),
+		@VNRO			VARCHAR(30),
+		@VPISO			VARCHAR(30),
+		@VLOCALIDAD		VARCHAR(100),
+		@VPROVINCIA		VARCHAR(50),
+		@VTELEFONO1		VARCHAR(100),
+		@VTELEFONO2		VARCHAR(100),
+		@VEMAIL			VARCHAR(100),
+		@VIVA			VARCHAR(50),
+		@VCONTACTO		VARCHAR(4000),
+		@VTIPO_CLIENTE	VARCHAR(50),
+		@VESTADO		VARCHAR(50),
+		@VOBSERVACIONES	VARCHAR(400),
+		@VDIRECCION		VARCHAR(MAX),
+		@VOBSERV_HR		VARCHAR(MAX)
+ 
+DECLARE	@VCLIENTE			VARCHAR(100), 
+		@VID_PROYECTO		VARCHAR(100),
+		@VID_SERVICIO		VARCHAR(100),
+		@VID_AGENDA_SELEC	VARCHAR(100),
+		@VCANT_PROY_ABI		INT,
+		@VCANT_PROY_CER		INT,
+		@VCANT_SERVICIOS	INT,
+		@VNOMBRE_PROY		VARCHAR(MAX),
+		@VNOMBRE_SERV_SELEC	VARCHAR(MAX),
+		@VLUGAR_SERV_SELEC	VARCHAR(MAX),
+		@VTIPO_SERV_SELEC	VARCHAR(MAX),
+		@VFECHA_INI_SELEC	DATETIME,
+		@VFECHA_FIN_SELEC	DATETIME,
+		@VHORAS_SELEC		VARCHAR(MAX),
+		@VMONTO_SELEC		VARCHAR(MAX),
+		@VCIERRE_SELEC		VARCHAR(MAX),
+		@VNOMBRE_SERV_TMT	VARCHAR(MAX),
+		@VLUGAR_SERV_TMT	VARCHAR(MAX),
+		@VTIPO_SERV_TMT		VARCHAR(MAX),
+		@VFECHA_INI_TMT		DATETIME,
+		@VFECHA_FIN_TMT		DATETIME,
+		@VHORAS_TMT			VARCHAR(MAX),
+		@VMONTO_TMT			VARCHAR(MAX),
+		@VCIERRE_TMT		VARCHAR(MAX),
+		@VTAB				VARCHAR(100),
+		@VTAB_SERV			VARCHAR(100),
+		@VTAB_AGENDA		VARCHAR(100),
+		@VTABLA				VARCHAR(MAX),
+		@VTABLA_DET			VARCHAR(MAX),
+		@VDESC_ERROR		VARCHAR(MAX),
+		@VCLAVE_DELETE		VARCHAR(100),
+		@PageNumber			INT,
+		@VSUBTOTAL			NUMERIC(36,2),
+		@VTOTAL_PAGINA		INT,
+		@VTOTAL				INT,
+		@VIZQUIERDA			VARCHAR(MAX),
+		@VPAGINADO			VARCHAR(MAX),
+		@VDERECHA			VARCHAR(MAX),
+		@VPAGINAS			VARCHAR(MAX),
+		@VACTUAL			INT,
+		@VPREVIUS			VARCHAR(50),
+		@VAGENDA_CONSULTOR	VARCHAR(50),
+		@VSTRUCTURE			VARCHAR(100),
+		@VEXPORTA_DET		VARCHAR(50),
+		@VID_DOCUM			VARCHAR(50),
+		@VMINUTA_DESC		VARCHAR(400)
+ 
+DECLARE @vproyecto			varchar(max),
+		@vobs				varchar(max),
+		@vestado_proy		varchar(max),
+		@vnormas			varchar(max),
+		@vfechaini			varchar(max),
+		@vfechafin			varchar(max),
+		@vhoras				varchar(max),
+		@vopciones			varchar(max),
+		@vinfo				varchar(max)
+ 
+DECLARE @VID_PROYECTO_SERV	VARCHAR(MAX),
+		@VTIPO_SERVICIO		varchar(max), 
+		@VHORAS_SERV_EJEC	varchar(max), 
+		@VFECHA_INI_SERV	varchar(max), 
+		@VFECHA_FIN_SERV	varchar(max), 
+		@VCIERRE			varchar(max), 
+		@VNOMBRE_SERV		varchar(max), 
+		@VLUGAR_SERV		varchar(max),
+		@VHORAS_SERV		varchar(max),
+		@VID_SERV_DELETE	VARCHAR(100),
+		@VCANT_AGENDAS		INT,
+		@VMENSAJE			varchar(4000)
+ 
+DECLARE @VARCLIENTE			varchar(max), 
+		@VARPROYECTO		varchar(max), 
+		@VARNORMA			varchar(max), 
+		@VARFECHAD			varchar(max), 
+		@VARFECHAH			varchar(max), 
+		@VARPROFESIONAL		varchar(max), 
+		@VAROBSERVACIONES	varchar(max), 
+		@VID_AGENDA			varchar(max), 
+		@VARSERVICIO		varchar(max), 
+		@VARDIAS			varchar(max), 
+		@VAROBS_HR			varchar(max), 
+		@VAROBS_CALIF		varchar(max), 
+		@VAROBS_LOGIS		varchar(max), 
+		@VARHORAS			varchar(max),
+		@VSTATUS			varchar(max),
+		@VARESTADO			varchar(max),
+		@VCANT_AGENDA		INT
+ 
+DECLARE @VFRECUENCIA		VARCHAR(50),
+		@VDOC_EMPRESA		VARCHAR(50),
+		@VMANUAL_DOC		VARCHAR(50),
+		@VREQ_INGRESO		VARCHAR(50),
+		@VCV_CERTIF			VARCHAR(50),
+		@VLOGISTICA			VARCHAR(50),
+		@VCURSO				VARCHAR(300),
+		@VMATERIAL			VARCHAR(50),
+		@VESTADO_ENVIO		VARCHAR(50),
+		@VRECIBIDO			VARCHAR(50),
+		@VCANT_SEG			INT
+ 
+DECLARE @VFECHA_MINUTA		VARCHAR(50),
+		@VNOMBRE			VARCHAR(300),
+		@VOBSERV_MINUTA		VARCHAR(400),
+		@VACCION			VARCHAR(MAX),
+		@VFECHA_PLAN		VARCHAR(50),
+		@VOBSERV_PLAN		VARCHAR(400),
+		@VCANT_MC			INT,
+		@VCANT_PE			INT,
+		@VCANT_PA			INT,
+		@VCANT_IA			INT,
+		@VCANT_IC			INT
+ 
+--AGENDA--
+DECLARE @VNORMA_AGENDA		VARCHAR(4000),
+		@VFECHAD_AGENDA		VARCHAR(50),
+		@VFECHAH_AGENDA		VARCHAR(50),
+		@VDIAS_AGENDA		VARCHAR(50),
+		@VHORAS_AGENDA		VARCHAR(50),
+		@VESTADO_AGENDA		VARCHAR(100),
+		@VESTADO_AGENDA_CODE VARCHAR(50),
+		--@VOBSERV_LOGIS_AGENDA VARCHAR(400),
+		@VOBSERV_CALIF_AGENDA VARCHAR(400),
+		@VOBSERV_AGENDA		VARCHAR(400),
+		@VCONSULTORES_AGENDA VARCHAR(400),
+		@VCONSULTORES_AGENDA_DESC VARCHAR(400),
+		@lstDato			VARCHAR(100), 
+		@lnuPosComa			INT,
+		@VALOR				VARCHAR(400),
+		@VDESCNORMAS		VARCHAR(4000)
+ 
+DECLARE @DIF_HORAS_SERV		INT,
+		@HORAS_SERV			INT,
+		@HORAS_CARGADAS_SERV INT
+				
+BEGIN	
+ 
+	SELECT	@VCLIENTE = ISNULL(CLIENTE,''),
+			@VID_PROYECTO =	ISNULL(PROYECTO_ID,''),
+			@VID_SERVICIO = ISNULL(PROYECTO_SERV_ID,''),
+			@VID_AGENDA_SELEC = ISNULL(AGENDA_ID,''),
+			@VTAB = ISNULL(TAB,''), --proyecto o servicio
+			@VTAB_SERV = ISNULL(TAB_SERV,''), --detalle de servicio
+			@VTAB_AGENDA = ISNULL(TAB_AGENDA,''), --detalle visita
+			@VDESC_ERROR = ISNULL(DESC_ERROR,''),
+			@VFECHA_INI_TMT = ISNULL(FECHA_INICIO_SERV,''),
+			@VFECHA_FIN_TMT = ISNULL(FECHA_FIN_SERV,''),
+			@VHORAS_TMT = ISNULL(HORAS_SERV,''),
+			@VMONTO_TMT = REPLACE(ISNULL(MONTO_SERV,'0'),'.',''),
+			@VNOMBRE_SERV_TMT = ISNULL(NOMBRE_SERV,''),
+			@VLUGAR_SERV_TMT = ISNULL(LUGAR_SERV,''),
+			@VCIERRE_TMT = ISNULL(CIERRE_SERVICIO,''),
+			@VCLAVE_DELETE = ISNULL(CLAVE_DELETE,''),
+			@PageNumber	= (CONVERT(INT,ISNULL(NRO_PAGINA,0))),
+			@VPREVIUS = ISNULL(PREVIUS,''),
+			@VAGENDA_CONSULTOR = ISNULL(AGENDA_CONSULTOR,''),
+			@VID_SERV_DELETE = ISNULL(ID_SERV_DELETE,''),
+			@VEXPORTA_DET = ISNULL(EXPORTA_MG,'')
+	FROM	XAGENDA
+	WHERE	PAR_KEY = @IPKEYJOB
+ 
+	IF (@VEXPORTA_DET = '') BEGIN
+		SET @VEXPORTA_DET = '0|1'
+	END
+ 
+	--CALCULO LAS HORAS DEL SERVICIO VS LAS CARGADAS--
+	IF (@VID_SERVICIO <> '') BEGIN
+ 
+		SELECT	@HORAS_SERV = TOTAL_HORAS_PROYECTADAS,
+				@HORAS_CARGADAS_SERV = ISNULL(CONVERT(VARCHAR,[dbo].[FN_GET_TOTAL_HS_EJECUTADAS] ('PS', NULL, NULL, ID_PROYECTO_SERVICIO)),'0')
+		FROM	LK_PROYECTO_SERVICIO
+		WHERE	ID_PROYECTO_SERVICIO = @VID_SERVICIO
+ 
+		SET @DIF_HORAS_SERV = @HORAS_SERV - @HORAS_CARGADAS_SERV
+ 
+	END
+ 
+	--DEFINO A QUE ESTRUCTURA VOLVER--
+	IF (@VAGENDA_CONSULTOR = '') BEGIN
+		--HOME INICIO--
+		SET @VSTRUCTURE = '522967A7-DDC9-465B-969B-85997AE1B085'
+	END ELSE BEGIN
+		--AGENDA CONSULTOR--
+		SET @VSTRUCTURE = '59AA3C13-A4EB-4DD9-AC84-50A1C3F2745B'
+		UPDATE XAGENDA SET PREVIUS = NULL WHERE PAR_KEY = @IPKEYJOB
+	END
+ 
+	IF (@VTAB = '') BEGIN
+		SET @VTAB = '0'
+	END
+ 
+	SET @VCANT_PROY_ABI = 0
+	SET @VCANT_PROY_CER = 0
+	SET @VCANT_SERVICIOS = 0
+	SET @VTOTAL = 0 
+ 
+	SELECT	@VCANT_PROY_ABI = COUNT(*)
+	FROM	LK_PROYECTO P
+	WHERE	P.ID_CLIENTE = @VCLIENTE
+	AND		P.ESTADO_PROYECTO_TOTAL <> 'TERMINADO'	
+ 
+	SELECT	@VCANT_PROY_CER = COUNT(*)
+	FROM	LK_PROYECTO P
+	WHERE	P.ID_CLIENTE = @VCLIENTE
+	AND		P.ESTADO_PROYECTO_TOTAL = 'TERMINADO'
+ 
+	IF (@VID_PROYECTO <> '') BEGIN
+ 
+		SELECT	@VCANT_SERVICIOS = COUNT(1)
+		FROM	LK_PROYECTO_SERVICIO
+		WHERE	ID_PROYECTO = @VID_PROYECTO
+ 
+		SELECT	@VNOMBRE_PROY = '('+CODIGO+') - '+NORMA_REF
+		FROM	LK_PROYECTO P
+		WHERE	P.ID_CLIENTE = @VCLIENTE
+		AND		P.ID_PROYECTO = @VID_PROYECTO
+	END
+ 
+	IF (@VID_SERVICIO <> '') BEGIN
+		
+		SELECT	@VTIPO_SERV_SELEC = ID_TIPO_SERVICIO,
+				@VNOMBRE_SERV_SELEC = ISNULL(NOMBRE,''),
+				@VLUGAR_SERV_SELEC = ISNULL(LUGAR,''),
+				@VFECHA_INI_SELEC = FECHA_INICIO_REAL,
+				@VFECHA_FIN_SELEC = NULLIF(ISNULL(FECHA_FIN_REAL,''),''),
+				@VHORAS_SELEC = TOTAL_HORAS_PROYECTADAS,
+				@VMONTO_SELEC = MONTO_PRESUP,
+				@VCIERRE_SELEC = ISNULL(CIERRE,'NO')
+		FROM	LK_PROYECTO_SERVICIO
+		WHERE	ID_PROYECTO_SERVICIO = @VID_SERVICIO
+ 
+		IF (@VDESC_ERROR = '') BEGIN
+			SET @VFECHA_INI_TMT = @VFECHA_INI_SELEC
+			SET @VFECHA_FIN_TMT = @VFECHA_FIN_SELEC
+			SET @VHORAS_TMT = @VHORAS_SELEC
+			SET @VMONTO_TMT = @VMONTO_SELEC
+			SET @VNOMBRE_SERV_TMT = @VNOMBRE_SERV_SELEC
+			SET @VLUGAR_SERV_TMT = @VLUGAR_SERV_SELEC
+			SET @VCIERRE_TMT = @VCIERRE_SELEC
+		END
+	END
+ 
+	SET @VMENSAJE = ''
+ 
+	--AGREGO CONTROL BOTON ELIMINAR SERVICIO--
+	IF (@VID_SERV_DELETE <> '') BEGIN
+		
+		SET @VCANT_AGENDAS = 0
+ 
+		SELECT	@VCANT_AGENDAS = COUNT(1)
+		FROM	LK_AGENDA
+		WHERE	PROYECTO_SERV_ID = @VID_SERV_DELETE
+		
+		IF (@VCANT_AGENDAS = 0) BEGIN
+			
+			DELETE	LK_PROYECTO_SERVICIO
+			WHERE	ID_PROYECTO_SERVICIO = @VID_SERV_DELETE
+ 
+		END ELSE BEGIN
+			
+			SET @VMENSAJE = 
+			'<script>
+				alert("NO Puede Eliminar el Servicio si el mismo tiene Visitas Cargadas");
+			</script>'
+ 
+		END
+	END
+ 
+	SELECT	@VCUIT = ISNULL(CUIT_CLIENTE,''),
+			@VRAZON_SOCIAL	= ISNULL(RAZON_SOCIAL_CLIENTE,''),
+			@VCALLE = ISNULL(CALLE_CLIENTE,''),
+			@VNRO = ISNULL(NRO_CALLE_CLIENTE,''),
+			@VPISO = ISNULL(PISO_DEPTO_CLIENTE,''),
+			@VLOCALIDAD = ISNULL(LOCALIDAD_CLIENTE,''),
+			@VPROVINCIA = ISNULL(PROVINCIA_CLIENTE,''),
+			@VTELEFONO1 = ISNULL(TEL1_CLIENTE,''),
+			@VTELEFONO2 = ISNULL(TEL2_CLIENTE,''),
+			@VEMAIL = ISNULL(EMAIL_CLIENTE,''),
+			@VIVA = ISNULL(IVA_CLIENTE,''),
+			--@VCONTACTO = ISNULL(CONTACTO_CLIENTE,''),
+			@VTIPO_CLIENTE = ISNULL(TIPO_CLIENTE,''),
+			@VESTADO = ISNULL(STATUS_CLIENTE,''),
+			@VOBSERVACIONES = ISNULL(OBSERV_CLIENTE,''),
+			@VCONTACTO = ISNULL(CONTACTO_CLIENTE,'')
+	FROM	LK_CLIENTES
+	WHERE	ID_CLIENTE = @VCLIENTE
+	
+	SET @VDIRECCION = ISNULL(@VCALLE,'') + ' ' + ISNULL(@VNRO,'') + ' / ' + --' - Depto: '+ ISNULL(@VPISO,'') + char(10) +
+					  ISNULL(@VLOCALIDAD,'') + ' - ' + ISNULL(@VPROVINCIA,'')
+	
+	IF (@VTAB = '0') BEGIN
+		
+		SET @VTOTAL = @VCANT_PROY_ABI
+ 
+		SELECT	@VSUBTOTAL = cast(round(@VCANT_PROY_ABI/5.0,2) as numeric(36,2))
+ 
+		IF (SUBSTRING(CONVERT(VARCHAR,@VSUBTOTAL),
+			CHARINDEX('.',CONVERT(VARCHAR,@VSUBTOTAL)) +1,
+			LEN(CONVERT(VARCHAR,@VSUBTOTAL)))) = '00' BEGIN
+ 
+			SET @VTOTAL_PAGINA = FLOOR(@VCANT_PROY_ABI/5)
+		END ELSE BEGIN
+			SET @VTOTAL_PAGINA = FLOOR(@VCANT_PROY_ABI/5)+1
+		END
+ 
+		SET @VTABLA = '
+				<table id="Table1" class="w3-table w3-card-4 w3-muhle-text-11">
+					<tr style="background-color:gray;color:white;">
+						<th><div class="w3-left"></div></th>
+						<th><div class="w3-left">Proyecto</div></th>
+						<th><div class="w3-center">Estado</div></th>
+						<th><div class="w3-center">Normas</div></th>
+						<th><div class="w3-center">Inicio</div></th>
+						<th><div class="w3-center">Fin</div></th>
+						<th><div class="w3-center">Horas</div></th>
+						<th><div class="w3-center">Opciones</div></th>
+					</tr>'
+		--almacenarSeleccion(''NRO_COTIZA'','''+cast(NRO_COTIZA as varchar)+''');almacenarSeleccion(''CLIENTE'','''+cast(PROYECTOS.CLIENTE as varchar)+''');almacenarSeleccion(''ESTADO_PROY'','''+ISNULL(PROYECTOS.ESTADO,'')+''');
+		DECLARE Proyectos CURSOR FOR
+		SELECT	'<div class="w3-center w3-muhle-text-12">'+
+					'<i class="fas fa-cogs" style="cursor:pointer;color:black;" title="Servicios" 
+						onclick="'+CASE WHEN [dbo].[FN_GET_OBLIGA_MINUTA_GESTION] (CONVERT(VARCHAR,ID))  = 'NO' THEN 
+								'almacenarSeleccion(''TAB'',''1'');
+								 almacenarSeleccion(''TAB_SERV'','''');
+								 almacenarSeleccion(''PROYECTO_ID'','''+CONVERT(VARCHAR,ID)+''');
+								 almacenarSeleccion(''PROYECTO_SERV_ID'','''');
+								 almacenarSeleccion(''AGENDA_ID'','''');
+								 goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');return false;' ELSE 'return false;' END+'"></i>' + '&nbsp;' +
+					CASE WHEN (ISNULL(PROYECTOS.MINUTA_GESTION,'') <> '') THEN
+						'<i class="fas fa-book" style="cursor:pointer;color:'+CASE WHEN [dbo].[FN_GET_OBLIGA_MINUTA_GESTION] (CONVERT(VARCHAR,ID))  = 'NO' THEN 'green' ELSE 'red' END +';" title="Minuta de Gestion" 
+							onclick="almacenarSeleccion(''TAB'',''0'');
+									 almacenarSeleccion(''TAB_SERV'',''8'');
+									 almacenarSeleccion(''PROYECTO_ID'','''+CONVERT(VARCHAR,ID)+''');
+									 almacenarSeleccion(''PROYECTO_SERV_ID'','''');
+									 almacenarSeleccion(''AGENDA_ID'','''');
+									 goto('''+@FORM_ID+''',''380EF2BE-409D-4D09-8446-1605A4823D81'');return false;"></i>'
+					ELSE 
+						'<i class="fas fa-book" style="cursor:pointer;color:gray;" title="Minuta de Gestion" onclick="return false;"></i>'
+					END + '</div>'																		AS Info,
+				'<div class="w3-left w3-muhle-text-11">'+PROYECTO+ '</div>'								AS Proyecto, 
+				'<div class="w3-center w3-muhle-text-11">'+ISNULL(ESTADO_DESC,'Sin Estado')+ '</div>'	AS Estado, 
+				'<div class="w3-center w3-muhle-text-12">'+
+					'<i class="fas fa-info-circle" style="cursor:pointer;color:teal;" title="'+REPLACE(dbo.FN_GET_NORMA_HTML('',NORMAS,''),'</br>',char(10))+'"></i>' 
+				+ '</div>'	AS Normas,
+				'<div class="w3-center w3-muhle-text-11">'+CONVERT(VARCHAR,FECHA_INICIO,103)+ '</div>'						AS "Fecha Inicio", 
+				'<div class="w3-center w3-muhle-text-11">'+CONVERT(VARCHAR,FECHA_FIN,103)+ '</div>'							AS "Fecha Fin", 
+				'<div class="w3-center w3-muhle-text-11">'+HORASP+'/'+[dbo].[FN_GET_TOTAL_HS_EJECUTADAS] ('P', ID, NULL, NULL)+ '</div>' AS "Horas",
+				'<div class="w3-center w3-muhle-text-12">'+
+					'<i class="fas fa-edit" style="cursor:pointer;color:black;" title="Modificar" onclick="almacenarSeleccion(''PROYECTO_ID'','''+cast(ID as varchar)+''');goto('''+@FORM_ID+''',''4049307F-6C13-459D-AC01-54F97D942D1B'');return false;"></i>&nbsp;'+
+					CASE WHEN ISNULL(NRO_COTIZA,0) <> 0 THEN 
+						'<i class="fas fa-file-word" style="cursor:pointer;color:blue;" title="Ver Propuesta" onclick="OpenAttach('''+ISNULL(ID_ADJUNTO,'')+''','''+ISNULL(ATACH_COTIZ.FILE_NAME,'')+''');return false;"></i>'  
+					ELSE '' END + '&nbsp;' +
+					CASE WHEN ISNULL(SUM(A.DIAS),0) = 0 THEN 
+						'<i class="fas fa-trash-alt" style="cursor:pointer;color:red;" title="' +'Eliminar Proyecto'+ '" 
+						onclick="confirmar=confirm(''¿Esta seguro que quiere eliminar el Proyecto?'');
+						if (confirmar){almacenarSeleccion(''ID_DELETE'','''+cast(ID as varchar)+ ''');goto('''+@FORM_ID+''',''522967A7-DDC9-465B-969B-85997AE1B085'');}"/>'
+					ELSE ''
+					END + '</div>' AS Opciones
+		FROM	
+			(
+			SELECT DISTINCT CLI.RAZON_SOCIAL_CLIENTE						AS RAZON_SOCIAL,
+					'('+CODIGO+') - '+NORMA_REF								AS PROYECTO,
+					CONVERT(VARCHAR,P.FECHA_INICIO_REAL,103)				AS FECHA_INICIO,
+					CASE WHEN ISNULL(P.FECHA_FIN_REAL,'') = '' THEN '' ELSE CONVERT(VARCHAR,P.FECHA_FIN_REAL,103) END	AS FECHA_FIN,
+					CONVERT(VARCHAR,P.TOTAL_HORAS_PROYECTADAS)				AS HORASP,
+					--CONVERT(VARCHAR,ISNULL(P.TOTAL_HORAS_EJECUTADAS,'0'))	AS HORASE,
+					P.ID_PROYECTO							 AS ID,
+					P.ID_CLIENTE							 AS CLIENTE,
+					ESTADO_PROYECTO_TOTAL					 AS ESTADO,
+					CD.CAT_DATA_DESC						 AS ESTADO_DESC,
+					NORMAS									 AS NORMAS,
+					P.OBSERVACIONES							 AS OBSERV,
+					P.ID_COTIZACION							 AS NRO_COTIZA,
+					C.ID_ADJUNTO							 AS ID_ADJUNTO,
+					(SELECT 1 FROM LK_PROYECTO_DOCUM WHERE	ID_PROYECTO = P.ID_PROYECTO AND TIPO = 'MG') AS MINUTA_GESTION
+			FROM	LK_PROYECTO P
+					INNER JOIN LK_CLIENTES CLI ON P.ID_CLIENTE = CLI.ID_CLIENTE
+					--LEFT JOIN LK_PROYECTO_SERVICIO PS ON P.ID_PROYECTO = PS.ID_PROYECTO
+					LEFT JOIN CAT_DATA CD ON CD.CAT_DATA_CODE = P.ESTADO_PROYECTO_TOTAL AND CD.PAR_KEY = (SELECT PKEY FROM CAT_TYPE WHERE CAT_TYPE_CODE = 'ESTADOS_PROYECTO')
+					--LEFT JOIN LK_AGENDA A ON A.ID_CLIENTE = CLI.ID_CLIENTE AND A.ID_PROYECTO = P.ID_PROYECTO
+					LEFT JOIN LK_COTIZACIONES C ON C.ID_COTIZACION = P.ID_COTIZACION
+			WHERE	P.ESTADO_PROYECTO_TOTAL <> 'TERMINADO'
+			AND		P.ID_CLIENTE = @VCLIENTE
+			) PROYECTOS 
+			LEFT JOIN PHYSICAL_ATTACHED_DOCUMENT ATACH_COTIZ ON ATACH_COTIZ.PKEY = PROYECTOS.ID_ADJUNTO
+			LEFT JOIN LK_AGENDA A ON A.ID_CLIENTE = PROYECTOS.CLIENTE AND A.ID_PROYECTO = PROYECTOS.ID
+			GROUP BY RAZON_SOCIAL, PROYECTO, OBSERV, PROYECTOS.ESTADO, NORMAS, FECHA_INICIO, FECHA_FIN, HORASP, ID, PROYECTOS.CLIENTE, NRO_COTIZA, ID_ADJUNTO, ESTADO_DESC,ATACH_COTIZ.FILE_NAME, MINUTA_GESTION
+		ORDER BY CONVERT(DATETIME,FECHA_INICIO,103) DESC
+		OFFSET @PageNumber*5 ROWS FETCH NEXT 5 ROWS ONLY
+ 
+		OPEN Proyectos
+		FETCH NEXT FROM Proyectos INTO @vinfo, @vproyecto, /*@vobs,*/ @vestado_proy, @vnormas, @vfechaini, @vfechafin, @vhoras, /*@vservicios,*/ @vopciones
+	
+			WHILE @@FETCH_STATUS = 0  
+			BEGIN  
+				
+				SET	@VTABLA = isnull(@VTABLA,'') +
+				'<tr>
+					<td>'+ISNULL(@vinfo,'')+'</td>
+					<td>'+ISNULL(@vproyecto,'')+'</td>'+
+					--<td>'+ISNULL(@vobs,'')+'</td>
+					'<td>'+ISNULL(@vestado_proy,'')+'</td>
+					<td>'+ISNULL(@vnormas,'')+'</td>
+					<td>'+ISNULL(@vfechaini,'')+'</td>
+					<td>'+ISNULL(@vfechafin,'')+'</td>
+					<td>'+ISNULL(@vhoras,'')+'</td>
+					<td>'+ISNULL(@vopciones,'')+'</td>
+ 
+				</tr>'
+ 
+				FETCH NEXT FROM Proyectos INTO @vinfo, @vproyecto, /*@vobs,*/ @vestado_proy, @vnormas, @vfechaini, @vfechafin, @vhoras, /*@vservicios,*/ @vopciones
+			END 
+ 
+		CLOSE Proyectos  
+		DEALLOCATE Proyectos	
+ 
+		SET @VTABLA = @VTABLA + '</table>'
+	END
+ 
+	IF (@VTAB = '1') BEGIN
+		
+		SET @VTOTAL = @VCANT_SERVICIOS
+ 
+		SELECT	@VSUBTOTAL = cast(round(@VCANT_SERVICIOS/5.0,2) as numeric(36,2))
+ 
+		IF (SUBSTRING(CONVERT(VARCHAR,@VSUBTOTAL),
+			CHARINDEX('.',CONVERT(VARCHAR,@VSUBTOTAL)) +1,
+			LEN(CONVERT(VARCHAR,@VSUBTOTAL)))) = '00' BEGIN
+ 
+			SET @VTOTAL_PAGINA = FLOOR(@VCANT_SERVICIOS/5)
+		END ELSE BEGIN
+			SET @VTOTAL_PAGINA = FLOOR(@VCANT_SERVICIOS/5)+1
+		END
+ 
+		SET @VTABLA = '
+				<table id="Table1" class="w3-table w3-card-4 w3-muhle-text-11">
+					<tr style="background-color:gray;color:white;">
+						<th><div class="w3-center"></div></th>
+						<th><div class="w3-left">Nombre</div></th>
+						<th><div class="w3-left">Lugar</div></th>
+						<th><div class="w3-center">Inicio</div></th>
+						<th><div class="w3-center">Fin</div></th>
+						<th><div class="w3-center">Horas</div></th>
+						<th><div class="w3-center">Cierre</div></th>
+						<th><div class="w3-center">Opciones</div></th>
+					</tr>'
+ 
+		DECLARE Servicios CURSOR FOR 
+			SELECT	ID_PROYECTO_SERVICIO ID_SERVICIO,
+					ID_TIPO_SERVICIO TIPO_SERVICIO, 
+					--ISNULL(CONVERT(VARCHAR,[dbo].[FN_GET_TOTAL_HS_EJECUTADAS] ('S', ID_PROYECTO, ID_TIPO_SERVICIO, NULL)),'0') HORAS,
+					ISNULL(CONVERT(VARCHAR,[dbo].[FN_GET_TOTAL_HS_EJECUTADAS] ('PS', NULL, NULL, ID_PROYECTO_SERVICIO)),'0') HORAS,
+					ISNULL(CONVERT(VARCHAR,FECHA_INICIO_REAL,103),''),
+					NULLIF(ISNULL(CONVERT(VARCHAR,FECHA_FIN_REAL,103),''),''),
+					ISNULL(CONVERT(VARCHAR,TOTAL_HORAS_PROYECTADAS),'0'),
+					CASE WHEN CIERRE IS NULL THEN 'NO' ELSE CIERRE END,
+					ISNULL(NOMBRE,''),
+					ISNULL(LUGAR,'')
+			FROM	LK_PROYECTO_SERVICIO
+			WHERE	ID_PROYECTO = @VID_PROYECTO
+			ORDER BY CONVERT(DATETIME,FECHA_INICIO_REAL,103) DESC
+			OFFSET @PageNumber*5 ROWS FETCH NEXT 5 ROWS ONLY
+			
+		OPEN Servicios  
+		FETCH NEXT FROM Servicios INTO @VID_PROYECTO_SERV, @VTIPO_SERVICIO, @VHORAS_SERV_EJEC, @VFECHA_INI_SERV, @VFECHA_FIN_SERV, @VHORAS_SERV, @VCIERRE, @VNOMBRE_SERV, @VLUGAR_SERV
+ 
+		WHILE @@FETCH_STATUS = 0  
+		BEGIN  
+				SET	@VTABLA = isnull(@VTABLA,'') +
+					'<tr>
+						<td>
+							<div class="w3-center w3-muhle-text-12"><i class="'+ CASE WHEN @VTIPO_SERVICIO = '1' THEN 
+									'fas fa-user-tie"'
+								WHEN @VTIPO_SERVICIO = '2' THEN 
+									'fas fa-chalkboard-teacher"'
+								WHEN @VTIPO_SERVICIO = '3' THEN 
+									'fas fa-user-graduate"' END+
+								'style="cursor:pointer;" title="'+	CASE WHEN @VTIPO_SERVICIO = '1' THEN 
+															'Consultoria"'
+														WHEN @VTIPO_SERVICIO = '2' THEN 
+															'Auditoria"'
+														WHEN @VTIPO_SERVICIO = '3' THEN 
+															'Capacitacion"' END+ ' onclick="almacenarSeleccion(''TAB_SERV'',''0'');
+																							almacenarSeleccion(''PROYECTO_SERV_ID'','''+CONVERT(VARCHAR,@VID_PROYECTO_SERV)+''');
+																							almacenarSeleccion(''AGENDA_ID'','''');
+																							goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');return false;"></i>'+'</div></td>
+						<td><div class="w3-left w3-muhle-text-11 '+CASE WHEN @VID_SERVICIO = CONVERT(VARCHAR,@VID_PROYECTO_SERV) THEN 'w3-muhle-vocaturo' ELSE 'black' END+';">'+CASE WHEN @VID_SERVICIO = CONVERT(VARCHAR,@VID_PROYECTO_SERV) THEN '<b>' ELSE '' END + ISNULL(@VNOMBRE_SERV,'')+CASE WHEN @VID_SERVICIO = CONVERT(VARCHAR,@VID_PROYECTO_SERV) THEN '</b>' ELSE '' END+'</div></td>'+
+						--<td>'+ISNULL(@vobs,'')+'</td>
+						'<td><div class="w3-left w3-muhle-text-11 '+CASE WHEN @VID_SERVICIO = CONVERT(VARCHAR,@VID_PROYECTO_SERV) THEN 'w3-muhle-vocaturo' ELSE 'black' END+';">'+CASE WHEN @VID_SERVICIO = CONVERT(VARCHAR,@VID_PROYECTO_SERV) THEN '<b>' ELSE '' END +ISNULL(@VLUGAR_SERV,'')+CASE WHEN @VID_SERVICIO = CONVERT(VARCHAR,@VID_PROYECTO_SERV) THEN '</b>' ELSE '' END+'</div></td>
+						<td><div class="w3-center w3-muhle-text-11 '+CASE WHEN @VID_SERVICIO = CONVERT(VARCHAR,@VID_PROYECTO_SERV) THEN 'w3-muhle-vocaturo' ELSE 'black' END+';">'+CASE WHEN @VID_SERVICIO = CONVERT(VARCHAR,@VID_PROYECTO_SERV) THEN '<b>' ELSE '' END +ISNULL(@VFECHA_INI_SERV,'')+CASE WHEN @VID_SERVICIO = CONVERT(VARCHAR,@VID_PROYECTO_SERV) THEN '</b>' ELSE '' END+'</div></td>
+						<td><div class="w3-center w3-muhle-text-11 '+CASE WHEN @VID_SERVICIO = CONVERT(VARCHAR,@VID_PROYECTO_SERV) THEN 'w3-muhle-vocaturo' ELSE 'black' END+';">'+CASE WHEN @VID_SERVICIO = CONVERT(VARCHAR,@VID_PROYECTO_SERV) THEN '<b>' ELSE '' END +ISNULL(@VFECHA_FIN_SERV,'')+CASE WHEN @VID_SERVICIO = CONVERT(VARCHAR,@VID_PROYECTO_SERV) THEN '</b>' ELSE '' END+'</div></td>
+						<td><div class="w3-center w3-muhle-text-11 '+CASE WHEN @VID_SERVICIO = CONVERT(VARCHAR,@VID_PROYECTO_SERV) THEN 'w3-muhle-vocaturo' ELSE 'black' END+';">'+CASE WHEN @VID_SERVICIO = CONVERT(VARCHAR,@VID_PROYECTO_SERV) THEN '<b>' ELSE '' END +ISNULL(@VHORAS_SERV,'')+'/'+ISNULL(@VHORAS_SERV_EJEC,'')+CASE WHEN @VID_SERVICIO = CONVERT(VARCHAR,@VID_PROYECTO_SERV) THEN '</b>' ELSE '' END+'</div></td>
+						<td><div class="w3-center w3-muhle-text-11 '+CASE WHEN @VID_SERVICIO = CONVERT(VARCHAR,@VID_PROYECTO_SERV) THEN 'w3-muhle-vocaturo' ELSE 'black' END+';">'+CASE WHEN @VID_SERVICIO = CONVERT(VARCHAR,@VID_PROYECTO_SERV) THEN '<b>' ELSE '' END +ISNULL(@VCIERRE,'')+CASE WHEN @VID_SERVICIO = CONVERT(VARCHAR,@VID_PROYECTO_SERV) THEN '</b>' ELSE '' END+'</div></td>
+						<td><div class="w3-center w3-muhle-text-12 '+CASE WHEN @VID_SERVICIO = CONVERT(VARCHAR,@VID_PROYECTO_SERV) THEN 'w3-muhle-vocaturo' ELSE 'black' END+';">'+CASE WHEN @VID_SERVICIO = CONVERT(VARCHAR,@VID_PROYECTO_SERV) THEN '<b>' ELSE '' END +
+							'<i class="fas fa-trash-alt" style="cursor:pointer;color:red;" title="' +'Eliminar'+ '" 
+							onclick="confirmar=confirm(''¿Esta seguro que quiere Eliminar el Servicio?'');
+							if (confirmar){almacenarSeleccion(''ID_SERV_DELETE'','''+@VID_PROYECTO_SERV+ ''');goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');}"/>'+
+							CASE WHEN @VID_SERVICIO = CONVERT(VARCHAR,@VID_PROYECTO_SERV) THEN '</b>' ELSE '' END+
+						'</div></td>
+					</tr>'
+					
+			FETCH NEXT FROM Servicios INTO @VID_PROYECTO_SERV, @VTIPO_SERVICIO, @VHORAS_SERV_EJEC, @VFECHA_INI_SERV, @VFECHA_FIN_SERV, @VHORAS_SERV, @VCIERRE, @VNOMBRE_SERV, @VLUGAR_SERV
+		END 
+ 
+		CLOSE Servicios  
+		DEALLOCATE Servicios
+ 
+		SET @VTABLA = @VTABLA + '</table>'
+	END
+ 
+	IF (@VTAB = '2') BEGIN
+		
+		SET @VTOTAL = @VCANT_PROY_CER
+ 
+		SELECT	@VSUBTOTAL = cast(round(@VCANT_PROY_CER/5.0,2) as numeric(36,2))
+ 
+		IF (SUBSTRING(CONVERT(VARCHAR,@VSUBTOTAL),
+			CHARINDEX('.',CONVERT(VARCHAR,@VSUBTOTAL)) +1,
+			LEN(CONVERT(VARCHAR,@VSUBTOTAL)))) = '00' BEGIN
+ 
+			SET @VTOTAL_PAGINA = FLOOR(@VCANT_PROY_CER/5)
+		END ELSE BEGIN
+			SET @VTOTAL_PAGINA = FLOOR(@VCANT_PROY_CER/5)+1
+		END
+ 
+		SET @VTABLA = '
+				<table id="Table1" class="w3-table w3-card-4 w3-muhle-text-11">
+					<tr style="background-color:gray;color:white;">
+						<th><div class="w3-left"></div></th>
+						<th><div class="w3-left">Proyecto</div></th>'+
+						--<th><div class="w3-center" style="font-size:13px">Obs</div></th>
+						'<th><div class="w3-center">Estado</div></th>
+						<th><div class="w3-center">Normas</div></th>
+						<th><div class="w3-center">Inicio</div></th>
+						<th><div class="w3-center">Fin</div></th>
+						<th><div class="w3-center">Horas</div></th>
+						<th><div class="w3-center">Opciones</div></th>
+					</tr>'
+		--almacenarSeleccion(''NRO_COTIZA'','''+cast(NRO_COTIZA as varchar)+''');almacenarSeleccion(''CLIENTE'','''+cast(PROYECTOS.CLIENTE as varchar)+''');almacenarSeleccion(''ESTADO_PROY'','''+ISNULL(PROYECTOS.ESTADO,'')+''');
+		DECLARE Proyectos CURSOR FOR
+		SELECT	'<div class="w3-center w3-muhle-text-12">'+
+					'<i class="fas fa-cogs" style="cursor:pointer;color:black;" title="Servicios" 
+						onclick="'+CASE WHEN [dbo].[FN_GET_OBLIGA_MINUTA_GESTION] (CONVERT(VARCHAR,ID))  = 'NO' THEN 
+								'almacenarSeleccion(''TAB'',''1'');
+								 almacenarSeleccion(''TAB_SERV'','''');
+								 almacenarSeleccionar(''PROYECTO_ID'','''+CONVERT(VARCHAR,ID)+''');
+								 almacenarSeleccion(''PROYECTO_SERV_ID'','''');
+								 almacenarSeleccion(''AGENDA_ID'','''');
+								 goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');return false;' ELSE 'return false;' END+'"></i>' + '&nbsp;' +
+					CASE WHEN (ISNULL(PROYECTOS.MINUTA_GESTION,'') <> '') THEN
+						'<i class="fas fa-book" style="cursor:pointer;color:'+CASE WHEN [dbo].[FN_GET_OBLIGA_MINUTA_GESTION] (CONVERT(VARCHAR,ID))  = 'NO' THEN 'green' ELSE 'red' END +';" title="Minuta de Gestion" 
+							onclick="almacenarSeleccion(''TAB'',''0'');
+									 almacenarSeleccion(''TAB_SERV'',''8'');
+									 almacenarSeleccion(''PROYECTO_ID'','''+CONVERT(VARCHAR,ID)+''');
+									 almacenarSeleccion(''PROYECTO_SERV_ID'','''');
+									 almacenarSeleccion(''AGENDA_ID'','''');
+									 goto('''+@FORM_ID+''',''380EF2BE-409D-4D09-8446-1605A4823D81'');return false;"></i>'
+					ELSE 
+						'<i class="fas fa-book" style="cursor:pointer;color:gray;" title="Minuta de Gestion" onclick="return false;"></i>'
+					END + '</div>'																		AS Info,
+				'<div class="w3-left w3-muhle-text-11">'+PROYECTO+ '</div>'							AS Proyecto, 
+				--'<div class="w3-left" style="font-size:13px">'+
+				--	'<font style="font-size:10px;color:black;text-align: left">'+ISNULL(OBSERV,'Sin Observaciones')+'</font>'+ '</div>' AS Obs, 
+				'<div class="w3-center w3-muhle-text-11">'+ISNULL(ESTADO_DESC,'Sin Estado')+ '</div>'	AS Estado, 
+				'<div class="w3-center w3-muhle-text-12">'+
+					'<i class="fas fa-info-circle" style="cursor:pointer;color:teal;" title="'+REPLACE(dbo.FN_GET_NORMA_HTML('',NORMAS,''),'</br>',char(10))+'"></i>' 
+				+ '</div>'	AS Normas,
+				'<div class="w3-center w3-muhle-text-11">'+CONVERT(VARCHAR,FECHA_INICIO,103)+ '</div>'						AS "Fecha Inicio", 
+				'<div class="w3-center w3-muhle-text-11">'+CONVERT(VARCHAR,FECHA_FIN,103)+ '</div>'							AS "Fecha Fin", 
+				'<div class="w3-center w3-muhle-text-11">'+HORASP+'/'+[dbo].[FN_GET_TOTAL_HS_EJECUTADAS] ('P', ID, NULL, NULL)+ '</div>' AS "Horas",
+				'<div class="w3-center w3-muhle-text-12">'+
+					'<i class="fas fa-edit" style="cursor:pointer;color:black;" title="Modificar" onclick="almacenarSeleccion(''PROYECTO_ID'','''+cast(ID as varchar)+''');goto('''+@FORM_ID+''',''4049307F-6C13-459D-AC01-54F97D942D1B'');return false;"></i>&nbsp;'+
+					CASE WHEN ISNULL(NRO_COTIZA,0) <> 0 THEN 
+						'<i class="fas fa-file-word" style="cursor:pointer;color:blue;" title="Ver Propuesta" onclick="OpenAttach('''+ISNULL(ID_ADJUNTO,'')+''','''+ISNULL(ATACH_COTIZ.FILE_NAME,'')+''');return false;"></i>'  
+					ELSE '' END + '&nbsp;' +
+					CASE WHEN ISNULL(SUM(A.DIAS),0) = 0 THEN 
+						'<i class="fas fa-trash-alt" style="cursor:pointer;color:red;" title="' +'Eliminar Proyecto'+ '" 
+						onclick="confirmar=confirm(''¿Esta seguro que quiere eliminar el Proyecto?'');
+						if (confirmar){almacenarSeleccion(''ID_DELETE'','''+cast(ID as varchar)+ ''');goto('''+@FORM_ID+''',''522967A7-DDC9-465B-969B-85997AE1B085'');}"/>'
+					ELSE ''
+					END + '</div>' AS Opciones
+		FROM	
+			(
+			SELECT DISTINCT CLI.RAZON_SOCIAL_CLIENTE						AS RAZON_SOCIAL,
+					'('+CODIGO+') - '+NORMA_REF								AS PROYECTO,
+					CONVERT(VARCHAR,P.FECHA_INICIO_REAL,103)				AS FECHA_INICIO,
+					CASE WHEN ISNULL(P.FECHA_FIN_REAL,'') = '' THEN '' ELSE CONVERT(VARCHAR,P.FECHA_FIN_REAL,103) END	AS FECHA_FIN,
+					CONVERT(VARCHAR,P.TOTAL_HORAS_PROYECTADAS)				AS HORASP,
+					--CONVERT(VARCHAR,ISNULL(P.TOTAL_HORAS_EJECUTADAS,'0'))	AS HORASE,
+					P.ID_PROYECTO							 AS ID,
+					P.ID_CLIENTE							 AS CLIENTE,
+					ESTADO_PROYECTO_TOTAL					 AS ESTADO,
+					CD.CAT_DATA_DESC						 AS ESTADO_DESC,
+					NORMAS									 AS NORMAS,
+					P.OBSERVACIONES							 AS OBSERV,
+					P.ID_COTIZACION							 AS NRO_COTIZA,
+					C.ID_ADJUNTO							 AS ID_ADJUNTO,
+					(SELECT 1 FROM LK_PROYECTO_DOCUM WHERE	ID_PROYECTO = P.ID_PROYECTO AND TIPO = 'MG') AS MINUTA_GESTION
+			FROM	LK_PROYECTO P
+					INNER JOIN LK_CLIENTES CLI ON P.ID_CLIENTE = CLI.ID_CLIENTE
+					--LEFT JOIN LK_PROYECTO_SERVICIO PS ON P.ID_PROYECTO = PS.ID_PROYECTO
+					LEFT JOIN CAT_DATA CD ON CD.CAT_DATA_CODE = P.ESTADO_PROYECTO_TOTAL AND CD.PAR_KEY = (SELECT PKEY FROM CAT_TYPE WHERE CAT_TYPE_CODE = 'ESTADOS_PROYECTO')
+					--LEFT JOIN LK_AGENDA A ON A.ID_CLIENTE = CLI.ID_CLIENTE AND A.ID_PROYECTO = P.ID_PROYECTO
+					LEFT JOIN LK_COTIZACIONES C ON C.ID_COTIZACION = P.ID_COTIZACION
+			WHERE	P.ESTADO_PROYECTO_TOTAL = 'TERMINADO'
+			AND		P.ID_CLIENTE = @VCLIENTE
+			) PROYECTOS 
+			LEFT JOIN PHYSICAL_ATTACHED_DOCUMENT ATACH_COTIZ ON ATACH_COTIZ.PKEY = PROYECTOS.ID_ADJUNTO
+			LEFT JOIN LK_AGENDA A ON A.ID_CLIENTE = PROYECTOS.CLIENTE AND A.ID_PROYECTO = PROYECTOS.ID
+			GROUP BY RAZON_SOCIAL, PROYECTO, OBSERV, PROYECTOS.ESTADO, NORMAS, FECHA_INICIO, FECHA_FIN, HORASP, ID, PROYECTOS.CLIENTE, NRO_COTIZA, ID_ADJUNTO, ESTADO_DESC,ATACH_COTIZ.FILE_NAME, MINUTA_GESTION
+		ORDER BY CONVERT(DATETIME,FECHA_FIN,103) DESC
+		OFFSET @PageNumber*5 ROWS FETCH NEXT 5 ROWS ONLY
+ 
+		OPEN Proyectos
+		FETCH NEXT FROM Proyectos INTO @vinfo, @vproyecto, /*@vobs,*/ @vestado_proy, @vnormas, @vfechaini, @vfechafin, @vhoras, /*@vservicios,*/ @vopciones
+	
+			WHILE @@FETCH_STATUS = 0  
+			BEGIN  
+				
+				SET	@VTABLA = isnull(@VTABLA,'') +
+				'<tr>
+					<td>'+ISNULL(@vinfo,'')+'</td>
+					<td>'+ISNULL(@vproyecto,'')+'</td>'+
+					--<td>'+ISNULL(@vobs,'')+'</td>
+					'<td>'+ISNULL(@vestado_proy,'')+'</td>
+					<td>'+ISNULL(@vnormas,'')+'</td>
+					<td>'+ISNULL(@vfechaini,'')+'</td>
+					<td>'+ISNULL(@vfechafin,'')+'</td>
+					<td>'+ISNULL(@vhoras,'')+'</td>
+					<td>'+ISNULL(@vopciones,'')+'</td>
+ 
+				</tr>'
+ 
+				FETCH NEXT FROM Proyectos INTO @vinfo, @vproyecto, /*@vobs,*/ @vestado_proy, @vnormas, @vfechaini, @vfechafin, @vhoras, /*@vservicios,*/ @vopciones
+			END 
+ 
+		CLOSE Proyectos  
+		DEALLOCATE Proyectos	
+ 
+		SET @VTABLA = @VTABLA + '</table>'
+	END
+ 
+	IF (@VTAB_SERV = '1' AND ISNULL(@VTAB_AGENDA,'') = '') BEGIN
+		
+		SET @VCANT_AGENDA = 0
+ 
+		SET @VTABLA_DET = '
+		<table id="TableDet" class="w3-table-all w3-muhle-text-11">
+			<tr style="background-color:gray;color:white;">
+				<th><div class="w3-center"></div></th>
+				<th><div class="w3-center">Desde</div></th>
+				<th><div class="w3-center">Hasta</div></th>
+				<th><div class="w3-center">Servicio</div></th>
+				<th><div class="w3-center">Normas</div></th>
+				<th><div class="w3-center">Días</div></th>
+				<th><div class="w3-center">Horas</div></th>
+				<th><div class="w3-center">Notas</div></th>
+				<th><div class="w3-left">Consultores</div></th>
+				<th><div class="w3-left">Observaciones</div></th>
+				<th><div class="w3-center">[+]</div></th>
+			</tr>'
+ 
+		DECLARE Planificacion CURSOR FOR 
+			SELECT	C.RAZON_SOCIAL_CLIENTE, --CLIENTE
+					P.NORMA_REF,
+					A.NORMA, --NORMA
+					CONVERT(VARCHAR,A.FECHA,103), --FECHA desde
+					CONVERT(VARCHAR,A.FECHA_HASTA,103), --FECHA hasta
+					CASE WHEN ISNULL(A.ID_CONSULTOR,'') = '' THEN 'Sin Consultor' 
+					ELSE dbo.FN_GET_AGENDA_CONSULTOR(A.ID_AGENDA,'M') END, --PROFESIONAL
+					ISNULL(A.OBSERVADOR,''), --OBSERVACIONES
+					CONVERT(VARCHAR,A.ID_AGENDA), --ID AGENDA
+					A.ID_SERVICIO, --ID SERVICIO
+					A.DIAS,
+					CASE WHEN ISNULL(A.OBSERV_CALIF,'') = '' THEN '' ELSE A.OBSERV_CALIF END,
+					CASE WHEN ISNULL(A.OBSERV_LOGISTICA,'') = '' THEN '' ELSE A.OBSERV_LOGISTICA END,
+					CASE WHEN ISNULL(DOC.OBSERVACIONES,'') = '' THEN '' ELSE DOC.OBSERVACIONES END,
+					DBO.[FN_GET_AGENDA_HORAS] (A.ID_AGENDA) AS HORAS,
+					INDICADOR_HR,
+					A.ESTADO
+			FROM	LK_AGENDA A
+					INNER JOIN LK_CLIENTES C ON C.ID_CLIENTE = A.ID_CLIENTE
+					INNER JOIN LK_PROYECTO P ON P.ID_PROYECTO = A.ID_PROYECTO
+					--LEFT JOIN LK_EMPLEADOS EMP ON EMP.ID_EMPLEADO = A.ID_CONSULTOR
+					INNER JOIN LK_PROYECTO_SERVICIO PS ON PS.ID_PROYECTO_SERVICIO = A.PROYECTO_SERV_ID
+					LEFT JOIN LK_PROYECTO_DOCUM DOC ON DOC.ID_AGENDA = A.ID_AGENDA AND DOC.ID_DOCUMENTACION in (5,6,7)
+			WHERE	A.PROYECTO_SERV_ID = @VID_SERVICIO
+			ORDER BY A.FECHA DESC
+ 
+		OPEN Planificacion  
+		FETCH NEXT FROM Planificacion INTO @VARCLIENTE, @VARPROYECTO, @VARNORMA, @VARFECHAD, @VARFECHAH, @VARPROFESIONAL, @VAROBSERVACIONES, @VID_AGENDA, @VARSERVICIO, @VARDIAS, @VAROBS_CALIF, @VAROBS_LOGIS, @VAROBS_HR, @VARHORAS, @VSTATUS, @VARESTADO
+ 
+		WHILE @@FETCH_STATUS = 0  
+		BEGIN  
+			SET @VCANT_AGENDA = @VCANT_AGENDA + 1
+			
+			--SET @VSTATUS = [dbo].[FN_GET_STATUS_AGENDA] (@VID_AGENDA)
+ 
+			/*SET @VAROBS = 
+				'<i class="fas fa-clipboard-list w3-large" style="cursor:pointer;color:blue;" 
+					title="'+ISNULL(@VAROBS,'')+'"></i>'*/
+			
+			SET @VTABLA_DET =  isnull(@VTABLA_DET,'') + 
+				
+				'<tr>' +
+				  '<td><div class="w3-center">'+
+										CASE WHEN ISNULL(@VSTATUS,'R') = 'R' THEN	
+											'<i class="fas fa-circle" style="cursor:pointer;color:red;" title="Indicador"></i>'
+											WHEN ISNULL(@VSTATUS,'R') = 'N' THEN
+											'<i class="fas fa-circle" style="cursor:pointer;color:orange;" title="Indicador"></i>'	 
+											WHEN ISNULL(@VSTATUS,'R') = 'A' THEN
+											'<i class="fas fa-circle" style="cursor:pointer;color:yellow;" title="Indicador"></i>'
+											WHEN ISNULL(@VSTATUS,'R') = 'V' THEN
+											'<i class="fas fa-circle" style="cursor:pointer;color:green;" title="Indicador"></i>'
+											WHEN ISNULL(@VSTATUS,'R') = 'C' THEN	
+											'<i class="fas fa-circle" style="cursor:pointer;color:#5DADE2;" title="Indicador"></i>'	
+										END +'</div></td>'+	
+				  '<td><div class="w3-center">'+@VARFECHAD+'</div></td>'+
+				  '<td><div class="w3-center">'+@VARFECHAH+'</div></td>'+
+				  '<td><div class="w3-center">'+ CASE	WHEN @VARSERVICIO = '1' THEN 'Consultoria'
+																		WHEN @VARSERVICIO = '2' THEN 'Auditoria'
+																		WHEN @VARSERVICIO = '3' THEN 'Capacitacion'
+																	END +'</div></td>'+
+				  '<td><div class="w3-center">'+ 
+					'<i class="fas fa-info-circle" style="cursor:pointer;color:teal;" title="'+REPLACE(dbo.FN_GET_NORMA_HTML('',@VARNORMA,''),'</br>',char(10))+'"></i>'
+					+'</div></td>'+
+				  '<td><div class="w3-center">'+@VARDIAS+'</div></td>'+
+				  '<td><div class="w3-center">'+@VARHORAS+'</div></td>'+
+				  '<td><div class="w3-center">'+
+					CASE WHEN ISNULL(@VAROBS_CALIF,'') <> '' THEN 
+					'<i class="fas fa-clipboard-list" style="cursor:pointer;color:red;" title="Obs. Calificación:&nbsp;'+@VAROBS_CALIF+'"></i>&nbsp;' ELSE '' END+
+					--CASE WHEN ISNULL(@VAROBS_LOGIS,'') <> '' THEN 
+					--'<i class="fas fa-clipboard-check w3-large" style="cursor:pointer;color:blue;" title="'+'Obs. Logística:&nbsp;'+@VAROBS_LOGIS+'"></i>&nbsp;' ELSE '' END+
+					CASE WHEN ISNULL(@VAROBS_HR,'') <> '' THEN 
+					'<i class="fas fa-clipboard" style="cursor:pointer;color:green;" title="'+'Obs. Hoja Ruta:&nbsp;'+@VAROBS_HR+'"></i>' ELSE '' END
+					+'</div></td>'+
+				  '<td><div class="w3-left">'+@VARPROFESIONAL+'</div></td>'+
+				  '<td><div class="w3-left">'+ISNULL(@VAROBSERVACIONES,'')+'</div></td>' +
+				  '<td><div class="w3-center">' +
+					  '<i class="fas fa-flag" style="cursor:pointer;color:'+CASE WHEN @VARESTADO = 'C' THEN 'green' ELSE 'yellow' END+'" title="'+CASE WHEN @VARESTADO = 'C' THEN 'Confirmado' ELSE 'Pendiente' END+'" onclick="return false;"></i>' + '&nbsp;' +
+					  '<i class="fas fa-calendar-alt" style="cursor:pointer;" title="Ver Visita" onclick="almacenarSeleccion(''AGENDA_ID'','''+@VID_AGENDA+''');almacenarSeleccion(''TAB_AGENDA'',''0'');goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');return false;"></i>'+ '&nbsp;' + 
+					  '<i class="fas fa-trash-alt" style="cursor:pointer;color:red;" title="' +'Eliminar'+ '" 
+						onclick="confirmar=confirm(''¿Esta seguro que quiere eliminar la Visita?'');
+						if (confirmar){almacenarSeleccion(''ID_DELETE'','''+@VID_AGENDA+ ''');goto('''+@FORM_ID+''',''D4F4266D-2745-438E-9E46-D22F3B1D2D8A'');}"/>
+					</div></td>'+
+				'</tr>'
+ 
+			FETCH NEXT FROM Planificacion INTO @VARCLIENTE, @VARPROYECTO, @VARNORMA, @VARFECHAD, @VARFECHAH, @VARPROFESIONAL, @VAROBSERVACIONES, @VID_AGENDA, @VARSERVICIO, @VARDIAS, @VAROBS_CALIF, @VAROBS_LOGIS, @VAROBS_HR, @VARHORAS, @VSTATUS, @VARESTADO
+		END 
+ 
+		CLOSE Planificacion  
+		DEALLOCATE Planificacion
+ 
+		SET @VTABLA_DET = @VTABLA_DET + '</table>'
+	END
+ 
+	IF (@VTAB_SERV = '2') BEGIN
+ 
+		IF (@VTIPO_SERV_SELEC = '1') BEGIN
+			
+			SELECT	@VFRECUENCIA = ISNULL(FRECUENCIA_ENVIO,''), @VDOC_EMPRESA = ISNULL(DOC_EMPRESA,'')
+			FROM	LK_PROYECTO_SERVICIO
+			WHERE	ID_PROYECTO_SERVICIO = @VID_SERVICIO
+ 
+			SET @VTABLA_DET = '
+			<table class="w3-table-all w3-muhle-text-11">
+				<tr style="background-color:gray;">
+					<th><div class="w3-center w3-muhle-text-11" style="color:white;">Frecuencia Envio Plan Estrategico</div></th>
+					<th><div class="w3-center w3-muhle-text-11" style="color:white;">Documentacion Empresa</div></th>
+				</tr>
+				<tr>
+					<td><div class="w3-center w3-muhle-text-11">'+ISNULL(@VFRECUENCIA,'')+'</div></td>
+					<td><div class="w3-center w3-muhle-text-11">'+ISNULL(@VDOC_EMPRESA,'')+'</div></td>
+				</tr>
+			</table>'
+		END
+ 
+		IF (@VTIPO_SERV_SELEC = '2') BEGIN
+ 
+			SELECT	@VMANUAL_DOC = ISNULL(MANUALES,''), @VREQ_INGRESO = ISNULL(REQUISITO_INGRESO,''), @VCV_CERTIF = ISNULL(CV_CERTIFICADOS,''), @VLOGISTICA = ISNULL(LOGISTICA,'')
+			FROM	LK_PROYECTO_SERVICIO
+			WHERE	ID_PROYECTO_SERVICIO = @VID_SERVICIO
+			
+			SET @VTABLA_DET = '
+			<table class="w3-table-all w3-muhle-text-11">
+				<tr style="background-color:gray;">
+					<th><div class="w3-center w3-muhle-text-11" style="color:white;">Manual/Documentacion</div></th>
+					<th><div class="w3-center w3-muhle-text-11" style="color:white;">Requisitos Ingreso</div></th>
+					<th><div class="w3-center w3-muhle-text-11" style="color:white;">CV y Certificados</div></th>
+					<th><div class="w3-center w3-muhle-text-11" style="color:white;">Logistica</div></th>
+				</tr>
+				<tr>
+					<td><div class="w3-center w3-muhle-text-11">'+ISNULL(@VMANUAL_DOC,'')+'</div></td>
+					<td><div class="w3-center w3-muhle-text-11">'+ISNULL(@VREQ_INGRESO,'')+'</div></td>
+					<td><div class="w3-center w3-muhle-text-11">'+ISNULL(@VCV_CERTIF,'')+'</div></td>
+					<td><div class="w3-center w3-muhle-text-11">'+ISNULL(@VLOGISTICA,'')+'</div></td>
+				</tr>
+			</table>'
+		END
+ 
+		IF (@VTIPO_SERV_SELEC = '3') BEGIN
+			
+			SELECT	@VCURSO = ISNULL(NOMBRE_CURSO,''), @VMATERIAL = ISNULL(MATERIALES,''), @VESTADO_ENVIO = ISNULL(ESTADO_ENVIO,''), @VRECIBIDO = ISNULL(RECIBIDO,'')
+			FROM	LK_PROYECTO_SERVICIO
+			WHERE	ID_PROYECTO_SERVICIO = @VID_SERVICIO
+ 
+			SET @VTABLA_DET = '
+			<table class="w3-table-all w3-muhle-text-11">
+				<tr style="background-color:gray;">
+					<th><div class="w3-center w3-muhle-text-11" style="color:white;">Nombre Curso</div></th>
+					<th><div class="w3-center w3-muhle-text-11" style="color:white;">Materiales</div></th>
+					<th><div class="w3-center w3-muhle-text-11" style="color:white;">Estado de Envio</div></th>
+					<th><div class="w3-center w3-muhle-text-11" style="color:white;">Recibido</div></th>
+				</tr>
+				<tr>
+					<td><div class="w3-center w3-muhle-text-11">'+ISNULL(@VCURSO,'')+'</div></td>
+					<td><div class="w3-center w3-muhle-text-11">'+ISNULL(@VMATERIAL,'')+'</div></td>
+					<td><div class="w3-center w3-muhle-text-11">'+ISNULL(@VESTADO_ENVIO,'')+'</div></td>
+					<td><div class="w3-center w3-muhle-text-11">'+ISNULL(@VRECIBIDO,'')+'</div></td>
+				</tr>
+			</table>'
+		END
+	END
+ 
+	IF (@VTAB_SERV = '3') BEGIN
+		
+		IF (@VCLAVE_DELETE <> '') BEGIN
+			
+			DELETE FROM LK_PROYECTO_DOCUM WHERE ID_PROYECTO_DOCUM = @VCLAVE_DELETE
+ 
+		END
+ 
+		SET @VCANT_MC = 0
+ 
+		SET @VTABLA_DET = '
+			<table class="w3-table-all w3-muhle-text-11">
+				<tr style="background-color:gray;">
+					<th><div class="w3-center w3-muhle-text-11" style="color:white;">Fecha</div></th>
+					<th><div class="w3-left w3-muhle-text-11" style="color:white;">Nombre</div></th>
+					<th><div class="w3-left w3-muhle-text-11" style="color:white;">Observacion</div></th>
+					<th><div class="w3-center w3-muhle-text-11" style="color:white;">[+]</div></th>
+				</tr>'
+ 
+		DECLARE Minutas CURSOR FOR 
+			SELECT	ISNULL(CONVERT(VARCHAR,FECHA_DOCUM, 103),''),
+					NRO_DOCUM_INTERNO,
+					OBSERVACIONES,
+					'<i class="fas fa-edit" style="cursor:pointer;color:#002364;" title="Modificar"
+					 onclick="almacenarSeleccion(''ID_MINUTA'','''+CONVERT(VARCHAR,D.ID_PROYECTO_DOCUM)+''');
+					 goto('''+@FORM_ID+''',''0403354A-FDBD-4443-BF8D-ABE9C10AB373'');"></i>' + '&nbsp;' + 
+					'<i class="fas fa-trash-alt" style="cursor:pointer;color:red;" title="' +'Eliminar'+ '" 
+					onclick="confirmar=confirm(''¿Esta seguro que quiere eliminar la Minuta?'');
+					if (confirmar){almacenarSeleccion(''CLAVE_DELETE'','''+CONVERT(VARCHAR,D.ID_PROYECTO_DOCUM)+ ''');goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');}"/>' + '&nbsp;' +
+					CASE WHEN ISNULL(D.ID_ADJUNTO,'') <> '' THEN
+						'<i class="fas fa-file-word" style="cursor:pointer;" title="Ver Minuta" '+ CASE WHEN ISNULL(D.ID_ADJUNTO,'') <> '' THEN
+															'onclick="OpenAttach('''+ISNULL(P.PKEY,'')+''','''+ISNULL(P.FILE_NAME,'')+''');return false;"' ELSE '' END +'></i>'
+						ELSE '' END 
+			FROM	LK_PROYECTO_DOCUM D
+					LEFT JOIN PHYSICAL_ATTACHED_DOCUMENT P ON P.PKEY = D.ID_ADJUNTO
+			WHERE	D.ID_PROYECTO = @VID_PROYECTO
+			AND		D.ID_TIPO_SERVICIO = @VTIPO_SERV_SELEC
+			AND		D.PROYECTO_SERV_ID = @VID_SERVICIO
+			AND		D.TIPO = 'MC'
+ 
+ 
+		OPEN Minutas  
+		FETCH NEXT FROM Minutas INTO @VFECHA_MINUTA, @VNOMBRE, @VOBSERV_MINUTA,@VACCION
+ 
+		WHILE @@FETCH_STATUS = 0  
+		BEGIN  
+			SET @VCANT_MC = @VCANT_MC + 1
+ 
+			SET @VTABLA_DET =  isnull(@VTABLA_DET,'') + 
+	
+				'<tr>' +
+				  '<td><div class="w3-center w3-muhle-text-11">'+@VFECHA_MINUTA+'</div></td>'+
+				  '<td><div class="w3-left w3-muhle-text-11">'+@VNOMBRE+'</div></td>'+
+				  '<td><div class="w3-left w3-muhle-text-11">'+@VOBSERV_MINUTA+'</div></td>'+
+				  '<td><div class="w3-center w3-muhle-text-12">'+@VACCION+'</div></td>'+
+				'</tr>'
+ 
+			FETCH NEXT FROM Minutas INTO @VFECHA_MINUTA, @VNOMBRE, @VOBSERV_MINUTA,@VACCION
+		END 
+ 
+		CLOSE Minutas  
+		DEALLOCATE Minutas
+ 
+		SET @VTABLA_DET = @VTABLA_DET + '</table>'
+	END
+ 
+	IF (@VTAB_SERV = '4')	BEGIN
+		
+		IF (@VCLAVE_DELETE <> '') BEGIN
+			
+			DELETE FROM LK_PROYECTO_DOCUM WHERE ID_PROYECTO_DOCUM = @VCLAVE_DELETE
+ 
+		END
+ 
+		SET @VCANT_PE = 0
+ 
+		SET @VTABLA_DET = '
+		<table class="w3-table-all w3-muhle-text-11">
+				<tr style="background-color:gray;">
+					<th><div class="w3-center w3-muhle-text-11" style="color:white;">Fecha</div></th>
+					<th><div class="w3-left w3-muhle-text-11" style="color:white;">Nombre</div></th>
+					<th><div class="w3-left w3-muhle-text-11" style="color:white;">Observacion</div></th>
+					<th><div class="w3-center w3-muhle-text-11" style="color:white;">[+]</div></th>
+				</tr>'
+ 
+		DECLARE Planes CURSOR FOR 
+			SELECT	ISNULL(CONVERT(VARCHAR,FECHA_DOCUM, 103),''),
+					NRO_DOCUM_INTERNO,
+					OBSERVACIONES,
+					'<i class="fas fa-edit" style="cursor:pointer;color:#002364;" title="Modificar"
+					 onclick="almacenarSeleccion(''ID_MINUTA'','''+CONVERT(VARCHAR,D.ID_PROYECTO_DOCUM)+''');
+					 goto('''+@FORM_ID+''',''B0569958-40AB-49AD-8036-555088709D77'');"></i>' + '&nbsp;' + 
+					'<i class="fas fa-trash-alt" style="cursor:pointer;color:red;" title="' +'Eliminar'+ '" 
+					onclick="confirmar=confirm(''¿Esta seguro que quiere eliminar el Plan?'');
+					if (confirmar){almacenarSeleccion(''CLAVE_DELETE'','''+CONVERT(VARCHAR,D.ID_PROYECTO_DOCUM)+ ''');goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');}"/>' + '&nbsp;' +
+					CASE WHEN ISNULL(D.ID_ADJUNTO,'') <> '' THEN
+						'<i class="fas fa-file-word" style="cursor:pointer;" title="Ver Plan" '+ CASE WHEN ISNULL(D.ID_ADJUNTO,'') <> '' THEN
+															'onclick="OpenAttach('''+ISNULL(P.PKEY,'')+''','''+ISNULL(P.FILE_NAME,'')+''');return false;"' ELSE '' END +'></i>'
+						ELSE '' END
+			FROM	LK_PROYECTO_DOCUM D
+					LEFT JOIN PHYSICAL_ATTACHED_DOCUMENT P ON P.PKEY = D.ID_ADJUNTO
+			WHERE	D.ID_PROYECTO = @VID_PROYECTO
+			AND		D.ID_TIPO_SERVICIO = @VTIPO_SERV_SELEC
+			AND		D.PROYECTO_SERV_ID = @VID_SERVICIO
+			AND		D.TIPO = 'PE'
+ 
+ 
+		OPEN Planes  
+		FETCH NEXT FROM Planes INTO @VFECHA_PLAN, @VNOMBRE, @VOBSERV_PLAN,@VACCION--, @VFRECUENCIA
+ 
+		WHILE @@FETCH_STATUS = 0  
+		BEGIN  
+			
+			SET @VCANT_PE = @VCANT_PE + 1
+ 
+			SET @VTABLA_DET =  isnull(@VTABLA_DET,'') + 
+				'<tr>' +
+				  '<td><div class="w3-center w3-muhle-text-11">'+@VFECHA_PLAN+'</div></td>'+
+				  '<td><div class="w3-left w3-muhle-text-11">'+@VNOMBRE+'</div></td>'+
+				  '<td><div class="w3-left w3-muhle-text-11">'+@VOBSERV_PLAN+'</div></td>'+
+				  '<td><div class="w3-center w3-muhle-text-12">'+@VACCION+'</div></td>'+
+				'</tr>'
+ 
+			FETCH NEXT FROM Planes INTO @VFECHA_PLAN, @VNOMBRE, @VOBSERV_PLAN,@VACCION--, @VFRECUENCIA
+		END 
+ 
+		CLOSE Planes  
+		DEALLOCATE Planes
+ 
+		SET @VTABLA_DET = @VTABLA_DET + '</table>'
+ 
+	END
+ 
+	IF (@VTAB_SERV = '5')	BEGIN
+		
+		IF (@VCLAVE_DELETE <> '') BEGIN
+			
+			DELETE FROM LK_PROYECTO_DOCUM WHERE ID_PROYECTO_DOCUM = @VCLAVE_DELETE
+ 
+		END
+ 
+		SET @VCANT_PA = 0
+ 
+		SET @VTABLA_DET = '
+		<table class="w3-table-all w3-muhle-text-11">
+				<tr style="background-color:gray;">
+					<th><div class="w3-center w3-muhle-text-11" style="color:white;">Fecha</div></th>
+					<th><div class="w3-left w3-muhle-text-11" style="color:white;">Nombre</div></th>
+					<th><div class="w3-left w3-muhle-text-11" style="color:white;">Observacion</div></th>
+					<th><div class="w3-center w3-muhle-text-11" style="color:white;">[+]</div></th>
+				</tr>'
+ 
+		DECLARE Planes CURSOR FOR 
+			SELECT	ISNULL(CONVERT(VARCHAR,FECHA_DOCUM, 103),''),
+					NRO_DOCUM_INTERNO,
+					OBSERVACIONES,
+					'<i class="fas fa-edit" style="cursor:pointer;color:#002364;" title="Modificar"
+					 onclick="almacenarSeleccion(''ID_MINUTA'','''+CONVERT(VARCHAR,D.ID_PROYECTO_DOCUM)+''');
+					 goto('''+@FORM_ID+''',''DFE8677A-7CCF-4D8E-A91D-4EB3F526393C'');"></i>' + '&nbsp;' + 
+					'<i class="fas fa-trash-alt" style="cursor:pointer;color:red;" title="' +'Eliminar'+ '" 
+					onclick="confirmar=confirm(''¿Esta seguro que quiere eliminar el Plan?'');
+					if (confirmar){almacenarSeleccion(''CLAVE_DELETE'','''+CONVERT(VARCHAR,D.ID_PROYECTO_DOCUM)+ ''');goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');}"/>' + '&nbsp;' +
+					CASE WHEN ISNULL(D.ID_ADJUNTO,'') <> '' THEN
+						'<i class="fas fa-file-word" style="cursor:pointer;" title="Ver Plan" '+ CASE WHEN ISNULL(D.ID_ADJUNTO,'') <> '' THEN
+															'onclick="OpenAttach('''+ISNULL(P.PKEY,'')+''','''+ISNULL(P.FILE_NAME,'')+''');return false;"' ELSE '' END +'></i>'
+						ELSE '' END
+			FROM	LK_PROYECTO_DOCUM D
+					LEFT JOIN PHYSICAL_ATTACHED_DOCUMENT P ON P.PKEY = D.ID_ADJUNTO
+			WHERE	D.ID_PROYECTO = @VID_PROYECTO
+			AND		D.ID_TIPO_SERVICIO = @VTIPO_SERV_SELEC
+			AND		D.PROYECTO_SERV_ID = @VID_SERVICIO
+			AND		D.TIPO = 'PA'
+ 
+		OPEN Planes  
+		FETCH NEXT FROM Planes INTO @VFECHA_PLAN, @VNOMBRE, @VOBSERV_PLAN,@VACCION
+ 
+		WHILE @@FETCH_STATUS = 0  
+		BEGIN  
+			SET @VCANT_PA = @VCANT_PA + 1
+ 
+			SET @VTABLA_DET =  isnull(@VTABLA_DET,'') + 
+				'<tr>' +
+				  '<td><div class="w3-center w3-muhle-text-11">'+@VFECHA_PLAN+'</div></td>'+
+				  '<td><div class="w3-left w3-muhle-text-11">'+@VNOMBRE+'</div></td>'+
+				  '<td><div class="w3-left w3-muhle-text-11">'+@VOBSERV_PLAN+'</div></td>'+
+				  '<td><div class="w3-center w3-muhle-text-12">'+@VACCION+'</div></td>'+
+				'</tr>'
+ 
+			FETCH NEXT FROM Planes INTO @VFECHA_PLAN, @VNOMBRE, @VOBSERV_PLAN,@VACCION
+		END 
+ 
+		CLOSE Planes  
+		DEALLOCATE Planes
+ 
+		SET @VTABLA_DET = @VTABLA_DET + '</table>'
+	END
+ 
+	IF (@VTAB_SERV = '6')	BEGIN
+		
+		IF (@VCLAVE_DELETE <> '') BEGIN
+			
+			DELETE FROM LK_PROYECTO_DOCUM WHERE ID_PROYECTO_DOCUM = @VCLAVE_DELETE
+ 
+		END
+ 
+		SET @VCANT_IA = 0
+ 
+		SET @VTABLA_DET = '
+		<table class="w3-table-all w3-muhle-text-11">
+				<tr style="background-color:gray;">
+					<th><div class="w3-center w3-muhle-text-11" style="color:white;">Fecha</div></th>
+					<th><div class="w3-left w3-muhle-text-11" style="color:white;">Nombre</div></th>
+					<th><div class="w3-left w3-muhle-text-11" style="color:white;">Observacion</div></th>
+					<th><div class="w3-center w3-muhle-text-11" style="color:white;">[+]</div></th>
+				</tr>'
+ 
+		DECLARE Informes CURSOR FOR 
+			SELECT	ISNULL(CONVERT(VARCHAR,FECHA_DOCUM, 103),''),
+					NRO_DOCUM_INTERNO,
+					OBSERVACIONES,
+					'<i class="fas fa-edit" style="cursor:pointer;color:#002364;" title="Modificar"
+					 onclick="almacenarSeleccion(''ID_MINUTA'','''+CONVERT(VARCHAR,D.ID_PROYECTO_DOCUM)+''');
+					 goto('''+@FORM_ID+''',''3F6EFE7E-110B-4A5E-953B-B0E5D49C0F16'');"></i>' + '&nbsp;' + 
+					'<i class="fas fa-trash-alt" style="cursor:pointer;color:red;" title="' +'Eliminar'+ '" 
+					onclick="confirmar=confirm(''¿Esta seguro que quiere eliminar el Informe?'');
+					if (confirmar){almacenarSeleccion(''CLAVE_DELETE'','''+CONVERT(VARCHAR,D.ID_PROYECTO_DOCUM)+ ''');goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');}"/>' + '&nbsp;' +
+					CASE WHEN ISNULL(D.ID_ADJUNTO,'') <> '' THEN
+						'<i class="fas fa-file-word" style="cursor:pointer;" title="Ver Informe" '+ CASE WHEN ISNULL(D.ID_ADJUNTO,'') <> '' THEN
+															'onclick="OpenAttach('''+ISNULL(P.PKEY,'')+''','''+ISNULL(P.FILE_NAME,'')+''');return false;"' ELSE '' END +'></i>'
+						ELSE '' END
+			FROM	LK_PROYECTO_DOCUM D
+					LEFT JOIN PHYSICAL_ATTACHED_DOCUMENT P ON P.PKEY = D.ID_ADJUNTO
+			WHERE	D.ID_PROYECTO = @VID_PROYECTO
+			AND		D.ID_TIPO_SERVICIO = @VTIPO_SERV_SELEC
+			AND		D.PROYECTO_SERV_ID = @VID_SERVICIO
+			AND		D.TIPO = 'IA'
+ 
+ 
+		OPEN Informes  
+		FETCH NEXT FROM Informes INTO @VFECHA_PLAN, @VNOMBRE, @VOBSERV_PLAN,@VACCION
+ 
+		WHILE @@FETCH_STATUS = 0  
+		BEGIN  
+			
+			SET @VCANT_IA = @VCANT_IA + 1
+ 
+			SET @VTABLA_DET =  isnull(@VTABLA_DET,'') + 
+				'<tr>' +
+				  '<td><div class="w3-center w3-muhle-text-11">'+@VFECHA_PLAN+'</div></td>'+
+				  '<td><div class="w3-left w3-muhle-text-11">'+@VNOMBRE+'</div></td>'+
+				  '<td><div class="w3-left w3-muhle-text-11">'+@VOBSERV_PLAN+'</div></td>'+
+				  '<td><div class="w3-center w3-muhle-text-12">'+@VACCION+'</div></td>'+
+				'</tr>'
+ 
+			FETCH NEXT FROM Informes INTO @VFECHA_PLAN, @VNOMBRE, @VOBSERV_PLAN,@VACCION
+		END 
+ 
+		CLOSE Informes  
+		DEALLOCATE Informes
+ 
+		SET @VTABLA_DET = @VTABLA_DET + '</table>'
+	END
+ 
+	IF (@VTAB_SERV = '7')	BEGIN
+		
+		IF (@VCLAVE_DELETE <> '') BEGIN
+			
+			DELETE FROM LK_PROYECTO_DOCUM WHERE ID_PROYECTO_DOCUM = @VCLAVE_DELETE
+ 
+		END
+ 
+		SET @VCANT_IC = 0
+ 
+		SET @VTABLA_DET = '
+		<table class="w3-table-all w3-muhle-text-11">
+				<tr style="background-color:gray;">
+					<th><div class="w3-center w3-muhle-text-11" style="color:white;">Fecha</div></th>
+					<th><div class="w3-left w3-muhle-text-11" style="color:white;">Nombre</div></th>
+					<th><div class="w3-left w3-muhle-text-11" style="color:white;">Observacion</div></th>
+					<th><div class="w3-center w3-muhle-text-11" style="color:white;">[+]</div></th>
+				</tr>'
+ 
+		DECLARE Informes CURSOR FOR 
+			SELECT	ISNULL(CONVERT(VARCHAR,FECHA_DOCUM, 103),''),
+					NRO_DOCUM_INTERNO,
+					OBSERVACIONES,
+					'<i class="fas fa-edit" style="cursor:pointer;color:#002364;" title="Modificar"
+					 onclick="almacenarSeleccion(''ID_MINUTA'','''+CONVERT(VARCHAR,D.ID_PROYECTO_DOCUM)+''');
+					 goto('''+@FORM_ID+''',''931875EA-23ED-4EEA-BF4F-8A53C7B1FB90'');"></i>' + '&nbsp;' + 
+					'<i class="fas fa-trash-alt" style="cursor:pointer;color:red;" title="' +'Eliminar'+ '" 
+					onclick="confirmar=confirm(''¿Esta seguro que quiere eliminar el Informe?'');
+					if (confirmar){almacenarSeleccion(''CLAVE_DELETE'','''+CONVERT(VARCHAR,D.ID_PROYECTO_DOCUM)+ ''');goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');}"/>' + '&nbsp;' +
+					CASE WHEN ISNULL(D.ID_ADJUNTO,'') <> '' THEN
+						'<i class="fas fa-file-word" style="cursor:pointer;" title="Ver Informe" '+ CASE WHEN ISNULL(D.ID_ADJUNTO,'') <> '' THEN
+															'onclick="OpenAttach('''+ISNULL(P.PKEY,'')+''','''+ISNULL(P.FILE_NAME,'')+''');return false;"' ELSE '' END +'></i>'
+						ELSE '' END
+			FROM	LK_PROYECTO_DOCUM D
+					LEFT JOIN PHYSICAL_ATTACHED_DOCUMENT P ON P.PKEY = D.ID_ADJUNTO
+			WHERE	D.ID_PROYECTO = @VID_PROYECTO
+			AND		D.ID_TIPO_SERVICIO = @VTIPO_SERV_SELEC
+			AND		D.PROYECTO_SERV_ID = @VID_SERVICIO
+			AND		D.TIPO = 'IC'
+ 
+ 
+		OPEN Informes  
+		FETCH NEXT FROM Informes INTO @VFECHA_PLAN, @VNOMBRE, @VOBSERV_PLAN,@VACCION
+ 
+		WHILE @@FETCH_STATUS = 0  
+		BEGIN  
+			
+			SET @VCANT_IC = @VCANT_IC + 1
+ 
+			SET @VTABLA_DET =  isnull(@VTABLA_DET,'') + 
+				'<tr>' +
+				  '<td><div class="w3-center w3-muhle-text-11">'+@VFECHA_PLAN+'</div></td>'+
+				  '<td><div class="w3-left w3-muhle-text-11">'+@VNOMBRE+'</div></td>'+
+				  '<td><div class="w3-left w3-muhle-text-11">'+@VOBSERV_PLAN+'</div></td>'+
+				  '<td><div class="w3-center w3-muhle-text-12">'+@VACCION+'</div></td>'+
+				'</tr>'
+ 
+			FETCH NEXT FROM Informes INTO @VFECHA_PLAN, @VNOMBRE, @VOBSERV_PLAN,@VACCION
+		END 
+ 
+		CLOSE Informes  
+		DEALLOCATE Informes
+ 
+		SET @VTABLA_DET = @VTABLA_DET + '</table>'
+	END
+ 
+	IF (@VTOTAL_PAGINA <> 0) BEGIN
+		SET @VACTUAL = 1
+		SET @VIZQUIERDA = '<a '+CASE WHEN @PageNumber = 0 THEN 'style="visibility: hidden;"' ELSE '' END+' href="javascript:almacenarSeleccion(''NRO_PAGINA'',''' + CONVERT(VARCHAR,(@PageNumber - 1)) + ''');goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');">&laquo;</a>'
+		SET @VDERECHA = '<a '+CASE WHEN ((@PageNumber + 1) = @VTOTAL_PAGINA) THEN 'style="visibility: hidden;"' ELSE '' END+' href="javascript:almacenarSeleccion(''NRO_PAGINA'',''' + CONVERT(VARCHAR,(@PageNumber + 1)) + ''');goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');">&raquo;</a>'
+ 
+		WHILE @VACTUAL <= @VTOTAL_PAGINA BEGIN
+			
+			SET @VPAGINAS = ISNULL(@VPAGINAS,'') +
+					'<a '+CASE WHEN (@PageNumber+1 = @VACTUAL) THEN 'class="active"' ELSE '' END 
+						+CASE WHEN (@PageNumber+1 = @VACTUAL) THEN '' ELSE ' href="javascript:almacenarSeleccion(''NRO_PAGINA'',''' + CONVERT(VARCHAR,(@VACTUAL - 1)) + ''');goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');' END + '"> ' +
+						CONVERT(VARCHAR,@VACTUAL)+'</a>'
+ 
+			SET @VACTUAL = @VACTUAL + 1
+		END
+		
+		SET @VPAGINADO = '<div class="pagination w3-center w3-muhle-text-12">' + ISNULL(@VIZQUIERDA,'') + isnull(@VPAGINAS,'') + ISNULL(@VDERECHA,'') + '</div>'
+	END
+ 
+ 
+ 
+	SET @ODETALLE = 
+			'<div class="w3-row w3-back w3-light-grey">
+				<div class="w3-col w3-padding">
+					<div class="w3-card-4 w3-round w3-padding">
+					'
+	
+	--SOLO PARA PROYECTOS--
+	--SET @ODETALLE = @ODETALLE + 		 
+	--	'<div class="w3-bar w3-round w3-muhle-text-14">
+	--		<button class="w3-bar-item w3-round '+CASE WHEN @VTAB_SERV = '8' THEN 'w3-muhle-vocaturo' ELSE 'w3-muhle-color' END+' w3-button w3-text-white" onclick="almacenarSeleccion(''TAB_SERV'','''');almacenarSeleccion(''TAB_AGENDA'','''');goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');return false;"><i class="fas fa-info-circle w3-margin-right"></i>General</button>
+	--		<button class="w3-bar-item w3-round '+CASE WHEN @VTAB_SERV = '8' THEN 'w3-muhle-color' ELSE 'w3-muhle-vocaturo' END+' w3-button w3-text-white" '+CASE WHEN ISNULL(@VID_PROYECTO,'') = '' THEN 'disabled' ELSE '' END+' onclick="almacenarSeleccion(''TAB_SERV'',''8'');almacenarSeleccion(''TAB_AGENDA'','''');goto('''+@FORM_ID+''',''380EF2BE-409D-4D09-8446-1605A4823D81'');return false;"><i class="fas fa-book w3-margin-right"></i>Minuta de Gestion</button>
+	--	</div>'
+ 
+	IF (ISNULL(@VID_AGENDA_SELEC,'') = '') BEGIN
+ 
+		--RECUPERO EL ID DE DOCUMENTACION DE LA MINUTA DE GESTION--
+		SELECT	@VID_DOCUM = ID_PROYECTO_DOCUM,
+				@VMINUTA_DESC = LTRIM(RTRIM(SUBSTRING(NRO_DOCUM_INTERNO,1,CHARINDEX('-',NRO_DOCUM_INTERNO,0)-1)))
+		FROM	LK_PROYECTO_DOCUM
+		WHERE	ID_PROYECTO = @VID_PROYECTO
+		AND		TIPO = 'MG'
+		
+		DECLARE @VTITULO NVARCHAR(max),
+				@FILENAME NVARCHAR (MAX)
+ 
+		--SET @VTITULO = '
+		--<tr style="background-color:white;color:black;">
+		--  <td colspan="2">
+		--	<div style="display: flex; justify-content: space-between; align-items: center;">
+		--	  <!-- Logo izquierdo (si lo querés eliminar, dejá vacío o quitá la etiqueta) -->
+		--	  <!--<img class="w3-muhle-logo" src="../img/logo.jpg">-->
+      
+		--	  <!-- Título centrado -->
+		--	  <span class="w3-muhle-text-20" style="flex-grow: 1; text-align: center; padding: 15px 0;">
+		--		'+ISNULL('HLVS','')+'
+		--	  </span>
+ 
+		--	  <!-- Logo derecho -->
+		--	  <img class="w3-muhle-logo" src="../img/logo.jpg">
+		--	</div>
+		--  </td>
+		--</tr>
+ 
+		--<!-- Fila Cliente -->
+		--<tr style="background-color:white;color:black;">
+		--  <td colspan="2" style="padding: 5px 0; font-weight: bold;">
+		--	Cliente:
+		--  </td>
+		--</tr>
+ 
+		--<!-- Fila Proyecto -->
+		--<tr style="background-color:white;color:black;">
+		--  <td colspan="2" style="padding: 5px 0; font-weight: bold;">
+		--	Proyecto:
+		--  </td>
+		--</tr>'
+ 
+		SET @VTITULO = @VMINUTA_DESC
+ 
+		SET @FILENAME = @VMINUTA_DESC
+		
+ 
+		SET @ODETALLE = @ODETALLE +
+				
+		'<div class="w3-bar w3-round w3-muhle-text-14">'+
+			CASE WHEN ISNULL(@VID_PROYECTO,'') = '' THEN
+				'<button class="w3-bar-item w3-round '+CASE WHEN @VTAB_SERV = '8' THEN 'w3-muhle-vocaturo' ELSE 'w3-muhle-color' END+' w3-button w3-text-white" onclick="almacenarSeleccion(''TAB_SERV'','''');almacenarSeleccion(''TAB_AGENDA'','''');goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');return false;"><i class="fas fa-info-circle w3-margin-right"></i>General</button>
+				<button class="w3-bar-item w3-round '+CASE WHEN @VTAB_SERV = '8' THEN 'w3-muhle-color' ELSE 'w3-muhle-vocaturo' END+' w3-button w3-text-white" '+CASE WHEN ISNULL(@VID_PROYECTO,'') = '' THEN 'disabled' ELSE '' END+' onclick="almacenarSeleccion(''TAB_SERV'',''8'');almacenarSeleccion(''TAB_AGENDA'','''');goto('''+@FORM_ID+''',''D2E01C1F-FB41-42EC-8ED8-88D38E9D9CA5'');return false;"><i class="fas fa-book w3-margin-right"></i>Minuta de Gestion</button>'+
+				CASE WHEN @VTAB_SERV = '8' THEN
+					-- boton pdf
+					'<button class="w3-bar-item w3-round w3-button w3-border w3-muhle-color w3-text-white w3-right" ' +
+					'onclick="exportarAPDF(''table_SP_HOME_GRD_DET_AGENDA_40'',''' + ISNULL(@FILENAME,'') + '.pdf'',''' + ISNULL(@VTITULO,'') + ''');return false;">' +
+					'<i class="fas fa-file-pdf"></i></button>
+					<div class="w3-bar-item w3-round w3-padding-small w3-right">
+						<select class="w3-input w3-round w3-border w3-muhle-text-11 w3-right" name="SP.EXPORTA_MG">
+							<option value="0" '+CASE WHEN isnull(@VEXPORTA_DET,'') = '0' THEN 'selected="selected"' ELSE '' END+'>Consultor</option>
+							<option value="0|1" '+CASE WHEN isnull(@VEXPORTA_DET,'') = '0|1' THEN 'selected="selected"' ELSE '' END+'>Interno</option>
+						</select>
+					</div>'
+				ELSE '' END
+			ELSE
+				CASE WHEN ISNULL(@VID_SERVICIO,'') = '' THEN
+					'<button class="w3-bar-item w3-round '+CASE WHEN @VTAB_SERV = '8' THEN 'w3-muhle-vocaturo' ELSE 'w3-muhle-color' END+' w3-button w3-text-white" onclick="almacenarSeleccion(''TAB_SERV'','''');almacenarSeleccion(''TAB_AGENDA'','''');goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');return false;"><i class="fas fa-info-circle w3-margin-right"></i>General</button>
+					 <button class="w3-bar-item w3-round '+CASE WHEN @VTAB_SERV = '8' THEN 'w3-muhle-color' ELSE 'w3-muhle-vocaturo' END+' w3-button w3-text-white" '+CASE WHEN ISNULL(@VID_PROYECTO,'') = '' THEN 'disabled' ELSE '' END+' onclick="almacenarSeleccion(''TAB_SERV'',''8'');almacenarSeleccion(''TAB_AGENDA'','''');goto('''+@FORM_ID+''',''380EF2BE-409D-4D09-8446-1605A4823D81'');return false;"><i class="fas fa-book w3-margin-right"></i>Minuta de Gestion</button>'+
+					CASE WHEN @VTAB_SERV = '8' THEN
+						-- boton pdf
+						'<button class="w3-bar-item w3-round w3-button w3-border w3-muhle-color w3-text-white w3-right" ' +
+					'onclick="exportarAPDF(''table_SP_HOME_GRD_DET_AGENDA_40'',''' + ISNULL(@FILENAME,'') + '.pdf'',''' + ISNULL(@VTITULO,'') + ''');return false;">' +
+					'<i class="fas fa-file-pdf"></i></button>
+						<div class="w3-bar-item w3-round w3-padding-small w3-right">
+							<select class="w3-input w3-round w3-border w3-muhle-text-11 w3-right" name="SP.EXPORTA_MG">
+								<option value="0" '+CASE WHEN isnull(@VEXPORTA_DET,'') = '0' THEN 'selected="selected"' ELSE '' END+'>Consultor</option>
+								<option value="0|1" '+CASE WHEN isnull(@VEXPORTA_DET,'') = '0|1' THEN 'selected="selected"' ELSE '' END+'>Interno</option>
+							</select>
+						</div>'
+					ELSE '' END
+				ELSE
+					'<button class="w3-bar-item w3-round '+CASE WHEN @VTAB_SERV = '0' THEN 'w3-muhle-color' ELSE 'w3-muhle-vocaturo' END+' w3-button w3-text-white" '+CASE WHEN ISNULL(@VID_SERVICIO,'') = '' THEN 'disabled' ELSE '' END+' onclick="almacenarSeleccion(''TAB_SERV'',''0'');almacenarSeleccion(''TAB_AGENDA'','''');goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');return false;"><i class="fas fa-info-circle w3-margin-right"></i>General</button>
+					<button class="w3-bar-item w3-round '+CASE WHEN @VTAB_SERV = '1' THEN 'w3-muhle-color' ELSE 'w3-muhle-vocaturo' END+' w3-button w3-text-white" '+CASE WHEN ISNULL(@VID_SERVICIO,'') = '' THEN 'disabled' ELSE '' END+' onclick="almacenarSeleccion(''TAB_SERV'',''1'');almacenarSeleccion(''TAB_AGENDA'','''');goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');return false;"><i class="fas fa-calendar-alt w3-margin-right"></i>Visitas</button>
+					<button class="w3-bar-item w3-round '+CASE WHEN @VTAB_SERV = '2' THEN 'w3-muhle-color' ELSE 'w3-muhle-vocaturo' END+' w3-button w3-text-white" '+CASE WHEN ISNULL(@VID_SERVICIO,'') = '' THEN 'disabled' ELSE '' END+' onclick="almacenarSeleccion(''TAB_SERV'',''2'');almacenarSeleccion(''TAB_AGENDA'','''');goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');return false;"><i class="fas fa-shoe-prints w3-margin-right"></i>Datos Seguimiento</button>'+
+					CASE WHEN ISNULL(@VTIPO_SERV_SELEC,'') = '1' THEN
+							'<button class="w3-bar-item w3-round '+CASE WHEN @VTAB_SERV = '3' THEN 'w3-muhle-color' ELSE 'w3-muhle-vocaturo' END+' w3-button w3-text-white" '+CASE WHEN ISNULL(@VID_SERVICIO,'') = '' THEN 'disabled' ELSE '' END+' onclick="almacenarSeleccion(''TAB_SERV'',''3'');almacenarSeleccion(''TAB_AGENDA'','''');goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');return false;"><i class="fas fa-archive w3-margin-right"></i>Minuta de Cierre</button>
+							<button class="w3-bar-item w3-round '+CASE WHEN @VTAB_SERV = '4' THEN 'w3-muhle-color' ELSE 'w3-muhle-vocaturo' END+' w3-button w3-text-white" '+CASE WHEN ISNULL(@VID_SERVICIO,'') = '' THEN 'disabled' ELSE '' END+' onclick="almacenarSeleccion(''TAB_SERV'',''4'');almacenarSeleccion(''TAB_AGENDA'','''');goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');return false;"><i class="fas fa-list-alt w3-margin-right"></i>Plan Estrategico</button>'
+							WHEN ISNULL(@VTIPO_SERV_SELEC,'') = '2' THEN
+							'<button class="w3-bar-item w3-round '+CASE WHEN @VTAB_SERV = '5' THEN 'w3-muhle-color' ELSE 'w3-muhle-vocaturo' END+' w3-button w3-text-white" '+CASE WHEN ISNULL(@VID_SERVICIO,'') = '' THEN 'disabled' ELSE '' END+' onclick="almacenarSeleccion(''TAB_SERV'',''5'');almacenarSeleccion(''TAB_AGENDA'','''');goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');return false;"><i class="fas fa-clipboard w3-margin-right"></i>Plan Auditoría</button>
+							<button class="w3-bar-item w3-round '+CASE WHEN @VTAB_SERV = '6' THEN 'w3-muhle-color' ELSE 'w3-muhle-vocaturo' END+' w3-button w3-text-white" '+CASE WHEN ISNULL(@VID_SERVICIO,'') = '' THEN 'disabled' ELSE '' END+' onclick="almacenarSeleccion(''TAB_SERV'',''6'');almacenarSeleccion(''TAB_AGENDA'','''');goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');return false;"><i class="fas fa-clipboard-list w3-margin-right"></i>Informe Auditoría</button>'
+							WHEN ISNULL(@VTIPO_SERV_SELEC,'') = '3' THEN
+							'<button class="w3-bar-item w3-round '+CASE WHEN @VTAB_SERV = '7' THEN 'w3-muhle-color' ELSE 'w3-muhle-vocaturo' END+' w3-button w3-text-white" '+CASE WHEN ISNULL(@VID_SERVICIO,'') = '' THEN 'disabled' ELSE '' END+' onclick="almacenarSeleccion(''TAB_SERV'',''7'');almacenarSeleccion(''TAB_AGENDA'','''');goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');return false;"><i class="fas fa-clipboard-list w3-margin-right"></i>Informe Capacitación</button>'
+					ELSE '' END +
+					CASE WHEN @VTAB_SERV = '1' THEN
+							'<button class="w3-bar-item w3-round w3-button w3-muhle-color w3-text-white w3-right" onclick="myFunction();return false;"><i class="fas fa-calendar-plus"></i>&nbsp;&nbsp;Agregar Visita</button>'
+							WHEN @VTAB_SERV = '2' THEN
+							'<button class="w3-bar-item w3-round w3-button w3-muhle-color w3-text-white w3-right" onclick="goto('''+@FORM_ID+''',''6DDF0683-6FD9-4D57-8FF0-C2FA07AE1397'');return false;"><i class="fas fa-edit"></i>&nbsp;&nbsp;Editar Datos</button>'
+							WHEN @VTAB_SERV = '3' THEN
+							'<button class="w3-bar-item w3-round w3-button w3-muhle-color w3-text-white w3-right" onclick="goto('''+@FORM_ID+''',''0403354A-FDBD-4443-BF8D-ABE9C10AB373'');return false;"><i class="fas fa-archive"></i>&nbsp;&nbsp;Agregar Minuta</button>'
+							WHEN @VTAB_SERV = '4' THEN
+							'<button class="w3-bar-item w3-round w3-button w3-muhle-color w3-text-white w3-right" onclick="goto('''+@FORM_ID+''',''B0569958-40AB-49AD-8036-555088709D77'');return false;"><i class="fas fa-list-alt"></i>&nbsp;&nbsp;Agregar Plan</button>'
+							WHEN @VTAB_SERV = '5' THEN
+							'<button class="w3-bar-item w3-round w3-button w3-muhle-color w3-text-white w3-right" onclick="goto('''+@FORM_ID+''',''DFE8677A-7CCF-4D8E-A91D-4EB3F526393C'');return false;"><i class="fas fa-clipboard"></i>&nbsp;&nbsp;Agregar Plan</button>'
+							WHEN @VTAB_SERV = '6' THEN
+							'<button class="w3-bar-item w3-round w3-button w3-muhle-color w3-text-white w3-right" onclick="goto('''+@FORM_ID+''',''3F6EFE7E-110B-4A5E-953B-B0E5D49C0F16'');return false;"><i class="fas fa-clipboard-list"></i>&nbsp;&nbsp;Agregar Informe</button>' 
+							WHEN @VTAB_SERV = '7' THEN
+							'<button class="w3-bar-item w3-round w3-button w3-muhle-color w3-text-white w3-right" onclick="goto('''+@FORM_ID+''',''931875EA-23ED-4EEA-BF4F-8A53C7B1FB90'');return false;"><i class="fas fa-clipboard-list"></i>&nbsp;&nbsp;Agregar Informe</button>'
+					ELSE ''	END +
+					CASE WHEN ISNULL(@VID_SERVICIO,'') = '' THEN '' ELSE
+						'<span class="w3-bar-item w3-muhle-text-12 w3-round w3-right">'+CASE WHEN ISNULL(@VID_SERVICIO,'') = '' THEN '' ELSE 
+						'<i class="'+ CASE WHEN ISNULL(@VTIPO_SERV_SELEC,'') = '1' THEN
+												'fas fa-user-tie"'
+											WHEN ISNULL(@VTIPO_SERV_SELEC,'') = '2' THEN
+												'fas fa-chalkboard-teacher"'
+											WHEN ISNULL(@VTIPO_SERV_SELEC,'') = '3' THEN
+												'fas fa-user-graduate"'
+										ELSE '' END +' style="color:black;"></i>&nbsp;&nbsp;<b>' END+SUBSTRING(ISNULL(@VNOMBRE_SERV_SELEC,'')+' - '+ISNULL(@VLUGAR_SERV_SELEC,''),1,80)+'</b></span>'
+					END 
+				END
+			END + '
+		</div>'
+ 
+		SET @ODETALLE = @ODETALLE +
+		'<div class="w3-container" style="padding:1px;"></div>'+
+		CASE WHEN ISNULL(@VID_PROYECTO,'') = '' THEN
+			'<table id="TableDet" class="w3-table-all">
+			<tr style="height:470px;">
+				<td class="w3-muhle-text-12" style="text-align:center;vertical-align:middle;"><b>Debe Seleccionar un Proyecto</b></td>
+			</tr>
+			</table>'
+		ELSE 
+			CASE WHEN ISNULL(@VTAB_SERV,'') = '' THEN
+				'<table id="TableDet" class="w3-table-all">
+				<tr style="height:470px;">
+					<td class="w3-muhle-text-12" style="text-align:center;vertical-align:middle;"><b>Debe Seleccionar un Servicio</b></td>
+				</tr>
+				</table>'
+			--<form class="w3-container" style="background-color:light-gray;border-style: solid 1px;border-color:gray;">
+				WHEN ISNULL(@VTAB_SERV,'') = '0' THEN 
+					'<div class="w3-container" style="border: 2px solid gray;">
+							<div class="w3-row">
+								<div class="w3-half w3-padding">
+									<label class="w3-muhle-text-14">&nbsp;<i class="fas fa-font"></i>&nbsp;&nbsp;Nombre&nbsp;&nbsp;<i class="fas fa-exclamation-circle w3-text-red"></i></label>
+									<input class="w3-input w3-border w3-padding-large w3-round w3-muhle-text-14" type="text" name="SP.NOMBRE_SERV" value="' + ISNULL(@VNOMBRE_SERV_TMT,'') + '">
+								</div>
+								<div class="w3-half w3-padding">
+									<label class="w3-muhle-text-14">&nbsp;<i class="fas fa-map-marker-alt"></i>&nbsp;&nbsp;Lugar&nbsp;&nbsp;<i class="fas fa-exclamation-circle w3-text-red"></i></label>
+									<input class="w3-input w3-border w3-padding-large w3-round w3-muhle-text-14" type="text" name="SP.LUGAR_SERV" value="' + ISNULL(@VLUGAR_SERV_TMT,'') + '">
+								</div>
+							</div>
+							<div class="w3-row">
+								<div class="w3-half w3-padding">
+									<label class="w3-muhle-text-14">&nbsp;<i class="fas fa-calendar"></i>&nbsp;&nbsp;Fecha Inicio&nbsp;&nbsp;<i class="fas fa-exclamation-circle w3-text-red"></i></label>
+									<input class="w3-input w3-border w3-padding-large w3-round w3-muhle-text-14" type="date" name="SP.FECHA_INICIO_SERV" value="'+ISNULL(CONVERT(VARCHAR,@VFECHA_INI_TMT,23),'') +'">
+								</div>
+								<div class="w3-half w3-padding">
+									<label class="w3-muhle-text-14">&nbsp;<i class="fas fa-calendar"></i>&nbsp;&nbsp;Fecha Fin&nbsp;&nbsp;<i class="fas fa-exclamation-circle w3-text-red"></i></label>
+									<input class="w3-input w3-border w3-padding-large w3-round w3-muhle-text-14" type="date" name="SP.FECHA_FIN_SERV" value="'+ISNULL(CONVERT(VARCHAR,@VFECHA_FIN_TMT,23),'') +'">
+								</div>
+							</div>
+							<div class="w3-row">
+								<div class="w3-third w3-padding">
+									<label class="w3-muhle-text-14">&nbsp;<i class="fas fa-clock"></i>&nbsp;&nbsp;Horas Proyectadas&nbsp;&nbsp;<i class="fas fa-exclamation-circle w3-text-red"></i></label>
+									<input class="w3-input w3-border w3-padding-large w3-round w3-muhle-text-14" type="text" name="SP.HORAS_SERV" value="' + ISNULL(@VHORAS_TMT,'') + '">
+								</div>
+								<div class="w3-third w3-padding">
+									<label class="w3-muhle-text-14">&nbsp;<i class="fas fa-dollar-sign"></i>&nbsp;&nbsp;Monto</label>
+									<input class="w3-input w3-border w3-padding-large w3-round w3-muhle-text-14" type="text" name="SP.MONTO_SERV" value="' + ISNULL(@VMONTO_TMT,'') + '">
+								</div>
+								<div class="w3-third w3-padding">
+									<label class="w3-muhle-text-14">&nbsp;<i class="fas fa-window-close"></i>&nbsp;&nbsp;Cierre</label>
+									<select class="w3-input w3-border w3-padding-large w3-round w3-muhle-text-14" name="SP.CIERRE_SERVICIO">
+										<option value="SI" '+CASE WHEN isnull(@VCIERRE_TMT,'') = 'SI' THEN 'selected="selected"' ELSE '' END+'>Si</option>
+										<option value="NO" '+CASE WHEN isnull(@VCIERRE_TMT,'') = 'NO' THEN 'selected="selected"' ELSE '' END+'>No</option>
+									</select>									
+								</div>
+							</div>
+							<div class="w3-container w3-padding">
+								<btn type="btn" class="w3-right w3-button w3-muhle-color w3-medium w3-round" onclick="goto('''+@FORM_ID+''',''A77CE927-9D2D-4C15-91CE-34388075B9F7'');return false;">Guardar</btn>
+							</div>
+					</div>'+
+					CASE WHEN  ISNULL(@VDESC_ERROR,'') = '' THEN
+						''
+					ELSE
+						'<script>alert("'+isnull(@VDESC_ERROR,'')+'");</script>'
+					END
+ 
+				WHEN ISNULL(@VTAB_SERV,'') = '1' THEN 
+					CASE WHEN (@VCANT_AGENDA > 0) THEN ISNULL(@VTABLA_DET,'') ELSE 
+						'<table id="TableDet" class="w3-table-all">
+							<tr style="height:470px;">
+								<td class="w3-muhle-text-12" style="text-align:center;vertical-align:middle;"><b>No Existen Agendas Cargadas</b></td>
+							</tr>
+						</table>' END
+				WHEN ISNULL(@VTAB_SERV,'') = '2' THEN 
+					ISNULL(@VTABLA_DET,'')
+				WHEN ISNULL(@VTAB_SERV,'') = '3' THEN 
+					CASE WHEN (@VCANT_MC > 0) THEN ISNULL(@VTABLA_DET,'') ELSE 
+						'<table id="TableDet" class="w3-table-all">
+							<tr style="height:470px;">
+								<td class="w3-muhle-text-12" style="text-align:center;vertical-align:middle;"><b>No Existen Minutas de Cierre Cargadas</b></td>
+							</tr>
+						</table>' END
+				WHEN ISNULL(@VTAB_SERV,'') = '4' THEN 
+					CASE WHEN (@VCANT_PE > 0) THEN ISNULL(@VTABLA_DET,'') ELSE 
+						'<table id="TableDet" class="w3-table-all">
+							<tr style="height:470px;">
+								<td class="w3-muhle-text-12" style="text-align:center;vertical-align:middle;"><b>No Existen Plan Estrategico Cargados</b></td>
+							</tr>
+						</table>' END
+				WHEN ISNULL(@VTAB_SERV,'') = '5' THEN 
+					CASE WHEN (@VCANT_PA > 0) THEN ISNULL(@VTABLA_DET,'') ELSE 
+						'<table id="TableDet" class="w3-table-all">
+							<tr style="height:470px;">
+								<td class="w3-muhle-text-12" style="text-align:center;vertical-align:middle;"><b>No Existen Plan Auditoria Cargados</b></td>
+							</tr>
+						</table>' END
+				WHEN ISNULL(@VTAB_SERV,'') = '6' THEN 
+					CASE WHEN (@VCANT_IA > 0) THEN ISNULL(@VTABLA_DET,'') ELSE 
+						'<table id="TableDet" class="w3-table-all">
+							<tr style="height:470px;">
+								<td class="w3-muhle-text-12" style="text-align:center;vertical-align:middle;"><b>No Existen Informe Auditoria Cargados</b></td>
+							</tr>
+						</table>' END
+				WHEN ISNULL(@VTAB_SERV,'') = '7' THEN 
+					CASE WHEN (@VCANT_IC > 0) THEN ISNULL(@VTABLA_DET,'') ELSE 
+						'<table id="TableDet" class="w3-table-all">
+							<tr style="height:470px;">
+								<td class="w3-muhle-text-12" style="text-align:center;vertical-align:middle;"><b>No Existen Informe Capacitacion Cargados</b></td>
+							</tr>
+						</table>' END
+				WHEN ISNULL(@VTAB_SERV,'') = '8' THEN
+					'<div class="w3-container" style="padding:1px;border-top:1px solid;border-color:gray;"></div>'
+			ELSE '' END
+		END
+	END
+ 
+	--cierre container @PS_TITULO--
+	--IF (@VTAB_SERV <> '8') BEGIN
+	--	SET @ODETALLE = @ODETALLE +
+	--						'</div>
+	--					</div>
+	--				</div>'
+	--END
+ 
+	--logica para armar parte inferior en variable @detalle
+	IF (@VID_AGENDA_SELEC <> '') BEGIN 
+		
+		SELECT	@VDIAS_AGENDA = DIAS,
+				@VHORAS_AGENDA = DBO.[FN_GET_AGENDA_HORAS] (A.ID_AGENDA),
+				@VFECHAD_AGENDA = CONVERT(VARCHAR,A.FECHA,103),
+				@VFECHAH_AGENDA = CONVERT(VARCHAR,A.FECHA_HASTA,103),
+				@VESTADO_AGENDA = CASE WHEN A.ESTADO = 'C' THEN 'Confirmado' WHEN A.ESTADO = 'P' THEN 'Pendiente' ELSE 'Sin Estado' END,
+				@VESTADO_AGENDA_CODE = A.ESTADO,
+				@VNORMA_AGENDA = ISNULL(A.NORMA,''),
+				@VCONSULTORES_AGENDA = CASE WHEN ISNULL(A.ID_CONSULTOR,'') = '' THEN 'Sin Consultor'  ELSE dbo.FN_GET_AGENDA_CONSULTOR(A.ID_AGENDA,'M') END,
+				@VCONSULTORES_AGENDA_DESC = CASE WHEN ISNULL(A.ID_CONSULTOR,'') = '' THEN 'Sin Consultor'  ELSE dbo.FN_GET_AGENDA_CONSULTOR(A.ID_AGENDA,'A') END,
+				--@VOBSERV_LOGIS_AGENDA = ISNULL(A.OBSERV_LOGISTICA,''),
+				@VOBSERV_CALIF_AGENDA = ISNULL(A.OBSERV_CALIF,''),
+				@VOBSERV_AGENDA = ISNULL(A.OBSERVADOR,'')
+		FROM	LK_AGENDA A
+				INNER JOIN LK_PROYECTO P ON P.ID_PROYECTO = A.ID_PROYECTO
+				INNER JOIN LK_CLIENTES C ON C.ID_CLIENTE = A.ID_CLIENTE
+		WHERE	ID_AGENDA = @VID_AGENDA_SELEC
+ 
+		WHILE LEN(@VNORMA_AGENDA) > 0
+			BEGIN 
+				SET @lnuPosComa = CHARINDEX('|', @VNORMA_AGENDA) -- Busca el caracter a separador
+				IF (@lnuPosComa = 0) BEGIN 
+					SET @lstDato = @VARNORMA
+					SET @VARNORMA = '' 
+				END ELSE BEGIN
+					SET @lstDato = SUBSTRING(@VNORMA_AGENDA, 1, @lnuPosComa - 1)
+ 
+					SELECT	@VALOR = '<font style="font-size:11px;color:black;text-align:left">'+DESC_APTITUD+'</font>'
+					FROM	LK_APTITUDES
+					WHERE	ID_APTITUD = @lstDato
+ 
+					SET @VDESCNORMAS = ISNULL(@VDESCNORMAS,'') + @VALOR + '</br>'
+ 
+					SET @VNORMA_AGENDA = SUBSTRING(@VARNORMA, @lnuPosComa + 1, LEN(@VNORMA_AGENDA))
+				END
+			END
+ 
+		SET @ODETALLE = @ODETALLE + 
+			
+			'<div class="w3-bar w3-round w3-muhle-text-14">
+				<span class="w3-bar-item w3-round w3-muhle-color w3-text-white w3-left"><i class="fas fa-calendar-alt w3-margin-right"></i>Detalle Visita</span>'+
+				CASE WHEN ISNULL(@VTAB_AGENDA,'') <> '0' THEN
+				'<span class="w3-bar-item w3-muhle-text-12 w3-left">
+					<i class="fas fa-calendar" style="color:black;"></i>&nbsp;&nbsp;<b>' +ISNULL(@VFECHAD_AGENDA,'')+' - '+ISNULL(@VFECHAH_AGENDA,'')+'</b>&nbsp;&nbsp;
+					<i class="fas fa-clock" style="color:black;"></i>&nbsp;&nbsp;<b>' +ISNULL(@VDIAS_AGENDA,'') + ' / ' + ISNULL(@VHORAS_AGENDA,'')+'</b>&nbsp;&nbsp;
+					<i class="fas fa-users" style="color:black;"></i>&nbsp;&nbsp;<b>' +ISNULL(@VCONSULTORES_AGENDA_DESC,'') + '</b></span>'
+				ELSE '' END +
+				CASE WHEN ISNULL(@VID_SERVICIO,'') = '' THEN '' ELSE '
+				<button class="w3-bar-item w3-round w3-muhle-color w3-button w3-text-white w3-right" onclick="almacenarSeleccion(''AGENDA_ID'','''');almacenarSeleccion(''TAB_AGENDA'','''');goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');return false;"><i class="fas fa-arrow-alt-circle-left w3-margin-center"></i>&nbsp;&nbsp;Volver</button>
+				<span class="w3-bar-item w3-muhle-text-12 w3-right">
+					<i class="'+ CASE WHEN ISNULL(@VTIPO_SERV_SELEC,'') = '1' THEN 
+										'fas fa-user-tie"'
+									WHEN ISNULL(@VTIPO_SERV_SELEC,'') = '2' THEN 
+										'fas fa-chalkboard-teacher"'
+									WHEN ISNULL(@VTIPO_SERV_SELEC,'') = '3' THEN 
+										'fas fa-user-graduate"' ELSE '' END+' style="color:black;"></i>&nbsp;&nbsp;<b>' +ISNULL(@VNOMBRE_SERV_SELEC,'')+' - '+ISNULL(@VLUGAR_SERV_SELEC,'')+'</b></span>' END + '
+			</div>
+			<div class="w3-container" style="padding:1px;"></div>
+			<div class="w3-container" style="padding:1px;border-top:1px solid;border-color:gray;"></div>
+			<div class="w3-bar w3-round w3-muhle-text-14">
+				<button class="w3-bar-item w3-round w3-button '+CASE WHEN @VTAB_AGENDA = '0' THEN 'w3-muhle-color' ELSE 'w3-muhle-vocaturo' END+' w3-text-white" onclick="almacenarSeleccion(''TAB_AGENDA'',''0'');goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');return false;"><i class="fas fa-info-circle w3-margin-right"></i>General</button>
+				<button class="w3-bar-item w3-round w3-button '+CASE WHEN @VTAB_AGENDA = '1' THEN 'w3-muhle-color' ELSE 'w3-muhle-vocaturo' END+' w3-text-white" onclick="almacenarSeleccion(''TAB_AGENDA'',''1'');goto('''+@FORM_ID+''',''380EF2BE-409D-4D09-8446-1605A4823D81'');return false;"><i class="fas fa-road w3-margin-right"></i>Hoja de Ruta</button>
+				<button class="w3-bar-item w3-round w3-button '+CASE WHEN @VTAB_AGENDA = '2' THEN 'w3-muhle-color' ELSE 'w3-muhle-vocaturo' END+' w3-text-white" onclick="almacenarSeleccion(''TAB_AGENDA'',''2'');goto('''+@FORM_ID+''',''D2E01C1F-FB41-42EC-8ED8-88D38E9D9CA5'');return false;"><i class="fas fa-money-check-alt w3-margin-right"></i>Viáticos</button>
+				<button class="w3-bar-item w3-round w3-button '+CASE WHEN @VTAB_AGENDA = '3' THEN 'w3-muhle-color' ELSE 'w3-muhle-vocaturo' END+' w3-text-white" onclick="almacenarSeleccion(''TAB_AGENDA'',''3'');goto('''+@FORM_ID+''',''D2E01C1F-FB41-42EC-8ED8-88D38E9D9CA5'');return false;"><i class="fas fa-hand-holding-usd w3-margin-right"></i>Honorarios</button>' +
+				CASE WHEN ISNULL(@VTIPO_SERV_SELEC,'') = '1' THEN 
+					'<button class="w3-bar-item w3-round w3-button '+CASE WHEN @VTAB_AGENDA = '4' THEN 'w3-muhle-color' ELSE 'w3-muhle-vocaturo' END+' w3-text-white" onclick="almacenarSeleccion(''TAB_AGENDA'',''4'');goto('''+@FORM_ID+''',''D2E01C1F-FB41-42EC-8ED8-88D38E9D9CA5'');return false;"><i class="fas fa-paperclip w3-margin-right"></i>Minuta de Visita</button>'
+					WHEN ISNULL(@VTIPO_SERV_SELEC,'') = '2' THEN
+					''
+					WHEN ISNULL(@VTIPO_SERV_SELEC,'') = '3' THEN
+					'<button class="w3-bar-item w3-round w3-button '+CASE WHEN @VTAB_AGENDA = '5' THEN 'w3-muhle-color' ELSE 'w3-muhle-vocaturo' END+' w3-text-white" onclick="almacenarSeleccion(''TAB_AGENDA'',''5'');goto('''+@FORM_ID+''',''380EF2BE-409D-4D09-8446-1605A4823D81'');return false;"><i class="fas fa-tasks w3-margin-right"></i>CheckList</button>'
+				END + 
+				CASE WHEN @VTAB_AGENDA = '0' THEN-- style="border:2px solid gray;" 
+					'<button class="w3-bar-item w3-right w3-border w3-round w3-button w3-muhle-color w3-text-white" title="Modificar" onclick="goto('''+@FORM_ID+''',''766BD3F2-F310-43E7-9CAF-15168C0E01FB'');return false;"><i class="fas fa-edit"></i></button>
+					<button class="w3-bar-item w3-right w3-border w3-round w3-button w3-muhle-color w3-text-white" title="Editar" onclick="document.getElementById(''nuevoProceso'').style.display=''block'';return false;"><i class="fas fa-pen"></i></button>'
+					 --<button class="w3-bar-item w3-right w3-button w3-text-white" style="background-color:#641E16;width:4%;border:2px solid gray;" title="Editar" onclick="document.getElementById(''nuevoProceso'').style.display=''block'';return false;"><i class="fas fa-pen"></i></button>'
+					WHEN @VTAB_AGENDA = '2' THEN
+					'<button class="w3-bar-item w3-right w3-border w3-round w3-button w3-muhle-color w3-text-white" title="Nuevo Viático" onclick="goto('''+@FORM_ID+''',''9699BAC1-EB3A-41AF-AB6C-8B97A339EFA2'');return false;"><i class="fa fa-plus"></i></button>
+					<button class="w3-bar-item w3-right w3-border w3-round w3-button w3-muhle-color w3-text-white" title="Parte Logistico" onclick="goto('''+@FORM_ID+''',''DCF9CC7E-1B8D-452E-9AB5-85B179D58A7D'');return false;"><i class="fas fa-clipboard-list"></i></button>
+					<button class="w3-bar-item w3-right w3-border w3-round w3-button w3-muhle-color w3-text-white" title="Rendicion Viaticos" onclick="goto('''+@FORM_ID+''',''816D74E9-0C1C-478A-A699-CF1903A61B23'');return false;"><i class="fas fa-file-invoice-dollar"></i></button>'
+					WHEN @VTAB_AGENDA = '3' THEN 
+					'<button class="w3-bar-item w3-right w3-round w3-button w3-muhle-color w3-text-white" title="Nuevo Honorario" onclick="goto('''+@FORM_ID+''',''0B438E7D-728C-4D27-B9C5-534984C18EF9'');return false;"><i class="fa fa-plus"></i></button>'
+					WHEN @VTAB_AGENDA = '4' THEN 
+					'<button class="w3-bar-item w3-right w3-round w3-button w3-muhle-color w3-text-white" title="Nueva Minuta" onclick="goto('''+@FORM_ID+''',''0403354A-FDBD-4443-BF8D-ABE9C10AB373'');return false;"><i class="fa fa-plus"></i></button>'
+					WHEN @VTAB_AGENDA = '5' THEN 
+					'<button class="w3-bar-item w3-right w3-round w3-button w3-muhle-color w3-text-white" title="Nuevo CheckList" onclick="goto('''+@FORM_ID+''',''3F11610E-DB37-427B-997D-1507E8982A92'');return false;"><i class="fa fa-plus"></i></button>'
+				ELSE '' END +'
+			</div>
+			<div class="w3-container" style="padding:1px;"></div>' +
+			CASE WHEN ISNULL(@VTAB_AGENDA,'') = '0' THEN
+				'<div class="w3-container w3-padding" style="border: 2px solid gray;">
+						<div class="w3-row">
+							<div class="w3-quarter w3-padding">
+								<label class="w3-muhle-text-14">&nbsp;<i class="fas fa-calendar"></i>&nbsp;&nbsp;Fecha Desde</label>
+								<input class="w3-input w3-border w3-round w3-muhle-text-14" value="' + ISNULL(@VFECHAD_AGENDA,'') + '" disabled>
+							</div>
+							<div class="w3-quarter w3-padding">
+								<label class="w3-muhle-text-14">&nbsp;<i class="fas fa-calendar"></i>&nbsp;&nbsp;Fecha Hasta</label>
+								<input class="w3-input w3-border w3-round w3-muhle-text-14" value="' + ISNULL(@VFECHAH_AGENDA,'') + '" disabled>
+							</div>
+							<div class="w3-half w3-padding">
+								<label class="w3-muhle-text-14">&nbsp;<i class="fas fa-font"></i>&nbsp;&nbsp;Observaciones</label>
+								<input class="w3-input w3-border w3-round w3-muhle-text-14" value="' + ISNULL(@VOBSERV_AGENDA,'') + '" disabled>
+							</div>
+						</div>
+						<div class="w3-row">
+							<div class="w3-quarter w3-padding">
+								<label class="w3-muhle-text-14">&nbsp;<i class="far fa-play-circle"></i>&nbsp;&nbsp;Estado</label>
+								<input class="w3-input w3-border w3-round w3-muhle-text-14" value="' + ISNULL(@VESTADO_AGENDA,'') + '" disabled>
+							</div>
+							<div class="w3-quarter w3-padding">
+								<label class="w3-muhle-text-14">&nbsp;<i class="fas fa-clock"></i>&nbsp;&nbsp;Días / Horas</label>
+								<input class="w3-input w3-border w3-round w3-muhle-text-14" value="' + ISNULL(@VDIAS_AGENDA,'') + ' / ' + ISNULL(@VHORAS_AGENDA,'') + '" disabled>
+							</div>
+							<div class="w3-half w3-padding">
+								<label class="w3-muhle-text-14">&nbsp;<i class="fas fa-clipboard-list"></i>&nbsp;&nbsp;Observaciones Calificación</label>
+								<input class="w3-input w3-border w3-round w3-muhle-text-14" value="' + ISNULL(@VOBSERV_CALIF_AGENDA,'') + '" disabled>
+							</div>
+						</div>
+						<div class="w3-row">
+							<div class="w3-quarter w3-padding">
+								<label class="w3-muhle-text-14">&nbsp;<i class="fas fa-ruler"></i>&nbsp;&nbsp;Normas</label></br>'+
+								ISNULL(@VDESCNORMAS,'')+'
+							</div>
+							<div class="w3-quarter w3-padding">
+								<label class="w3-muhle-text-14">&nbsp;<i class="fas fa-users"></i>&nbsp;&nbsp;Profesionales</label></br>' + 
+								ISNULL(@VCONSULTORES_AGENDA,'') + '
+							</div>
+						</div>'+
+						--<div class="w3-half">
+						--	<label>&nbsp;<i class="fas fa-list-alt"></i>&nbsp;&nbsp;Observaciones Logística</label>
+						--	<input class="w3-input w3-border w3-round" value="' + ISNULL(@VOBSERV_LOGIS_AGENDA,'') + '" disabled>
+						--</div>
+					'</div>'
+			ELSE 
+				'<div class="w3-container" style="padding:1px;border-top:1px solid;border-color:gray;"></div>' 
+			END
+	END
+ 
+	--SET @ODETALLE = @ODETALLE + 
+	--			--cierre div DETALLE--
+	--				'</div>
+	--			</div>
+	--		</div>'
+ 
+	----TOP CONTAINER----
+	--<div class="w3-container" style="padding:4px;"></div>' + ISNULL(@VMENSAJE,'')
+	SET @OHEADER = '
+	<style>
+		.pagination a {color:black;padding: 8px 16px;text-decoration: none;}
+		.pagination a.active {background-color:#7f1d46;color:white;}
+		.pagination a:hover:not(.active) {background-color:#ddd;}
+	</style>
+	<div class="w3-row w3-back w3-light-grey">
+		<div class="w3-col w3-padding">
+			<div class="w3-card-4 w3-round">
+				<div class="w3-bar w3-muhle-vocaturo w3-round w3-padding">
+					<span class="w3-bar-item w3-muhle-text-14 w3-left" style="color:white"><i class="fas fa-street-view w3-large"></i>&nbsp;&nbsp;Vista 360 Cliente</span>
+					<span class="w3-bar-item w3-muhle-text-14 w3-right" style="color:white"><i class="fas fa-arrow-alt-circle-left w3-margin-center w3-large" style="cursor:pointer;color:white;" title="Volver a Proyectos" onclick="almacenarSeleccion(''TAB'','''');almacenarSeleccion(''TAB_SERV'','''');almacenarSeleccion(''PROYECTO_ID'','''');almacenarSeleccion(''PROYECTO_SERV_ID'','''');almacenarSeleccion(''AGENDA_ID'','''');almacenarSeleccion(''TAB_AGENDA'','''');goto('''+@FORM_ID+''','''+ISNULL(@VSTRUCTURE,'')+''');return false;"></i></span>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="w3-row w3-back w3-light-grey">
+		<div class="w3-col w3-padding">
+			<div class="w3-card-4 w3-round w3-padding">'+
+				--divido en dos la parte superior--
+				'<div class="w3-row-padding">'+
+					--parte izquierda--	
+					'<div class="w3-col s3">'+
+						--card cliente-- quarter
+						--<span class="w3-bar-item w3-left" style="color:white"><img src="./../img/avatar7.png" style="height:50px;width:50px;" alt="Avatar" class="w3-left w3-circle w3-margin-center"></span>
+						/*
+							<span class="w3-muhle-text-14 w3-left"><i class="fas fa-address-card w3-text-blue-gray"></i>&nbsp;' + ISNULL(@VCUIT,'') + '</span>
+							<span class="w3-muhle-text-14 w3-right"><i class="fas fa-envelope w3-text-blue-gray"></i>&nbsp;' + ISNULL(@VEMAIL,'') + '</span>
+							<span class="w3-muhle-text-14 w3-left"><i class="fas fa-phone w3-text-blue-gray"></i>&nbsp;' + ISNULL(@VTELEFONO1,'') +'</span>
+							<span class="w3-muhle-text-14 w3-right"><i class="fas fa-mobile-alt w3-text-blue-gray"></i>&nbsp;' + ISNULL(@VTELEFONO2,'') +'</span>
+ 
+						*/
+						'<div class="w3-card-4 w3-round">
+							<header class="w3-container w3-muhle-color w3-center w3-padding w3-round">
+								<span class="w3-muhle-text-14" style="font-size:20px;color:white">&nbsp;&nbsp;'+ISNULL(@VRAZON_SOCIAL,'')+'</span>
+							</header>
+							<div class="w3-container w3-padding">
+								<div class="w3-container w3-muhle-text-12">
+								  <p><i class="fas fa-address-card w3-margin-right w3-text-blue-gray"></i>&nbsp;' + ISNULL(@VCUIT,'') + '</p>
+								  <p><i class="fas fa-user w3-margin-right w3-text-blue-gray"></i>&nbsp;<b>Contactos</b></p>
+								  <span class="w3-muhle-text-11">'+ISNULL(REPLACE(@VCONTACTO,'/','</br>'),'')+'</span>'+
+								  --<p><i class="fas fa-envelope w3-margin-right w3-text-blue-gray"></i>&nbsp;' + ISNULL(@VEMAIL,'') + '</p>
+								  --<p><i class="fas fa-phone w3-margin-right w3-text-blue-gray"></i>&nbsp;' + ISNULL(@VTELEFONO1,'') +'</p>
+								  --<p><i class="fas fa-mobile-alt w3-margin-right w3-text-blue-gray"></i>&nbsp;' + ISNULL(@VTELEFONO2,'') +'</p>
+								  '<hr style="height:2px;border-width:0;color:gray;background-color:gray;">
+								  <p><i class="fas fa-home w3-margin-right w3-text-blue-gray"></i>&nbsp;' + ISNULL(@VDIRECCION,'')  + '</p>
+								</div>
+							</div>'/*
+							<div class="w3-container w3-padding">
+								<table class="w3-table w3-borderer" style="background-color:#E6E6E6">
+									<tr>
+										<td class="w3-muhle-text-12"><i class="fas fa-user w3-text-blue">&nbsp;Contacto Cliente</i></td>
+										<td class="w3-muhle-text-12">' + ISNULL(@VCONTACTO,'') + '</td>
+									</tr>
+									<tr>
+										<td class="w3-muhle-text-12"><i class="fas fa-project-diagram w3-text-green">&nbsp;Proyectos En Curso</i></td>
+										<td class="w3-muhle-text-12">' + CONVERT(VARCHAR,@VCANT_PROY_ABI) +'</td>
+									</tr>
+									<tr>
+										<td class="w3-muhle-text-12"><i class="fas fa-project-diagram w3-text-red">&nbsp;Proyectos Finalizados</i></td>
+										<td class="w3-muhle-text-12">' + CONVERT(VARCHAR,@VCANT_PROY_CER) +'</td>
+									</tr>
+								</table>
+							</div>*/
+						+'</div>'+
+						--fin card cliente--
+					'</div>'+
+					--parte derecha--
+					'<div class="w3-col s9">
+						<div class="w3-bar w3-round w3-muhle-text-14">
+							<button class="w3-bar-item w3-round '+CASE WHEN @VTAB = '0' THEN 'w3-muhle-color' ELSE 'w3-muhle-vocaturo' END+' w3-button w3-text-white" onclick="almacenarSeleccion(''TAB'',''0'');almacenarSeleccion(''NRO_PAGINA'',''0'');almacenarSeleccion(''TAB_SERV'','''');almacenarSeleccion(''TAB_AGENDA'','''');almacenarSeleccion(''PROYECTO_ID'','''');almacenarSeleccion(''PROYECTO_SERV_ID'','''');almacenarSeleccion(''AGENDA_ID'','''');goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');return false;"><i class="fas fa-project-diagram w3-margin-right"></i>Proyectos</button>
+							<button class="w3-bar-item w3-round '+CASE WHEN @VTAB = '2' THEN 'w3-muhle-color' ELSE 'w3-muhle-vocaturo' END+' w3-button w3-text-white" onclick="almacenarSeleccion(''TAB'',''2'');almacenarSeleccion(''NRO_PAGINA'',''0'');almacenarSeleccion(''TAB_SERV'','''');almacenarSeleccion(''TAB_AGENDA'','''');almacenarSeleccion(''PROYECTO_ID'','''');almacenarSeleccion(''PROYECTO_SERV_ID'','''');almacenarSeleccion(''AGENDA_ID'','''');goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');return false;"><i class="fas fa-project-diagram w3-margin-right"></i>Finalizados</button>
+							<button class="w3-bar-item w3-round '+CASE WHEN @VTAB = '1' THEN 'w3-muhle-color' ELSE 'w3-muhle-vocaturo' END+' w3-button w3-text-white" '+CASE WHEN @VID_PROYECTO = '' THEN 'disabled' ELSE '' END+' onclick="almacenarSeleccion(''TAB'',''1'');almacenarSeleccion(''NRO_PAGINA'',''0'');almacenarSeleccion(''AGENDA_ID'','''');almacenarSeleccion(''TAB_AGENDA'','''');goto('''+@FORM_ID+''',''40D2D9E1-74E8-4135-A54E-EBA6D61AC8E5'');return false;"><i class="fas fa-cogs w3-margin-right"></i>Servicios</button>
+							<button class="w3-bar-item w3-round '+CASE WHEN @VTAB = '1' THEN 'w3-muhle-color' ELSE 'w3-muhle-vocaturo' END+' w3-button w3-text-white" '+CASE WHEN @VID_PROYECTO = '' THEN 'disabled' ELSE '' END+' title="Nuevo" onclick="almacenarSeleccion(''TAB_SERV'','''');almacenarSeleccion(''PROYECTO_SERV_ID'',''N'');almacenarSeleccion(''AGENDA_ID'','''');almacenarSeleccion(''TAB_AGENDA'','''');goto('''+@FORM_ID+''',''F8B6A5CD-5252-4CDF-ABEA-67260485E937'');return false;"><i class="fa fa-plus"></i></button>
+							<span class="w3-bar-item w3-muhle-text-12 w3-round w3-right">'+CASE WHEN @VID_PROYECTO = '' THEN '' ELSE '<i class="fas fa-project-diagram" style="color:black;"></i>&nbsp;&nbsp;<b>' END+ISNULL(SUBSTRING(@VNOMBRE_PROY,1,80),'')+'</b></span>
+						</div>
+						<div class="w3-container" style="padding:1px;"></div>
+						<div id="table1">'+ISNULL(@VTABLA,'')+'</div>
+						<div class="w3-container w3-center" style="padding:8px;"></div>
+						'+ISNULL(@VPAGINADO,'')+'
+						<div class="w3-container w3-center" style="padding:8px;">
+							<span class="w3-muhle-text-12">'+CASE WHEN @VTOTAL <> '0' THEN
+							'Página '+ CONVERT(VARCHAR,@PageNumber+1)+' de '+CONVERT(VARCHAR,@VTOTAL_PAGINA)+', 
+								mostrando filas ' + CASE WHEN (@PageNumber = 0) THEN '1' ELSE CONVERT(VARCHAR,(@PageNumber*5) + 1) END + ' a la '+
+								CASE WHEN (@PageNumber + 1 < @VTOTAL_PAGINA) THEN
+									CONVERT(VARCHAR,(@PageNumber*5) + 5) 
+								ELSE 
+									CONVERT(VARCHAR,@VTOTAL)
+								END +' de '+CONVERT(VARCHAR,@VTOTAL)
+								ELSE
+								'No se han encontrado resultados para esta búsqueda.'
+								END + '</span>
+						</div>
+					</div>'
+					--fin parte derecha--
+				+'</div>'+
+				--fin division superior class="w3-row"--
+				CASE WHEN ISNULL(@VMENSAJE,'') <> '' THEN ISNULL(@VMENSAJE,'') ELSE '' END+
+				--AGREGO ALERT AGREGAR VISITA--
+				'<script>
+					function myFunction() {
+						'+CASE WHEN @DIF_HORAS_SERV <= 0 THEN 
+							'alert("Revise el total de Horas del Servicio");return false;'
+						  ELSE 
+							'goto('''+@FORM_ID+''',''02CDA1FC-0F56-486F-BB6C-3B1299CC39A1'');return false;'
+						  END +'
+					}
+				</script>
+				<!-- PDFMake -->
+			<!-- PDFMake -->
+			<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.9/pdfmake.min.js"></script>
+			<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.9/vfs_fonts.js"></script>
+		<script>
+			(function () {
+			  function getBase64Image(imgElement) {
+				try {
+				  var canvas = document.createElement("canvas");
+				  canvas.width = imgElement.naturalWidth || imgElement.width || 0;
+				  canvas.height = imgElement.naturalHeight || imgElement.height || 0;
+				  if (!canvas.width || !canvas.height) return null;
+				  var ctx = canvas.getContext("2d");
+				  ctx.drawImage(imgElement, 0, 0);
+				  return canvas.toDataURL("image/png");
+				} catch (e) {
+				  console.warn("No se pudo convertir la imagen a Base64:", e);
+				  return null;
+				}
+			  }
+ 
+			  function clean(cell) {
+				var html = cell.innerHTML || "";
+				html = html.replace(/<br\s*\/?>/gi, "\n"); // <br> -> salto de línea
+				html = html.replace(/<[^>]+>/g, "");       // quitar etiquetas HTML
+				return html.trim();
+			  }
+ 
+			  /**
+			   * Exporta a PDF una tabla HTML.
+			   * @param {string} tableId    ID de la tabla en el DOM.
+			   * @param {string} fileName   Nombre de archivo PDF (ej: "Minuta.pdf").
+			   * @param {string} headerText Título del reporte (se muestra en el encabezado).
+			   */
+			  function exportarAPDF(tableId, fileName, headerText) {
+				var table = document.getElementById(tableId);
+				if (!table) { console.error("No se encontró la tabla con id:", tableId); return; }
+ 
+				// Construcción del body
+				var body = [];
+				for (var r = 0; r < table.rows.length; r++) {
+				  var row = [];
+				  for (var c = 0; c < table.rows[r].cells.length; c++) {
+					var txt = clean(table.rows[r].cells[c]);
+					if (r === 0) {
+					  row.push({ text: txt, style: "tableHeader" });        // Header
+					} else if (c === 0) {
+					  row.push({ text: txt, style: "col1Cell" });           // 1ª col (gris)
+					} else {
+					  // Usa col2Cell si querés fuente más chica en la 2ª col
+					  row.push({ text: txt, style: "col2Cell" });
+					  // Si preferís mantener como antes:
+					  // row.push({ text: txt, style: "tableBody" });
+					}
+				  }
+				  body.push(row);
+				}
+				if (!body.length) body = [[{ text: "Sin datos", style: "tableBody" }]];
+ 
+				// Logo (opcional)
+				var logoElem = document.querySelector(".w3-muhle-logo");
+				var logoBase64 = logoElem ? getBase64Image(logoElem) : null;
+ 
+				// Título: prioriza el parámetro; si no, intenta tomar del DOM; si no, usa el fallback literal del SP
+				var titulo =
+				  (headerText && String(headerText).trim()) ||
+				  (document.querySelector(".w3-muhle-text-20") && document.querySelector(".w3-muhle-text-20").innerText) ||
+				  "'+ isnull(@VTITULO,'')+'";
+ 
+				// Anchos: si hay 2 columnas, 40/60; si no, auto
+				var widths = (body[0] && body[0].length === 2) ? ["40%", "60%"] : Array((body[0] && body[0].length) || 1).fill("*");
+ 
+				var docDefinition = {
+				  pageSize: "A4",
+				  pageMargins: [30, 40, 30, 40],
+ 
+				  // ESTILOS
+				  styles: {
+					headerTitle: { fontSize: 13, bold: true },
+					tableHeader: { bold: true, fontSize: 10, fillColor: "#800040", color: "white" }, // bordó
+					tableBody:   { fontSize: 11, color: "#222" },
+					col1Cell:    { fontSize: 9,  bold: true, color: "#222", fillColor: "#E6E6E6" },  // <-- aquí faltaba la coma
+					col2Cell:    { fontSize: 8,  color: "#222" }                                     // 2ª col (ajústalo si querés 8)
+				  },
+ 
+				  content: [
+					{
+					  columns: [
+						logoBase64 ? { image: logoBase64, fit: [100, 60], alignment: "left" } : { text: "" },
+						{ text: titulo, style: "headerTitle", alignment: "center" },
+						logoBase64 ? { image: logoBase64, fit: [100, 60], alignment: "right" } : { text: "" }
+					  ],
+					  columnGap: 10,
+					  margin: [0, 0, 0, 15]
+					},
+					{
+					  table: { headerRows: 1, widths: widths, body: body },
+					  layout: {
+						paddingLeft:   function(){ return 8; },
+						paddingRight:  function(){ return 8; },
+						paddingTop:    function(){ return 6; },
+						paddingBottom: function(){ return 6; },
+						hLineColor:    function(){ return "#BDBDBD"; },
+						vLineColor:    function(){ return "#BDBDBD"; }
+					  }
+					}
+				  ],
+ 
+				  defaultStyle: { font: "Roboto", fontSize: 9 }
+				};
+ 
+				pdfMake.createPdf(docDefinition).download(fileName || "'+isnull(@FILENAME,'')+'");
+			  }
+ 
+			  window.exportarAPDF = exportarAPDF;
+			})();
+			</script>'
+				
+									
+----FOOT CONTAINER----
+ 
+	SET @OCLIENTE = --division superior con inferior--
+									--'<div class="w3-row w3-back w3-light-grey">
+									--	<div class="w3-col w3-padding">
+									--		<div class="w3-bottombar"></div>
+									--	</div>
+									--</div>'+
+									--parte inferior--	
+									isnull(@ODETALLE,'') +
+									CASE WHEN ISNULL(@VTAB_AGENDA,'') = '0' THEN
+									--inicio pop up--
+									'<div id="nuevoProceso" class="w3-modal w3-round">
+										<div class="w3-modal-content w3-round">
+											<header class="w3-container w3-muhle-color w3-round-up w3-padding">' 
+												+
+												'<p class="w3-muhle-text-14" style="font-size:20px;color:white">'+ISNULL(@VRAZON_SOCIAL,'')+'</p>
+												 <p class="w3-muhle-text-14" style="color:white"><i class="fas fa-project-diagram"></i>&nbsp;&nbsp;' +ISNULL(SUBSTRING(@VNOMBRE_PROY,1,80),'')+'</p>
+												 <p class="w3-muhle-text-14" style="color:white"><i class="'+ CASE WHEN ISNULL(@VTIPO_SERV_SELEC,'') = '1' THEN 
+																														'fas fa-user-tie"'
+																													WHEN ISNULL(@VTIPO_SERV_SELEC,'') = '2' THEN 
+																														'fas fa-chalkboard-teacher"'
+																													WHEN ISNULL(@VTIPO_SERV_SELEC,'') = '3' THEN 
+																														'fas fa-user-graduate"' ELSE '' END+'></i>&nbsp;&nbsp;' +ISNULL(@VNOMBRE_SERV_SELEC,'')+' - '+ISNULL(@VLUGAR_SERV_SELEC,'')+'</p>'
+												+
+											'</header>
+											<div class="w3-container w3-padding-large">
+												<div class="w3-row">
+													<div class="w3-half w3-padding">
+														<label class="w3-muhle-text-14">&nbsp;<i class="fas fa-calendar"></i>&nbsp;&nbsp;Fecha Desde</label>
+														<input class="w3-input w3-border w3-round w3-muhle-text-14" value="' + ISNULL(@VFECHAD_AGENDA,'') + '" disabled>
+													</div>
+													<div class="w3-half w3-padding">
+														<label class="w3-muhle-text-14">&nbsp;<i class="fas fa-calendar"></i>&nbsp;&nbsp;Fecha Hasta</label>
+														<input class="w3-input w3-border w3-round w3-muhle-text-14" value="' + ISNULL(@VFECHAH_AGENDA,'') + '" disabled>
+													</div>
+												</div>
+												<div class="w3-row">
+													<div class="w3-half w3-padding">
+														<label class="w3-muhle-text-14">&nbsp;<i class="fas fa-clock"></i>&nbsp;&nbsp;Días / Horas</label>
+														<input class="w3-input w3-border w3-round w3-muhle-text-14" value="' + ISNULL(@VDIAS_AGENDA,'') + ' / ' + ISNULL(@VHORAS_AGENDA,'') + '" disabled>
+													</div>
+													<div class="w3-half w3-padding">
+														<label class="w3-muhle-text-14">&nbsp;<i class="fas fa-users"></i>&nbsp;&nbsp;Profesionales</label></br>' + 
+														ISNULL(@VCONSULTORES_AGENDA,'') + '
+													</div>
+												</div>
+												<div class="w3-row">
+													<div class="w3-row w3-padding">
+														<label class="w3-muhle-text-14">&nbsp;<i class="far fa-play-circle"></i>&nbsp;&nbsp;Estado</label>
+														<select class="w3-input w3-border w3-round w3-muhle-text-14" id="cmb1" name="SP.AGENDA_ESTADO"></select>
+													</div>
+												</div>
+												<div class="w3-row">
+													<div class="w3-row w3-padding">
+														<label class="w3-muhle-text-14">&nbsp;<i class="fas fa-font"></i>&nbsp;&nbsp;Observaciones</label>
+														<input class="w3-input w3-border w3-round w3-muhle-text-14" type="text" name="SP.AGENDA_OBSERVADOR" value="' + ISNULL(@VOBSERV_AGENDA,'') + '">
+													</div>
+												</div>
+												<div class="w3-row">
+													<div class="w3-row w3-padding">
+														<label class="w3-muhle-text-14">&nbsp;<i class="fas fa-clipboard-list"></i>&nbsp;&nbsp;Observaciones Calificación</label>
+														<input class="w3-input w3-border w3-round w3-muhle-text-14" type="text" name="SP.AGENDA_OBSERV_CALIF" value="' + ISNULL(@VOBSERV_CALIF_AGENDA,'') + '" disabled>
+													</div>
+												</div>
+											</div>
+											<div class="w3-container w3-border-top w3-padding-16 w3-light-grey w3-round-down">
+												<btn type="btn" class="w3-right w3-button w3-muhle-color w3-medium w3-round" onclick="goto('''+@FORM_ID+''',''7B62AD63-D2A5-40B3-90C4-45A11E8DD67A'');">Guardar</btn>
+												<btn type="btn" class="w3-button w3-muhle-color w3-medium w3-round" onclick="document.getElementById(''nuevoProceso'').style.display=''none''">Cancelar</btn>
+											</div>
+										</div>
+									</div>
+									<script>BuildAjaxSPCombo('''+@FORM_ID+''',''cmb1'', ''' + '260022DF-4FC1-4944-809E-BC3834834FD1' + ''', ''' + ISNULL(@VESTADO_AGENDA_CODE,'') +''', '''');</script>'
+									ELSE '' END 
+									--fin pop up--
+	
+	--abro un container para meter la tabla--
+	IF (@VTAB_AGENDA IN ('1','2','3','4','5') OR (@VTAB_SERV = '8')) BEGIN
+		SET @OCLIENTE = @OCLIENTE +
+								'<div class="w3-row w3-back w3-light-grey">
+									<div class="w3-col w3-padding">
+										<div class="w3-card-4 w3-round">'
+	END
+ 
+	--RECUPERO LAS OBSERVACIONES DE LA HOJA DE RUTA--
+	SELECT	@VOBSERV_HR = ISNULL(OBSERVACIONES,'')
+	FROM	LK_PROYECTO_DOCUM 
+	WHERE	ID_AGENDA = @VID_AGENDA_SELEC
+ 
+	SET @OBUTTON = 
+		CASE WHEN @VTAB_AGENDA = '1' THEN
+						'<div class="w3-container" style="padding:2px;border-top:1px solid;border-color:gray;"></div>
+						<div>
+							<label class="w3-muhle-text-12">&nbsp;<i class="fas fa-font"></i>&nbsp;&nbsp;Observaciones Hoja de Ruta</label>'+
+							--<input class="w3-input w3-border w3-round w3-muhle-text-14" type="text" name="SP.OBSERVACION_HR" value="' + ISNULL(@VOBSERV_HR,'') + '">
+							'<textarea class="w3-input w3-border w3-round w3-muhle-text-12" type="text" name="SP.OBSERVACION_HR" maxlength="4000" rows="3" cols="50" value="' + ISNULL(@VOBSERV_HR,'') + '">' + ISNULL(@VOBSERV_HR,'') + '</textarea>
+						</div>
+						<div class="w3-container" style="padding:1px;"></div>
+						<div class="w3-container w3-padding">
+							<btn type="btn" class="w3-right w3-button w3-muhle-color w3-medium w3-round" onclick="saveValues(''BUFFER'');goto('''+@FORM_ID+''',''441D2446-B86C-4A60-AD37-1325060BFCCF'');return false;">Guardar</btn>
+						</div>'+
+					--cierre div--
+					'</div>
+			</div>
+			<script>var dic=[];function toggleCombo(i){dic[i.id]=i.value}function saveValues(i){var a="";for(var c in dic){a=a+c+"="+dic[c]+"|"}saveSelection(i,a)}</script>'
+			WHEN (@VTAB_AGENDA IN ('2','3','4','5')) THEN
+				--cierre div--
+					'</div>
+				</div>
+			</div>
+			<script>var dic=[];function toggleCombo(i){dic[i.id]=i.value}function saveValues(i){var a="";for(var c in dic){a=a+c+"="+dic[c]+"|"}saveSelection(i,a)}</script>'
+		ELSE
+			CASE WHEN @VTAB_SERV = '8' THEN
+						'<div class="w3-container" style="padding:1px;"></div>
+						<div class="w3-container w3-padding">
+							<btn type="btn" class="w3-right w3-button w3-muhle-color w3-medium w3-round" onclick="saveValuesCombo(''BUFFER'');goto('''+@FORM_ID+''',''441D2446-B86C-4A60-AD37-1325060BFCCF'');return false;">Guardar</btn>
+						</div>'+
+						--cierre div--
+					'</div>
+				</div>
+			</div>
+			<script>var dic2=[];function toggleCombo(i){dic2[i.id]=i.value;}function saveValuesCombo(i){var a="";for(var c in dic2){a=a+c+"="+dic2[c]+"|"}almacenarSeleccion(i,a);}</script>
+			<script>function iniDic(){var str = document.getElementsByName("CALL.BUFFER:ctl_52")[0].value;var res = str.split("|");res.forEach(func);}</script>
+			<script>function func(item, index){var val = item.split("=");if (val[0]!==""){dic2[val[0]]=val[1];}}iniDic();</script>'
+			ELSE '' END
+		END
+		--<script>var dic=[];function toggleCombo(i){dic[i.id]=i.value}function saveValues(i){var a="";for(var c in dic){a=a+c+"="+dic[c]+"|"}saveSelection(i,a)}</script>
+ 
+	UPDATE	XAGENDA
+	SET		AGENDA_DESDE = NULL,
+			AGENDA_HASTA = NULL,
+			AGENDA_FECHA = NULL,
+			FECHA_SELEC = NULL,
+			ERROR = NULL,
+			DESC_ERROR = NULL,
+			HOJA_RUTA_ID = NULL,
+			PROVEEDOR_ID = NULL,
+			TIPO_PROV = NULL,
+			NRO_FACTURA_PROV = NULL,
+			CANT_PERSONAS_PROV = NULL,
+			DESCRIP_SERVICIO_PROV = NULL,
+			FECHA_FACTURA_PROV = NULL,
+			PRECIO_FINAL_PROV = NULL,
+			FORMA_PAGO_PROV = NULL,
+			CANT_CUOTAS_PROV = NULL,
+			ESTADO_PAGO_PROV = NULL,
+			FECHA_ULT_PAGO_PROV = NULL,
+			PRECIO_CUOTA_PROV = NULL,
+			FECHA_PROX_VTO_PROV = NULL,
+			SALDO_PEND_PROV = NULL,
+			DESTINO_PROV = NULL,
+			FECHA_DESDE_SERV_PROV = NULL,
+			FECHA_HASTA_SERV_PROV = NULL,
+			TIPO_CONSULTOR_PROV = NULL,
+			CONSULTOR_PROV = NULL,
+			DESC_FORMA_PAGO_PROV = NULL,
+			HONOR_FECHA = NULL,
+			HONOR_LUGAR = NULL,
+			HONOR_CONSULTOR = NULL,
+			HONOR_IMPORTE = NULL,
+			CONS_FECHA_MC = NULL,
+			CONS_OBSERV_MC = NULL,
+			AUDI_FECHA_PA = NULL,
+			AUDI_OBSERV_PA = NULL,
+			AUDI_FECHA_IA = NULL,
+			AUDI_OBSERV_IA = NULL,
+			CAPA_FECHA_IC = NULL,
+			CAPA_OBSERV_IC = NULL,
+			ID_MINUTA = NULL,
+			FECHA_CLC = NULL,
+			NOMBRE_CLC = NULL,
+			CURSO_CLC = NULL,
+			ASISTENTES_CLC = NULL,
+			OBSERVACION_HR = NULL,
+			ID_SERV_DELETE = NULL
+	WHERE	PAR_KEY = @IPKEYJOB
+ 
+END

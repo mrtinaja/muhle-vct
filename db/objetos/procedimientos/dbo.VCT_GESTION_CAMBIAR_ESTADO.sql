@@ -1,0 +1,88 @@
+ 
+CREATE PROCEDURE dbo.VCT_GESTION_CAMBIAR_ESTADO
+(
+    @ID_GESTION          INT,
+    @ID_ESTADO_NUEVO     INT,
+    @ID_RESULTADO        INT = NULL,
+    @DESCRIPCION         VARCHAR(2000) = NULL,
+    @TIPO_ACTOR          VARCHAR(20) = 'EMPLEADO',
+    @ID_ACTOR            INT = NULL,
+    @USUARIO             VARCHAR(100) = NULL
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+ 
+    DECLARE @ID_ESTADO_ANTERIOR INT;
+    DECLARE @ES_FINAL BIT;
+ 
+    SELECT @ID_ESTADO_ANTERIOR=ID_ESTADO
+    FROM dbo.VCT_GESTIONES
+    WHERE ID=@ID_GESTION;
+ 
+    IF @ID_ESTADO_ANTERIOR IS NULL
+    BEGIN
+        RAISERROR('La gestion indicada no existe.',16,1);
+        RETURN;
+    END;
+ 
+    SELECT @ES_FINAL=ES_FINAL
+    FROM dbo.VCT_PRM_GESTIONES_ESTADOS
+    WHERE ID=@ID_ESTADO_NUEVO
+      AND ACTIVO=1;
+ 
+    IF @ES_FINAL IS NULL
+    BEGIN
+        RAISERROR('El estado destino no existe o esta inactivo.',16,1);
+        RETURN;
+    END;
+ 
+    BEGIN TRANSACTION;
+ 
+    UPDATE dbo.VCT_GESTIONES
+       SET ID_ESTADO=@ID_ESTADO_NUEVO,
+           ID_RESULTADO=@ID_RESULTADO,
+           FECHA_CIERRE=CASE WHEN @ES_FINAL=1 THEN GETDATE() ELSE NULL END,
+           FECHA_UPD=GETDATE(),
+           USUARIO_UPD=@USUARIO
+     WHERE ID=@ID_GESTION;
+ 
+    INSERT INTO dbo.VCT_GESTIONES_HISTORIAL
+    (
+        ID_GESTION,
+        ID_ESTADO_ANTERIOR,
+        ID_ESTADO_NUEVO,
+        ID_RESULTADO,
+        ACCION,
+        DESCRIPCION,
+        TIPO_ACTOR,
+        ID_ACTOR,
+        FECHA,
+        USUARIO
+    )
+    VALUES
+    (
+        @ID_GESTION,
+        @ID_ESTADO_ANTERIOR,
+        @ID_ESTADO_NUEVO,
+        @ID_RESULTADO,
+        'CAMBIO_ESTADO',
+        @DESCRIPCION,
+        @TIPO_ACTOR,
+        @ID_ACTOR,
+        GETDATE(),
+        @USUARIO
+    );
+ 
+    COMMIT TRANSACTION;
+ 
+    SELECT
+        G.ID,
+        G.CODIGO,
+        G.ID_ESTADO,
+        G.ID_RESULTADO,
+        G.FECHA_CIERRE
+    FROM dbo.VCT_GESTIONES G
+    WHERE G.ID=@ID_GESTION;
+END

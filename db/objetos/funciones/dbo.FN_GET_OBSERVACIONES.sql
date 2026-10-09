@@ -1,0 +1,43 @@
+ 
+ 
+CREATE FUNCTION [dbo].[FN_GET_OBSERVACIONES] (@VAGENDA_ID VARCHAR(50), @CONSULTOR_ID VARCHAR(50))
+RETURNS VARCHAR(400)
+AS BEGIN
+ 
+	declare @RAZON_SOCIAL varchar(100)
+	declare @TIPO_PROV varchar(100)
+	declare @CALLE varchar(100)
+	declare @NRO varchar(30)
+	declare @LOCALIDAD varchar(100)
+	declare @TEL varchar(100)
+	declare @EMAIL varchar(100)
+	DECLARE @RTA VARCHAR(400)
+	declare cur CURSOR LOCAL for
+	
+	SELECT distinct P.RAZON_SOCIAL_PROV, p.TIPO_PROV, P.CALLE_PROV, P.NRO_CALLE_PROV, P.LOCALIDAD_PROV, P.TEL1_PROV, P.EMAIL_PROV  FROM LK_PROYECTO_VIATICOS V
+		INNER JOIN LK_PROVEEDORES P ON V.ID_PROVEEDOR=P.ID_PROVEEDOR
+		WHERE ID_AGENDA=CAST(@VAGENDA_ID AS INT)
+		AND ID_CONSULTOR=@CONSULTOR_ID
+		AND (TIPO_PROV='HOTEL' or TIPO_PROV='REMIS')
+ 
+	set @RTA = '';
+ 
+	open cur
+ 
+	fetch next from cur into @RAZON_SOCIAL, @TIPO_PROV, @CALLE, @NRO, @LOCALIDAD, @TEL, @EMAIL
+ 
+	while @@FETCH_STATUS = 0 BEGIN
+ 
+		SET @RTA = @RTA + @RAZON_SOCIAL + ' ('+ @TIPO_PROV +'): ' + @CALLE + ' ' + @NRO + ' (' + @LOCALIDAD + ') - ' + @TEL + ' - ' + @EMAIL + CHAR(13)
+	
+ 
+		fetch next from cur into @RAZON_SOCIAL, @TIPO_PROV, @CALLE, @NRO, @LOCALIDAD, @TEL, @EMAIL
+	END
+ 
+	close cur
+	deallocate cur
+ 
+ 
+ 
+    RETURN @RTA
+END

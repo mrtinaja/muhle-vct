@@ -1,0 +1,847 @@
+﻿/* =========================================================
+   VOCATURO - MÓDULO, PESTAÑAS Y FORMULARIOS
+   Archivo completo: vct-Tabs.css
+   ========================================================= */
+
+/* =========================================================
+   1. VARIABLES & FUENTE GLOBAL GOTHAM
+   ========================================================= */
+
+@font-face {
+    font-family: 'Gotham';
+    src: local('Gotham'), local('Gotham-Medium'), local('Gotham Medium');
+    font-weight: normal;
+    font-style: normal;
+}
+
+:root {
+    --vct-bordo: #85003d;
+    --vct-bordo-hover: #6d0032;
+
+    --vct-header: #1e293b;
+    --vct-texto: #17213f;
+    --vct-texto-secundario: #68758c;
+
+    --vct-blanco: #ffffff;
+    --vct-fondo-suave: #f4f6fa;
+    --vct-fondo-tab: #eef2f7;
+
+    --vct-borde: #dce3ed;
+    --vct-borde-suave: #e8edf3;
+}
+
+/* =========================================================
+   2. RESET INTERNO Y FUENTES
+   ========================================================= */
+
+.vct-module,
+.vct-module *,
+.vct-module *::before,
+.vct-module *::after {
+    box-sizing: border-box;
+    font-family: 'Gotham', 'Helvetica Neue', Arial, sans-serif !important;
+}
+
+.vct-module button,
+.vct-module input,
+.vct-module select,
+.vct-module textarea {
+    font-family: 'Gotham', 'Helvetica Neue', Arial, sans-serif !important;
+}
+
+/* =========================================================
+   3. CONTENEDOR GENERAL
+   ========================================================= */
+
+.vct-module {
+    width: 100%;
+    overflow: hidden;
+    color: var(--vct-texto);
+    font-family: 'Gotham', 'Helvetica Neue', Arial, sans-serif !important;
+    background: var(--vct-blanco);
+    border: 1px solid var(--vct-borde);
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(31, 45, 78, 0.10);
+}
+
+/* =========================================================
+   4. HEADER DEL MÓDULO
+   ========================================================= */
+
+.vct-module-header {
+    width: 100%;
+    min-height: 96px;
+    padding: 20px 26px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    color: #ffffff;
+    background: var(--vct-header);
+    border-bottom: 3px solid var(--vct-bordo);
+}
+
+.vct-module-heading {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.vct-module-heading-text {
+    min-width: 0;
+}
+
+.vct-module-icon {
+    width: 50px;
+    height: 50px;
+    flex: 0 0 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    background: var(--vct-bordo);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 11px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.18);
+}
+
+.vct-module-icon i,
+.vct-module-icon svg {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+    stroke-width: 2.2px !important;
+    color: #ffffff !important;
+    display: inline-block !important;
+}
+
+.vct-module-title {
+    margin: 0;
+    color: #ffffff;
+    font-size: 23px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.vct-module-subtitle {
+    margin: 5px 0 0;
+    color: #d4dce8;
+    font-size: 13px;
+    line-height: 1.35;
+}
+
+/* =========================================================
+   5. BOTONES GENERALES Y ACCIONES
+   ========================================================= */
+
+.vct-button {
+    min-height: 42px;
+    padding: 0 20px;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    text-decoration: none;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.vct-button i,
+.vct-button svg {
+    width: 17px !important;
+    height: 17px !important;
+    min-width: 17px !important;
+    min-height: 17px !important;
+    stroke-width: 2px !important;
+    display: inline-block !important;
+    color: inherit !important;
+}
+
+.vct-button:focus {
+    outline: none;
+}
+
+.vct-button-primary {
+    color: #ffffff !important;
+    background: var(--vct-bordo) !important;
+    border-color: var(--vct-bordo) !important;
+}
+
+.vct-button-primary:hover {
+    color: #ffffff !important;
+    background: var(--vct-bordo-hover) !important;
+    border-color: var(--vct-bordo-hover) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 5px 13px rgba(133, 0, 61, 0.24);
+}
+
+.vct-button-secondary {
+    color: #536079 !important;
+    background: #ffffff !important;
+    border-color: #d2dae6 !important;
+}
+
+.vct-button-secondary:hover {
+    color: #26324d !important;
+    background: #f3f6fa !important;
+    border-color: #bec8d6 !important;
+}
+
+.vct-button-icon-only {
+    width: 40px;
+    min-width: 40px;
+    padding: 0;
+}
+
+/* =========================================================
+   6. BARRA DE PESTAÑAS
+   ========================================================= */
+
+.vct-tabs-bar {
+    position: relative;
+    width: 100%;
+    min-height: 58px;
+    padding: 8px 18px 0 18px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    background: #ffffff;
+    border-bottom: 1px solid rgba(133, 0, 61, 0.38);
+}
+
+/* =========================================================
+   7. LISTA DE PESTAÑAS
+   ========================================================= */
+
+.vct-tabs-list {
+    min-width: 0;
+    flex: 1 1 auto;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.vct-tabs-list::-webkit-scrollbar {
+    height: 4px;
+}
+
+.vct-tabs-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.vct-tabs-list::-webkit-scrollbar-thumb {
+    background: #c8d0dc;
+    border-radius: 10px;
+}
+
+/* =========================================================
+   8. PESTAÑA GENERAL
+   ========================================================= */
+
+.vct-tab {
+    position: relative;
+    z-index: 1;
+    min-width: 165px;
+    height: 50px;
+    padding: 0 24px;
+    flex: 0 0 auto;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    color: #66738a;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    background: #f7f9fc;
+    border: 1px solid #e1e7ef;
+    border-bottom: 0;
+    border-radius: 10px 10px 0 0;
+    outline: none;
+    cursor: pointer;
+    box-shadow: none;
+    transition: all 0.18s ease;
+}
+
+.vct-tab-surface {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: transparent;
+    border-radius: inherit;
+}
+
+.vct-tab-content {
+    position: relative;
+    z-index: 2;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    color: inherit;
+}
+
+.vct-tab:not(.is-active):hover {
+    color: var(--vct-bordo);
+    background: #fbf2f6;
+    border-color: #e4c8d5;
+}
+
+.vct-tab:not(.is-active):active {
+    transform: translateY(1px);
+}
+
+.vct-tab.is-active {
+    z-index: 3;
+    color: var(--vct-bordo);
+    background: #ffffff;
+    border-color: #d8dee8;
+    border-bottom-color: #ffffff;
+    box-shadow: 0 -2px 8px rgba(31, 45, 78, 0.05), 0 2px 4px rgba(31, 45, 78, 0.03);
+    transform: translateY(1px);
+}
+
+.vct-tab.is-active::before {
+    content: "";
+    position: absolute;
+    z-index: 5;
+    top: -1px;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--vct-bordo);
+    border-radius: 10px 10px 0 0;
+}
+
+.vct-tab.is-active::after {
+    display: none;
+}
+
+.vct-tab i,
+.vct-tab svg,
+.vct-tabs-action-button i,
+.vct-tabs-action-button svg {
+    flex: 0 0 auto;
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
+    stroke-width: 2px !important;
+    color: inherit !important;
+    display: inline-block !important;
+    transition: all 0.18s ease;
+}
+
+.vct-tab.is-active i,
+.vct-tab.is-active svg {
+    color: var(--vct-bordo) !important;
+    width: 19px !important;
+    height: 19px !important;
+}
+
+.vct-tab span:not(.vct-tab-close),
+.vct-tab-content > span:not(.vct-tab-close) {
+    color: inherit;
+    font-size: inherit;
+    line-height: 1;
+}
+
+.vct-tab.is-active span:not(.vct-tab-close),
+.vct-tab.is-active .vct-tab-content > span:not(.vct-tab-close) {
+    color: var(--vct-bordo);
+}
+
+.vct-tab-close {
+    width: 19px;
+    height: 19px;
+    margin-left: 3px;
+    flex: 0 0 19px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #7a879a;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    background: #edf1f6;
+    border-radius: 50%;
+    transition: all 0.18s ease;
+}
+
+.vct-tab.is-active .vct-tab-close {
+    color: var(--vct-bordo);
+    background: rgba(133, 0, 61, 0.10);
+}
+
+.vct-tab-close:hover {
+    color: #ffffff !important;
+    background: var(--vct-bordo) !important;
+    transform: scale(1.08);
+}
+
+.vct-tabs-actions {
+    flex: 0 0 auto;
+    padding-bottom: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.vct-tabs-action-button {
+    min-height: 40px;
+    height: 40px;
+    padding: 0 18px;
+    color: #ffffff;
+    background: var(--vct-bordo);
+    border: 1px solid var(--vct-bordo);
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(133, 0, 61, 0.21);
+}
+
+.vct-tabs-action-button:hover {
+    color: #ffffff;
+    background: var(--vct-bordo-hover);
+    border-color: var(--vct-bordo-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 5px 13px rgba(133, 0, 61, 0.28);
+}
+
+.vct-tabs-action-button .vct-button-text:empty {
+    display: none;
+}
+
+.vct-tab[hidden] {
+    display: none !important;
+}
+
+.vct-tabs-list .vct-tab:first-child { margin-left: 0; }
+.vct-tabs-list .vct-tab:last-child { margin-right: 0; }
+
+/* =========================================================
+   9. CONTENEDOR DE PANELES Y GRILLA
+   ========================================================= */
+
+.vct-panels {
+    width: 100%;
+    min-height: 100px;
+    background: #ffffff;
+}
+
+.vct-panel {
+    display: none;
+    width: 100%;
+    padding: 15px 18px 24px;
+}
+
+.vct-panel.is-active {
+    display: block;
+}
+
+.vct-panel[hidden],
+.vct-tab[hidden] {
+    display: none !important;
+}
+
+.vct-grid-host {
+    width: 100%;
+    min-height: 100px;
+}
+
+.vct-grid-host > * {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+}
+
+.vct-grid-host [data-vct-grid-source] {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+/* =========================================================
+   10. TARJETA Y CABECERA DEL FORMULARIO
+   ========================================================= */
+
+.vct-form-card {
+    width: 100%;
+    max-width: 760px;
+    margin: 5px auto;
+    overflow: visible !important; /* Permite que los flotantes no se recorten */
+    background: #ffffff;
+    border: 1px solid #dfe5ee;
+    border-radius: 14px;
+    box-shadow: 0 8px 25px rgba(30, 45, 80, 0.08);
+}
+
+.vct-form-header {
+    padding: 21px 25px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #f5f7fb;
+    border-bottom: 1px solid #dfe5ee;
+    border-radius: 14px 14px 0 0;
+}
+
+.vct-form-icon {
+    width: 43px;
+    height: 43px;
+    flex: 0 0 43px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    background: var(--vct-bordo);
+    border-radius: 10px;
+}
+
+.vct-form-icon i,
+.vct-form-icon svg {
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    min-height: 22px !important;
+    stroke-width: 2.2px !important;
+    color: #ffffff !important;
+    display: inline-block !important;
+}
+
+.vct-form-title {
+    margin: 0;
+    color: var(--vct-texto);
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.vct-form-subtitle {
+    margin: 4px 0 0;
+    color: #7a859b;
+    font-size: 13px;
+}
+
+/* =========================================================
+   11. CUERPO DEL FORMULARIO Y LABELS
+   ========================================================= */
+
+.vct-form-body {
+    padding: 25px;
+    position: relative;
+    overflow: visible !important;
+}
+
+.vct-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    position: relative;
+    z-index: 10;
+}
+
+/* CORRECCION: VCT_FORM_BUILDER arma dinamicamente vct-form-grid-1/2/3 segun la
+   cantidad de campos del form, pero esta hoja nunca definia esas clases -- por eso
+   TODO form, sin importar cuantos campos tuviera, quedaba forzado a 2 columnas fijas
+   (la regla .vct-form-grid de arriba). Un form de 1 solo campo (ej. Email) caia en la
+   primera columna y la segunda quedaba vacia, dejando el input angosto (mitad del
+   ancho real) y el label apretado sin espacio, forzandolo a partirse en varias lineas.
+   Con estas 3 reglas cada cantidad de columnas usa su propio grid-template-columns. */
+.vct-form-grid-1 { grid-template-columns: 1fr; }
+.vct-form-grid-2 { grid-template-columns: 1fr 1fr; }
+.vct-form-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+.vct-form-group {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.vct-form-group-full {
+    grid-column: 1 / -1;
+}
+
+.vct-form-group label {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-bottom: 2px !important;
+    color: #1e293b !important;
+    font-family: 'Gotham', 'Helvetica Neue', Arial, sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+}
+
+.vct-form-group label i,
+.vct-form-group label svg {
+    width: 17px !important;
+    height: 17px !important;
+    min-width: 17px !important;
+    min-height: 17px !important;
+    stroke-width: 2px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    color: var(--vct-bordo) !important;
+    display: inline-block !important;
+    flex-shrink: 0 !important;
+}
+
+.vct-required {
+    color: #e53935 !important;
+    font-weight: 700 !important;
+    margin-left: 2px !important;
+}
+
+/* =========================================================
+   12. INPUTS Y CONTROLES NATIVOS
+   ========================================================= */
+
+.vct-input {
+    width: 100% !important;
+    height: 42px !important;
+    padding: 0 14px !important;
+    color: #1e293b !important;
+    font-family: 'Gotham', 'Helvetica Neue', Arial, sans-serif !important;
+    font-size: 13.5px !important;
+    font-weight: 500 !important;
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    outline: none !important;
+    transition: all 0.2s ease !important;
+}
+
+textarea.vct-input {
+    min-height: 100px;
+    height: auto !important;
+    padding-top: 11px !important;
+    padding-bottom: 11px !important;
+    resize: vertical;
+}
+
+.vct-input::placeholder {
+    color: #a2acbc;
+    opacity: 1;
+}
+
+.vct-input:hover:not(:disabled):not([readonly]) {
+    border-color: #bfc9d7 !important;
+}
+
+.vct-input:focus {
+    border-color: var(--vct-bordo) !important;
+    box-shadow: 0 0 0 3px rgba(133, 0, 61, 0.12) !important;
+}
+
+.vct-input:disabled,
+.vct-input[readonly] {
+    color: #6c768b !important;
+    background: #f1f3f6 !important;
+    cursor: not-allowed;
+}
+
+.vct-form-actions {
+    margin-top: 25px;
+    padding-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    border-top: 1px solid #e2e7ef;
+    position: relative;
+    z-index: 1;
+}
+
+/* =========================================================
+   13. RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+    .vct-module-header { padding: 18px 20px; }
+    .vct-tabs-bar { gap: 10px; }
+    .vct-tab { min-width: 150px; padding: 0 20px; }
+    .vct-tabs-action-button { padding: 0 14px; }
+}
+
+@media (max-width: 700px) {
+    .vct-module { border-radius: 12px; }
+    .vct-module-header { min-height: auto; padding: 18px; align-items: flex-start; flex-direction: column; }
+    .vct-module-heading { width: 100%; }
+    .vct-module-icon { width: 44px; height: 44px; flex-basis: 44px; }
+    .vct-module-title { font-size: 20px; }
+    .vct-module-subtitle { font-size: 12px; }
+
+    .vct-tabs-bar { min-height: auto; padding: 10px 0 0; align-items: stretch; flex-direction: column; gap: 8px; }
+    .vct-tabs-list { width: 100%; padding-left: 8px; }
+    .vct-tab { min-width: 142px; height: 47px; padding: 0 18px; font-size: 12px; }
+
+    .vct-tabs-actions { width: 100%; padding: 0 12px 10px; justify-content: flex-end; }
+    .vct-tabs-action-button { min-width: 145px; }
+
+    .vct-panel { padding: 14px 12px 20px; }
+    .vct-form-card { border-radius: 12px; }
+    .vct-form-header { padding: 18px; }
+    .vct-form-body { padding: 18px; }
+    .vct-form-grid,
+    .vct-form-grid-1,
+    .vct-form-grid-2,
+    .vct-form-grid-3 { grid-template-columns: 1fr; }
+    .vct-form-group-full { grid-column: auto; }
+    .vct-form-actions { flex-direction: column-reverse; }
+    .vct-form-actions .vct-button { width: 100%; }
+}
+
+@media (max-width: 430px) {
+    .vct-module-heading { align-items: flex-start; }
+    .vct-tabs-action-button { width: 100%; }
+    .vct-button-icon-only { width: 40px; }
+    .vct-tab { min-width: 132px; padding: 0 15px; }
+}
+
+/* =========================================================
+   14. TOM-SELECT INTEGRADO (VOCATURO UI - GOTHAM & BORDÓ)
+   ========================================================= */
+
+select.vct-tom-select {
+    display: none !important;
+}
+
+.ts-wrapper {
+    width: 100% !important;
+    padding: 0 !important;
+    position: relative !important;
+    z-index: 20 !important;
+}
+
+/* Control principal visible */
+.ts-control {
+    width: 100% !important;
+    min-height: 42px !important;
+    height: 42px !important;
+    padding: 0 38px 0 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    color: #1e293b !important;
+    font-family: 'Gotham', 'Helvetica Neue', Arial, sans-serif !important;
+    font-size: 13.5px !important;
+    font-weight: 500 !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+    position: relative !important;
+}
+
+.ts-control:hover {
+    border-color: #bfc9d7 !important;
+}
+
+.ts-wrapper.focus .ts-control,
+.ts-wrapper.dropdown-active .ts-control {
+    border-color: var(--vct-bordo) !important;
+    box-shadow: 0 0 0 3px rgba(133, 0, 61, 0.12) !important;
+}
+
+.ts-control input {
+    display: none !important;
+}
+
+/* Flecha SVG */
+.ts-wrapper.single .ts-control::after {
+    content: '' !important;
+    position: absolute !important;
+    right: 14px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 12px !important;
+    height: 12px !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2368758c' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    border: none !important;
+}
+
+/* MENÚ DESPLEGABLE FLOTANTE */
+.ts-dropdown {
+    width: 100% !important;
+    margin-top: 4px !important;
+    background: #ffffff !important;
+    border: 1px solid #dce3ed !important;
+    border-radius: 8px !important;
+    box-shadow: 0 12px 28px rgba(30, 45, 80, 0.18) !important;
+    z-index: 99999 !important;
+    padding: 4px 0 !important;
+}
+
+/* Ítems de la lista */
+.ts-dropdown .option {
+    padding: 10px 14px !important;
+    color: var(--vct-texto) !important;
+    font-family: 'Gotham', 'Helvetica Neue', Arial, sans-serif !important;
+    font-size: 13.5px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: background-color 0.15s ease, color 0.15s ease !important;
+}
+
+/* Hover activo */
+.ts-dropdown .option:hover,
+.ts-dropdown .option.active {
+    background-color: var(--vct-bordo) !important;
+    color: #ffffff !important;
+}
+
+/* Opción actualmente seleccionada */
+.ts-dropdown .option.selected {
+    background-color: #f1f5f9 !important;
+    color: var(--vct-bordo) !important;
+    font-weight: 700 !important;
+}
+
+.ts-dropdown .option.selected:hover {
+    background-color: var(--vct-bordo) !important;
+    color: #ffffff !important;
+}
+
+/* =========================================================
+   CORRECCIÓN RESIDUAL MÜHLE ENGINE (TD FANTASMA)
+   ========================================================= */
+
+/* Elimina el espacio residual de la tabla exterior de Mühle */
+#mainContainer > table:has(.vct-module),
+#mainContainer > .w3-responsive > table:has(.vct-module) {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+}
+
+#mainContainer table tbody tr td:has(> .vct-module),
+#mainContainer table tbody tr td:has(> section.vct-module) {
+    padding: 0 !important;
+    margin: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    border: none !important;
+    background: transparent !important;
+}

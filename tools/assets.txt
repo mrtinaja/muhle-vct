@@ -15,8 +15,6 @@ vct-email-template-designer.js
 vct-export.js
 vct-inicio.css
 vct-inicio.js
-vct-main-fix-paginado-mobile.css
-vct-main-fix-v360-proyectos-recientes-mobile.css
 vct-main.css
 vct-main.js
 vct-proyecto-alta.css
@@ -29,3 +27,13 @@ vct-proyecto-visitas.css
 vct-proyecto-visitas.js
 vct-reportes.css
 vct-reportes.js
+vct-Table.css
+vct-Tabs.css
+vct-Tabs.js
+vct-modal.css
+vct-modal.js
+# Archivos de la plataforma que cargan las paginas (.aspx) y tambien se tocan
+main.css
+main.js
+admin.css
+profile.js

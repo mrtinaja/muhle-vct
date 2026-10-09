@@ -1,0 +1,590 @@
+﻿/* ==========================================================================
+   🔤 TIPOGRAFÍA UNIFICADA: GOTHAM PARA TODO EL PROYECTO
+   ========================================================================== */
+@font-face {
+    font-family: 'Gotham';
+    src: local('Gotham'), local('Gotham-Medium'), local('Gotham Medium');
+    font-weight: normal;
+    font-style: normal;
+}
+
+* {
+    box-sizing: border-box;
+    font-family: 'Gotham', 'Helvetica Neue', Arial, sans-serif !important;
+}
+
+html, body, h1, h2, h3, h4, h5, h6, p, span, td, th, a, button, input, select, textarea {
+    font-family: 'Gotham', 'Helvetica Neue', Arial, sans-serif !important;
+}
+
+body {
+    background-color: #f8fafc;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    color: #1e293b;
+}
+
+/* ==========================================================================
+   🎯 BARRA DE NAVEGACIÓN SUPERIOR (BORDÓ VOCATURO)
+   ========================================================================== */
+.vct-top-navbar {
+    background-color: #66062C;
+    height: 60px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    position: fixed;
+    top: 0; left: 0; z-index: 1001;
+}
+.vct-navbar-left { display: flex; align-items: center; gap: 12px; }
+.vct-btn-hamburger { display: none; background: transparent; border: none; color: #fff; cursor: pointer; padding: 6px; border-radius: 6px; }
+.vct-brand-container { display: flex; align-items: center; height: 36px; }
+.vct-brand-container img { height: 100%; width: auto; }
+.vct-user-widget { display: flex; align-items: center; gap: 12px; }
+
+/* Avatar de usuario */
+.vct-avatar {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.15) !important;
+    border: 2px solid rgba(255, 255, 255, 0.5) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    flex-shrink: 0 !important;
+}
+
+.vct-avatar img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    border-radius: 50% !important;
+    display: block !important;
+}
+
+.vct-user-details { display: flex; flex-direction: column; }
+.vct-user-title { color: #ffffff; font-size: 13px; font-weight: 700; line-height: 1.1; }
+.vct-user-subtitle { color: rgba(255, 255, 255, 0.75); font-size: 10px; }
+.vct-btn-logout { color: rgba(255,255,255,0.85); display: flex; align-items: center; justify-content: center; text-decoration: none; padding: 6px 8px; border-radius: 8px; transition: background 0.2s ease; }
+.vct-btn-logout:hover { color: #fff; background: rgba(239, 68, 68, 0.3); }
+
+/* ==========================================================================
+   🎯 SIDEBAR DE ÍCONOS Y CONTENEDOR PRINCIPAL
+   ========================================================================== */
+.vct-sidebar {
+    position: fixed !important;
+    top: 60px !important;
+    left: 0 !important;
+    width: 70px !important;
+    height: calc(100vh - 60px) !important;
+    background-color: #1e293b !important;
+    z-index: 1000 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    padding: 20px 0 !important;
+    box-shadow: 4px 0 15px rgba(0,0,0,0.1) !important;
+    float: none !important;
+}
+.vct-sidebar-nav {
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 14px !important;
+}
+.vct-nav-item {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    float: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+.vct-nav-item a {
+    color: #94a3b8 !important;
+    text-decoration: none !important;
+    width: 46px !important;
+    height: 46px !important;
+    border-radius: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    margin: 0 auto !important;
+    float: none !important;
+    transition: all 0.2s ease !important;
+}
+.vct-nav-item a:hover { color: #ffffff !important; background: #334155 !important; }
+.vct-nav-item.active a { color: #ffffff !important; background: #66062C !important; box-shadow: 0 4px 10px rgba(102, 6, 44, 0.4) !important; }
+.vct-sidebar-overlay { position: fixed; top: 60px; left: 0; width: 100%; height: calc(100vh - 60px); background: rgba(15, 23, 42, 0.6); z-index: 999; display: none; }
+
+#main { margin-left: 70px !important; padding: 76px 20px 24px 20px !important; width: calc(100% - 70px) !important; }
+
+@media (max-width: 900px) {
+    .vct-btn-hamburger { display: flex; }
+    .vct-user-details { display: none; }
+    .vct-sidebar { transform: translateX(-100%); }
+    .vct-sidebar.open { transform: translateX(0); }
+    #main { margin-left: 0 !important; padding: 72px 12px 20px 12px !important; width: 100% !important; }
+}
+
+/* Loader */
+.loading { position: fixed; top: 0; right: 0; bottom: 0; left: 0; background: rgba(255, 255, 255, 0.8); z-index: 9999; }
+.loader { left: 50%; margin-left: -4em; font-size: 10px; border: .8em solid #e2e8f0; border-left: .8em solid #66062C; animation: spin 1.1s infinite linear; }
+.loader, .loader:after { border-radius: 50%; width: 8em; height: 8em; display: block; position: absolute; top: 50%; margin-top: -4.05em; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* ==========================================================================
+   🔥 ESTILOS ESTABLES TABLAS LEGACY VOCATURO (ISOLATED)
+   ========================================================================== */
+#mainContainer table:not(.vct-table):not(.vct-table-main) {
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, .04) !important;
+    margin-top: 0 !important;
+}
+#mainContainer table:not(.vct-table):not(.vct-table-main):not([id*="grid_SP_M_CONFIG_"]) thead tr { background: #f8fafc !important; }
+#mainContainer table:not(.vct-table):not(.vct-table-main):not([id*="grid_SP_M_CONFIG_"]) thead th {
+    height: 42px !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    color: #475569 !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: .03em !important;
+    padding: 8px 14px !important;
+    text-align: left !important;
+}
+#mainContainer table:not(.vct-table):not(.vct-table-main):not([id*="grid_SP_M_CONFIG_"]) tbody td {
+    height: 46px !important;
+    border-bottom: 1px solid #edf2f7 !important;
+    padding: 8px 14px !important;
+    vertical-align: middle !important;
+    font-size: 13px !important;
+    color: #334155 !important;
+}
+#mainContainer table:not(.vct-table):not(.vct-table-main):not([id*="grid_SP_M_CONFIG_"]) tbody tr:hover td { background: #f8fafc !important; }
+
+/* Botones de acción legacy de Mühle */
+#mainContainer table:not(.vct-table):not(.vct-table-main) a.w3-btn,
+#mainContainer table:not(.vct-table):not(.vct-table-main) button {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #66062C !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    padding: 0 !important;
+    text-decoration: none !important;
+}
+#mainContainer table:not(.vct-table):not(.vct-table-main) a.w3-btn:hover,
+#mainContainer table:not(.vct-table):not(.vct-table-main) button:hover {
+    background: #66062C !important;
+    color: #ffffff !important;
+    border-color: #66062C !important;
+}
+
+/* ==========================================================================
+   🖼️ HEADER DE MÓDULOS VOCATURO
+   ========================================================================== */
+.vct-module-header {
+    background: #ffffff !important;
+    padding: 20px 24px !important;
+    border-radius: 12px !important;
+    border: 1px solid #e2e8f0 !important;
+    margin-bottom: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+}
+
+.vct-module-title-box {
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+}
+
+.vct-module-icon {
+    width: 44px !important;
+    height: 44px !important;
+    background: #66062C !important; /* Bordó Corporativo */
+    color: #ffffff !important;
+    border-radius: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 20px !important;
+}
+
+.vct-module-text h2 {
+    margin: 0 !important;
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+}
+
+.vct-module-text p {
+    margin: 2px 0 0 0 !important;
+    font-size: 13px !important;
+    color: #64748b !important;
+}
+
+.vct-button-primary {
+    background-color: #66062C !important;
+    color: #ffffff !important;
+    border: none !important;
+    padding: 10px 18px !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    cursor: pointer !important;
+    transition: background 0.2s ease !important;
+}
+
+.vct-button-primary:hover {
+    background-color: #4a0420 !important;
+}
+
+/* ==========================================================================
+   🌿 MÓDULO ÁRBOL DE SECTORES (BALANCE VISUAL Y REESCALADO)
+   ========================================================================== */
+
+/* Contenedor principal del árbol: Centrado y con aire */
+.vct-tree-container {
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    padding: 36px 40px !important;
+    box-shadow: 0 4px 25px rgba(15, 23, 42, 0.04) !important;
+    border: 1px solid #e2e8f0 !important;
+    margin: 20px auto 40px auto !important;
+    max-width: 960px !important;
+    overflow: visible !important;
+}
+
+/* Sangría y espaciado entre nodos del árbol */
+.vct-tree li {
+    position: relative !important;
+    padding-left: 44px !important;
+    margin: 12px 0 !important;
+    list-style: none !important;
+    overflow: visible !important;
+}
+
+/* Alineación mejorada de las líneas guía */
+.vct-tree li::before {
+    content: "" !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 20px !important;
+    bottom: 0 !important;
+    border-left: 2px dashed #cbd5e1 !important;
+}
+
+.vct-tree li::after {
+    content: "" !important;
+    position: absolute !important;
+    top: 28px !important;
+    left: 20px !important;
+    width: 24px !important;
+    border-top: 2px dashed #cbd5e1 !important;
+}
+
+.vct-tree li:last-child::before {
+    height: 28px !important;
+    bottom: auto !important;
+}
+
+/* Tarjeta del sector */
+.vct-sector-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    padding: 14px 20px !important;
+    width: 440px !important;
+    max-width: 100% !important;
+    display: inline-flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03) !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+.vct-sector-card:hover {
+    border-color: #66062C !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 20px rgba(102, 6, 44, 0.09) !important;
+}
+
+/* Nodo Raíz */
+.vct-sector-card.special-root {
+    background: #fdf2f4 !important;
+    border-color: #fbcfe8 !important;
+    width: 460px !important;
+}
+.vct-sector-card.special-root .vct-sector-title {
+    color: #66062C !important;
+}
+
+.vct-sector-card:has(.vct-dropdown-menu.is-open) {
+    z-index: 100 !important;
+}
+
+.vct-sector-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+}
+
+.vct-sector-title-wrapper {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    cursor: pointer !important;
+}
+
+.vct-sector-title {
+    color: #0f172a !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+}
+
+/* Toggles de Flecha */
+.vct-caret {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 22px !important;
+    height: 22px !important;
+    border-radius: 6px !important;
+    background: #fdf2f4 !important;
+    color: #66062C !important;
+    transition: all 0.2s ease !important;
+}
+
+.vct-caret:hover {
+    background: #66062C !important;
+    color: #ffffff !important;
+}
+
+.vct-caret.active {
+    transform: rotate(90deg) !important;
+    background: #66062C !important;
+    color: #ffffff !important;
+}
+
+/* Metadatos */
+.vct-sector-meta {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    margin-top: 2px !important;
+}
+
+.vct-sector-meta-item {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    color: #475569 !important;
+    background: #f8fafc !important;
+    border: 1px solid #f1f5f9 !important;
+    padding: 3px 8px !important;
+    border-radius: 6px !important;
+    line-height: 1 !important;
+}
+
+.vct-sector-meta-item svg,
+.vct-sector-meta-item i {
+    width: 12px !important;
+    height: 12px !important;
+    color: #64748b !important;
+}
+
+/* Botón y Menú Contextual Desplegable */
+.vct-dropdown {
+    position: relative !important;
+}
+
+.vct-dropdown-btn {
+    background: transparent !important;
+    border: none !important;
+    color: #94a3b8 !important;
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 6px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+}
+
+.vct-dropdown-btn:hover {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+}
+
+.vct-dropdown-menu {
+    display: none;
+    position: absolute !important;
+    top: 32px !important;
+    right: 0 !important;
+    background: #ffffff !important;
+    min-width: 180px !important;
+    border-radius: 8px !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.2) !important;
+    z-index: 99999 !important;
+    padding: 6px !important;
+}
+
+.vct-dropdown-menu.is-open {
+    display: block !important;
+}
+
+.vct-dropdown-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 8px 12px !important;
+    color: #334155 !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    border-radius: 6px !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    transition: background 0.15s, color 0.15s !important;
+}
+
+.vct-dropdown-item:hover {
+    background: #fdf2f4 !important;
+    color: #66062C !important;
+}
+
+.vct-nested {
+    display: none;
+}
+
+.vct-nested.active {
+    display: block !important;
+}
+
+/* ==========================================================================
+   🎯 VOCATURO MODULE HEADER (AZUL NOCHE #1e293b)
+   ========================================================================== */
+.vct-module-header {
+    background: #1e293b !important;
+    padding: 20px 24px !important;
+    border-radius: 12px 12px 0 0 !important;
+    border: none !important;
+    margin-bottom: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1) !important;
+}
+
+.vct-module-icon {
+    width: 44px !important;
+    height: 44px !important;
+    background: #66062C !important;
+    color: #ffffff !important;
+    border-radius: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 20px !important;
+}
+
+.vct-module-text h2 {
+    margin: 0 !important;
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+}
+
+.vct-module-text p {
+    margin: 3px 0 0 0 !important;
+    font-size: 12.5px !important;
+    color: rgba(255, 255, 255, 0.75) !important;
+}
+
+/* Sub-header de pestañas / barra superior del lienzo */
+.vct-module-subbar {
+    background: #ffffff !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    padding: 12px 24px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    border-radius: 0 0 12px 12px !important;
+    margin-bottom: 24px !important;
+}
+
+/* ==========================================================================
+   🧹 CORRECCIÓN DE CONTENEDOR MÜHLE ENGINE (ELIMINA EL ESPACIO DEL TD)
+   ========================================================================== */
+
+/* 1. Neutraliza la tabla envolvente que mete Mühle alrededor de vct-module */
+#mainContainer > table.datatable,
+#mainContainer > .w3-responsive > table.datatable,
+table[id*="grid_SP_M_CONFIG_"] {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    table-layout: fixed !important;
+}
+
+/* 2. Resetea el td fantasma para que no ocupe 46px de alto ni tenga bordes */
+#mainContainer table.datatable > tbody > tr > td:has(> section.vct-module),
+#mainContainer table.datatable > tbody > tr > td:has(> .vct-tree-container),
+table[id*="grid_SP_M_CONFIG_"] > tbody > tr > td {
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    vertical-align: top !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+}

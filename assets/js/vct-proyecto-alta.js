@@ -1,4 +1,5 @@
-/* vct-proyecto-alta.js - v1
+﻿/* vct-proyecto-alta.js - v2 (normas: el menu abre en cada clic y Enter toma la opcion bajo el mouse;
+                              al reabrir el alta se limpian chips y servicios)
    ============================================================================
    Alta de proyecto desde la Vista 360 de Cliente (VCT_MAIN_CLIENTES_V360).
 
@@ -192,6 +193,8 @@
         }
 
         search.addEventListener("focus", open);
+        /* v2: si el buscador ya tenia el foco (ej. despues de Esc), el clic igual abre el menu */
+        search.addEventListener("click", open);
         search.addEventListener("input", function () { active = 0; open(); });
         search.addEventListener("keydown", function (e) {
             var opts = menu.querySelectorAll(".vct-proy-combo-option");
@@ -206,6 +209,16 @@
                 var ids = selected();
                 if (ids.length) { ids.pop(); setValue(input, ids.join(",")); }
             }
+        });
+        /* v2: la opcion activa (la que toma Enter) sigue al mouse */
+        menu.addEventListener("mousemove", function (e) {
+            var opt = e.target.closest(".vct-proy-combo-option");
+            if (!opt) return;
+            var opts = Array.prototype.slice.call(menu.querySelectorAll(".vct-proy-combo-option"));
+            var i = opts.indexOf(opt);
+            if (i === active) return;
+            active = i;
+            opts.forEach(function (o, k) { o.classList.toggle("is-active", k === active); });
         });
         menu.addEventListener("mousedown", function (e) {
             var opt = e.target.closest(".vct-proy-combo-option");
@@ -477,6 +490,11 @@
         }
         var com = fieldEl("TEXTO26");
         if (com) com.value = "";
+        /* v2: DomForm.clear no avisa el cambio: repintar servicios y chips de normas */
+        ["TEXTO22", "TEXTO24"].forEach(function (f) {
+            var i = fieldEl(f);
+            if (i) i.dispatchEvent(new Event("change", { bubbles: true }));
+        });
         m.querySelectorAll('input[type="date"]').forEach(syncDateLabel);
         syncAnalista();
         var panel = m.querySelector(".vct-proy-rent-panel");

@@ -1,0 +1,18 @@
+ 
+/* ---------------- 2. sincronizar ---------------- */
+CREATE   PROCEDURE dbo.VCT_PROYECTO_AVANCE_SYNC
+(
+    @ID_PROYECTO INT = NULL
+)
+AS
+BEGIN
+    /* Graba en VCT_PROYECTOS.PORCENTAJE_AVANCE el avance calculado.
+       @ID_PROYECTO NULL = todos. No toca FECHA_UPD. */
+    SET NOCOUNT ON;
+    UPDATE P
+       SET PORCENTAJE_AVANCE = A.AVANCE
+      FROM dbo.VCT_PROYECTOS P
+     CROSS APPLY dbo.VCT_PROYECTO_AVANCE(P.ID) A
+     WHERE (@ID_PROYECTO IS NULL OR P.ID = @ID_PROYECTO)
+       AND ISNULL(P.PORCENTAJE_AVANCE, -1) <> A.AVANCE;
+END

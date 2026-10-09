@@ -1,0 +1,17 @@
+CREATE FUNCTION [dbo].[FN_GET_DIAS_HABILES] (@IFECHAD DATETIME, @IFECHAH DATETIME)
+RETURNS VARCHAR(400)
+AS BEGIN
+    DECLARE @VDIAS		INT
+ 
+	IF (@IFECHAD=@IFECHAH)
+		RETURN 0
+	ELSE
+		select	@VDIAS = COUNT(1)
+		from	Calendar
+		where	Fecha >= @IFECHAD
+		and		Fecha <= @IFECHAH
+		and		IsHoliday <> 1
+		and		FinDeSemana <> 1
+ 
+	    RETURN @VDIAS
+END

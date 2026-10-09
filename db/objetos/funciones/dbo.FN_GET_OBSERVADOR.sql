@@ -1,0 +1,29 @@
+ 
+ 
+CREATE FUNCTION [dbo].[FN_GET_OBSERVADOR] (@IAGENDA INT)
+RETURNS @TempTable TABLE (
+   CAT_DATA_CODE	VARCHAR(50),
+   CAT_DATA_DESC	varchar(400),
+   TRUE				VARCHAR(50)
+) 
+AS
+BEGIN
+	DECLARE @VOBSERVADOR		VARCHAR(100),
+		@lstDato		varchar(100), 
+		@lnuPosComa		int ,
+		@VID			VARCHAR(50),
+		@VALOR			VARCHAR(400)
+ 
+	SELECT	@VOBSERVADOR = ISNULL(OBSERVADOR,'')
+	FROM	LK_AGENDA
+	WHERE	ID_AGENDA = @IAGENDA
+ 
+	IF (@VOBSERVADOR <> '') BEGIN
+		insert into @TempTable
+		SELECT	@VOBSERVADOR, @VOBSERVADOR, 'true'
+	END ELSE BEGIN
+		insert into @TempTable
+		select 'SO', 'Sin Observador', 'true'
+	END
+   RETURN;
+END

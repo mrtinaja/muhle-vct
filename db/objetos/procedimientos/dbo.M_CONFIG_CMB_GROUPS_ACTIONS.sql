@@ -1,0 +1,22 @@
+CREATE   PROCEDURE [dbo].[M_CONFIG_CMB_GROUPS_ACTIONS]
+(@IPKEYJOB	AS VARCHAR(100))
+AS
+ 
+DECLARE @V_PERFIL_SEL VARCHAR(50)
+ 
+BEGIN
+ 
+	SELECT	@V_PERFIL_SEL = ISNULL(ID_GROUP_SEL,'')
+	FROM	M_CONFIG
+	WHERE	PAR_KEY = @IPKEYJOB
+ 
+	SELECT  a.[Id]		AS CAT_DATA_CODE,
+			A.[Name]	AS CAT_DATA_DESC, 
+			'TRUE'
+	FROM	Actions A 
+	WHERE	id not in ( 
+				select ActionId from GroupsActions
+				where GroupId = @V_PERFIL_SEL)  
+	order by a.name
+ 
+END

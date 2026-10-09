@@ -1,0 +1,121 @@
+CREATE PROCEDURE [dbo].[HOME_ADD_MINUTACIE_PROY]
+(@IPKEYJOB	AS VARCHAR(100),
+ @IAGENTE	AS VARCHAR(100),
+ @OCODE		AS VARCHAR(2) OUTPUT,
+ @OMENSAJE	AS VARCHAR(400) OUTPUT)
+AS
+ 
+DECLARE	@VPROYECTO			VARCHAR(50),
+		@VPROYECTO_SERV		VARCHAR(50),
+		@VSERVICIO			VARCHAR(50),
+		@VFECHA				DATETIME,
+		@VOBSERVACION		VARCHAR(400),
+		@VID_DOC			VARCHAR(50),
+		@VID_PROYECTO_DOCUM	VARCHAR(50),
+		@VDESC_DOC_DET		VARCHAR(400), 
+		@VGRUPO_DOC_DET		VARCHAR(50),
+		@VCANT				INT,
+		@VERROR				VARCHAR(50),
+		@VAGENDA_ID			VARCHAR(50),
+		@VTIPO				VARCHAR(50),
+		@VADJUNTO	VARCHAR(100)	
+ 
+BEGIN	
+ 
+	SET @OCODE = '0'
+	SET @OMENSAJE = ''
+ 
+	SELECT	@VPROYECTO		= ISNULL(PROYECTO_ID,''),
+			--@VPROYECTO_SERV = ISNULL(PROYECTO_SERV_ID,''),
+			@VFECHA = ISNULL(FECHA_MC_PROY,''),
+			@VOBSERVACION = ISNULL(OBSERV_MC_PROY,''),
+			@VERROR = ISNULL(ERROR,'')
+	FROM	XAGENDA
+	WHERE	PAR_KEY = @IPKEYJOB
+ 
+	SELECT	@VADJUNTO = ISNULL(PKEY,'')
+	FROM	PHYSICAL_ATTACHED_DOCUMENT
+	WHERE	PAR_KEY = @IPKEYJOB
+ 
+	IF @VERROR = '' BEGIN
+		SET @OCODE = '0'
+		SET @OMENSAJE = ''
+ 
+	END ELSE BEGIN
+ 
+		IF (@VFECHA = '') BEGIN
+			SET @OCODE = '1'
+			SET @OMENSAJE = '<html>
+							<body>
+							  <div class="w3-panel w3-pale-red" style="height: 20px;">
+									<font style="font-family:Tahoma, Arial, Helvetica, sans-serif;font-size:12px;color:#641E16"><b>Debe completar el Campo Fecha</b></font>
+							  </div>
+							</div>
+							</body>
+							</html>'
+			
+			UPDATE	XAGENDA
+			SET		ERROR = 'SI'
+			WHERE	PAR_KEY = @IPKEYJOB
+			RETURN
+		END
+ 
+		SELECT	@VCANT = COUNT(1)
+		FROM	LK_PROYECTO_SERVICIO
+		WHERE	ID_PROYECTO = @VPROYECTO
+		AND		CIERRE = ISNULL('NO','NO')
+ 
+		IF (@VCANT > 0) BEGIN
+			SET @OCODE = '1'
+			SET @OMENSAJE = '<html>
+							<body>
+							  <div class="w3-panel w3-pale-red" style="height: 20px;">
+									<font style="font-family:Tahoma, Arial, Helvetica, sans-serif;font-size:12px;color:#641E16"><b>Debe Cerrar los Servicios del Proyecto para poder Adjuntar la Minuta</b></font>
+							  </div>
+							</div>
+							</body>
+							</html>'
+			
+			UPDATE	XAGENDA
+			SET		ERROR = 'SI'
+			WHERE	PAR_KEY = @IPKEYJOB
+			RETURN
+		END
+	
+		BEGIN
+		
+			INSERT INTO LK_PROYECTO_DOCUM
+			(ID_PROYECTO, ID_TIPO_SERVICIO, ID_DOCUMENTACION, FECHA_DOCUM, NRO_DOCUM_INTERNO,
+			 PARTICIPANTES_DOCUM, TEMAS_DOCUM, ADJUNTO_DOCUM,
+			 CONSULTOR, VISITA_MES, CONSULTOR_ACOMP, OBSERVACIONES,FECHA_CIERRE, ID_AGENDA, TIPO, ID_ADJUNTO)
+			VALUES
+			(@VPROYECTO, @VSERVICIO, 0, @VFECHA, 'Minuta de Cierre Proyecto',
+			 NULL, NULL, NULL,
+			 NULL, NULL, NULL, @VOBSERVACION, NULL, NULL, 'MP', @VADJUNTO)
+ 
+			UPDATE	LK_PROYECTO
+			SET		FECHA_FIN_TOTAL = GETDATE(),
+					ESTADO_PROYECTO_TOTAL = 'TERMINADO'
+			WHERE	ID_PROYECTO = @VPROYECTO
+ 
+		END
+ 
+		IF (@VADJUNTO <> '') BEGIN
+			UPDATE	PHYSICAL_ATTACHED_DOCUMENT
+			SET		PAR_KEY = @VPROYECTO
+			WHERE	PKEY = @VADJUNTO
+		END
+ 
+		UPDATE	XAGENDA
+		SET		FECHA_MC_PROY = NULL,
+				OBSERV_MC_PROY = NULL
+		WHERE	PAR_KEY = @IPKEYJOB
+	END
+ 
+	
+	IF (@OCODE = '0') BEGIN
+		UPDATE	XAGENDA
+		SET		ERROR = 'NO'
+		WHERE	PAR_KEY = @IPKEYJOB
+	END
+END

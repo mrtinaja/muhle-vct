@@ -1,0 +1,34 @@
+ 
+CREATE VIEW dbo.VCT_VW_GESTIONES_RESPONSABLES
+AS
+    SELECT
+        X.ID_GESTION,
+        X.TIPO_ENTIDAD,
+        X.ID_ENTIDAD,
+        X.NOMBRE
+    FROM
+    (
+        SELECT
+            GP.ID_GESTION,
+            GP.TIPO_ENTIDAD,
+            GP.ID_ENTIDAD,
+            CASE
+                WHEN GP.TIPO_ENTIDAD='SISTEMA' THEN 'Sistema'
+                WHEN P.NOMBRE IS NOT NULL THEN P.NOMBRE
+                WHEN GP.ID_ENTIDAD IS NOT NULL
+                    THEN GP.TIPO_ENTIDAD+' #'+CONVERT(VARCHAR(20),GP.ID_ENTIDAD)
+                ELSE GP.TIPO_ENTIDAD
+            END AS NOMBRE,
+            ROW_NUMBER() OVER
+            (
+                PARTITION BY GP.ID_GESTION
+                ORDER BY GP.PRINCIPAL DESC,GP.ID
+            ) AS RN
+        FROM dbo.VCT_GESTIONES_PARTICIPANTES GP
+        LEFT JOIN dbo.VCT_VW_PERSONAS_V360 P
+            ON P.TIPO_ENTIDAD=GP.TIPO_ENTIDAD
+           AND P.ID_ENTIDAD=GP.ID_ENTIDAD
+        WHERE GP.ROL_PARTICIPANTE='RESPONSABLE'
+          AND GP.ESTADO='ACTIVO'
+    ) X
+    WHERE X.RN=1;

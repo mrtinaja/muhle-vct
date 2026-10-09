@@ -1,0 +1,32 @@
+CREATE FUNCTION [dbo].[FN_GET_NORMA_HTML] (@ISTRING_BEGIN VARCHAR(400), @INORMAS VARCHAR(4000), @ISTRING_END VARCHAR(400))
+RETURNS VARCHAR(4000)
+AS BEGIN
+    DECLARE @lnuPosComa	int,
+			@VALOR		VARCHAR(400),
+			@VDESCNORMAS varchar(4000),
+			@lstDato varchar(100)
+ 
+	SET	@INORMAS = ISNULL(@INORMAS,'');
+ 
+	WHILE LEN(@INORMAS) > 0
+				BEGIN 
+					SET @lnuPosComa = CHARINDEX('|', @INORMAS) -- Busca el caracter a separador
+					IF (@lnuPosComa = 0) BEGIN 
+						SET @lstDato = @INORMAS
+						SET @INORMAS = '' 
+					END ELSE BEGIN
+						SET @lstDato = SUBSTRING(@INORMAS, 1, @lnuPosComa - 1)
+ 
+						SELECT	@VALOR = isnull(@ISTRING_BEGIN,'')+DESC_APTITUD+isnull(@ISTRING_END,'')
+						FROM	LK_APTITUDES
+						WHERE	ID_APTITUD = @lstDato
+ 
+						SET @VDESCNORMAS = ISNULL(@VDESCNORMAS,'') + @VALOR + '</br>'
+ 
+						SET @INORMAS = SUBSTRING(@INORMAS, @lnuPosComa + 1, LEN(@INORMAS))
+					END
+				END
+ 
+	RETURN ISNULL(@VDESCNORMAS,'')
+ 
+END

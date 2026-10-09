@@ -1,0 +1,70 @@
+ 
+CREATE PROCEDURE dbo.VCT_EVENTO_REGISTRAR
+(
+    @CODIGO_EVENTO   VARCHAR(100),
+ 
+    @TIPO_ENTIDAD    VARCHAR(50) = NULL,
+    @ID_ENTIDAD      INT = NULL,
+ 
+    @ID_PROYECTO     INT = NULL,
+ 
+    @DETALLE         VARCHAR(MAX) = NULL,
+ 
+    @PROCESAR        BIT = 1,
+    @USUARIO         VARCHAR(100) = NULL,
+ 
+    @ID_EVENTO_OUT   INT OUTPUT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+ 
+    SET @ID_EVENTO_OUT=NULL;
+ 
+    IF NULLIF(LTRIM(RTRIM(ISNULL(@CODIGO_EVENTO,''))),'') IS NULL
+    BEGIN
+        RAISERROR('CODIGO_EVENTO es obligatorio.',16,1);
+        RETURN;
+    END;
+ 
+    INSERT INTO dbo.VCT_EVENTOS_NEGOCIO
+    (
+        CODIGO_EVENTO,
+        TIPO_ENTIDAD,
+        ID_ENTIDAD,
+        ID_PROYECTO,
+        FECHA_EVENTO,
+        DETALLE,
+        PROCESADO,
+        FECHA_PROCESADO,
+        ERROR_PROCESO,
+        FECHA_ALTA,
+        USUARIO_ALTA
+    )
+    VALUES
+    (
+        @CODIGO_EVENTO,
+        @TIPO_ENTIDAD,
+        @ID_ENTIDAD,
+        @ID_PROYECTO,
+        GETDATE(),
+        @DETALLE,
+        0,
+        NULL,
+        NULL,
+        GETDATE(),
+        @USUARIO
+    );
+ 
+    SET @ID_EVENTO_OUT=SCOPE_IDENTITY();
+ 
+    IF ISNULL(@PROCESAR,1)=1
+    BEGIN
+        EXEC dbo.VCT_EVENTO_PROCESAR
+            @ID_EVENTO=@ID_EVENTO_OUT,
+            @USUARIO=@USUARIO;
+    END;
+ 
+    SELECT
+        @ID_EVENTO_OUT AS ID_EVENTO;
+END

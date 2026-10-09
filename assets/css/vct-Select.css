@@ -1,0 +1,68 @@
+﻿.vct-custom-select-wrapper {
+    position: relative !important;
+    width: 100% !important;
+    display: block !important;
+}
+
+.vct-custom-select-trigger {
+    width: 100% !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    padding: 0 14px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #0f172a !important;
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.vct-custom-select-trigger:focus,
+.vct-custom-select-wrapper.is-open .vct-custom-select-trigger {
+    border-color: #66062D !important;
+    box-shadow: 0 0 0 3px rgba(102, 6, 45, 0.12) !important;
+    outline: none !important;
+}
+
+.vct-custom-select-options {
+    position: absolute !important;
+    top: calc(100% + 4px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15) !important;
+    padding: 6px !important;
+    margin: 0 !important;
+    list-style: none !important;
+    z-index: 99999 !important;
+    display: none !important;
+    max-height: 220px !important;
+    overflow-y: auto !important;
+}
+
+.vct-custom-select-wrapper.is-open .vct-custom-select-options {
+    display: block !important;
+}
+
+.vct-custom-select-option {
+    padding: 9px 12px !important;
+    font-size: 13px !important;
+    color: #334155 !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    transition: background 0.15s ease !important;
+}
+
+.vct-custom-select-option:hover,
+.vct-custom-select-option.is-selected {
+    background-color: #66062D !important;
+    color: #ffffff !important;
+}

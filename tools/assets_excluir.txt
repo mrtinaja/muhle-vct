@@ -1,0 +1,10 @@
+# Archivos de /css/ y /js/ del servidor que NO se versionan (pull_assets.ps1 baja todo lo demas).
+# Librerias de terceros
+css/font-awesome-5-all.css
+css/font-awesome.css
+css/font-awesome.min.css
+css/progress-wizard.min.css
+css/w3.css
+# Respaldos viejos del servidor (copias, no se usan)
+css/portal-vocaturoBK.css
+js/Main-Copy.js

@@ -1,0 +1,627 @@
+﻿/* ====================================================
+   🎨 VOCATURO UI 2026 - CSS MAESTRO CORPORATIVO
+   ==================================================== */
+
+/* ----------------------------------------------------
+   1. OVERRIDE DE MÜHLE Y FONDO FOTOGRÁFICO UNIFICADO
+   ---------------------------------------------------- */
+
+/* Removemos el fondo gris opaco que impone Mühle en sus contenedores master */
+#main.w3-main,
+#mainContainer.w3-light-grey {
+    background: transparent !important;
+}
+
+/* Aplicamos el lienzo fotográfico general del Portal con contraste equilibrado */
+.vocaturo-portal {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-height: calc(100vh - 80px) !important;
+    padding: 16px !important;
+    border-radius: 16px !important;
+    font-family: "Gotham", "Gotham Book", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    color: #333233 !important; /* Pantone Black 7 C */
+    margin-top: 0px !important;
+
+    /* Gradiente oscuro sutil sobre la foto para garantizar legibilidad de las tarjetas */
+    background: linear-gradient(
+                    rgba(15, 23, 42, 0.35), 
+                    rgba(15, 23, 42, 0.45)
+                ),
+                url('../img/fondo-vocaturo.jpg') no-repeat center center fixed !important;
+    background-size: cover !important;
+}
+
+.vocaturo-portal *,
+.vocaturo-portal *::before,
+.vocaturo-portal *::after {
+    box-sizing: border-box;
+}
+
+/* ----------------------------------------------------
+   2. GLASSMORPHISM & TARJETAS
+   ---------------------------------------------------- */
+.vocaturo-portal .card,
+.vocaturo-portal .search-card,
+.vocaturo-portal .vct-chart-card,
+.vocaturo-portal .vct-accordion-item,
+.vocaturo-portal .vct-table-scroll,
+.vocaturo-portal .vct-row-detail-box {
+    background: rgba(255, 255, 255, 0.92) !important;
+    backdrop-filter: blur(8px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(8px) saturate(140%) !important;
+    border: 1px solid rgba(226, 232, 240, 0.8) !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Hover suave para tarjetas */
+.vocaturo-portal .card:hover,
+.vocaturo-portal .vct-chart-card:hover {
+    background: rgba(255, 255, 255, 0.96) !important;
+    box-shadow: 0 12px 36px 0 rgba(102, 6, 45, 0.12) !important;
+    transition: all 0.3s ease !important;
+}
+
+/* ----------------------------------------------------
+   3. HEADER CARD & LOGO
+   ---------------------------------------------------- */
+.vocaturo-portal .vocaturo-header-card {
+    width: 100%;
+    min-height: 74px;
+    background: rgba(102, 6, 45, 0.95) !important; /* Bordó Pantone 7421 C */
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 10px 28px rgba(102, 6, 45, .25) !important;
+    margin-bottom: 14px;
+}
+
+.vocaturo-portal .vocaturo-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.vocaturo-portal .vocaturo-header-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+}
+
+.vocaturo-portal .vct-header-logo-img {
+    height: 32px !important;
+    width: auto !important;
+    object-fit: contain !important;
+    display: block !important;
+    mix-blend-mode: lighten !important;
+}
+
+.vocaturo-portal .vocaturo-header-title {
+    font-size: 17px;
+    font-weight: 800;
+    line-height: 1.1;
+    color: #ffffff !important;
+    margin: 0;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.vocaturo-portal .vocaturo-header-subtitle {
+    font-size: 13px;
+    color: rgba(255, 255, 255, .86) !important;
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+.vocaturo-portal .vocaturo-header-home {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .15);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    transition: background .2s ease;
+}
+
+.vocaturo-portal .vocaturo-header-home:hover {
+    background: rgba(255, 255, 255, .25);
+}
+
+/* ----------------------------------------------------
+   4. BÚSQUEDA Y BARRAS SUPERIORES
+   ---------------------------------------------------- */
+.vocaturo-portal .search-card {
+    width: 100%;
+    padding: 10px 12px;
+    margin-bottom: 14px;
+    border-radius: 14px;
+}
+
+.vocaturo-portal .search-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.vocaturo-portal .search-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #66062D !important;
+    white-space: nowrap;
+    text-transform: uppercase;
+}
+
+.vocaturo-portal .search-content input {
+    height: 34px !important;
+    flex: 1 1 auto;
+    min-width: 160px;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 10px !important;
+    background: #ffffff !important;
+    color: #333233 !important;
+    font-size: 13px !important;
+    padding: 0 10px !important;
+    outline: none !important;
+}
+
+.vocaturo-portal .search-content input:focus {
+    border-color: #66062D !important;
+    box-shadow: 0 0 0 3px rgba(102, 6, 45, .12) !important;
+}
+
+.vocaturo-portal .vct-search-action {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    border-radius: 10px !important;
+    color: #66062D !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+}
+
+.vocaturo-portal .vct-search-action:hover {
+    background: #fff1f5 !important;
+    color: #66062D !important;
+}
+
+/* ----------------------------------------------------
+   5. METRIC CARDS DE DASHBOARD
+   ---------------------------------------------------- */
+.vocaturo-portal .cards-container {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 14px;
+}
+
+.vocaturo-portal .card {
+    border-radius: 14px;
+    padding: 14px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.vocaturo-portal .card-label {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    margin-bottom: 10px;
+}
+
+.vocaturo-portal .card-content {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.vocaturo-portal .card-value {
+    font-size: 30px;
+    line-height: 1;
+    color: #66062D !important;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.vocaturo-portal .card-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    min-width: 0;
+}
+
+.vocaturo-portal .side-row {
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.vocaturo-portal .side-ok { color: #15803d; }
+.vocaturo-portal .side-bad { color: #b91c1c; }
+
+/* ----------------------------------------------------
+   6. SECCIÓN DE GRÁFICOS (CHART.JS LAYOUT)
+   ---------------------------------------------------- */
+.vct-chart-row {
+    display: flex !important;
+    gap: 20px !important;
+    margin-bottom: 24px !important;
+    flex-wrap: wrap !important;
+}
+
+.vct-chart-card {
+    flex: 1 1 calc(50% - 10px) !important;
+    min-width: 340px !important;
+    border-radius: 16px !important;
+    padding: 20px !important;
+    box-sizing: border-box !important;
+}
+
+.vct-chart-card-head {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    margin-bottom: 20px !important;
+    border-bottom: 1px solid #F1F5F9 !important;
+    padding-bottom: 12px !important;
+}
+
+.label-bigcard {
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    color: #333233 !important;
+    margin-bottom: 4px !important;
+    line-height: 1.2 !important;
+}
+
+.vct-chart-subtitle {
+    font-size: 12px !important;
+    color: #64748b !important;
+    margin-top: 4px !important;
+}
+
+.vct-chart-badge {
+    background: #FFF1F5 !important;
+    color: #66062D !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    padding: 4px 10px !important;
+    border-radius: 20px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+}
+
+.vct-chart-layout {
+    display: flex !important;
+    align-items: center !important;
+    gap: 20px !important;
+    width: 100% !important;
+    flex-wrap: nowrap !important;
+}
+
+.vct-chart-layout--donut { flex-direction: row !important; }
+.vct-chart-layout--bar { flex-direction: row !important; align-items: center !important; }
+
+.vct-chart-canvas-wrap {
+    position: relative !important;
+    width: 160px !important;
+    height: 160px !important;
+    flex: 0 0 160px !important;
+}
+
+.vct-chart-canvas-wrap--bar {
+    position: relative !important;
+    height: 170px !important;
+    flex: 1 1 60% !important;
+    min-width: 220px !important;
+}
+
+.vct-chart-legend {
+    flex: 1 1 40% !important;
+    overflow-y: auto !important;
+    max-height: 180px !important;
+    min-width: 130px !important;
+}
+
+.vct-chart-legend-list {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+}
+
+.vct-chart-legend-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 6px 8px !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.vct-chart-legend-item:hover {
+    background: rgba(248, 250, 252, 0.8) !important;
+}
+
+.vct-chart-legend-color {
+    width: 10px !important;
+    height: 10px !important;
+    border-radius: 50% !important;
+    display: inline-block !important;
+    flex-shrink: 0 !important;
+    margin-right: 8px !important;
+}
+
+.vct-chart-legend-copy {
+    display: flex !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    font-size: 12px !important;
+}
+
+.vct-chart-legend-label { color: #333233 !important; font-weight: 600 !important; }
+.vct-chart-legend-meta { color: #64748b !important; font-weight: 700 !important; text-align: right !important; }
+
+/* ----------------------------------------------------
+   7. COMPONENTES Y CLASES DE STORED PROCEDURES (M_CONFIG_USERS, ETC.)
+   ---------------------------------------------------- */
+/* Encabezados de Tabla Generados por SP */
+.vct-th {
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    color: #475569 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+}
+
+/* Celdas de Texto Estándar */
+.vct-cell-text {
+    font-size: 12px;
+    font-weight: 500;
+    color: #333233;
+    line-height: 1.3;
+}
+
+/* Badges de Estado (Activo / Inactivo) */
+.vct-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    line-height: 1;
+}
+
+.vct-badge-success {
+    background: #dcfce7 !important;
+    color: #15803d !important;
+    border: 1px solid rgba(21, 128, 61, 0.15) !important;
+}
+
+.vct-badge-danger {
+    background: #fee2e2 !important;
+    color: #b91c1c !important;
+    border: 1px solid rgba(185, 28, 28, 0.15) !important;
+}
+
+/* Botones de Acción dentro de Celdas */
+.vct-btn-icon {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: #0f172a;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.vct-btn-icon:hover {
+    background: #fff1f5;
+    border-color: #f3c4d5;
+    color: #66062D;
+}
+
+/* ----------------------------------------------------
+   8. ACORDEÓN Y TABLAS VOCATURO UI
+   ---------------------------------------------------- */
+.vocaturo-portal .vct-table-section { width: 100%; margin-top: 14px; }
+.vocaturo-portal .vct-accordion-item { width: 100%; border-radius: 14px; overflow: visible; }
+
+.vocaturo-portal .vct-accordion-header {
+    width: 100%;
+    min-height: 48px;
+    border: 0;
+    background: transparent !important;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    border-radius: 14px 14px 0 0;
+}
+
+.vocaturo-portal .vct-arrow { color: #64748b; font-size: 13px; }
+.vocaturo-portal .vct-accordion-content { display: block; padding: 0 14px 14px 14px; }
+.vocaturo-portal .vct-accordion-item:not(.active) .vct-accordion-content { display: none; }
+
+.vocaturo-portal .vct-table-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 4px 0 10px 0;
+}
+
+.vocaturo-portal .vct-table-length,
+.vocaturo-portal .vct-table-search {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: #475569;
+}
+
+.vocaturo-portal .vct-page-size-select {
+    height: 32px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #333233;
+    font-size: 12px;
+    padding: 0 8px;
+    cursor: pointer;
+    outline: none;
+}
+
+.vocaturo-portal .vct-table-scroll {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+    border-radius: 12px;
+}
+
+.vocaturo-portal .vct-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    background: transparent;
+}
+
+.vocaturo-portal .vct-table-compact { table-layout: fixed; min-width: 780px; }
+
+.vocaturo-portal .vct-table-compact thead th {
+    height: 34px;
+    background: rgba(248, 250, 252, 0.9);
+    border-bottom: 1px solid #e2e8f0;
+    color: #475569;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    padding: 6px 8px;
+    text-align: left;
+    line-height: 1.1;
+    white-space: nowrap;
+}
+
+.vocaturo-portal .vct-table-compact tbody td {
+    height: 38px;
+    border-bottom: 1px solid #edf2f7;
+    padding: 5px 8px;
+    vertical-align: middle;
+    line-height: 1.15;
+    overflow: visible;
+}
+
+.vocaturo-portal .vct-main-row:hover td { background: rgba(255, 255, 255, 0.6); }
+
+/* ----------------------------------------------------
+   9. PAGINACIÓN Y FOOTER
+   ---------------------------------------------------- */
+.vocaturo-portal .vct-table-footer {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.vocaturo-portal .vct-table-info { font-size: 12px; color: #64748b; }
+.vocaturo-portal .vct-table-pager { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+
+.vocaturo-portal .vct-page-btn {
+    min-width: 32px;
+    min-height: 30px;
+    padding: 6px 9px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #333233;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.vocaturo-portal .vct-page-btn:hover { background: #f8fafc; color: #66062D; }
+.vocaturo-portal .vct-page-btn.active { background: #66062D !important; border-color: #66062D !important; color: #ffffff !important; }
+.vocaturo-portal .vct-page-btn.disabled { opacity: .45; cursor: not-allowed; pointer-events: none; }
+
+/* ----------------------------------------------------
+   10. MEDIA QUERIES (RESPONSIVE)
+   ---------------------------------------------------- */
+@media (max-width: 1100px) {
+    .vocaturo-portal .cards-container { grid-template-columns: 1fr; }
+    .vct-chart-card { flex: 1 1 100% !important; }
+}
+
+@media (max-width: 768px) {
+    .vct-chart-layout--donut { flex-direction: column !important; align-items: center !important; }
+    .vct-chart-legend { width: 100% !important; }
+    .vocaturo-portal .search-content { flex-wrap: wrap; }
+    .vocaturo-portal .vct-table-toolbar,
+    .vocaturo-portal .vct-table-footer { align-items: flex-start; flex-direction: column; }
+}
+
+/* Forzar visualización moderna en grillas dinámicas del motor */
+.vocaturo-portal table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 13px !important;
+}
+
+.vocaturo-portal table th {
+    background: #f8fafc !important;
+    color: #475569 !important;
+    font-weight: 700 !important;
+    padding: 10px 12px !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    font-size: 11px !important;
+    text-transform: uppercase !important;
+}
+
+.vocaturo-portal table td {
+    padding: 10px 12px !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    vertical-align: middle !important;
+}
+

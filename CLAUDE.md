@@ -44,7 +44,7 @@ Plataforma de gestión de la consultora **Vocaturo** (proyectos de normas ISO: c
 ## Estructura del repo
 
 - Raíz: scripts de entrega numerados en orden de ejecución (`PROYECTO_ALTA_1..5`, `PROYECTO_LANZ_1..5`, `PROYECTO_PLAN_1..3`, `PROYECTO_VISITAS_1..3`, `INICIO_PERFIL_1..4`, `ACCIONES_1..3`, `PULIDO_*`, `FIX_*`) y diagnósticos `DIAG_*`.
-- `assets/css`, `assets/js`: copias de los assets `vct-*` bajadas del servidor (las copias sueltas en la raíz NO son la fuente).
+- `assets/css`, `assets/js`: copia de **todo** `/css/` y `/js/` del servidor (las copias sueltas en la raíz NO son la fuente). `tools/pull_assets.ps1` lee el listado de carpetas del servidor y baja todo salvo lo de `tools/assets_excluir.txt` (librerías de terceros y respaldos). Ojo: si un asset se cambió en el repo y todavía no se subió al servidor, correr el script lo pisa con la versión del servidor; subirlo antes o restaurarlo con git.
 - `db/objetos/`: definiciones de SPs/funciones volcadas de la base (`db/DUMP_OBJETOS.sql` + `tools/split_dump.py`).
 - `db/AUDITORIA_*`: trigger de auditoría DDL (mail en cada cambio de estructura) y vigilante de archivos del servidor web (`tools/vigilante`).
 

@@ -18,267 +18,220 @@
     <link rel="stylesheet" href="../css/font-awesome-5-all.css"/>
     <link rel="stylesheet" href="../css/sw2/sweetalert2.min.css"/>
     <link rel="stylesheet" href="../css/progress-wizard.min.css"/>
+
+    <!-- Estilos Corporativos Vocaturo y VctTable -->
+    <link rel="stylesheet" href="../css/portal-vocaturo.css"/>
+    <link rel="stylesheet" href="../css/vctTable.css"/>
+
     <link rel="shortcut icon" href="../favicon.ico" type="image/x-icon"/>
     <link rel="icon" href="../favicon.ico" type="image/x-icon"/>
+	<!-- En el <head> de la página ASPX (debajo de portal-vocaturo.css) -->
+	<link rel="stylesheet" href="../css/vct-Select.css"/>
+	<link rel="stylesheet" href="../css/vct-Core.css"/>
 
+	<!-- Antes del cierre de </body> (debajo de vctTable.js / main.js) -->
+	<script src="https://unpkg.com/lucide@latest"></script>
+	<script src="../js/vct-Select.js"></script>
     <style>
-        /* ⚪ TOPBAR SUPERIOR FIXED */
-        body #muhleTopBar.w3-muhle-topbar {
-            height: 60px !important;
-            background-color: #ffffff !important;
-            border-bottom: 1px solid #e2e8f0 !important;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05) !important;
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100% !important;              
-            padding: 0 !important;
-            margin: 0 !important;
-            z-index: 1000 !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: space-between !important;
-        }
-        
-        body #muhleTopBar .w3-muhle-logo-container {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            height: 60px !important;
-            display: flex !important;
-            align-items: center !important;
-        }
-        
-        body #muhleTopBar .w3-muhle-logo {
-            height: 38px !important;
-            width: auto !important;
-            margin-left: 15px !important;
-            display: block !important;
-            object-fit: contain !important;
-        }
+/* ==========================================================================
+   1. IMPOSICIÓN TIPOGRÁFICA GOTHAM GLOBAL
+   ========================================================================== */
+@font-face {
+    font-family: 'Gotham';
+    src: url('../fonts/Gotham-Book.woff2') format('woff2'),
+         url('../fonts/Gotham-Book.woff') format('woff'),
+         url('../fonts/Gotham-Book.ttf') format('truetype');
+    font-weight: 400; font-style: normal;
+}
 
-        .vct-header-right-container {
-            position: absolute !important;
-            right: 15px !important;
-            top: 0 !important;
-            height: 60px !important;
-            display: flex !important;
-            align-items: center !important;
-            gap: 12px !important;
-        }
+/* Spinner de carga (#loader / .loader) */
+.loading {
+    position: fixed !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    background: #ffffff !important;
+    z-index: 500 !important;
+}
+.loader {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 56px !important;
+    height: 56px !important;
+    margin: -28px 0 0 -28px !important;
+    border-radius: 50% !important;
+    border: 5px solid #F1D2DE !important;
+    border-top-color: #66062D !important;
+    animation: vctLoaderSpin .8s linear infinite !important;
+}
+@keyframes vctLoaderSpin {
+    to { transform: rotate(360deg); }
+}
 
-        .vct-user-widget {
-            display: flex !important;
-            align-items: center !important;
-            gap: 10px !important;
-            padding: 4px 10px !important;
-            border-radius: 8px !important;
-            background: #f8fafc !important;
-            border: 1px solid #e2e8f0 !important;
-            transition: background 0.2s ease !important;
-        }
+@font-face {
+    font-family: 'Gotham';
+    src: url('../fonts/Gotham-Medium.woff2') format('woff2'),
+         url('../fonts/Gotham-Medium.woff') format('woff'),
+         url('../fonts/Gotham-Medium.ttf') format('truetype');
+    font-weight: 500; font-style: normal;
+}
 
-        .vct-avatar {
-            width: 34px !important;
-            height: 34px !important;
-            border-radius: 50% !important;
-            background: #66062C !important;
-            border: 1px solid #cbd5e1 !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            overflow: hidden !important;
-            flex-shrink: 0 !important;
-            margin-bottom: 3px;
-        }
+@font-face {
+    font-family: 'Gotham';
+    src: url('../fonts/Gotham-Bold.woff2') format('woff2'),
+         url('../fonts/Gotham-Bold.woff') format('woff'),
+         url('../fonts/Gotham-Bold.ttf') format('truetype');
+    font-weight: 700; font-style: normal;
+}
 
-        .vct-avatar img {
-            width: 100% !important;
-            height: 100% !important;
-            object-fit: cover !important;
-            display: block !important;
-        }
+/* ==========================================================================
+   colores previos css
+   ========================================================================== */
+.w3-muhle-color {
+	color:#fff;
+	background-color:#66062D;
+}
 
-        .vct-user-details {
-            display: flex !important;
-            flex-direction: column !important;
-            text-align: left !important;
-        }
+.w3-muhle-hover-color:hover {
+	color:#fff;
+	background-color:#66062D
+}
 
-        .vct-user-subtitle {
-            color: #64748b !important;
-            font-size: 10px !important;
-            font-weight: 600 !important;
-            line-height: 1 !important;
-            text-transform: uppercase !important;
-        }
+.w3-muhle-vocaturo {
+	background: linear-gradient(
+		135deg,
+		rgba(102, 6, 45, 0.75) 0%,
+		rgba(102, 6, 45, 0.40) 100%
+	);
+}
 
-        .vct-user-title {
-            color: #0f172a !important;
-            font-size: 13px !important;
-            font-weight: 700 !important;
-            line-height: 1.2 !important;
-        }
+.w3-muhle-vocaturo-hover-color:hover {
+	background: #66062D;
+}
 
-        .w3-muhle-topbar-button {
-            height: 36px !important;
-            width: 36px !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            background: transparent !important;
-            border: none !important;
-            border-radius: 8px !important;
-            cursor: pointer !important;
-            transition: background 0.2s !important;
-        }
-        .w3-muhle-topbar-button:hover { background: #fee2e2 !important; }
-        .w3-muhle-topbar-button i { color: #66062D !important; font-size: 16px !important; }
+/* Tipografía Gotham uniforme */
+*, html, body, h1, h2, h3, h4, h5, h6, input, select, textarea, button, span, a, td, th {
+    font-family: "Gotham", "Gotham Book", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
 
-        /* 🩻 SIDEBAR DE ÍCONOS INYECTADO DESDE EL SP */
-        body #muhleSideBar {
-            display: block !important;
-            visibility: visible !important;
-            position: fixed !important;
-            top: 60px !important;
-            left: 0 !important;
-            height: calc(100vh - 60px) !important;
-            width: 60px !important;
-            background-color: #66062C !important;
-            z-index: 999 !important;
-            overflow: hidden !important;
-            box-shadow: 2px 0 15px rgba(0,0,0,0.1) !important;
-        }
+.fa, .fas, .far, .fal, .fad, .fab, [class^="fa-"], [class*=" fa-"] {
+    font-family: "Font Awesome 5 Free", "Font Awesome 5 Brands" !important;
+}
 
-        body #muhleSideBar a {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            color: rgba(255, 255, 255, 0.7) !important;
-            text-decoration: none !important;
-            height: 55px !important;
-            width: 60px !important;
-            transition: all 0.2s ease !important;
-        }
+/* ==========================================================================
+   2. MARCO ESTRUCTURAL BASE (TOPBAR SUPERIOR + SIDEBAR 60PX)
+   ========================================================================== */
 
-        body #muhleSideBar a:first-child { margin-top: 14px !important; }
-        body #muhleSideBar a:hover, body #muhleSideBar a.active {
-            background-color: rgba(255, 255, 255, 0.15) !important;
-            color: #ffffff !important;
-        }
-        body #muhleSideBar a i { font-size: 18px !important; }
-        body #muhleSideBar a span { display: none !important; }
+/* ⚪ TOPBAR SUPERIOR FIXED */
+body #muhleTopBar.w3-muhle-topbar {
+    height: 60px !important;
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05) !important;
+    position: fixed !important; top: 0 !important; left: 0 !important;
+    width: 100% !important; padding: 0 !important; margin: 0 !important;
+    z-index: 1000 !important;
+    display: flex !important; align-items: center !important; justify-content: space-between !important;
+}
 
-        /* 📦 CONTENIDO PRINCIPAL COMPATIBLE */
-        body #main.w3-main {
-            margin-left: 60px !important;
-            margin-top: 60px !important;
-            padding: 15px !important;
-        }
+body #muhleTopBar .w3-muhle-logo-container {
+    position: absolute !important; left: 0 !important; top: 0 !important; height: 60px !important;
+    display: flex !important; align-items: center !important;
+}
 
-        /* 🛡️ RESTAURACIÓN EXPLICITA DE W3.CSS Y ENCABEZADOS LEGADO (#mainContainer) */
-        #mainContainer .w3-row,
-        #mainContainer .w3-bar {
-            display: block !important;
-            width: 100% !important;
-            clear: both !important;
-        }
+body #muhleTopBar .w3-muhle-logo {
+    height: 38px !important; width: auto !important; margin-left: 15px !important;
+    display: block !important; object-fit: contain !important;
+}
 
-        #mainContainer .w3-bar::after,
-        #mainContainer .w3-row::after {
-            content: "" !important;
-            display: table !important;
-            clear: both !important;
-        }
+.vct-header-right-container {
+    position: absolute !important; right: 15px !important; top: 0 !important; height: 60px !important;
+    display: flex !important; align-items: center !important; gap: 12px !important;
+}
 
-        #mainContainer .w3-bar .w3-bar-item {
-            padding: 8px 16px !important;
-            float: left !important;
-            width: auto !important;
-            border: none !important;
-            display: block !important;
-        }
+.vct-user-widget {
+    display: flex !important; align-items: center !important; gap: 10px !important;
+    padding: 4px 10px !important; border-radius: 8px !important;
+    background: #f8fafc !important; border: 1px solid #e2e8f0 !important;
+}
 
-        #mainContainer .w3-bar .w3-left {
-            float: left !important;
-        }
+.vct-avatar {
+    width: 34px !important; height: 34px !important; border-radius: 50% !important;
+    background: #66062C !important; border: 1px solid #cbd5e1 !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    overflow: hidden !important; flex-shrink: 0 !important;
+}
 
-        #mainContainer .w3-bar .w3-right {
-            float: right !important;
-        }
+.vct-avatar img { width: 100% !important; height: 100% !important; object-fit: cover !important; }
+.vct-user-subtitle { color: #64748b !important; font-size: 10px !important; font-weight: 600 !important; text-transform: uppercase !important; }
+.vct-user-title { color: #0f172a !important; font-size: 13px !important; font-weight: 700 !important; }
 
-        #mainContainer .w3-bar-item {
-            font-size: 14px !important;
-            line-height: 1.5 !important;
-        }
+.w3-muhle-topbar-button {
+    height: 36px !important; width: 36px !important; display: inline-flex !important;
+    align-items: center !important; justify-content: center !important;
+    background: transparent !important; border: none !important; border-radius: 8px !important; cursor: pointer !important;
+}
+.w3-muhle-topbar-button:hover { background: #fee2e2 !important; }
+.w3-muhle-topbar-button i { color: #66062D !important; font-size: 16px !important; }
 
-        #mainContainer .w3-bar-item i {
-            display: inline-block !important;
-            vertical-align: middle !important;
-        }
+/* 🩻 SIDEBAR DE ÍCONOS */
+body #muhleSideBar {
+    display: flex !important; flex-direction: column !important; align-items: center !important;
+    visibility: visible !important; position: fixed !important; top: 60px !important; left: 0 !important;
+    height: calc(100vh - 60px) !important; width: 60px !important;
+    background-color: #66062C !important; z-index: 999 !important;
+    overflow-y: auto !important; overflow-x: hidden !important;
+    box-shadow: 2px 0 15px rgba(0,0,0,0.1) !important; padding-top: 22px !important;
+}
 
-        #mainContainer .w3-muhle-color {
-            background-color: #66062C !important;
-            color: #ffffff !important;
-        }
+body #muhleSideBar a {
+    position: relative !important; top: auto !important; left: 0 !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    color: #ffffff !important; text-decoration: none !important;
+    height: 48px !important; width: 60px !important; margin: 1px 0 !important; padding: 0 !important;
+}
 
-        /* Alineación limpia para DataTables nativo (Mostrar X registros / Buscar) */
-        #mainContainer .dataTables_wrapper .dataTables_length {
-            float: left !important;
-            margin-top: 10px !important;
-            margin-bottom: 10px !important;
-        }
+body #muhleSideBar a:hover, body #muhleSideBar a.active {
+    background-color: rgba(255, 255, 255, 0.2) !important; color: #ffffff !important;
+}
 
-        #mainContainer .dataTables_wrapper .dataTables_filter {
-            float: right !important;
-            margin-top: 10px !important;
-            margin-bottom: 10px !important;
-        }
+body #muhleSideBar a i, body #muhleSideBar a svg { 
+    font-size: 18px !important; display: inline-block !important; visibility: visible !important; color: #ffffff !important;
+}
+body #muhleSideBar a span, body #muhleSideBar a text { display: none !important; }
 
-        #mainContainer .dataTables_wrapper::after {
-            content: "" !important;
-            clear: both !important;
-            display: table !important;
-        }
+/* 📦 CONTENIDO PRINCIPAL */
+body #main.w3-main {
+    margin-left: 60px !important; margin-top: 60px !important; padding: 15px !important;
+    width: calc(100% - 60px) !important; box-sizing: border-box !important; display: block !important;
+}
 
-        /* ⏳ SPINNER DE CARGA (#loader / .loader, linea 293)
-           El div ya existia y sendForm()/next()/goto() en js/main.js ya lo
-           muestran/ocultan (.show()/.hide()) alrededor de cada llamada
-           AJAX, pero nunca tuvo CSS que lo dibuje -- por eso quedaba en
-           blanco 1-2 segundos en vez de mostrar un spinner. z-index por
-           debajo del topbar/sidebar (999/1000) para que esos sigan
-           visibles mientras carga el contenido. */
-        .loading {
-            position: fixed !important;
-            top: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            left: 0 !important;
-            background: #ffffff !important;
-            z-index: 500 !important;
-        }
-        .loader {
-            position: absolute !important;
-            top: 50% !important;
-            left: 50% !important;
-            width: 56px !important;
-            height: 56px !important;
-            margin: -28px 0 0 -28px !important;
-            border-radius: 50% !important;
-            border: 5px solid #F1D2DE !important;
-            border-top-color: #66062D !important;
-            animation: vctLoaderSpin .8s linear infinite !important;
-        }
-        @keyframes vctLoaderSpin {
-            to { transform: rotate(360deg); }
-        }
+#mainContainer {
+    width: 100% !important; display: block !important; box-sizing: border-box !important;
+    clear: both !important; background: transparent !important;
+}
+
+/* ==========================================================================
+   3. ESTILOS DE ACENTO CONTROLADOS (SIN AFECTAR LAYOUTS LEGACY)
+   ========================================================================== */
+
+/* Solo afectamos los componentes nativos Mühle creados explícitamente con la clase del sistema */
+.w3-muhle-color {
+    background-color: #66062D !important;
+    color: #ffffff !important;
+}
+
+/* Acento suave en campos al hacer focus */
+input:focus, select:focus, textarea:focus {
+    border-color: #66062D !important;
+}
     </style>
 </head>
 <body class="w3-light-grey">
 
 <form id="form1" runat="server">
-    
-    <%-- Componentes nativos ocultos para inicialización de Mühle --%>
     <div style="display:none !important;">
         <uc1:Header ID="Header1" runat="server" />
         <uc2:Sidebar ID="Sidebar1" runat="server" />
@@ -312,8 +265,6 @@
         </div>
     </div>
 
-    <!-- ℹ️ EL SIDEBAR SE INYECTA DINÁMICAMENTE DESDE EL SP HOME_INICIO_PORTAL EN @OMENU -->
-
     <div id="muhlePopup" class="w3-hide">
         <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
         <span id="muhlePopupMessage">This is an alert box.</span>
@@ -321,12 +272,11 @@
 
     <!------ 2️⃣ CONTENIDO DINÁMICO ------>
     <div id="main" class="w3-main">
-        <div class="w3-container">
+        <div class="w3-container" style="padding: 0 !important; width: 100% !important;">
             <div id="loader" class="loading" style="display: none;"><div class="loader"></div></div>
             <div id="mainContainer" class="w3-light-grey"></div>
         </div>
     </div>
-
 </form>
 
 <script src="../lib/jquery/jquery.min.js"></script>
@@ -340,6 +290,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
 <script src="../css/sw2/sweetalert2.all.min.js"></script>
 <script src="../css/sw2/sweetalert2.min.js"></script>
+
+<!-- Librerías de Tabla e Interacción Vocaturo -->
+<script src="../js/vctTable.js"></script>
 <script src="../js/main.js"></script>
 
 <script>
@@ -355,10 +308,6 @@
         }
     } catch(e) { console.log(e); }
 
-    /**
-     * 🎯 FUNCIÓN LOADHOME INICIALIZADA EN USUARIOS
-     * Carga por defecto el módulo de Usuarios (SV_04)
-     */
     function loadHome() {
         try {
             newTaskForContact('VOCATURO', 'SV_04', 'Alta Empleados/Consultores');

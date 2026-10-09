@@ -1,0 +1,350 @@
+<title>Estado del Panel Admin</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#f4f6f8;
+    --bg-panel:#ffffff;
+    --bg-code:#eef1f4;
+    --bg-code-line:#e3e8ed;
+    --ink:#161b22;
+    --ink-soft:#4b5563;
+    --ink-faint:#8792a2;
+    --line:#dde3ea;
+    --accent:#66062d;
+    --accent-soft:#f2e3e9;
+    --accent-ink:#66062d;
+    --good:#146c43;
+    --good-bg:#e3f3ea;
+    --warn:#8a5a00;
+    --warn-bg:#faf0da;
+    --bad:#a4243b;
+    --bad-bg:#fbe6e9;
+    --todo:#5b5f97;
+    --todo-bg:#eaeafb;
+    --shadow: 0 1px 2px rgba(22,27,34,0.04), 0 8px 24px rgba(22,27,34,0.05);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12151b;
+      --bg-panel:#191d24;
+      --bg-code:#0f1216;
+      --bg-code-line:#1c2129;
+      --ink:#e8ebf0;
+      --ink-soft:#aab2bf;
+      --ink-faint:#6b7280;
+      --line:#2a3038;
+      --accent:#e0a6bb;
+      --accent-soft:#2a1920;
+      --accent-ink:#eec3d3;
+      --good:#7fd4a6;
+      --good-bg:#123322;
+      --warn:#e8bd6a;
+      --warn-bg:#332608;
+      --bad:#f0919f;
+      --bad-bg:#3a1720;
+      --todo:#b3b6ef;
+      --todo-bg:#232152;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#12151b;
+    --bg-panel:#191d24;
+    --bg-code:#0f1216;
+    --bg-code-line:#1c2129;
+    --ink:#e8ebf0;
+    --ink-soft:#aab2bf;
+    --ink-faint:#6b7280;
+    --line:#2a3038;
+    --accent:#e0a6bb;
+    --accent-soft:#2a1920;
+    --accent-ink:#eec3d3;
+    --good:#7fd4a6;
+    --good-bg:#123322;
+    --warn:#e8bd6a;
+    --warn-bg:#332608;
+    --bad:#f0919f;
+    --bad-bg:#3a1720;
+    --todo:#b3b6ef;
+    --todo-bg:#232152;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+  }
+
+  *{ box-sizing:border-box; }
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"IBM Plex Sans", -apple-system, sans-serif;
+    font-size:15.5px;
+    line-height:1.65;
+    margin:0;
+    padding-block:40px;
+  }
+  .wrap{ max-width:920px; margin:0 auto; padding-inline:20px; }
+
+  h1,h2,h3{ font-family:"Zilla Slab", Georgia, serif; color:var(--ink); text-wrap:balance; line-height:1.2; margin:0; }
+  h1{ font-size:2.4rem; font-weight:700; }
+  h2{ font-size:1.5rem; font-weight:600; margin-bottom:4px; }
+  h3{ font-size:1.05rem; font-weight:600; }
+  code, .mono{ font-family:"IBM Plex Mono", ui-monospace, monospace; }
+
+  header.top{ display:flex; flex-direction:column; gap:10px; margin-bottom:8px; }
+  .eyebrow{ font-family:"IBM Plex Mono"; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); font-weight:600; }
+  .subtitle{ color:var(--ink-soft); font-size:16px; max-width:62ch; }
+  .meta-row{ display:flex; flex-wrap:wrap; gap:16px; color:var(--ink-faint); font-size:13px; margin-top:6px; font-family:"IBM Plex Mono"; }
+
+  .stat-bar{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:1px;
+    background:var(--line); border:1px solid var(--line); border-radius:14px;
+    overflow:hidden; margin:32px 0; box-shadow:var(--shadow);
+  }
+  .stat{ background:var(--bg-panel); padding:20px 18px; display:flex; flex-direction:column; gap:4px; }
+  .stat .n{ font-family:"Zilla Slab"; font-size:2.1rem; font-weight:700; color:var(--accent-ink); font-variant-numeric:tabular-nums; }
+  .stat .l{ font-size:12px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.04em; }
+
+  section{ margin:44px 0; }
+  section > h2{ margin-bottom:6px; }
+  .section-note{ color:var(--ink-soft); font-size:14px; margin-bottom:18px; max-width:68ch; }
+
+  .pill{ display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:600; padding:3px 10px; border-radius:99px; font-family:"IBM Plex Mono"; white-space:nowrap; }
+  .pill.good{ background:var(--good-bg); color:var(--good); }
+  .pill.warn{ background:var(--warn-bg); color:var(--warn); }
+  .pill.bad{ background:var(--bad-bg); color:var(--bad); }
+  .pill.todo{ background:var(--todo-bg); color:var(--todo); }
+
+  .module-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  .module-card{
+    background:var(--bg-panel); border:1px solid var(--line); border-radius:12px;
+    padding:16px 18px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:8px;
+  }
+  .module-card .head{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
+  .module-card .head h3{ font-size:1rem; }
+  .module-card ul{ margin:2px 0 0 0; padding-left:18px; font-size:13px; color:var(--ink-soft); }
+  .module-card ul li{ margin:3px 0; }
+
+  .bug{
+    background:var(--bg-panel); border:1px solid var(--line); border-left:4px solid var(--bad);
+    border-radius:0 10px 10px 0; padding:16px 20px; margin:14px 0; box-shadow:var(--shadow);
+  }
+  .bug.fixed{ border-left-color:var(--good); }
+  .bug .bug-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  .bug .bug-head h3{ font-size:1rem; }
+  .bug p{ margin:8px 0 0 0; font-size:13.5px; color:var(--ink-soft); }
+  .bug .cause{ background:var(--bg-code); border-radius:8px; padding:10px 14px; margin-top:10px; font-size:13px; }
+  .bug .cause b{ color:var(--ink); }
+
+  table.status-table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  .table-scroll{ overflow-x:auto; border:1px solid var(--line); border-radius:10px; }
+  table.status-table th{ text-align:left; background:var(--bg-code); color:var(--ink-soft); font-weight:600; font-size:11.5px; text-transform:uppercase; letter-spacing:.03em; padding:9px 14px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  table.status-table td{ padding:10px 14px; border-bottom:1px solid var(--line); vertical-align:top; }
+  table.status-table tr:last-child td{ border-bottom:none; }
+  table.status-table td.sp{ font-family:"IBM Plex Mono"; font-size:12px; color:var(--ink-faint); }
+
+  .pending-list{ display:flex; flex-direction:column; gap:10px; }
+  .pending-item{ display:flex; gap:12px; align-items:flex-start; background:var(--bg-panel); border:1px solid var(--line); border-radius:10px; padding:12px 16px; box-shadow:var(--shadow); }
+  .pending-item .pill{ margin-top:2px; flex-shrink:0; }
+  .pending-item .body b{ display:block; font-size:14px; margin-bottom:2px; }
+  .pending-item .body span{ font-size:13px; color:var(--ink-soft); }
+
+  footer{ margin-top:48px; padding-top:20px; border-top:1px solid var(--line); color:var(--ink-faint); font-size:12.5px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+
+  @media (max-width:760px){
+    .stat-bar{ grid-template-columns:repeat(2,1fr); }
+    .module-grid{ grid-template-columns:1fr; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="top">
+    <span class="eyebrow">Vocaturo &amp; Asociados — Sistema de Gestión</span>
+    <h1>Estado del Panel de Administración</h1>
+    <p class="subtitle">Relevamiento de los seis módulos del admin (Usuarios, Perfiles, Estructura, Permisos, Áreas, Reportes), lo que se corrigió y construyó en esta sesión, y lo que queda abierto.</p>
+    <div class="meta-row">
+      <span>15 sep 2026</span>
+      <span>·</span>
+      <span>MuhlePROD — vocaturo.desa.interdev.online/admin</span>
+      <span>·</span>
+      <span>Motor Engage + capa visual VCT</span>
+    </div>
+  </header>
+
+  <div class="stat-bar">
+    <div class="stat"><span class="n">6/6</span><span class="l">Módulos operativos</span></div>
+    <div class="stat"><span class="n">6</span><span class="l">Bugs corregidos hoy</span></div>
+    <div class="stat"><span class="n">2</span><span class="l">Features nuevas (Reportes)</span></div>
+    <div class="stat"><span class="n">2</span><span class="l">Pendientes reales</span></div>
+  </div>
+
+  <section>
+    <h2>Módulo por módulo</h2>
+    <p class="section-note">Estado actual de cada sección, verificado en vivo (grilla, formularios, consola del navegador).</p>
+    <div class="module-grid">
+
+      <div class="module-card">
+        <div class="head"><h3>Usuarios</h3><span class="pill good">Operativo</span></div>
+        <ul>
+          <li>Alta y edición funcionando</li>
+          <li>Sin campo Sector — decisión técnica de Esteban, no es un bug</li>
+        </ul>
+      </div>
+
+      <div class="module-card">
+        <div class="head"><h3>Perfiles</h3><span class="pill good">Operativo</span></div>
+        <ul>
+          <li>6 perfiles: Administración, Clientes, Consultores, Gerencia, Proyectos, Test Call Type</li>
+          <li>Matriz de Permisos con auditoría (46 acciones)</li>
+        </ul>
+      </div>
+
+      <div class="module-card">
+        <div class="head"><h3>Estructura</h3><span class="pill good">Operativo</span></div>
+        <ul>
+          <li>Árbol de 10 sectores, 3 niveles</li>
+          <li>Externos aplanado por decisión de negocio</li>
+        </ul>
+      </div>
+
+      <div class="module-card">
+        <div class="head"><h3>Permisos / Acciones</h3><span class="pill good">Operativo</span></div>
+        <ul>
+          <li>46 acciones con Tipo / Orden / Padre</li>
+          <li>Sin botón de eliminar — decisión de Esteban</li>
+        </ul>
+      </div>
+
+      <div class="module-card">
+        <div class="head"><h3>Áreas</h3><span class="pill good">Operativo</span></div>
+        <ul>
+          <li>3 áreas, alta/edición/baja con auditoría</li>
+          <li>Sin novedades esta sesión</li>
+        </ul>
+      </div>
+
+      <div class="module-card">
+        <div class="head"><h3>Reportes</h3><span class="pill good">Rediseñado</span></div>
+        <ul>
+          <li>4 reportes activos, foco de trabajo de hoy</li>
+          <li>Ver detalle abajo ↓</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <h2>Reportes — lo que se construyó hoy</h2>
+    <p class="section-note">El módulo con más cambios de la sesión. Los cuatro reportes comparten filtros, exportación (Excel/PDF/Word) y paginación.</p>
+    <div class="table-scroll">
+      <table class="status-table">
+        <thead><tr><th>Reporte</th><th>Fuente</th><th>Cambios de hoy</th><th>Estado</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Actividad</td>
+            <td class="sp">M_AUDITORIA_ADMIN</td>
+            <td>Filtros Fecha Desde/Hasta migrados a datepicker propio (antes: calendario nativo del navegador)</td>
+            <td><span class="pill good">OK</span></td>
+          </tr>
+          <tr>
+            <td>Usuarios por Sector</td>
+            <td class="sp">UsersSector</td>
+            <td>Botón de búsqueda reubicado en la misma fila que los filtros</td>
+            <td><span class="pill warn">Ver nota</span></td>
+          </tr>
+          <tr>
+            <td>Permisos por Perfil</td>
+            <td class="sp">GroupsActions</td>
+            <td>Rediseño completo: de lista plana a grilla agrupada por Perfil con toggle "Ver todos" por fila</td>
+            <td><span class="pill good">OK</span></td>
+          </tr>
+          <tr>
+            <td>Estructura de Sectores</td>
+            <td class="sp">Sectores</td>
+            <td>Sin cambios funcionales esta sesión</td>
+            <td><span class="pill good">OK</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Bugs corregidos hoy</h2>
+    <p class="section-note">De más a menos crítico. Todos verificados en vivo después de aplicar el fix.</p>
+
+    <div class="bug fixed">
+      <div class="bug-head"><h3>Franja negra intermitente en toda la app</h3><span class="pill good">Resuelto</span></div>
+      <p>Aparecía al navegar fuera de Reportes después de haber usado el datepicker. No era un bug de CSS ni del servidor.</p>
+      <div class="cause"><b>Causa:</b> flatpickr (la librería del datepicker) cuelga su calendario de <code>&lt;body&gt;</code> por defecto, fuera del contenedor que la SPA reemplaza al navegar. El calendario quedaba huérfano en el DOM, congelado a mitad de una transición — visible como una franja diagonal. Confirmado contra el propio bundle de flatpickr.</div>
+      <div class="cause"><b>Fix:</b> <code>appendTo</code> apunta ahora al contenedor del campo, así el calendario se destruye junto con el resto de la página al navegar.</div>
+    </div>
+
+    <div class="bug fixed">
+      <div class="bug-head"><h3>Pantalla en blanco en Reportes</h3><span class="pill good">Resuelto</span></div>
+      <p>Al sumar los links de flatpickr, la pantalla de Reportes dejaba de renderizar por completo.</p>
+      <div class="cause"><b>Causa:</b> en T-SQL, concatenar una cadena larga de literales y recién envolver el resultado en <code>CAST(... AS VARCHAR(MAX))</code> al final trunca en 8000 caracteres — el CAST no se propaga retroactivamente. Con los nuevos links, el HTML superó ese límite.</div>
+      <div class="cause"><b>Fix:</b> el <code>CAST(... AS VARCHAR(MAX))</code> ahora envuelve el primer literal de la cadena, no el resultado final.</div>
+    </div>
+
+    <div class="bug fixed">
+      <div class="bug-head"><h3>Alineación de columnas no aplicaba</h3><span class="pill good">Resuelto</span></div>
+      <p>El header "Permisos" no se alineaba a la derecha pese al CSS con <code>!important</code>.</p>
+      <div class="cause"><b>Causa:</b> una regla global de <code>admin.css</code> (<code>#mainContainer table:not(.vct-table-main) thead th</code>) tiene más especificidad por usar un ID — le ganaba a la regla local aunque ambas tuvieran <code>!important</code>.</div>
+      <div class="cause"><b>Fix:</b> se agregó el mismo ID como ancla en el selector local para igualar y superar la especificidad.</div>
+    </div>
+
+    <div class="bug fixed">
+      <div class="bug-head"><h3>Selector de "10 por pág." vacío</h3><span class="pill good">Resuelto</span></div>
+      <p>En Permisos por Perfil, el combo de paginación no mostraba ningún valor.</p>
+      <div class="cause"><b>Causa:</b> se había fijado <code>@PageSize = 500</code> para evitar que la paginación cortara los permisos de un perfil — pero 500 no es una opción válida del selector, que solo acepta 10/25/50/100.</div>
+      <div class="cause"><b>Fix:</b> al agrupar los datos por Perfil del lado del servidor (una fila por perfil, con sus permisos adentro), el problema de paginación desapareció y <code>@PageSize</code> volvió a 10.</div>
+    </div>
+
+    <div class="bug fixed">
+      <div class="bug-head"><h3>Dropdown de opciones largo se cortaba</h3><span class="pill good">Resuelto</span></div>
+      <p>El combo de Usuarios en Reportes no dejaba scrollear la lista ni navegar con flechas.</p>
+      <div class="cause"><b>Causa:</b> un listener global de <code>scroll</code> en fase de captura cerraba cualquier dropdown abierto apenas el mouse-wheel generaba un evento dentro de la lista.</div>
+      <div class="cause"><b>Fix:</b> el listener ahora ignora el scroll que ocurre dentro de un listado abierto; se sumó navegación con flechas ↑/↓.</div>
+    </div>
+
+    <div class="bug">
+      <div class="bug-head"><h3>Paginación "1 2 4 4" en Usuarios por Sector</h3><span class="pill warn">Detectado, sin investigar</span></div>
+      <p>37 registros a 10 por página deberían mostrar 4 páginas (1‑2‑3‑4); el control de paginación muestra <code class="mono">« 1 2 4 4 »</code> — falta el 3 y el 4 aparece duplicado.</p>
+      <div class="cause">Vive en el motor de paginación de <code>vct-Table.js</code>, no en código tocado esta sesión. Queda para la próxima.</div>
+    </div>
+
+  </section>
+
+  <section>
+    <h2>Pendientes y decisiones</h2>
+    <p class="section-note">Nada bloqueante. Ordenado por si requiere acción o es solo contexto.</p>
+    <div class="pending-list">
+      <div class="pending-item">
+        <span class="pill todo">Acción</span>
+        <div class="body"><b>Paginación de Usuarios por Sector</b><span>Investigar por qué falta la página 3 y se duplica la 4 en el control de paginación.</span></div>
+      </div>
+      <div class="pending-item">
+        <span class="pill todo">Acción</span>
+        <div class="body"><b>Migrar page-size selector a Tom Select</b><span>El "10 por pág." de todas las grillas sigue siendo un &lt;select&gt; nativo sin estilo VCT — único elemento pendiente de la auditoría de selects.</span></div>
+      </div>
+      <div class="pending-item">
+        <span class="pill warn">Bajo</span>
+        <div class="body"><b>404 de img/back-login.jpg</b><span>Imagen de fondo faltante en la pantalla de login. Cosmético, preexistente, no relacionado a esta sesión.</span></div>
+      </div>
+      <div class="pending-item">
+        <span class="pill todo">Postergado</span>
+        <div class="body"><b>Motor de grilla dual (vct-Table.js v18.2.5 vs. motor nuevo de Grupos)</b><span>Deuda técnica identificada; el usuario decidió posponerla explícitamente.</span></div>
+      </div>
+      <div class="pending-item">
+        <span class="pill good">No es un bug</span>
+        <div class="body"><b>Sector ausente en "Nuevo usuario"</b><span>Decisión técnica de Esteban — se documenta acá para que no se vuelva a reportar como pendiente.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Informe generado a partir de verificación en vivo del panel, 15 sep 2026</span>
+    <span>Vocaturo &amp; Asociados</span>
+  </footer>
+
+</div>

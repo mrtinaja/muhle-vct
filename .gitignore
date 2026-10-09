@@ -1,0 +1,37 @@
+# --- Plataforma: binarios, librerias de terceros, imagenes pesadas ---
+Bin/
+Log/
+lib/
+fonts/
+fonts_bkp/
+css_bkp/
+img/
+manual_pages/
+AgdDoc/
+*.dll
+*.pdb
+*.zip
+
+# --- Claves: machineKey de la plataforma y cuenta de mail ---
+*.config
+vocaturo_mail_setup.sql
+
+# --- Salidas de diagnostico: tienen datos reales (usuarios, mails, clientes) ---
+_diag/
+db/_dump/
+
+# --- Copias sueltas de paginas de la plataforma ---
+*Copy*.aspx
+*BK*.aspx
+*bk*.aspx
+
+# --- Sistema / editores ---
+Thumbs.db
+desktop.ini
+.vs/
+.vscode/
+*.tmp
+
+# --- Copias locales sueltas de los assets: la version buena es assets/ (bajada del servidor) ---
+/vct-*.css
+/vct-*.js

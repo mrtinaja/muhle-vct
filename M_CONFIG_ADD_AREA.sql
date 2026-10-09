@@ -1,0 +1,108 @@
+USE [MuhlePROD]
+GO
+/****** Object:  StoredProcedure [dbo].[M_CONFIG_ADD_AREA] ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER   PROCEDURE [dbo].[M_CONFIG_ADD_AREA]
+(@IPKEYJOB	AS VARCHAR(100),
+ @IUSERID	AS VARCHAR(100),
+ @ORETCODE	AS INT OUTPUT)
+AS
+
+BEGIN
+
+	DECLARE @ID_USER_SEL	VARCHAR(50),
+			@NEW_ID			VARCHAR(50),
+			@NEW_NAME		VARCHAR(100),
+			@VEXISTE		INT,
+			@VACCION_LOG	VARCHAR(50),
+			@VDETALLE_LOG	VARCHAR(500),
+			@VREGISTRO_LOG	VARCHAR(50)
+
+	SELECT	@ID_USER_SEL= ISNULL(ID_USER_SEL,''),
+			@NEW_ID		= ISNULL(NEW_ID,''),
+			@NEW_NAME	=ISNULL(NEW_NAME,'')
+	FROM	M_CONFIG
+	WHERE	PAR_KEY = @IPKEYJOB;
+
+	SET @ORETCODE = 0
+
+	IF (@NEW_NAME = '') BEGIN
+		SET @ORETCODE = 1
+		UPDATE	M_CONFIG
+		SET		DESC_ERROR = 'Debe Completar el campo Descripcion'
+		WHERE	PAR_KEY = @IPKEYJOB;
+		RETURN
+
+	END ELSE BEGIN
+
+		IF (@ID_USER_SEL = '') BEGIN
+
+			SELECT	@VEXISTE = COUNT(1)
+			FROM	Areas
+			WHERE	desc_area = @NEW_NAME
+
+		END ELSE BEGIN
+
+			SELECT	@VEXISTE = COUNT(1)
+			FROM	Areas
+			WHERE	desc_area = @NEW_NAME
+			and		id_area <> @ID_USER_SEL
+
+		END
+
+		IF (@VEXISTE <> 0) BEGIN
+			SET @ORETCODE = 1
+			UPDATE	M_CONFIG
+			SET		DESC_ERROR = 'Ya existe un Area para la Descripcion ingresada'
+			WHERE	PAR_KEY = @IPKEYJOB;
+			RETURN
+		END
+	END
+
+	/* ====== Insert / UPDATE ====== */
+	BEGIN TRANSACTION
+
+		IF (@ID_USER_SEL = '') BEGIN
+
+			insert into Areas values (@NEW_NAME, GETDATE(),@IUSERID)
+
+			SET @VACCION_LOG  = 'ALTA'
+			SET @VDETALLE_LOG = 'Alta de área: ' + @NEW_NAME
+
+		END ELSE BEGIN
+
+			DECLARE @VDESC_AREA_OLD VARCHAR(100)
+
+			SELECT	@VDESC_AREA_OLD = Desc_Area
+			FROM	Areas
+			WHERE	Id_Area = @ID_USER_SEL
+
+			update	Areas
+			set		desc_area = @NEW_NAME, modifiedDate = GETDATE(), Userid = @IUSERID
+			where	id_area = @ID_USER_SEL
+
+			SET @VACCION_LOG  = 'MODIFICACION'
+			SET @VDETALLE_LOG = 'Edición de área: ' + ISNULL(@VDESC_AREA_OLD,'') + ' -> ' + @NEW_NAME
+
+		END
+	COMMIT TRANSACTION
+
+	SET @VREGISTRO_LOG = ISNULL(NULLIF(@ID_USER_SEL,''), @NEW_NAME)
+
+	EXEC dbo.VCT_LOG_AUDITORIA
+	     @MODULO            = 'AREA',
+	     @ACCION            = @VACCION_LOG,
+	     @USER_ID           = @IUSERID,
+	     @REGISTRO_AFECTADO = @VREGISTRO_LOG,
+	     @DETALLE           = @VDETALLE_LOG;
+
+	UPDATE	M_CONFIG
+	SET		ID_USER_SEL = NULL
+	WHERE	PAR_KEY = @IPKEYJOB;
+
+	RETURN;
+
+END

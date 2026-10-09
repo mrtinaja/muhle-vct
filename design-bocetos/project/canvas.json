@@ -1,0 +1,20 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-09-22T00:00:00Z" },
+  "title": "Bocetos - Editor de Templates de Email",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1280, "h": 940, "title": "Concepto A — Agrupado y compacto" },
+    "Concepto-B-Enfoque.dc.html": { "x": 1360, "y": 0, "w": 1280, "h": 880, "title": "Concepto B — Editor en foco" },
+    "Concepto-C-Wizard.dc.html": { "x": 2720, "y": 0, "w": 1280, "h": 960, "title": "Concepto C — Wizard de 3 pasos" }
+  },
+  "order": ["Main.dc.html", "Concepto-B-Enfoque.dc.html", "Concepto-C-Wizard.dc.html"],
+  "notes": {
+    "title": { "x": 0, "y": -140, "text": "Bocetos — Editor de Templates de Email", "kind": "title1" },
+    "noteA": { "x": 0, "y": 970, "w": 1280, "text": "A · Agrupado y compacto: campos en 3 tarjetas temáticas, toolbar agrupada por clusters, vista previa en vivo siempre visible (split view) y panel de variables con búsqueda y categorías." },
+    "noteB": { "x": 1360, "y": 910, "w": 1280, "text": "B · Editor en foco: los datos generales se colapsan en una barra resumen, el asunto queda siempre visible, y el panel de variables se reduce a un riel angosto — el editor gana todo el ancho." },
+    "noteC": { "x": 2720, "y": 990, "w": 1280, "text": "C · Wizard de 3 pasos: Datos generales → Destinatarios → Contenido. Al llegar al contenido, los pasos previos quedan resumidos y el editor recibe más espacio, con navegación Atrás/Guardar." }
+  },
+  "designSystems": []
+}

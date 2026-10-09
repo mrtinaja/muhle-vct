@@ -1,0 +1,981 @@
+﻿/* ========================================================================
+   VCT REPORTES - V1
+   Aislado de vct-main.css. Solo aplica dentro de [data-vct-report-root].
+   ======================================================================== */
+
+/* Colores de badge para valores propios de Reportes que VCT.Badge.typeFor
+   (vct-main.js) no reconoce (solo sabe de ACTIVO/PENDIENTE/EN CURSO/etc,
+   no de "Auditoria" o "Lider") -- todos caian en gris neutral. Se pisan
+   reusando la MISMA paleta de 4 colores que ya usa el resto de la app
+   (success/warning/danger/info), sin tocar vct-main.css/js.
+   Se usa *="..." (contiene, insensible a mayus/minus) en vez de match
+   exacto: los datos reales tienen inconsistencias ("Lider" sin tilde,
+   ".Lider" con punto pegado, "Semi senior" en minuscula) que un match
+   exacto no capturaba. El orden importa: "semi" va DESPUES de "senior"
+   para pisarlo en los casos "Semi Senior" (ambos matchean, gana el
+   ultimo declarado). */
+[data-vct-report-root] .vct-badge[data-vct-badge*="consultor" i]{
+    color:#1466C3 !important; background:#DDEEFF !important; border-color:#D1E7FD !important;
+}
+[data-vct-report-root] .vct-badge[data-vct-badge*="auditor" i]{
+    color:#A86400 !important; background:#FFF1CC !important; border-color:#FBE7B3 !important;
+}
+[data-vct-report-root] .vct-badge[data-vct-badge*="capacitac" i]{
+    color:#087A49 !important; background:#DDF6E9 !important; border-color:#D1F0E0 !important;
+}
+[data-vct-report-root] .vct-badge[data-vct-badge*="senior" i]{
+    color:#1466C3 !important; background:#DDEEFF !important; border-color:#D1E7FD !important;
+}
+[data-vct-report-root] .vct-badge[data-vct-badge*="semi" i]{
+    color:#A86400 !important; background:#FFF1CC !important; border-color:#FBE7B3 !important;
+}
+[data-vct-report-root] .vct-badge[data-vct-badge*="lider" i],
+[data-vct-report-root] .vct-badge[data-vct-badge*="líder" i]{
+    color:#087A49 !important; background:#DDF6E9 !important; border-color:#D1F0E0 !important;
+}
+[data-vct-report-root] .vct-badge[data-vct-badge*="junior" i]{
+    color:#52647B !important; background:#EEF2F6 !important; border-color:#E5EAF0 !important;
+}
+[data-vct-report-root] .vct-badge[data-vct-badge="sí" i],
+[data-vct-report-root] .vct-badge[data-vct-badge*="enviado" i],
+[data-vct-report-root] .vct-badge[data-vct-badge*="en curso" i]{
+    color:#087A49 !important; background:#DDF6E9 !important; border-color:#D1F0E0 !important;
+}
+[data-vct-report-root] .vct-badge[data-vct-badge*="pendiente" i]{
+    color:#A86400 !important; background:#FFF1CC !important; border-color:#FBE7B3 !important;
+}
+[data-vct-report-root] .vct-badge[data-vct-badge="no" i],
+[data-vct-report-root] .vct-badge[data-vct-badge*="sin consultor" i],
+[data-vct-report-root] .vct-badge[data-vct-badge*="sin auditor" i],
+[data-vct-report-root] .vct-badge[data-vct-badge*="sin instructor" i]{
+    color:#B42318 !important; background:#FDE7E5 !important; border-color:#F8D4D0 !important;
+}
+
+[data-vct-report-group-panel]{
+    display:none;
+}
+[data-vct-report-group-panel].is-active{
+    display:block;
+}
+
+/* Todo el bloque de tabs + contenido vive dentro de UNA sola card (igual
+   que .vct-config-workspace en Configuracion -> Parametria), en vez de
+   quedar suelto sobre el fondo con imagen -- las tabs antes quedaban
+   afuera de cualquier card y se veia la transparencia del fondo. */
+.vct-reports-workspace{
+    margin-top:20px;
+    overflow:hidden;
+    border-radius:12px;
+}
+[data-vct-report-root]{
+    display:block;
+}
+
+/* Header real (no tabs), degrade blanco -> rosado (mismo lenguaje que ya
+   usa la app en otras cards, ej. .vct-360-client-strip: blanco dominante
+   que se tine hacia un costado, no color solido). El bordo oscuro solido
+   quedaba pisando al sidebar, que ya usa ese mismo tono -- con degrade
+   claro se distingue de ambos (sidebar oscuro, body blanco) y no repite
+   el bordo dos veces en pantalla. Texto oscuro (antes blanco sobre bordo,
+   ahora bordo sobre claro). Sin negrita para marcar el activo: alcanza
+   con el pill blanco + color. Una categoria con mas de un reporte abre un
+   dropdown; una categoria de un solo reporte (Rentabilidad) es link
+   directo (data-vct-report-cat + data-vct-report-group en el MISMO
+   boton, sin dropdown -- ver vct-reportes.js). Debajo del header, un
+   breadcrumb chico muestra la ubicacion actual. */
+.vct-report-topnav{
+    display:flex;
+    align-items:center;
+    gap:2px;
+    height:56px;
+    padding:0 18px;
+    background:linear-gradient(100deg,#FFFFFF 0%,#FFFFFF 45%,#F6D2E1 100%);
+    border-bottom:1px solid var(--vct-border,#e2e8f0);
+    border-radius:var(--vct-radius-lg,12px) var(--vct-radius-lg,12px) 0 0;
+}
+.vct-report-topnav-item{
+    position:relative;
+    height:100%;
+    display:flex;
+    align-items:center;
+}
+.vct-report-topnav [data-vct-report-cat]{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    border:none;
+    background:transparent;
+    padding:9px 14px;
+    font-size:13.5px;
+    font-weight:500;
+    color:#8A4560;
+    cursor:pointer;
+    border-radius:8px;
+    transition:color .15s ease, background-color .15s ease, transform .15s ease;
+}
+.vct-report-topnav [data-vct-report-cat]:active{
+    transform:scale(.96);
+}
+.vct-report-topnav [data-vct-report-cat] [data-vct-icon]{
+    width:14px;
+    height:14px;
+    color:currentColor;
+    opacity:.8;
+}
+.vct-report-topnav [data-vct-report-cat]:not(.is-active):hover{
+    color:#fff;
+    background:var(--vct-primary,#66062D);
+}
+.vct-report-topnav [data-vct-report-cat]:not(.is-active):hover [data-vct-icon],
+.vct-report-topnav [data-vct-report-cat]:not(.is-active):hover .vct-report-chevron{
+    color:#fff;
+    opacity:1;
+}
+/* El SVG (chevrons-up-down, lo inyecta vct-main.js) trae sus propios
+   atributos width/height="16" fijos y no se achica solo al tamaño real
+   del contenedor (11x11) -- sin esto, el clip-path de abajo recorta
+   justo en el medio de la caja de 11px, que NO coincide con el centro
+   real del icono de 16px, y terminan viendose pedacitos de las dos
+   flechas en vez de solo la de abajo. */
+.vct-report-chevron svg{
+    width:100%;
+    height:100%;
+}
+.vct-report-topnav [data-vct-report-cat] .vct-report-chevron{
+    width:11px;
+    height:11px;
+    margin-left:-3px;
+    opacity:.65;
+    clip-path:inset(50% 0 0 0);
+    transition:transform .15s ease;
+}
+.vct-report-topnav [data-vct-report-cat][aria-expanded="true"] .vct-report-chevron{
+    transform:rotate(180deg);
+}
+.vct-report-topnav [data-vct-report-cat].is-active{
+    color:var(--vct-primary,#66062D);
+    background:#FBE9EF;
+    box-shadow:0 1px 4px rgba(102,6,45,.12);
+}
+.vct-report-topnav [data-vct-report-cat].is-active [data-vct-icon]{
+    opacity:1;
+}
+
+/* display:flex siempre (no display:none/is-open) para poder animar con
+   opacity+transform en vez de un corte seco -- visibility+pointer-events
+   se encargan de que quede realmente oculto/no clickeable cuando esta
+   cerrado, igual de robusto que display:none. */
+.vct-report-dropdown{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    position:absolute;
+    top:calc(100% + 6px);
+    left:0;
+    z-index:20;
+    min-width:240px;
+    padding:6px;
+    background:#FFFFFF;
+    border:1px solid var(--vct-border,#e2e8f0);
+    border-radius:10px;
+    box-shadow:0 12px 28px rgba(15,23,42,.14);
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+    transform:translateY(-6px) scale(.98);
+    transform-origin:top left;
+    transition:opacity .16s ease, transform .16s ease, visibility .16s;
+}
+.vct-report-dropdown.is-open{
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
+    transform:translateY(0) scale(1);
+}
+.vct-report-dropdown [data-vct-report-group]{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    border:none;
+    background:transparent;
+    padding:9px 12px;
+    font-size:13px;
+    font-weight:500;
+    text-align:left;
+    color:var(--vct-text,#334155);
+    cursor:pointer;
+    border-radius:7px;
+    white-space:nowrap;
+    transition:color .13s ease, background-color .13s ease, transform .13s ease;
+}
+.vct-report-dropdown [data-vct-report-group] [data-vct-icon]{
+    width:14px;
+    height:14px;
+    flex-shrink:0;
+    color:currentColor;
+    opacity:.7;
+    transition:opacity .13s ease;
+}
+.vct-report-dropdown [data-vct-report-group]:hover{
+    background:var(--vct-bg-soft,#F7F8FA);
+    color:var(--vct-primary,#66062D);
+    transform:translateX(2px);
+}
+.vct-report-dropdown [data-vct-report-group]:hover [data-vct-icon]{
+    opacity:1;
+}
+.vct-report-dropdown [data-vct-report-group].is-active{
+    background:#FBE9EF;
+    color:var(--vct-primary,#66062D);
+}
+.vct-report-dropdown [data-vct-report-group].is-active [data-vct-icon]{
+    opacity:1;
+}
+
+.vct-report-breadcrumb{
+    padding:14px 20px 0;
+    margin-bottom:4px;
+    font-size:12.5px;
+    font-weight:500;
+    color:var(--vct-text-soft,#94a3b8);
+}
+
+/* Filtros del panel (fecha o select segun el reporte). Viven DENTRO de
+   .vct-grid-filters (fila unica del toolbar de la grilla, junto al
+   buscador de texto y a los botones de Excel/PDF/Graficos) -- ya no hay
+   labels arriba de cada campo (pedido explicito: eran la causa de que
+   los campos quedaran mas altos/desalineados que sus vecinos sin label,
+   como el buscador o los botones). El significado de cada campo queda en
+   aria-label/title (accesibilidad) y, en los <select>, en el propio texto
+   de la opcion en blanco (ej. "Aptitud (todas)") en vez de un label aparte. */
+.vct-reports-filters{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:10px;
+}
+/* Sin el wrapper .vct-field de antes (min-width:160px, un flex-item propio
+   por campo), los inputs quedaron como flex-item DIRECTOS de .vct-reports-
+   filters -- y .vct-input trae width:100% de base (vct-main.css), asi que
+   cada fecha pedia el 100% de la fila para si sola y la siguiente caia a
+   un renglon nuevo (flex-wrap). Los <select> no tienen este problema
+   porque ya reciben width:auto de otra regla compartida (".vct-grid-
+   toolbar .vct-select"). Se fija un ancho chico y flex:0 0 auto (no
+   crece/encoge) para que los de fecha/texto libre queden lado a lado
+   igual que los selects. */
+/* Dentro del toolbar de la grilla (.vctdg-filters) los filtros y el buscador van en UNA
+   fila alineada: el bloque de filtros no se estira (flex:0 1 auto) y cada combo propio
+   (.vct-custom-select trae width:100% !important de vct-main.css, por eso se apilaban
+   uno por renglon a ~510px) toma un ancho fijo; el buscador queda al lado. */
+.vctdg-filters > [data-vct-form-scope]{flex:0 1 auto;min-width:0;}
+.vctdg-filters .vct-reports-filters{flex-wrap:wrap;align-items:center;gap:8px 10px;}
+.vctdg-filters .vct-reports-filters > .vct-custom-select,
+.vctdg-filters .vct-reports-filters > select.vct-select{
+    flex:0 0 190px;
+    width:190px !important;
+    min-width:0;
+}
+.vctdg-filters .vct-reports-filters .vct-custom-select-trigger,
+.vctdg-filters .vct-reports-filters .vct-datepicker-trigger{height:38px !important;}
+.vctdg-filters .vct-reports-filters .vct-datepicker{flex:0 0 auto;}
+.vct-reports-filters input[type="date"]{
+    width:132px;
+    flex:0 0 auto;
+}
+/* Celular/tablet angosto: los filtros pasan a columna (ver @media max-width:768px mas abajo), asi que el
+   flex:0 0 190px de arriba se aplicaria al ALTO (cada combo de 190px de alto). En columna, los combos
+   ocupan todo el ancho y su alto es el propio. */
+@media (max-width:768px){
+    html body .vctdg-filters > [data-vct-form-scope]{flex:1 1 100%;width:100%;}
+    html body .vctdg-filters .vct-reports-filters > .vct-custom-select,
+    html body .vctdg-filters .vct-reports-filters > select.vct-select{
+        flex:0 0 auto !important;
+        width:100% !important;
+    }
+    html body .vctdg-filters .vct-reports-filters > .vct-datepicker{flex:1 1 auto;}
+}
+.vct-reports-filters input[type="text"]{
+    width:150px;
+    flex:0 0 auto;
+}
+/* La causa real del desalineado (confirmada con el inspector del
+   navegador): vct-main.css le pone margin-top a TODO .vct-input/.vct-select
+   dentro de .vct-grid-toolbar (".vct-grid-toolbar .vct-input,.vct-select,
+   .vct-custom-select-trigger"), pensado para el buscador de texto de la
+   grilla (que no tiene label arriba, asi que ese margen lo centra bien).
+   Los campos de fecha/select de Reportes SI tienen label arriba, y ese
+   mismo margen los empujaba mas abajo todavia -- ni Excel/PDF/Graficos
+   (son .vct-btn, no .vct-input, nunca lo reciben) ni el buscador de texto
+   (sin label, no lo necesita) se movian, solo estos campos. Se anula aca,
+   sin tocar vct-main.css, con un selector mas especifico + !important
+   para poder ganarle al !important original. */
+[data-vct-report-root] .vct-grid-toolbar .vct-input,
+[data-vct-report-root] .vct-grid-toolbar .vct-select{
+    margin-top:0 !important;
+}
+/* El boton "Buscar" visible (con label invisible arriba para alinear con
+   Fecha Desde/Hasta, altura calcada a Excel/PDF/Graficos, etc.) se
+   probo en 3 vueltas distintas y seguia sin cerrar del todo -- pedido
+   explicito del usuario: sacarlo del todo. El filtro ahora dispara solo
+   con "change" (fecha elegida en el datepicker / opcion de un select) o
+   Enter en texto libre, contra un boton real pero OCULTO
+   (.vct-hidden, ver vct-reportes.js) que sigue siendo el que ejecuta
+   VCT.DomForm.validateAndNext -- sin boton visible, no hay nada que
+   alinear.*/
+
+/* Icono del selector de fecha nativo (input[type=date]): por default el
+   navegador lo dibuja en gris/negro y, al pasar el mouse, le pone un
+   circulo de HOVER celeste (color de acento nativo de Chrome) -- se
+   reemplaza por el mismo trazo bordo que usa el resto de los iconos de la
+   app, con su propio hover bordo clarito. El popup del calendario en si
+   (la grilla de dias que aparece al hacer click) es UI nativa del
+   sistema operativo/navegador, fuera del DOM de la pagina -- ningun sitio
+   web puede recolorearlo via CSS (limitacion de la plataforma, no un bug
+   de ac; pasa igual en Gmail, bancos, etc. con este mismo tipo de input).
+   accent-color ayuda a que Chrome tiña el resaltado del dia seleccionado
+   adentro de ese popup con el bordo de la marca en versiones que lo
+   soportan, sin garantia total entre navegadores. */
+[data-vct-report-root] input[type="date"]{
+    accent-color:var(--vct-primary,#66062D);
+    color-scheme:light;
+}
+[data-vct-report-root] input[type="date"]::-webkit-calendar-picker-indicator{
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2366062D' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='16' rx='2'/%3E%3Cpath d='M16 3v4M8 3v4M3 10h18'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;
+    background-position:center;
+    background-size:15px;
+    width:20px;
+    height:20px;
+    padding:2px;
+    border-radius:5px;
+    cursor:pointer;
+    transition:background-color .15s ease;
+}
+[data-vct-report-root] input[type="date"]::-webkit-calendar-picker-indicator:hover{
+    background-color:rgba(102,6,45,.10);
+}
+
+/* Icono a la izquierda del titulo del panel (Cliente/Proyecto/etc, mismo
+   patron que Configuracion -> Parametria): la version con icono inline de
+   .vct-card-title vive en vct-main.css pero escopeada a .vct-config-page,
+   que Reportes no usa -- sin esto el <span data-vct-icon> quedaba como
+   bloque suelto ARRIBA del texto en vez de al lado (el <h2> no tenia
+   display:flex). Se redefine aca, aislado, sin tocar vct-main.css. */
+[data-vct-report-root] .vct-config-abm-header .vct-card-title{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+[data-vct-report-root] .vct-config-abm-header .vct-card-title > [data-vct-icon]{
+    width:26px;
+    height:26px;
+    flex-shrink:0;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--vct-primary,#66062D);
+    background:rgba(102,6,45,.065);
+    border-radius:8px;
+}
+[data-vct-report-root] .vct-config-abm-header .vct-card-title > [data-vct-icon] svg{
+    width:15px;
+    height:15px;
+}
+
+/* KPIs (cards resumen arriba de la grilla, uno por reporte). Flex en vez
+   de grid de 4 columnas fijas: con flex:1 cada card reparte el 100% del
+   ancho disponible entre las que haya, sean 3 o 4 (o mas) -- con grid de
+   4 columnas fijas, un reporte con 3 KPIs dejaba una columna vacia y no
+   llegaba al borde. */
+.vct-reports-kpis{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-bottom:20px;
+}
+/* Mismo componente visual .vct-soft-kpi que usan las grillas de Clientes/
+   Empleados (definido en vct-main.css), pero ESE viene pensado para vivir
+   dentro de un CSS grid de 4 columnas fijas (.vct-soft-kpi-grid) -- en
+   Reportes cada panel tiene 3 o 4 KPIs distintos segun el reporte, y un
+   grid de N columnas fijas deja hueco/no llega al 100% del ancho cuando
+   hay menos cards que columnas. Se resuelve SIN tocar vct-main.css:
+   el wrapper sigue siendo .vct-reports-kpis (flex, ver arriba), y esta
+   regla hace que las cards .vct-soft-kpi se comporten como hijas de ese
+   flex (reparten el 100% del ancho entre las que haya) en vez de como
+   hijas de un grid. */
+.vct-reports-kpis .vct-soft-kpi{
+    flex:1 1 0;
+    min-width:150px;
+}
+/* .vct-soft-kpi-value viene pensado (vct-main.css) para numeros cortos de
+   Clientes/Empleados (ej. "42"); en Reportes varios KPIs son montos en
+   pesos con miles/decimales (ej. "$83.100.001,00"), mucho mas largos --
+   con el tamaño/peso original (28px, weight 800) no entraban en una sola
+   linea y el "$" quedaba solo arriba, ademas de leerse muy pesado. Se
+   achica y se le baja el grosor solo para Reportes, sin tocar
+   vct-main.css (Clientes/Empleados siguen igual). */
+[data-vct-report-root] .vct-soft-kpi-value{
+    font-size:19px !important;
+    font-weight:600 !important;
+    letter-spacing:normal !important;
+}
+
+/* Resumen de graficos por reporte: cada vez que se elige un reporte, se
+   arma un mini-grafico DONUT afin a ESE reporte (% de avance, composicion
+   por categoria, etc.), usando datos que el reporte ya tiene calculados --
+   sin libreria externa, solo SVG con stroke-dasharray. Se prefiere donut
+   sobre barra horizontal: para "% completado" o "composicion de un total"
+   el donut comunica la proporcion de un vistazo, la barra no. */
+.vct-report-chart{
+    width:100%;
+    box-sizing:border-box;
+    padding:16px 18px;
+    margin-bottom:20px;
+    background:#fff;
+    border:1px solid var(--vct-border,#e2e8f0);
+    border-radius:var(--vct-radius-lg,12px);
+    transition:box-shadow .15s ease;
+}
+.vct-report-chart:hover{
+    box-shadow:0 10px 22px rgba(15,23,42,.06);
+}
+.vct-report-chart-title{
+    margin-bottom:14px;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--vct-text,#1e293b);
+    text-align:center;
+}
+/* Columnas EXACTAS (no auto-fit): con 2 graficos, 50/50; con 3
+   (data-vct-chart-cols="3"), 33,3/33,3/33,3 -- siempre reparten el 100%
+   del ancho entre si mismos, sin depender de un ancho minimo que podria
+   hacer caer a menos columnas de las que hay. */
+.vct-report-chart-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:20px;
+    width:100%;
+}
+.vct-report-chart-grid[data-vct-chart-cols="3"]{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+}
+/* Cuando JS oculta graficos sin datos (ver vct-reportes.js), el grid
+   reparte el 100% entre los que queden en vez de dejar hueco fantasma
+   del/de los grafico(s) ocultos. */
+.vct-report-chart-grid[data-vct-chart-cols="1"]{
+    grid-template-columns:1fr;
+}
+.vct-report-chart-grid .vct-report-chart{
+    margin-bottom:0;
+}
+@media (max-width:900px){
+    .vct-report-chart-grid{ grid-template-columns:1fr; }
+}
+
+/* justify-content:center: cuando el grafico esta solo en su card (el caso
+   mas comun, un donut por reporte), queda centrado en vez de pegado a la
+   izquierda con espacio vacio de un lado -- pedido explicito. */
+.vct-donut-row{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:center;
+    gap:24px;
+}
+.vct-donut{
+    width:110px;
+    height:110px;
+    flex-shrink:0;
+}
+.vct-donut-track{
+    fill:none;
+    stroke:var(--vct-bg-soft,#EEF1F5);
+    stroke-width:3.6;
+}
+.vct-donut-seg{
+    fill:none;
+    stroke-width:3.6;
+    stroke-linecap:butt;
+    transition:stroke-dasharray .4s ease, stroke-dashoffset .4s ease;
+}
+.vct-donut-seg.is-blue{ stroke:#1466D8; }
+.vct-donut-seg.is-violet{ stroke:#6D35B2; }
+.vct-donut-seg.is-mint{ stroke:#0B7D55; }
+.vct-donut-seg.is-amber{ stroke:#A96500; }
+.vct-donut-seg.is-coral{ stroke:#D0455C; }
+.vct-donut-seg.is-primary{ stroke:var(--vct-primary,#66062D); }
+.vct-donut-label{
+    font-size:7.5px;
+    font-weight:600;
+    fill:var(--vct-text,#1e293b);
+}
+.vct-donut-sublabel{
+    font-size:11px;
+    font-weight:500;
+    color:var(--vct-text-soft,#64748b);
+    text-align:center;
+    margin-top:6px;
+}
+.vct-donut-legend{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+.vct-donut-legend-item{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:3px 4px;
+    border-radius:6px;
+    font-size:12px;
+    color:var(--vct-text,#1e293b);
+    transition:background-color .15s ease;
+}
+.vct-donut-legend-item:hover{
+    background:var(--vct-bg-soft,#F7F8FA);
+}
+.vct-donut-legend-item b{
+    margin-left:auto;
+    padding-left:14px;
+    font-weight:600;
+}
+.vct-donut-dot{
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    flex-shrink:0;
+}
+.vct-donut-dot.is-blue{ background:#1466D8; }
+.vct-donut-dot.is-violet{ background:#6D35B2; }
+.vct-donut-dot.is-mint{ background:#0B7D55; }
+.vct-donut-dot.is-amber{ background:#A96500; }
+.vct-donut-dot.is-coral{ background:#D0455C; }
+.vct-donut-dot.is-primary{ background:var(--vct-primary,#66062D); }
+.vct-donut-dot.is-track{ background:var(--vct-bg-soft,#EEF1F5); border:1px solid var(--vct-border,#e2e8f0); }
+
+/* Barras verticales (Top 5 por columna): complementa el donut/gauge de
+   cada reporte con un segundo grafico de columnas reales (consultor,
+   proveedor, proyecto, etc.), no solo proporciones. */
+.vct-barchart{
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    gap:16px;
+    height:150px;
+    padding-top:10px;
+}
+.vct-barchart-col{
+    flex:1;
+    max-width:64px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-end;
+    gap:6px;
+    height:100%;
+}
+.vct-barchart-value{
+    font-size:10.5px;
+    font-weight:500;
+    color:var(--vct-text,#1e293b);
+}
+.vct-barchart-bar{
+    width:100%;
+    border-radius:5px 5px 0 0;
+    background:var(--vct-primary,#66062D);
+    min-height:3px;
+    transition:height .3s ease;
+}
+.vct-barchart-label{
+    font-size:10.5px;
+    color:var(--vct-text-soft,#94a3b8);
+    text-align:center;
+    max-width:100%;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+/* Timeline estilo Gantt: cada fila es un servicio/proyecto, la barra
+   ocupa la posicion relativa de su Fecha Inicio/Fin dentro del rango
+   total mostrado (0-100%). Uso: reportes con fecha inicio/fin por fila
+   (Seg. Consultoria/Auditoria/Capacitacion). */
+.vct-gantt{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+.vct-gantt-row-head{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    font-size:11.5px;
+    color:var(--vct-text,#1e293b);
+    margin-bottom:5px;
+}
+.vct-gantt-row-head span:first-child{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+.vct-gantt-row-head span:last-child{
+    flex-shrink:0;
+    font-weight:500;
+    color:var(--vct-text-soft,#64748b);
+}
+.vct-gantt-track{
+    height:8px;
+    background:var(--vct-bg-soft,#F1F3F6);
+    border-radius:4px;
+    position:relative;
+}
+.vct-gantt-bar{
+    position:absolute;
+    top:0;
+    height:100%;
+    border-radius:4px;
+    background:var(--vct-primary,#66062D);
+}
+.vct-gantt-bar.is-blue{ background:#1466D8; }
+.vct-gantt-bar.is-violet{ background:#6D35B2; }
+.vct-gantt-bar.is-mint{ background:#0B7D55; }
+.vct-gantt-bar.is-amber{ background:#A96500; }
+.vct-gantt-bar.is-coral{ background:#D0455C; }
+.vct-gantt-empty{
+    font-size:12px;
+    color:var(--vct-text-soft,#94a3b8);
+    text-align:center;
+    padding:20px 0;
+}
+
+.vct-donut-gauges{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:22px;
+}
+.vct-donut-gauge{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+}
+.vct-donut-gauge .vct-donut{
+    width:84px;
+    height:84px;
+}
+
+/* Grillas de Reportes (cualquiera, no solo Indice Ocupacion): layout fijo
+   para que las columnas entren en el ancho del panel cuando alcanza, y el
+   texto de header/celda envuelve en vez de forzar overflow por-celda.
+   Solo en desktop/tablet ancho: por debajo de 641px vct-main.css ya
+   transforma la tabla en cards verticales (data-label), y no queremos pisar
+   ese comportamiento.
+   vct-main.css fija .vct-table-wrap/.vct-table con !important (seccion
+   "TABLAS RESPONSIVE - V5"), asi que hace falta !important + un selector
+   mas especifico para ganarle sin tocar ese archivo.
+   Bug: con overflow-x:hidden, en grillas de muchas columnas (ej. Seg.
+   Consultoria: 12) la suma de los anchos fijos (vct-col-xs/sm/md) mas las
+   columnas de texto libre supera el ancho del panel en pantallas no muy
+   anchas -- el excedente no desborda a una 2da linea (table-layout:fixed
+   no lo permite), sino que queda simplemente OCULTO e inalcanzable (la
+   ultima columna, "Cierre", cortada a la mitad sin forma de verla). Scroll
+   horizontal en vez de hidden: no se nota si la tabla entra, y si no
+   entra el dato sigue accesible en vez de perderse. */
+@media (min-width:641px){
+    [data-vct-report-root] [data-vct-component="grid"] .vct-table-wrap{
+        overflow-x:auto !important;
+    }
+    /* width:100% DURO (no auto): combinado con columnas en % (mas abajo,
+       no en px fijos), la suma de columnas nunca puede superar el 100%
+       del panel -- la tabla SIEMPRE entra, sin scroll, en cualquier
+       ancho de pantalla. Lo que no entra en su columna se trunca con
+       "..." en vez de desbordar. */
+    [data-vct-report-root] [data-vct-component="grid"] .vct-table{
+        table-layout:fixed !important;
+        width:100% !important;
+    }
+    [data-vct-report-root] [data-vct-component="grid"] .vct-table th,
+    [data-vct-report-root] [data-vct-component="grid"] .vct-table td{
+        padding:10px 6px !important;
+        font-size:12.5px !important;
+    }
+    /* Las columnas de texto libre (Cliente, Proyecto, Personal Afectado,
+       Observaciones, etc. -- cualquier <th> sin clase vct-col-*) NO
+       llevan ancho propio: table-layout:fixed reparte automaticamente lo
+       que sobra (100% menos la suma de vct-col-xs/sm/md en %) en partes
+       iguales entre ellas. Como todo esta en %, la suma nunca supera el
+       panel. */
+    /* Las celdas comunes (numero, fecha, codigo, badge, palabra corta)
+       NUNCA envuelven: partir "12-3446" o "11/11/2019" a la mitad porque
+       la columna es angosta se ve roto, y esos valores no tienen "palabra"
+       donde cortar prolijamente. El texto realmente largo (Cliente,
+       Proyecto, Observaciones, etc.) ya tiene su propio manejo via
+       .vct-table-cell-truncatable (nowrap + "..." colapsado, con el
+       boton para desplegar) -- para eso esta el toggle, no hace falta que
+       ninguna celda plana envuelva. */
+    [data-vct-report-root] [data-vct-component="grid"] .vct-table td{
+        white-space:nowrap !important;
+    }
+    /* Bug: nowrap forzaba una sola linea en el header; en columnas angostas
+       (vct-col-xs/sm) un header mas largo que la columna no tenia adonde
+       desbordar y quedaba cortado por el overflow-x:hidden del wrapper
+       (mas visible en la ULTIMA columna, que no tiene celda vecina hacia
+       donde "sangrar"). Se resuelve dejando que el header envuelva a 2
+       lineas en vez de forzar 1 sola. */
+    [data-vct-report-root] [data-vct-component="grid"] .vct-table th{
+        white-space:normal !important;
+        line-height:1.25 !important;
+        font-size:9.5px !important;
+        padding-left:4px !important;
+        padding-right:4px !important;
+    }
+    /* Bug "cambalache": el icono de orden (.vct-sort-icon, de vct-main.css)
+       es inline-flex y fluye pegado al texto -- en columnas donde el
+       header entra en 1 linea queda al lado del texto, pero en las que
+       envuelven a 2 lineas queda colgando despues de la 2da linea, en una
+       posicion vertical distinta por columna. Se saca el icono del flujo
+       de texto y se fija con position:absolute pegado al borde derecho de
+       la columna, centrado verticalmente en el alto real de la fila de
+       headers -- asi queda siempre en el mismo lugar (a la derecha del
+       nombre, como es convencional) sin importar si el texto envuelve a 1
+       o 2 lineas. El texto queda libre para wrappear sin que el icono lo
+       empuje. */
+    [data-vct-report-root] [data-vct-component="grid"] .vct-table th{
+        position:relative !important;
+    }
+    [data-vct-report-root] [data-vct-component="grid"] .vct-table th[data-vct-sortable="true"]{
+        padding-right:16px !important;
+    }
+    [data-vct-report-root] [data-vct-component="grid"] .vct-table th > span:first-child{
+        display:block !important;
+    }
+    [data-vct-report-root] [data-vct-component="grid"] .vct-table th .vct-sort-icon{
+        position:absolute !important;
+        top:50% !important;
+        right:2px !important;
+        transform:translateY(-50%) !important;
+        margin:0 !important;
+    }
+    [data-vct-grid-id="reportes-indice-ocupacion"] .vct-table th:first-child,
+    [data-vct-grid-id="reportes-indice-ocupacion"] .vct-table td:first-child{
+        width:22% !important;
+    }
+
+    [data-vct-report-root] [data-vct-component="grid"] .vct-table thead th:last-child{
+        padding-left:6px !important;
+        padding-right:6px !important;
+    }
+    [data-vct-report-root] [data-vct-component="grid"] .vct-table thead th:last-child:not(.vct-col-xs):not(.vct-col-sm):not(.vct-col-md){
+        width:auto !important;
+        min-width:0 !important;
+        max-width:none !important;
+    }
+    [data-vct-report-root] [data-vct-component="grid"] .vct-table tbody td:last-child{
+        width:auto !important;
+        min-width:0 !important;
+        max-width:none !important;
+        padding-left:6px !important;
+        padding-right:6px !important;
+    }
+
+    /* Anchos por tipo de columna: con table-layout:fixed todas las columnas
+       quedaban parejas por defecto, asi que en grillas de muchas columnas
+       (hasta 16, ej. Seg. Auditoria) el texto largo (Cliente, Observaciones,
+       Proyecto) terminaba tan angosto como un numero corto (% Avance,
+       Cuotas) y se apilaba en muchas lineas dentro de la celda. Estas
+       clases (puestas en el <th>, que es lo que fija el ancho de columna
+       en fixed layout) le dan un ancho chico fijo a lo numerico/corto y
+       dejan que las columnas de texto (sin clase) se repartan el resto. */
+    /* Porcentaje, NO pixeles fijos: con px fijos, la suma de columnas
+       podia superar el ancho real del panel (mas en grillas de muchas
+       columnas) y no habia forma de garantizar que la tabla entrara
+       siempre sin scroll -- el navegador o desbordaba (y quedaba cortado)
+       o apretaba de forma inconsistente. En % relativo al panel, la suma
+       de columnas nunca puede superar el 100%, en NINGUN ancho de
+       pantalla ni cantidad de columnas: siempre entra. Lo que no entra en
+       su porcentaje se trunca con "..." (columnas de texto largo, via
+       .vct-table-cell-truncatable) o con nowrap+ellipsis (numeros/fechas/
+       codigos cortos, mas abajo). */
+    [data-vct-report-root] [data-vct-component="grid"] .vct-table th.vct-col-xs{
+        width:6% !important;
+    }
+    [data-vct-report-root] [data-vct-component="grid"] .vct-table td[data-vct-sort-value]{
+        white-space:nowrap !important;
+    }
+    [data-vct-report-root] [data-vct-component="grid"] .vct-table th.vct-col-sm{
+        width:8% !important;
+    }
+    [data-vct-report-root] [data-vct-component="grid"] .vct-table th.vct-col-md{
+        width:11% !important;
+    }
+
+    /* Celdas de texto largo (Cliente, Proyecto, Observaciones, Personal
+       Afectado, etc.): en vez de dejarlas envolver libre y ocupar 3-4
+       lineas de alto por fila, quedan truncadas a 1 sola linea con "..."
+       y un boton (v) que despliega el texto completo al hacer click.
+       BUG encontrado con inspector: display:flex en el <td> lo sacaba del
+       modelo table-cell mientras el resto de las celdas de la MISMA fila
+       seguian siendo table-cell -- mezclar los dos rompia el calculo de
+       alto de fila del navegador (filas de 110px, contenido "apilado").
+       Se resuelve SIN tocar display (sigue siendo table-cell): el boton va
+       con position:absolute centrado verticalmente via top:50%+transform,
+       no con un offset fijo (eso causaba que quedara flotando arriba). */
+    [data-vct-report-root] [data-vct-component="grid"] .vct-table td.vct-table-cell-truncatable{
+        position:relative;
+        padding-right:22px !important;
+        white-space:nowrap !important;
+    }
+    [data-vct-report-root] [data-vct-component="grid"] .vct-table td.vct-table-cell-truncatable .vct-table-cell-text{
+        display:block;
+        overflow:hidden;
+        white-space:nowrap !important;
+        text-overflow:ellipsis;
+    }
+    [data-vct-report-root] [data-vct-component="grid"] .vct-table td.vct-table-cell-truncatable.is-expanded{
+        white-space:normal !important;
+    }
+    [data-vct-report-root] [data-vct-component="grid"] .vct-table td.vct-table-cell-truncatable.is-expanded .vct-table-cell-text{
+        white-space:normal !important;
+        text-overflow:clip;
+    }
+}
+.vct-table-cell-expand{
+    position:absolute;
+    top:50%;
+    right:2px;
+    transform:translateY(-50%);
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:16px;
+    height:16px;
+    padding:0;
+    color:var(--vct-text-soft,#94a3b8);
+    background:transparent;
+    border:0;
+    cursor:pointer;
+    font-size:12px;
+    line-height:1;
+}
+.vct-table-cell-expand:hover{
+    color:var(--vct-primary,#66062D);
+}
+.vct-table-cell-truncatable.is-expanded .vct-table-cell-expand{
+    transform:rotate(180deg);
+}
+
+/* Botones de export (Excel/PDF): la version con color de estos mismos
+   nombres de clase vive en vct-main.css pero escopeada a .vct-config-page,
+   que Reportes no usa. Se redefine el color aca, aislado, sin tocar
+   vct-main.css. */
+.vct-config-export-btn{
+    background:#fff;
+    border-color:#D8E4EF;
+    color:#334C6B;
+}
+.vct-config-export-excel > [data-vct-icon]{
+    color:#138A4F;
+}
+.vct-config-export-pdf > [data-vct-icon]{
+    color:var(--vct-primary,#66062D);
+}
+.vct-config-export-btn:hover{
+    background:#F8FAFC;
+    border-color:#C8D6E4;
+}
+
+/* Modal de graficos (donut/gantt/barchart) por panel: usa VCT.Modal /
+   data-vct-command="open-modal"/"close-modal" (generico de vct-main.js)
+   y el markup base .vct-modal/.vct-modal-dialog (vct-main.css), sin
+   inventar un sistema nuevo. El dialog default mide min(620px,100%),
+   angosto para 3 graficos lado a lado -- se ensancha solo para esta
+   variante. */
+.vct-modal-charts .vct-modal-dialog{
+    width:min(1100px,96vw);
+    max-height:calc(100vh - 40px);
+}
+
+.vct-reports-empty{
+    padding:40px 20px;
+    text-align:center;
+    color:var(--vct-text-soft,#64748b);
+    font-size:13px;
+}
+
+@media (max-width:768px){
+    .vct-reports-kpis .vct-soft-kpi{
+        flex:1 1 calc(50% - 6px);
+    }
+    .vct-reports-filters{
+        flex-direction:column;
+        align-items:stretch;
+    }
+}
+
+/* DATE PICKER PROPIO: movido a vct-datepicker.css (compartido por todas las pantallas con DataGrid). */
+
+/* ============================================================================
+   BUSCAR (filtros de Reportes) + estado de carga del panel
+   La busqueda ya no se dispara al cambiar cada campo: se hace con este boton.
+   ============================================================================ */
+.vctdg-btn-search{
+    color:#fff;
+    background:var(--vct-primary,#66062D);
+    border-color:var(--vct-primary,#66062D);
+}
+.vctdg-btn-search:hover{
+    color:#fff;
+    background:#760A36;
+    border-color:#760A36;
+}
+.vctdg-btn-search:disabled{
+    opacity:.7;
+    cursor:progress;
+}
+[data-vct-report-group-panel].is-loading{
+    opacity:.55;
+    pointer-events:none;
+    transition:opacity .15s ease;
+}
+
+/* Aviso de error de una busqueda (se muestra dentro del panel, los datos previos se conservan) */
+.vct-report-error{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin:0 0 12px;
+    padding:10px 14px;
+    color:#991b1b;
+    background:#fef2f2;
+    border:1px solid #fecaca;
+    border-radius:10px;
+    font-size:12px;
+}
+.vct-report-error strong{font-weight:700;}
+.vct-report-error span{flex:1 1 auto;}
+.vct-report-error-close{
+    flex:0 0 auto;
+    width:24px;
+    height:24px;
+    padding:0;
+    color:#991b1b;
+    background:transparent;
+    border:0;
+    border-radius:6px;
+    font-size:18px;
+    line-height:1;
+    cursor:pointer;
+}
+.vct-report-error-close:hover{background:rgba(153,27,27,.1);}
+
+/* Barra superior en pantallas angostas: tenia height:56px fija y sin altura automatica, asi que
+   cuando los botones no entraban en una fila (el wrap ya lo resuelve vct-main.css <=640px) se
+   salian por debajo y se superponian con el breadcrumb. */
+@media (max-width:768px){
+    .vct-report-topnav{
+        flex-wrap:wrap;
+        height:auto;
+        padding:8px 10px;
+        row-gap:4px;
+    }
+}

@@ -1,0 +1,4 @@
+USE [MuhlePROD]
+GO
+
+ALTER TABLE dbo.Actions DROP COLUMN Orden;

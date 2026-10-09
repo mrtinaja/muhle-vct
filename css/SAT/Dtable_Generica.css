@@ -1,0 +1,8 @@
+/* Estilo Data Tables Comanda Abierta */
+
+/* Header cells Comanda Abierta #7ccd7c  #90ee90*/
+
+table.dataTable thead th {
+    background: #020e25;
+	color: white;
+}

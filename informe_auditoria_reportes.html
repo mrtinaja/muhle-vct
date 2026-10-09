@@ -1,0 +1,442 @@
+<title>Auditoría y Reportes</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#f4f6f8;
+    --bg-panel:#ffffff;
+    --bg-code:#eef1f4;
+    --bg-code-line:#e3e8ed;
+    --ink:#161b22;
+    --ink-soft:#4b5563;
+    --ink-faint:#8792a2;
+    --line:#dde3ea;
+    --accent:#66062d;
+    --accent-soft:#f2e3e9;
+    --accent-ink:#66062d;
+    --good:#146c43;
+    --good-bg:#e3f3ea;
+    --warn:#8a5a00;
+    --warn-bg:#faf0da;
+    --todo:#5b5f97;
+    --todo-bg:#eaeafb;
+    --shadow: 0 1px 2px rgba(22,27,34,0.04), 0 8px 24px rgba(22,27,34,0.05);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12151b;
+      --bg-panel:#191d24;
+      --bg-code:#0f1216;
+      --bg-code-line:#1c2129;
+      --ink:#e8ebf0;
+      --ink-soft:#aab2bf;
+      --ink-faint:#6b7280;
+      --line:#2a3038;
+      --accent:#e0a6bb;
+      --accent-soft:#2a1920;
+      --accent-ink:#eec3d3;
+      --good:#7fd4a6;
+      --good-bg:#123322;
+      --warn:#e8bd6a;
+      --warn-bg:#332608;
+      --todo:#b3b6ef;
+      --todo-bg:#232152;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#12151b;
+    --bg-panel:#191d24;
+    --bg-code:#0f1216;
+    --bg-code-line:#1c2129;
+    --ink:#e8ebf0;
+    --ink-soft:#aab2bf;
+    --ink-faint:#6b7280;
+    --line:#2a3038;
+    --accent:#e0a6bb;
+    --accent-soft:#2a1920;
+    --accent-ink:#eec3d3;
+    --good:#7fd4a6;
+    --good-bg:#123322;
+    --warn:#e8bd6a;
+    --warn-bg:#332608;
+    --todo:#b3b6ef;
+    --todo-bg:#232152;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+  }
+
+  *{ box-sizing:border-box; }
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"IBM Plex Sans", -apple-system, sans-serif;
+    font-size:15.5px;
+    line-height:1.65;
+    margin:0;
+  }
+  h1,h2,h3{
+    font-family:"Zilla Slab", Georgia, serif;
+    color:var(--ink);
+    text-wrap:balance;
+    line-height:1.2;
+  }
+  code, .mono, table.schema td, table.schema th{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+  }
+  a{ color:var(--accent-ink); }
+
+  .layout{
+    max-width:1180px;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:230px minmax(0,1fr);
+    gap:48px;
+    padding:40px 32px 100px;
+  }
+  @media (max-width:860px){
+    .layout{ grid-template-columns:1fr; }
+    nav.toc{ position:static !important; order:2; }
+  }
+
+  header.hero{
+    max-width:1180px;
+    margin:0 auto;
+    padding:36px 32px 0;
+  }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:"IBM Plex Mono", monospace;
+    font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--accent-ink);
+    background:var(--accent-soft);
+    padding:5px 10px; border-radius:5px;
+  }
+  h1.title{
+    font-size:clamp(28px,4vw,40px);
+    margin:16px 0 8px;
+    font-weight:700;
+  }
+  p.dek{
+    color:var(--ink-soft);
+    font-size:17px;
+    max-width:62ch;
+    margin:0 0 4px;
+  }
+  .system-line{
+    color:var(--ink-faint);
+    font-size:13px;
+    margin-top:14px;
+    display:flex; gap:6px; flex-wrap:wrap; align-items:center;
+  }
+  .system-line code{ background:var(--bg-code); padding:2px 6px; border-radius:4px; color:var(--ink); }
+
+  nav.toc{
+    align-self:start;
+    position:sticky;
+    top:32px;
+    font-size:13.5px;
+  }
+  nav.toc .toc-title{
+    font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--ink-faint); margin-bottom:10px; font-weight:600;
+  }
+  nav.toc ol{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:2px; }
+  nav.toc li a{
+    display:block; text-decoration:none; color:var(--ink-soft);
+    padding:6px 10px; border-radius:6px; border-left:2px solid transparent;
+  }
+  nav.toc li a:hover{ color:var(--ink); background:var(--bg-panel); }
+  nav.toc li.sub a{ padding-left:22px; font-size:12.5px; color:var(--ink-faint); }
+
+  main{ min-width:0; }
+  section{ margin-bottom:56px; scroll-margin-top:24px; }
+  section > .section-head{
+    display:flex; align-items:baseline; gap:12px; margin-bottom:6px;
+  }
+  .section-num{
+    font-family:"IBM Plex Mono", monospace;
+    color:var(--accent-ink);
+    font-size:13px;
+  }
+  h2{ font-size:24px; margin:0; }
+  section > p.section-dek{ color:var(--ink-soft); margin:4px 0 24px; max-width:70ch; }
+  h3{ font-size:17px; margin:32px 0 10px; }
+  p{ margin:0 0 14px; max-width:72ch; }
+
+  .panel{
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    box-shadow:var(--shadow);
+    padding:20px 24px;
+    margin:18px 0;
+  }
+
+  code.inline{
+    background:var(--bg-code);
+    border:1px solid var(--bg-code-line);
+    padding:1px 6px;
+    border-radius:4px;
+    font-size:.9em;
+  }
+
+  pre{
+    background:var(--bg-code);
+    border:1px solid var(--bg-code-line);
+    border-radius:10px;
+    padding:16px 18px;
+    overflow-x:auto;
+    font-size:13px;
+    line-height:1.6;
+    margin:14px 0;
+  }
+  pre code{ font-family:"IBM Plex Mono", monospace; color:var(--ink); background:none; border:none; padding:0; }
+  .kw{ color:var(--accent-ink); }
+  .cm{ color:var(--ink-faint); font-style:italic; }
+
+  .table-wrap{ overflow-x:auto; margin:16px 0; }
+  table{ border-collapse:collapse; width:100%; font-size:13.5px; }
+  table caption{ text-align:left; color:var(--ink-faint); font-size:12px; margin-bottom:6px; }
+  th{
+    text-align:left; font-weight:600; color:var(--ink-soft);
+    font-size:11.5px; letter-spacing:.04em; text-transform:uppercase;
+    padding:9px 12px; border-bottom:1px solid var(--line);
+    white-space:nowrap;
+  }
+  td{ padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top; font-variant-numeric:tabular-nums; }
+  tr:last-child td{ border-bottom:none; }
+  table.schema td:first-child{ color:var(--accent-ink); font-weight:500; }
+
+  .badge{
+    display:inline-flex; align-items:center; gap:5px;
+    font-size:11.5px; font-weight:600; letter-spacing:.02em;
+    padding:3px 9px; border-radius:20px;
+    white-space:nowrap;
+  }
+  .badge.good{ background:var(--good-bg); color:var(--good); }
+  .badge.warn{ background:var(--warn-bg); color:var(--warn); }
+  .badge.todo{ background:var(--todo-bg); color:var(--todo); }
+  .badge::before{ content:""; width:6px; height:6px; border-radius:50%; background:currentColor; }
+
+  .flow{
+    display:flex; align-items:stretch; gap:0; flex-wrap:wrap;
+    margin:22px 0;
+  }
+  .flow .step{
+    flex:1; min-width:150px;
+    background:var(--bg-panel); border:1px solid var(--line); border-radius:10px;
+    padding:14px 16px; position:relative;
+  }
+  .flow .step .k{ font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--accent-ink); text-transform:uppercase; letter-spacing:.06em; }
+  .flow .step .t{ font-weight:600; margin-top:4px; font-size:13.5px; }
+  .flow .step .d{ font-size:12px; color:var(--ink-soft); margin-top:4px; }
+  .flow .arrow{
+    flex:0 0 28px; display:flex; align-items:center; justify-content:center;
+    color:var(--ink-faint); font-size:18px;
+  }
+  @media (max-width:760px){
+    .flow{ flex-direction:column; }
+    .flow .arrow{ transform:rotate(90deg); padding:2px 0; }
+  }
+
+  .callout{
+    border-left:3px solid var(--accent);
+    background:var(--accent-soft);
+    border-radius:0 8px 8px 0;
+    padding:12px 16px;
+    font-size:13.5px;
+    color:var(--ink);
+    margin:16px 0;
+  }
+  .callout strong{ color:var(--accent-ink); }
+
+  footer{
+    max-width:1180px; margin:0 auto; padding:0 32px 60px;
+    color:var(--ink-faint); font-size:12.5px;
+    border-top:1px solid var(--line); padding-top:20px;
+  }
+</style>
+
+<header class="hero">
+  <span class="eyebrow">MuhlePROD · dbo</span>
+  <h1 class="title">Modelo de Auditoría y Reportes</h1>
+  <p class="dek">Cómo quedó armado el registro de actividad administrativa (altas, ediciones, asociaciones) y la pantalla de Reportes que lo consulta, para que cualquiera pueda sumar un módulo auditado o un reporte nuevo sin adivinar el patrón.</p>
+  <p class="system-line">Base <code>MuhlePROD</code> · pantalla <code>Reportes</code> en <code>vocaturo.desa.interdev.online/admin</code></p>
+</header>
+
+<div class="layout">
+  <nav class="toc">
+    <div class="toc-title">Contenido</div>
+    <ol>
+      <li><a href="#panorama">1. Panorama general</a></li>
+      <li><a href="#auditoria">2. Modelo de auditoría</a></li>
+      <li class="sub"><a href="#auditoria-tabla">La tabla</a></li>
+      <li class="sub"><a href="#auditoria-sp">El SP de logging</a></li>
+      <li class="sub"><a href="#auditoria-cobertura">Cobertura actual</a></li>
+      <li class="sub"><a href="#auditoria-nuevo">Instrumentar un ABM nuevo</a></li>
+      <li><a href="#reportes">3. Modelo de reportes</a></li>
+      <li class="sub"><a href="#reportes-catalogo">El catálogo (CAT_DATA)</a></li>
+      <li class="sub"><a href="#reportes-dos-sp">Los dos SPs por pantalla</a></li>
+      <li class="sub"><a href="#reportes-grid">El motor de grilla</a></li>
+      <li class="sub"><a href="#reportes-existentes">Los 4 reportes actuales</a></li>
+      <li class="sub"><a href="#reportes-nuevo">Agregar un reporte nuevo</a></li>
+      <li><a href="#pendientes">4. Pendientes conocidos</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <section id="panorama">
+      <div class="section-head"><span class="section-num">01</span><h2>Panorama general</h2></div>
+      <p class="section-dek">Dos piezas independientes que se apoyan una en la otra: primero se registra lo que pasa, después se puede consultar.</p>
+
+      <p>El <strong>modelo de auditoría</strong> es la parte que <em>escribe</em>: cada vez que un SP de guardado (alta de perfil, edición de usuario, asociación de un permiso) confirma su transacción, deja una fila en una tabla central describiendo qué módulo, qué acción, quién y sobre qué registro.</p>
+      <p>El <strong>modelo de reportes</strong> es la parte que <em>lee</em>: una pantalla con un selector de reporte y filtros que arma una tabla temporal por cada tipo de consulta y se la entrega a un motor de grilla genérico (<code class="inline">dbo.vct_RenderGrid</code>) para que la muestre paginada, con buscador y exportables.</p>
+
+      <div class="flow">
+        <div class="step"><div class="k">Origen</div><div class="t">SP de guardado</div><div class="d">UPD_USER, UPD_SECTOR, UPD_GROUPS, ADD_ACTION_GROUP…</div></div>
+        <div class="arrow">→</div>
+        <div class="step"><div class="k">Escritura</div><div class="t">VCT_LOG_AUDITORIA</div><div class="d">un INSERT parametrizado</div></div>
+        <div class="arrow">→</div>
+        <div class="step"><div class="k">Registro</div><div class="t">M_AUDITORIA_ADMIN</div><div class="d">tabla central de auditoría</div></div>
+        <div class="arrow">→</div>
+        <div class="step"><div class="k">Lectura</div><div class="t">M_CONFIG_REPORTES</div><div class="d">Reporte 1 filtra sobre ella</div></div>
+        <div class="arrow">→</div>
+        <div class="step"><div class="k">Salida</div><div class="t">vct_RenderGrid</div><div class="d">grilla paginada en pantalla</div></div>
+      </div>
+    </section>
+
+    <section id="auditoria">
+      <div class="section-head"><span class="section-num">02</span><h2>Modelo de auditoría</h2></div>
+      <p class="section-dek">Una tabla, un SP de escritura, y un contrato simple para cualquiera que quiera loguear una acción nueva.</p>
+
+      <h3 id="auditoria-tabla">La tabla — <code class="inline">dbo.M_AUDITORIA_ADMIN</code></h3>
+      <p>Guarda un evento por fila. No hay estados ni versiones: es un log de solo-inserción (append-only).</p>
+      <div class="table-wrap panel">
+        <table class="schema">
+          <tr><th>Columna</th><th>Tipo</th><th>Uso</th></tr>
+          <tr><td>Id</td><td>uniqueidentifier</td><td>PK, <code class="inline">NEWID()</code></td></tr>
+          <tr><td>Modulo</td><td>varchar(50)</td><td>USUARIOS · PERFILES · ESTRUCTURA · AREA · PSESSIONS · PERFIL_ADMIN</td></tr>
+          <tr><td>Accion</td><td>varchar(50)</td><td>ALTA · MODIFICACION · ASOCIAR · DESASOCIAR · LOG IN · LOG OFF</td></tr>
+          <tr><td>UsuarioId</td><td>varchar(30)</td><td>quién ejecutó la acción (<code class="inline">@IUSERID</code>)</td></tr>
+          <tr><td>RegistroAfectado</td><td>varchar(200)</td><td>clave del registro tocado (Id de perfil, usuario, sector…)</td></tr>
+          <tr><td>Detalle</td><td>varchar(500)</td><td>texto legible: qué cambió exactamente</td></tr>
+          <tr><td>Fecha</td><td>datetime</td><td><code class="inline">GETDATE()</code>, default</td></tr>
+        </table>
+      </div>
+      <p>Índices sobre <code class="inline">(Modulo, Accion, Fecha DESC)</code> y sobre <code class="inline">UsuarioId</code>, pensados para los filtros que arma la pantalla de Reportes.</p>
+
+      <h3 id="auditoria-sp">El SP de logging — <code class="inline">dbo.VCT_LOG_AUDITORIA</code></h3>
+      <p>Es el único punto de entrada para escribir en la tabla. Cualquier SP de guardado lo invoca con un <code class="inline">EXEC</code> de una línea:</p>
+      <pre><code><span class="kw">EXEC</span> dbo.VCT_LOG_AUDITORIA
+     <span class="kw">@MODULO</span>            = <span class="cm">'PERFILES'</span>,
+     <span class="kw">@ACCION</span>            = <span class="cm">'ALTA'</span>,
+     <span class="kw">@USER_ID</span>           = @IUSERID,
+     <span class="kw">@REGISTRO_AFECTADO</span> = @VID_LOG,
+     <span class="kw">@DETALLE</span>           = @VDETALLE_LOG;</code></pre>
+      <div class="callout"><strong>Regla que rompió varios SPs en el camino:</strong> <code class="inline">EXEC</code> con parámetros nombrados solo acepta constantes o variables — nunca una expresión (<code class="inline">CONVERT(...)</code>, <code class="inline">'texto ' + @var</code>, <code class="inline">UPPER(@x)</code>). Todo valor calculado se resuelve primero en un <code class="inline">SET @variable = …</code> y recién ahí se pasa al <code class="inline">EXEC</code>.</div>
+      <p>El SP solo hace un <code class="inline">INSERT</code>; siempre se llama <strong>después</strong> del <code class="inline">COMMIT TRANSACTION</code> del guardado real, nunca antes — si el guardado falla y hace rollback, no queda un log fantasma de algo que no pasó.</p>
+
+      <h3 id="auditoria-cobertura">Cobertura actual</h3>
+      <div class="table-wrap panel">
+        <table>
+          <tr><th>Módulo</th><th>Acción</th><th>SP instrumentado</th><th>Estado</th></tr>
+          <tr><td>PERFILES</td><td>ALTA / MODIFICACION</td><td>M_CONFIG_UPD_GROUPS</td><td><span class="badge good">activo</span></td></tr>
+          <tr><td>USUARIOS</td><td>ALTA / MODIFICACION</td><td>M_CONFIG_UPD_USER</td><td><span class="badge good">activo</span></td></tr>
+          <tr><td>PERFILES</td><td>ASOCIAR</td><td>M_CONFIG_UPD_USER (perfil asignado al guardar usuario)</td><td><span class="badge good">activo</span></td></tr>
+          <tr><td>ESTRUCTURA</td><td>ALTA / MODIFICACION</td><td>M_CONFIG_UPD_SECTOR</td><td><span class="badge good">activo</span></td></tr>
+          <tr><td>PERFIL_ADMIN</td><td>ASOCIAR (permiso→perfil)</td><td>M_CONFIG_ADD_ACTION_GROUP</td><td><span class="badge good">activo</span></td></tr>
+          <tr><td>PERFIL_ADMIN</td><td>ASOCIAR (menú→perfil)</td><td>M_CONFIG_ADD_TASK_GROUP</td><td><span class="badge good">activo</span></td></tr>
+          <tr><td>PERFIL_ADMIN</td><td>DESASOCIAR (menú)</td><td>sin identificar todavía</td><td><span class="badge todo">pendiente</span></td></tr>
+          <tr><td>AREA</td><td>—</td><td>sin SP de guardado pasado aún</td><td><span class="badge todo">pendiente</span></td></tr>
+          <tr><td>PSESSIONS</td><td>LOG IN / LOG OFF</td><td>no definido — no hay hook en el login</td><td><span class="badge todo">pendiente</span></td></tr>
+        </table>
+      </div>
+      <p>Los SPs que hacían lo mismo por duplicado quedaron identificados: <code class="inline">M_CONFIG_ADD_GROUP</code> es una versión vieja de <code class="inline">M_CONFIG_UPD_GROUPS</code> (que es la real, confirmada por vos) — no se tocó más, no está enganchada a nada.</p>
+
+      <h3 id="auditoria-nuevo">Cómo instrumentar un ABM nuevo</h3>
+      <p>Tres pasos, siempre en este orden dentro del SP de guardado:</p>
+      <ol>
+        <li>Determinar <strong>antes</strong> de escribir si es alta o edición (para loguear la acción correcta) — nunca inferirlo después del <code class="inline">COMMIT</code>.</li>
+        <li>Ejecutar la transacción real (<code class="inline">INSERT</code>/<code class="inline">UPDATE</code>) y hacer <code class="inline">COMMIT</code>.</li>
+        <li>Recién ahí, precomputar <code class="inline">@VDETALLE_LOG</code> y llamar a <code class="inline">EXEC dbo.VCT_LOG_AUDITORIA</code>.</li>
+      </ol>
+      <p>Si el guardado es del tipo "insertar solo si no existe" (como las asociaciones de permiso o menú), loguear <strong>solo cuando la fila fue realmente nueva</strong> — un flag <code class="inline">@VINSERTED BIT</code> alcanza para no ensuciar el log con no-ops.</p>
+    </section>
+
+    <section id="reportes">
+      <div class="section-head"><span class="section-num">03</span><h2>Modelo de reportes</h2></div>
+      <p class="section-dek">Una pantalla, dos stored procedures por convención: uno arma el header y los filtros, el otro arma la grilla de resultados.</p>
+
+      <h3 id="reportes-catalogo">El catálogo — <code class="inline">CAT_DATA</code></h3>
+      <p>Qué reportes existen y en qué orden aparecen en el combo "Reporte" no está hardcodeado: sale de <code class="inline">CAT_DATA</code> filtrado por un <code class="inline">PAR_KEY</code> fijo.</p>
+      <pre><code><span class="kw">SELECT</span> CAT_DATA_CODE, CAT_DATA_DESC
+<span class="kw">FROM</span> dbo.CAT_DATA
+<span class="kw">WHERE</span> PAR_KEY = <span class="cm">'11352CCA-DABB-40C1-9D55-DDA0F228CB23'</span></code></pre>
+      <p><code class="inline">CAT_DATA_CODE</code> es el id que viaja como <code class="inline">ID_TASK_SEL</code> en <code class="inline">M_CONFIG</code> y decide qué rama de los dos SPs de abajo se ejecuta.</p>
+
+      <h3 id="reportes-dos-sp">Los dos SPs por pantalla</h3>
+      <div class="table-wrap panel">
+        <table>
+          <tr><th>SP</th><th>Responsabilidad</th><th>Devuelve</th></tr>
+          <tr><td>M_CONFIG_PREV_REPORTES</td><td>Header del módulo, combo de Reporte, y los filtros propios de cada reporte (fecha, módulo, usuario, sector…)</td><td><code class="inline">@PS_TITULO</code> / <code class="inline">@PS_FORMULARIO</code> (HTML)</td></tr>
+          <tr><td>M_CONFIG_REPORTES</td><td>Lee los filtros ya guardados en <code class="inline">M_CONFIG</code>, arma un <code class="inline">#TEMP</code> con los datos, y llama al motor de grilla</td><td>resultset (la grilla renderizada)</td></tr>
+        </table>
+      </div>
+      <p>El primero se ejecuta al entrar o al cambiar de reporte/filtro; el segundo se dispara al togglear el reporte o apretar "Buscar" — ambos comparten el mismo <code class="inline">PAR_KEY</code> de sesión (<code class="inline">M_CONFIG.PAR_KEY = @IPKEYJOB</code>) para leer y persistir filtros.</p>
+
+      <h3 id="reportes-grid">El motor de grilla — <code class="inline">dbo.vct_RenderGrid</code></h3>
+      <p>En vez de armar HTML de tabla a mano (como hacía la versión vieja, con <code class="inline">SELECT '&lt;div&gt;...' AS 'Columna'</code>), cada reporte arma una tabla temporal con columnas en español como alias, y se la pasa al renderer genérico:</p>
+      <pre><code><span class="kw">SELECT</span>
+    Usuario             = ISNULL(u.Id, <span class="cm">''</span>),
+    [Apellido y Nombre] = ISNULL(u.Name, <span class="cm">''</span>),
+    Estado              = ISNULL(cd.cat_data_desc, <span class="cm">''</span>)
+<span class="kw">INTO</span> #TmpReporte2
+<span class="kw">FROM</span> UsersSector US <span class="cm">-- ...joins y filtros...</span>
+
+<span class="kw">EXEC</span> dbo.vct_RenderGrid
+     <span class="kw">@TempTableName</span> = <span class="cm">'#TmpReporte2'</span>,
+     <span class="kw">@FormId</span>        = @FORM_ID,
+     <span class="kw">@ActionsJson</span>   = <span class="cm">'[]'</span>,   <span class="cm">-- solo lectura, sin acciones de fila</span>
+     <span class="kw">@PageSize</span>      = <span class="cm">10</span>,
+     <span class="kw">@HiddenColumns</span> = <span class="cm">''</span>,
+     <span class="kw">@ScriptVersion</span> = <span class="cm">'16.0.0'</span>;</code></pre>
+      <p>El nombre de cada columna del <code class="inline">#TEMP</code> es literalmente el título que aparece en el header de la grilla — no hay mapeo aparte que mantener.</p>
+
+      <h3 id="reportes-existentes">Los 4 reportes actuales</h3>
+      <div class="table-wrap panel">
+        <table>
+          <tr><th>#</th><th>Nombre</th><th>Fuente</th><th>Filtros</th><th>Estado</th></tr>
+          <tr><td>1</td><td>Actividad</td><td>M_AUDITORIA_ADMIN</td><td>Fecha desde/hasta, Módulo, Acción, Usuario</td><td><span class="badge good">con datos</span></td></tr>
+          <tr><td>2</td><td>Usuarios por Sector</td><td>UsersSector × Users × Sectores × Areas × cat_data</td><td>Usuario, Sector</td><td><span class="badge good">con datos</span></td></tr>
+          <tr><td>3</td><td>Permisos por Perfil</td><td>GroupsActions × Groups × Actions</td><td>Perfil, Permiso</td><td><span class="badge good">con datos</span></td></tr>
+          <tr><td>4</td><td>Estructura de Sectores</td><td>Sectores × Areas (auto-join por sector padre)</td><td>ninguno</td><td><span class="badge good">con datos</span></td></tr>
+        </table>
+      </div>
+
+      <h3 id="reportes-nuevo">Agregar un reporte nuevo</h3>
+      <ol>
+        <li><strong>CAT_DATA</strong>: insertar una fila con el próximo <code class="inline">CAT_DATA_CODE</code> y el nombre a mostrar (recordar que <code class="inline">PKEY</code> y <code class="inline">CAT_INACTIVE</code> son <code class="inline">NOT NULL</code> sin default).</li>
+        <li><strong>M_CONFIG_PREV_REPORTES</strong>: un <code class="inline">IF (@Id_Reporte = 'N')</code> nuevo que arma los campos de filtro específicos.</li>
+        <li><strong>M_CONFIG_REPORTES</strong>: el <code class="inline">IF (@ID_REPORTE = 'N')</code> correspondiente — arma el <code class="inline">#TEMP</code> y llama a <code class="inline">vct_RenderGrid</code>.</li>
+      </ol>
+      <p>No hay today una tabla que declare "qué filtros usa cada reporte" — es información implícita en el código de ambos SPs. Con 4 reportes no pesa; si la lista crece bastante más, vale la pena versionarlo en una tabla de configuración.</p>
+    </section>
+
+    <section id="pendientes">
+      <div class="section-head"><span class="section-num">04</span><h2>Pendientes conocidos</h2></div>
+      <div class="table-wrap panel">
+        <table>
+          <tr><th>Tema</th><th>Detalle</th><th>Estado</th></tr>
+          <tr><td>Combos vacíos en Reportes</td><td>"Reporte", "Módulo" y "Acción" no muestran opciones en pantalla aunque el HTML generado trae los <code class="inline">&lt;option&gt;</code> — sospecha de un enhancer de <code class="inline">&lt;select&gt;</code> en el front que espera el formato de <code class="inline">VCT_RENDER_SELECT</code>. En revisión con DevTools.</td><td><span class="badge warn">investigando</span></td></tr>
+          <tr><td>CAT_DATA de Reportes en desa</td><td>No tenía filas para el <code class="inline">PAR_KEY</code> del combo de Reporte — se sembraron los 4 registros manualmente.</td><td><span class="badge good">resuelto</span></td></tr>
+          <tr><td>Reporte 1 sin fuente</td><td>Resuelto: ahora lee de <code class="inline">M_AUDITORIA_ADMIN</code> con los mismos filtros de la UI.</td><td><span class="badge good">resuelto</span></td></tr>
+          <tr><td>Desasociar menú sin loguear</td><td>Falta identificar y instrumentar el SP que dispara el target <code class="inline">E47723C4-7340-4168-AE4D-FDE4A65E7271</code> desde <code class="inline">M_CONFIG_PREV_GROUPS_MODULOS</code>.</td><td><span class="badge todo">pendiente</span></td></tr>
+          <tr><td>Módulos AREA y PSESSIONS sin auditar</td><td>No se identificó todavía el SP de guardado de Áreas, ni un hook de login/logout para Log In / Log Off.</td><td><span class="badge todo">pendiente</span></td></tr>
+        </table>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer>Documento de referencia interna — generado a partir del trabajo de esta sesión sobre <code class="inline">MuhlePROD</code>.</footer>

@@ -1,0 +1,63 @@
+﻿/* vct-proyecto-visitas.css - v3
+   Seccion "Visitas y horas" de la Vista 360 de Proyecto. Reusa las clases del
+   Plan Estrategico (vct-proyecto-plan.css): resumen, barras, chips, tabla,
+   estados. Aca solo lo propio de visitas. */
+
+.vct-vis { margin-top: 16px; }
+
+/* resumen en tres columnas */
+.vct-plan-summary.vct-vis-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.vct-vis-de { color: var(--vct-plan-muted); font-size: 13px; font-weight: 500; }
+.vct-plan-bar.vct-vis-bar.is-warn > span { background: #F97316; }
+.vct-plan-bar.vct-vis-bar.is-over > span { background: var(--vct-plan-bad); }
+.vct-plan-big.is-over { background: var(--vct-plan-bad-soft); color: var(--vct-plan-bad); }
+
+/* horas por consultor */
+.vct-vis-cons { margin: 0 0 12px; padding: 12px 14px; border: 1px solid var(--vct-plan-line); border-radius: 10px; background: #fff; }
+.vct-vis-cons h4 { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; color: var(--vct-plan-text); font-size: 13px; font-weight: 600; }
+.vct-vis-cons h4 svg { width: 15px; height: 15px; color: var(--vct-plan-brand); }
+.vct-vis-cons ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.vct-vis-cons li { display: grid; grid-template-columns: minmax(140px, 240px) 1fr auto; align-items: center; gap: 10px; font-size: 13px; }
+.vct-vis-cons-name { color: var(--vct-plan-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vct-vis-cons-bar { height: 6px; border-radius: 999px; background: #F1F5F9; overflow: hidden; }
+.vct-vis-cons-bar > span { display: block; height: 100%; border-radius: inherit; background: var(--vct-plan-brand); }
+.vct-vis-cons-num { color: var(--vct-plan-muted); font-size: 12px; white-space: nowrap; }
+.vct-vis-cons-num b { color: var(--vct-plan-text); }
+
+/* tabla */
+.vct-vis-table td { vertical-align: middle; }
+.vct-vis-table .vct-plan-date small { display: block; color: var(--vct-plan-muted); font-size: 11px; }
+.vct-vis-h { white-space: nowrap; font-weight: 600; }
+.vct-vis-row.is-open td { background: #FBF7F9; border-bottom-color: transparent; }
+.vct-vis-row.is-open .vct-plan-toggle::before { transform: rotate(90deg); }
+.vct-vis-table .vct-plan-toggle { white-space: nowrap; }
+
+.vct-vis-detail td { background: #FBF7F9; }
+.vct-vis-detail-body { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 18px; padding: 2px 4px 8px 14px; }
+.vct-vis-detail-body h5 { margin: 0 0 4px; color: var(--vct-plan-muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .02em; }
+.vct-vis-detail-body p { margin: 0; color: var(--vct-plan-text); font-size: 13px; line-height: 1.5; }
+.vct-vis-pend { display: block; margin-top: 4px; color: var(--vct-plan-ok); font-size: 11px; }
+.vct-vis-detail-body .vct-vis-meta { grid-column: 1 / -1; color: var(--vct-plan-muted); font-size: 11px; }
+
+.vct-vis-more { display: flex; justify-content: center; padding: 10px 0 0; }
+.vct-vis-more[hidden] { display: none; }
+
+@media (max-width: 900px) {
+    .vct-plan-summary.vct-vis-summary { grid-template-columns: 1fr; }
+    /* la tabla scrollea de costado: el detalle queda fijo al ancho visible (el JS pone --vct-vis-w) */
+    .vct-vis-detail-body {
+        grid-template-columns: 1fr; position: sticky; left: 0; box-sizing: border-box;
+        width: var(--vct-vis-w, auto);
+    }
+    .vct-vis-detail-body p { white-space: normal; overflow-wrap: anywhere; }
+    .vct-vis-cons li { grid-template-columns: 1fr auto; }
+    .vct-vis-cons-bar { grid-column: 1 / -1; grid-row: 2; }
+}
+
+/* v3: breadcrumb de la 360 de proyecto en celular. No entraba en una linea y
+   mostraba una barra de desplazamiento horizontal: ahora corta en varias. */
+@media (max-width: 768px) {
+    html body #mainContainer .vct-360-breadcrumb-row { overflow: visible !important; white-space: normal !important; height: auto !important; max-height: none !important; }
+    html body #mainContainer .vct-360-breadcrumb-row .vct-breadcrumb-simple { display: flex !important; flex-wrap: wrap !important; row-gap: 2px !important; max-width: 100% !important; white-space: normal !important; }
+    html body #mainContainer .vct-360-breadcrumb-row .vct-breadcrumb-simple > * { min-width: 0 !important; white-space: normal !important; overflow-wrap: anywhere !important; }
+}

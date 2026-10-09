@@ -1,0 +1,81 @@
+/* ==========================================================================
+   VCT SIDEBAR RIEL (solo iconos) - margen fantasma + drawer mobile
+   El shell de la plataforma pinta el sidebar de 64px (solo iconos), pero las
+   reglas viejas siguen reservando 188px (--vct-sidebar-option-b-w) a la
+   izquierda del contenido. Se alinea la variable al ancho real y el drawer
+   mobile pasa a ser el mismo riel de iconos (sin 320px vacios).
+   ========================================================================== */
+@media (min-width:769px){
+    html:root{ --vct-sidebar-option-b-w:64px; }
+    /* El riel es fijo: ni "expandido" (la V lo alternaba) ni el 188px viejo mueven el contenido */
+    html body #main,
+    html body.vct-sidebar-expanded #main,
+    html body.vct-sidebar-mobile-open #main{ padding-left:64px !important; }
+}
+
+@media (max-width:768px){
+    /* Fondo oscuro a la derecha del riel: tocarlo cierra el drawer (vct-main.js lo escucha) */
+    html body.vct-sidebar-mobile-open .vct-sidebar-backdrop{
+        display:block !important; visibility:visible !important; opacity:1 !important; pointer-events:auto !important;
+        position:fixed !important; inset:0 0 0 64px !important; z-index:5990 !important;
+        background:rgba(25,17,21,.48) !important;
+    }
+    html body #muhleSideBar.vct-sidebar.vct-sidebar-option-b.vct-sidebar-v8{
+        width:64px !important; min-width:64px !important; max-width:64px !important;
+        display:flex !important; flex-direction:column !important; overflow:hidden !important;
+        background:linear-gradient(180deg,#7c0734 0%,#670528 52%,#51031f 100%) !important;
+    }
+    html body #muhleSideBar.vct-sidebar.vct-sidebar-option-b.vct-sidebar-v8 .vct-sidebar-head{
+        width:64px !important; height:66px !important; min-height:66px !important; flex:0 0 66px !important;
+        display:flex !important; align-items:center !important; justify-content:center !important;
+        padding:0 !important; margin:0 !important;
+    }
+    html body #muhleSideBar.vct-sidebar.vct-sidebar-option-b.vct-sidebar-v8 .vct-sidebar-brand,
+    html body #muhleSideBar.vct-sidebar.vct-sidebar-option-b.vct-sidebar-v8 .vct-sidebar-brand-mark{
+        width:64px !important; min-width:64px !important; max-width:64px !important;
+        height:66px !important; min-height:66px !important; max-height:66px !important;
+        display:flex !important; align-items:center !important; justify-content:center !important;
+        padding:0 !important; margin:0 !important;
+    }
+    html body #muhleSideBar.vct-sidebar.vct-sidebar-option-b.vct-sidebar-v8 .vct-sidebar-brand-mark img{
+        display:block !important; width:auto !important; height:28px !important;
+        min-height:0 !important; max-height:28px !important; max-width:36px !important;
+        object-fit:contain !important; margin:0 auto !important;
+    }
+    html body #muhleSideBar.vct-sidebar.vct-sidebar-option-b.vct-sidebar-v8 .vct-sidebar-nav{
+        width:64px !important; flex:1 1 auto !important; min-height:0 !important;
+        display:flex !important; flex-direction:column !important; align-items:center !important;
+        gap:3px !important; padding:7px 0 !important; margin:0 !important;
+        overflow-x:hidden !important; overflow-y:auto !important;
+    }
+    html body #muhleSideBar.vct-sidebar.vct-sidebar-option-b.vct-sidebar-v8 .vct-sidebar-action,
+    html body #muhleSideBar.vct-sidebar.vct-sidebar-option-b.vct-sidebar-v8 .vct-sidebar-logout{
+        position:relative !important; display:flex !important; align-items:center !important; justify-content:center !important;
+        width:42px !important; min-width:42px !important; max-width:42px !important;
+        height:40px !important; min-height:40px !important; max-height:40px !important; flex:0 0 40px !important;
+        padding:0 !important; margin:0 auto !important; border-radius:10px !important;
+        border:1px solid rgba(255,255,255,.05) !important; background:rgba(255,255,255,.09) !important;
+        color:rgba(255,255,255,.94) !important; box-shadow:none !important; outline:none !important;
+        text-decoration:none !important; overflow:hidden !important; transform:none !important;
+    }
+    html body #muhleSideBar.vct-sidebar.vct-sidebar-option-b.vct-sidebar-v8 .vct-sidebar-action.active,
+    html body #muhleSideBar.vct-sidebar.vct-sidebar-option-b.vct-sidebar-v8 .vct-sidebar-action[aria-current="page"]{
+        background:rgba(255,255,255,.21) !important; border-color:rgba(255,255,255,.14) !important; color:#fff !important;
+    }
+    html body #muhleSideBar.vct-sidebar.vct-sidebar-option-b.vct-sidebar-v8 .vct-sidebar-action-icon{
+        display:flex !important; align-items:center !important; justify-content:center !important;
+        width:20px !important; height:20px !important; min-width:20px !important; max-width:20px !important;
+        margin:0 !important; padding:0 !important; line-height:0 !important;
+    }
+    html body #muhleSideBar.vct-sidebar.vct-sidebar-option-b.vct-sidebar-v8 .vct-sidebar-action-icon svg,
+    html body #muhleSideBar.vct-sidebar.vct-sidebar-option-b.vct-sidebar-v8 .vct-sidebar-logout svg{
+        display:block !important; width:20px !important; height:20px !important;
+        max-width:20px !important; max-height:20px !important; margin:0 !important;
+        stroke:currentColor !important; color:inherit !important;
+    }
+    html body #muhleSideBar.vct-sidebar.vct-sidebar-option-b.vct-sidebar-v8 .vct-sidebar-footer{
+        width:64px !important; max-width:64px !important; height:56px !important; min-height:56px !important; flex:0 0 56px !important;
+        display:flex !important; align-items:center !important; justify-content:center !important;
+        padding:6px 0 !important; margin:0 !important; border-top:1px solid rgba(255,255,255,.10) !important;
+    }
+}

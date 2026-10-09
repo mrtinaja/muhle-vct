@@ -1,0 +1,596 @@
+/* ========================================================================
+   VCT EMAIL TEMPLATE DESIGNER - V2
+   ------------------------------------------------------------------------
+   Aislado de vct-main.css. Solo aplica dentro de [data-vct-email-editor].
+   Reemplaza el editor por bloques (V1: Texto/Imagen apilados + iframe fijo)
+   por un editor de texto enriquecido de cuerpo único + panel de variables
+   persistente, siguiendo el layout de referencia. No modifica vct-main.css
+   ni vct-main.js.
+   ======================================================================== */
+
+[data-vct-config-panel="email-templates"] .vct-email-list-view,
+[data-vct-config-panel="email-templates"] .vct-email-editor-view {
+    display:none;
+}
+[data-vct-config-panel="email-templates"] .vct-email-list-view.is-active,
+[data-vct-config-panel="email-templates"] .vct-email-editor-view.is-active {
+    display:block;
+}
+
+[data-vct-email-editor] {
+    width:100%;
+    min-width:0;
+    padding:0 0 4px;
+    color:var(--vct-text,#1e293b);
+}
+
+/* ---------- HEADER ---------- */
+.vct-email-editor-header {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    padding:14px 14px 14px 4px;
+    border-bottom:1px solid var(--vct-border,#e2e8f0);
+}
+.vct-email-editor-heading {
+    display:flex;
+    align-items:center;
+    min-width:0;
+    gap:10px;
+}
+.vct-email-back-btn {
+    width:34px;
+    min-width:34px;
+    height:34px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:0;
+    color:var(--vct-primary,#66062D);
+    background:#fff;
+    border:1px solid var(--vct-primary-border,rgba(102,6,45,.2));
+    border-radius:9px;
+    cursor:pointer;
+}
+.vct-email-editor-icon {
+    width:34px;
+    min-width:34px;
+    height:34px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--vct-primary,#66062D);
+    background:rgba(102,6,45,.08);
+    border-radius:9px;
+}
+.vct-email-editor-icon [data-vct-icon],
+.vct-email-editor-icon [data-vct-icon] svg { width:16px; height:16px; }
+.vct-email-editor-titles { min-width:0; }
+.vct-email-editor-titles h2 {
+    margin:0;
+    color:var(--vct-navy,#172033);
+    font-size:16px;
+    font-weight:700;
+    line-height:1.2;
+}
+.vct-email-editor-titles p {
+    margin:3px 0 0;
+    color:var(--vct-text-soft,#64748b);
+    font-size:11px;
+}
+.vct-email-editor-actions {
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:8px;
+    flex-wrap:wrap;
+}
+
+/* ---------- LAYOUT: MAIN + SIDEBAR DE VARIABLES ---------- */
+.vct-email-editor-body {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 300px;
+    align-items:start;
+    gap:14px;
+    padding:14px 14px 4px 4px;
+}
+.vct-email-editor-main { min-width:0; }
+
+/* ---------- CAMPOS: TARJETAS TEMATICAS ---------- */
+.vct-email-fields-row {
+    display:flex;
+    gap:12px;
+    align-items:stretch;
+}
+.vct-email-field-group { flex:1 1 0; min-width:0; }
+/* Identificación queda angosta (campos cortos); Envío y destino se lleva
+   el resto del ancho porque sus campos "libre" pueden tener varios mails
+   separados por coma y necesitan espacio para leerse. */
+.vct-email-field-group-narrow { flex:0 1 300px; }
+.vct-email-field-group-wide { flex:1 1 480px; }
+/* Los 3 selects cortos (Tipo de envío/Destino/CC) no necesitan crecer aunque
+   el card se ensanche para llenar la fila; los campos "libre" (col-12) si
+   necesitan todo el ancho disponible, asi que no se tocan aca. */
+.vct-email-field-group-wide .vct-email-col-3 .vct-select,
+.vct-email-field-group-wide .vct-email-col-3 .vct-input { max-width:220px; }
+.vct-email-field-group-head {
+    display:flex;
+    align-items:center;
+    gap:7px;
+    margin-bottom:11px;
+    color:var(--vct-primary,#66062D);
+}
+.vct-email-field-group-head span {
+    color:var(--vct-navy,#172033);
+    font-size:11.5px;
+    font-weight:800;
+}
+.vct-email-editor-card {
+    padding:14px;
+    background:#fff;
+    border:1px solid var(--vct-border,#e2e8f0);
+    border-radius:12px;
+    box-shadow:0 1px 3px rgba(15,23,42,.04);
+}
+.vct-email-fields-grid {
+    display:grid;
+    grid-template-columns:repeat(12,minmax(0,1fr));
+    gap:12px;
+}
+.vct-email-col-3 { grid-column:span 3; }
+.vct-email-col-4 { grid-column:span 4; }
+.vct-email-col-6 { grid-column:span 6; }
+.vct-email-col-9 { grid-column:span 9; }
+.vct-email-col-12 { grid-column:span 12; }
+.vct-email-field-help {
+    display:block;
+    margin-top:4px;
+    color:var(--vct-text-muted,#94a3b8);
+    font-size:10px;
+    line-height:1.3;
+}
+[data-vct-email-destino-libre-wrap],
+[data-vct-email-cc-libre-wrap] { display:none; }
+[data-vct-email-destino-libre-wrap].is-visible,
+[data-vct-email-cc-libre-wrap].is-visible { display:block; }
+
+/* ---------- CUERPO DEL MAIL ---------- */
+.vct-email-body-card {
+    margin-top:12px;
+    background:#fff;
+    border:1px solid var(--vct-border,#e2e8f0);
+    border-radius:12px;
+    box-shadow:0 1px 3px rgba(15,23,42,.04);
+    /* Sin overflow:hidden a propósito: el popover de imagen es un hijo
+       posicionado en absoluto del toolbar y necesita poder crecer más
+       allá del alto de la card (antes quedaba recortado y el botón
+       "Insertar" aparecía solapado apenas se cargaba el archivo). El
+       redondeado de esquinas se resuelve puntualmente en header/footer. */
+}
+.vct-email-body-header {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:12px 14px;
+    border-bottom:1px solid var(--vct-border,#e2e8f0);
+    border-radius:12px 12px 0 0;
+}
+.vct-email-body-header strong {
+    color:var(--vct-navy,#172033);
+    font-size:13px;
+    font-weight:700;
+}
+.vct-email-device-toggle {
+    display:flex;
+    gap:2px;
+    background:#f1f3f5;
+    border-radius:999px;
+    padding:3px;
+}
+.vct-email-device-btn {
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    height:24px;
+    padding:0 10px;
+    color:var(--vct-text-soft,#64748b);
+    background:transparent;
+    border:0;
+    border-radius:999px;
+    font-size:10px;
+    font-weight:700;
+    cursor:pointer;
+}
+.vct-email-device-btn.is-active {
+    color:var(--vct-navy,#172033);
+    background:#fff;
+    box-shadow:0 1px 2px rgba(15,23,42,.08);
+}
+
+.vct-email-rich-toolbar {
+    position:relative;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+    padding:8px 12px;
+    background:#fbfcfd;
+    border-bottom:1px solid var(--vct-border,#e2e8f0);
+}
+
+/* Clusters visuales de la toolbar: cada grupo de botones relacionados
+   comparte un fondo redondeado, en vez de separadores sueltos. */
+.vct-email-rich-group {
+    display:flex;
+    align-items:center;
+    gap:2px;
+    padding:3px;
+    background:#f1f3f5;
+    border-radius:9px;
+}
+.vct-email-rich-group .vct-email-rich-btn,
+.vct-email-rich-group .vct-email-rich-select,
+.vct-email-rich-group .vct-email-rich-color {
+    background:transparent;
+    border-color:transparent;
+}
+.vct-email-rich-group .vct-email-rich-btn:hover {
+    background:#fff;
+    border-color:transparent;
+    box-shadow:0 1px 2px rgba(15,23,42,.06);
+}
+
+.vct-email-rich-sep {
+    width:1px;
+    height:20px;
+    margin:0 3px;
+    background:var(--vct-border,#e2e8f0);
+}
+.vct-email-rich-btn {
+    min-width:28px;
+    height:28px;
+    padding:0 8px;
+    color:#475569;
+    background:#fff;
+    border:1px solid var(--vct-border,#e2e8f0);
+    border-radius:6px;
+    cursor:pointer;
+    font-size:11px;
+    font-weight:700;
+}
+.vct-email-rich-btn:hover { color:var(--vct-primary,#66062D); border-color:rgba(102,6,45,.25); }
+.vct-email-rich-select {
+    height:28px;
+    padding:0 8px;
+    color:#334155;
+    background:#fff;
+    border:1px solid var(--vct-border,#e2e8f0);
+    border-radius:6px;
+    font-size:11px;
+}
+.vct-email-rich-color {
+    width:28px;
+    height:28px;
+    padding:2px;
+    background:#fff;
+    border:1px solid var(--vct-border,#e2e8f0);
+    border-radius:6px;
+    cursor:pointer;
+}
+
+/* ---------- SPLIT VIEW: EDITOR + VISTA PREVIA EN VIVO ---------- */
+.vct-email-body-split {
+    display:flex;
+    align-items:stretch;
+    min-height:300px;
+}
+.vct-email-rich-editor {
+    position:relative;
+    flex:1 1 50%;
+    min-width:0;
+    min-height:300px;
+    padding:16px 18px;
+    color:#263247;
+    font-family:Arial,sans-serif;
+    font-size:13px;
+    line-height:1.6;
+    background:#fff;
+    outline:none;
+}
+.vct-email-rich-editor img { max-width:100%; height:auto; cursor:pointer; }
+.vct-email-rich-editor img.vct-email-img-selected {
+    outline:2px solid var(--vct-primary,#66062D);
+    outline-offset:2px;
+    border-radius:2px;
+}
+.vct-email-rich-editor table { border-collapse:collapse; }
+
+.vct-email-live-preview {
+    flex:1 1 50%;
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    padding:12px;
+    background:#f3f5f7;
+    border-left:1px solid var(--vct-border,#e2e8f0);
+}
+.vct-email-live-preview-label {
+    margin-bottom:8px;
+    color:var(--vct-text-muted,#94a3b8);
+    font-size:9.5px;
+    font-weight:800;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+}
+.vct-email-live-preview-frame-wrap {
+    flex:1 1 auto;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    overflow:hidden;
+}
+.vct-email-preview-frame {
+    width:600px;
+    height:280px;
+    min-height:280px;
+    flex:0 0 auto;
+    display:block;
+    background:#fff;
+    border:1px solid var(--vct-border,#e2e8f0);
+    border-radius:9px;
+    transform-origin:top center;
+    transition:transform .18s ease;
+}
+
+.vct-email-body-footer {
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    padding:8px 14px;
+    border-top:1px solid var(--vct-border,#e2e8f0);
+    background:#fbfcfd;
+    border-radius:0 0 12px 12px;
+}
+.vct-email-word-count {
+    color:var(--vct-text-soft,#64748b);
+    font-size:10px;
+}
+
+/* ---------- BADGES TIPO DE ENVIO (listado de templates) ---------- */
+.vct-email-badge-manual {
+    color:var(--vct-primary,#66062D);
+    background:var(--vct-primary-soft,#F7EAF0);
+}
+.vct-email-badge-auto {
+    color:#2563EB;
+    background:#EAF1FF;
+}
+
+/* ---------- BADGE ESTADO (listado de templates) ---------- */
+/* vct-main.css define .vct-badge-neutral con !important; se sobreescribe puntualmente aca */
+tr[data-vct-active-tab="email-templates"] .vct-badge[data-vct-badge="INACTIVO"] {
+    color:#B91C1C !important;
+    background:#FCE8E8 !important;
+    border-color:#F5C2C2 !important;
+}
+
+/* ---------- PANEL DE VARIABLES ---------- */
+.vct-email-variables-panel {
+    position:sticky;
+    top:12px;
+    padding:14px;
+    background:#fff;
+    border:1px solid var(--vct-border,#e2e8f0);
+    border-radius:12px;
+    box-shadow:0 1px 3px rgba(15,23,42,.04);
+}
+.vct-email-variables-head strong {
+    display:block;
+    color:var(--vct-navy,#172033);
+    font-size:13px;
+    font-weight:700;
+}
+.vct-email-variables-hint {
+    margin:3px 0 10px;
+    color:var(--vct-text-soft,#64748b);
+    font-size:10.5px;
+    line-height:1.4;
+}
+.vct-email-variables-search-wrap {
+    position:relative;
+    margin:0 0 10px;
+}
+.vct-email-variables-search-icon {
+    position:absolute;
+    top:50%;
+    left:9px;
+    transform:translateY(-50%);
+    color:var(--vct-text-muted,#94a3b8);
+    pointer-events:none;
+}
+.vct-email-variables-search {
+    width:100%;
+    height:32px;
+    padding:0 10px 0 28px;
+    box-sizing:border-box;
+    color:var(--vct-text,#1e293b);
+    background:#fbfcfd;
+    border:1px solid var(--vct-border,#e2e8f0);
+    border-radius:9px;
+    font-size:11px;
+    outline:none;
+}
+.vct-email-variables-search:focus {
+    background:#fff;
+    border-color:var(--vct-primary,#66062D);
+    box-shadow:0 0 0 3px rgba(102,6,45,.10);
+}
+.vct-email-variables-alert {
+    margin:0 0 10px;
+    padding:8px 10px;
+    color:#0369a1;
+    background:#e0f2fe;
+    border:1px solid #bae6fd;
+    border-radius:9px;
+    font-size:10px;
+    line-height:1.4;
+}
+.vct-email-variables-list {
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    max-height:340px;
+    overflow-y:auto;
+}
+.vct-email-variables-group-label {
+    margin-bottom:6px;
+    color:var(--vct-text-muted,#94a3b8);
+    font-size:9.5px;
+    font-weight:800;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+}
+.vct-email-variables-chips {
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+}
+.vct-email-variable-chip {
+    display:inline-flex;
+    align-items:center;
+    height:25px;
+    padding:0 10px;
+    color:var(--vct-primary,#66062D);
+    background:var(--vct-primary-soft,#F7EAF0);
+    border:0;
+    border-radius:999px;
+    font-size:10.5px;
+    font-weight:700;
+    cursor:pointer;
+}
+.vct-email-variable-chip:hover { background:rgba(102,6,45,.16); }
+.vct-email-variables-empty {
+    padding:14px 4px;
+    color:var(--vct-text-muted,#94a3b8);
+    font-size:10.5px;
+    text-align:center;
+}
+.vct-email-tip {
+    display:flex;
+    gap:8px;
+    margin-top:12px;
+    padding:9px 10px;
+    background:#fffbeb;
+    border:1px solid #fde68a;
+    border-radius:9px;
+}
+.vct-email-tip strong {
+    display:block;
+    color:#92400e;
+    font-size:10.5px;
+}
+.vct-email-tip span {
+    display:block;
+    margin-top:2px;
+    color:#92400e;
+    font-size:9.5px;
+    line-height:1.4;
+}
+
+.vct-email-template-grid th:nth-child(1), .vct-email-template-grid td:nth-child(1) { width:8%; }
+.vct-email-template-grid th:nth-child(2), .vct-email-template-grid td:nth-child(2) { width:16%; }
+.vct-email-template-grid th:nth-child(3), .vct-email-template-grid td:nth-child(3) { width:26%; }
+.vct-email-template-grid th:nth-child(4), .vct-email-template-grid td:nth-child(4) { width:26%; }
+.vct-email-template-grid th:nth-child(5), .vct-email-template-grid td:nth-child(5) { width:9%; }
+.vct-email-template-grid th:nth-child(6), .vct-email-template-grid td:nth-child(6) { width:8%; }
+.vct-email-template-grid th:nth-child(7), .vct-email-template-grid td:nth-child(7) { width:94px; }
+
+/* Celdas con texto potencialmente largo (Descripcion/Asunto/Destino/CC):
+   una linea por defecto, truncada con elipsis, con un iconito "ver mas"
+   que expande SOLO esa celda puntual (el resto de la fila no se mueve). */
+.vct-email-template-grid {
+    table-layout:fixed;
+}
+.vct-table-cell-truncatable {
+    position:relative;
+    padding-right:20px !important;
+}
+.vct-table-cell-truncatable .vct-table-cell-text {
+    display:block;
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+}
+.vct-table-cell-truncatable .vct-table-cell-text .vct-table-subtext {
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+}
+.vct-table-cell-truncatable.is-expanded .vct-table-cell-text {
+    white-space:normal;
+    text-overflow:clip;
+}
+.vct-table-cell-truncatable.is-expanded .vct-table-cell-text .vct-table-subtext {
+    white-space:normal;
+}
+.vct-table-cell-expand {
+    position:absolute;
+    top:6px;
+    right:2px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:18px;
+    height:18px;
+    padding:0;
+    color:var(--vct-text-muted,#94a3b8);
+    background:transparent;
+    border:0;
+    cursor:pointer;
+    font-size:13px;
+    line-height:1;
+}
+.vct-table-cell-expand:hover { color:var(--vct-primary,#66062D); }
+.vct-table-cell-truncatable.is-expanded .vct-table-cell-expand {
+    transform:rotate(180deg);
+}
+
+@media (max-width:1100px) {
+    .vct-email-editor-body { grid-template-columns:1fr; }
+    .vct-email-variables-panel { position:static; }
+    .vct-email-col-4 { grid-column:span 6; }
+    .vct-email-body-split { flex-direction:column; }
+    .vct-email-live-preview { border-left:0; border-top:1px solid var(--vct-border,#e2e8f0); }
+}
+@media (max-width:900px) {
+    .vct-email-fields-row { flex-direction:column; align-items:stretch; }
+    .vct-email-field-group-narrow, .vct-email-field-group-wide { flex-basis:auto; }
+}
+@media (max-width:700px) {
+    .vct-email-editor-header { align-items:flex-start; flex-direction:column; padding-right:4px; }
+    .vct-email-editor-actions { width:100%; justify-content:flex-end; }
+    .vct-email-editor-body { padding:10px 8px 4px 4px; }
+    .vct-email-col-3, .vct-email-col-4, .vct-email-col-6, .vct-email-col-9, .vct-email-col-12 { grid-column:span 12; }
+}
+
+/* FIX VCT EMAIL TEMPLATE DESIGNER
+   Corrige compatibilidad SP actual:
+   data-vct-param-group-panel="email-templates"
+   Mantiene compatibilidad con arquitectura anterior.
+*/
+
+[data-vct-config-panel="email-templates"] .vct-email-list-view,
+[data-vct-config-panel="email-templates"] .vct-email-editor-view,
+[data-vct-param-group-panel="email-templates"] .vct-email-list-view,
+[data-vct-param-group-panel="email-templates"] .vct-email-editor-view {
+    display:none !important;
+}
+
+[data-vct-config-panel="email-templates"] .vct-email-list-view.is-active,
+[data-vct-config-panel="email-templates"] .vct-email-editor-view.is-active,
+[data-vct-param-group-panel="email-templates"] .vct-email-list-view.is-active,
+[data-vct-param-group-panel="email-templates"] .vct-email-editor-view.is-active {
+    display:block !important;
+}

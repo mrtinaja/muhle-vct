@@ -1,0 +1,13 @@
+
+/* ==========================================================================
+   VCT CONFIGURACION - ALINEACION DE GRILLAS (motor vct-datagrid)
+   Las grillas del motor quedaban pegadas a los bordes de la tarjeta
+   (toolbar, tabla y pie sin margen). Se alinean con los KPIs y el encabezado
+   (14px laterales). Aplica a las 9 grillas de panel y a Templates de email.
+   ========================================================================== */
+.vct-config-page .vct-config-panel > .vctdg,
+.vct-config-page .vct-email-list-view > .vctdg{
+    width:auto !important;
+    max-width:none !important;
+    margin:0 14px 16px !important;
+}

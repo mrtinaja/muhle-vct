@@ -1,0 +1,45 @@
+Asunto: Resuelto - Remitente "Vocaturo" en los mails del sistema + banner
+
+Esteban, les cuento que quedó resuelto el tema de los mails saliendo como "Muhle"/otro cliente. Probado en desa, en Gmail: no rebota y sale con remitente "Vocaturo".
+
+QUE SE HIZO:
+
+1. Perfil y cuenta de Database Mail propios de Vocaturo, aparte de MailCron
+   (no se tocó MailCron, que usan otros clientes en el mismo server):
+   - Cuenta: VocaturoAccount
+   - Perfil: VocaturoProfile
+
+2. Remitente: la dirección técnica quedó en noreply@muhle.io (mismo server
+   mail.muhle.io:25 que ya usa MailCron, sin auth), pero con display_name
+   "Vocaturo" -> es lo que ve el destinatario en la bandeja.
+   Importante: probamos primero con un remitente de squad.com.ar directo y
+   rebotó por SPF (ese server no tiene autorizado ese dominio). Por eso la
+   dirección técnica queda en muhle.io y solo cambia el nombre visible.
+
+3. Banner de encabezado: imagen subida en
+   https://vocaturo.desa.interdev.online/img/vct-mail.png (720x110px).
+
+COMO SE IMPLEMENTA (falta este paso final de tu lado):
+
+- En cualquier EXEC msdb.dbo.sp_send_dbmail que arme el sistema, cambiar
+  @profile_name de 'MailCron' a 'VocaturoProfile'. No hay que tocar nada
+  más de ese EXEC (@recipients, @subject, @body, @body_format,
+  @file_attachments quedan igual).
+
+- El banner por ahora lo estamos anteponiendo "a mano" al @VBODY justo
+  antes de ese EXEC, con este bloque:
+
+  SET @VBODY =
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:720px;margin:0 0 18px 0;">' +
+          '<tr><td>' +
+              '<img src="https://vocaturo.desa.interdev.online/img/vct-mail.png" alt="Vocaturo" width="720" style="width:100%;max-width:720px;height:auto;display:block;border:0;" />' +
+          '</td></tr>' +
+      '</table>' +
+      @VBODY;
+
+  Lo ideal es que esto pase a integrarse en el/los SP que arman @VBODY de
+  forma nativa (así no depende de acordarse de pegarlo en cada punto de
+  envío). Te paso el script completo (vocaturo_mail_FINAL.sql) con todo
+  documentado por si lo querés revisar o replicar en otro ambiente.
+
+Cualquier duda me avisás.

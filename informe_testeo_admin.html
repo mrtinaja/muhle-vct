@@ -1,0 +1,413 @@
+<title>Auditoría Panel Admin</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bg: #faf7f4;
+    --surface: #ffffff;
+    --surface-2: #f4eee9;
+    --ink: #241417;
+    --ink-dim: #6b5a5e;
+    --line: #e8dcd6;
+    --accent: #66062d;
+    --accent-soft: #f7e9ee;
+    --accent-line: #e3bfcd;
+    --ok: #1f7a4d;
+    --ok-soft: #e6f4ec;
+    --ok-line: #bfe3cf;
+    --warn: #92600a;
+    --warn-soft: #fbf0dc;
+    --warn-line: #f0d6a0;
+    --crit: #a3251f;
+    --crit-soft: #fbe9e7;
+    --crit-line: #f0bcb6;
+    --shadow: 0 1px 2px rgba(36,20,23,.04), 0 8px 24px rgba(36,20,23,.06);
+  }
+
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg: #1b1315;
+      --surface: #241a1d;
+      --surface-2: #2c2124;
+      --ink: #f3e9eb;
+      --ink-dim: #b79ea3;
+      --line: #3a2c30;
+      --accent: #e893b3;
+      --accent-soft: #34222a;
+      --accent-line: #5a3a44;
+      --ok: #7fd6a8;
+      --ok-soft: #1c2b23;
+      --ok-line: #2f4a3b;
+      --warn: #f0c169;
+      --warn-soft: #332612;
+      --warn-line: #4d3c1c;
+      --crit: #f19b93;
+      --crit-soft: #35201e;
+      --crit-line: #56302c;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg: #1b1315;
+    --surface: #241a1d;
+    --surface-2: #2c2124;
+    --ink: #f3e9eb;
+    --ink-dim: #b79ea3;
+    --line: #3a2c30;
+    --accent: #e893b3;
+    --accent-soft: #34222a;
+    --accent-line: #5a3a44;
+    --ok: #7fd6a8;
+    --ok-soft: #1c2b23;
+    --ok-line: #2f4a3b;
+    --warn: #f0c169;
+    --warn-soft: #332612;
+    --warn-line: #4d3c1c;
+    --crit: #f19b93;
+    --crit-soft: #35201e;
+    --crit-line: #56302c;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Public Sans', -apple-system, sans-serif;
+    font-size:15.5px;
+    line-height:1.6;
+    max-width:840px;
+    margin:0 auto;
+    padding:56px 28px 96px;
+  }
+
+  code, .mono{font-family:'JetBrains Mono', ui-monospace, monospace; font-size:.86em;}
+
+  header.doc-head{
+    margin-bottom:40px;
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--accent);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:22px; height:1px;
+    background:var(--accent);
+    display:inline-block;
+  }
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:clamp(30px,5vw,40px);
+    line-height:1.08;
+    letter-spacing:-.01em;
+    margin:0 0 10px;
+    text-wrap:balance;
+  }
+  .subtitle{
+    color:var(--ink-dim);
+    font-size:16px;
+    max-width:56ch;
+  }
+  .meta-row{
+    display:flex;
+    gap:24px;
+    flex-wrap:wrap;
+    margin-top:24px;
+    padding-top:20px;
+    border-top:1px solid var(--line);
+    font-size:13px;
+  }
+  .meta-row div{display:flex; flex-direction:column; gap:2px;}
+  .meta-row .k{color:var(--ink-dim); font-size:11.5px; text-transform:uppercase; letter-spacing:.06em;}
+  .meta-row .v{font-weight:600;}
+
+  .summary-strip{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+    border-radius:14px;
+    overflow:hidden;
+    margin-bottom:48px;
+    box-shadow:var(--shadow);
+  }
+  .summary-strip .cell{
+    background:var(--surface);
+    padding:18px 16px;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  .summary-strip .num{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:30px;
+    font-variant-numeric:tabular-nums;
+  }
+  .summary-strip .lbl{font-size:12px; color:var(--ink-dim);}
+  .summary-strip .cell.ok .num{color:var(--ok);}
+  .summary-strip .cell.warn .num{color:var(--warn);}
+  .summary-strip .cell.crit .num{color:var(--crit);}
+
+  section{margin-bottom:52px;}
+  .section-head{
+    display:flex;
+    align-items:baseline;
+    gap:12px;
+    margin-bottom:6px;
+  }
+  .section-num{
+    font-family:'JetBrains Mono', monospace;
+    color:var(--accent);
+    font-size:13px;
+  }
+  h2{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:22px;
+    margin:0;
+    text-wrap:balance;
+  }
+  .section-desc{color:var(--ink-dim); font-size:14px; margin:6px 0 22px; max-width:64ch;}
+
+  .module-group{
+    border:1px solid var(--line);
+    border-radius:14px;
+    background:var(--surface);
+    overflow:hidden;
+    margin-bottom:16px;
+    box-shadow:var(--shadow);
+  }
+  .module-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 18px;
+    background:var(--surface-2);
+    border-bottom:1px solid var(--line);
+  }
+  .module-head h3{
+    font-family:'Public Sans',sans-serif;
+    font-weight:700;
+    font-size:14.5px;
+    margin:0;
+  }
+  .pill{
+    font-size:11px;
+    font-weight:600;
+    padding:3px 10px;
+    border-radius:99px;
+    letter-spacing:.02em;
+    white-space:nowrap;
+  }
+  .pill.ok{background:var(--ok-soft); color:var(--ok); border:1px solid var(--ok-line);}
+  .pill.warn{background:var(--warn-soft); color:var(--warn); border:1px solid var(--warn-line);}
+  .pill.crit{background:var(--crit-soft); color:var(--crit); border:1px solid var(--crit-line);}
+
+  .finding-list{list-style:none; margin:0; padding:0;}
+  .finding{
+    display:grid;
+    grid-template-columns:22px 1fr;
+    gap:12px;
+    padding:13px 18px;
+    border-bottom:1px solid var(--line);
+    font-size:14px;
+  }
+  .finding:last-child{border-bottom:none;}
+  .finding .mark{
+    width:20px; height:20px;
+    border-radius:6px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:700;
+    margin-top:1px;
+  }
+  .finding .mark.fixed{background:var(--ok-soft); color:var(--ok);}
+  .finding .mark.open{background:var(--crit-soft); color:var(--crit);}
+  .finding .mark.idea{background:var(--warn-soft); color:var(--warn);}
+  .finding .body b{font-weight:700;}
+  .finding .note{color:var(--ink-dim); font-size:13px; margin-top:3px;}
+
+  .opp-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  @media (max-width:640px){.opp-grid{grid-template-columns:1fr;} .summary-strip{grid-template-columns:1fr 1fr;}}
+
+  .opp-card{
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px 18px;
+    background:var(--surface);
+    box-shadow:var(--shadow);
+  }
+  .opp-card h4{
+    font-size:14px;
+    margin:0 0 6px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .opp-card .tag{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    color:var(--accent);
+    background:var(--accent-soft);
+    border:1px solid var(--accent-line);
+    padding:1px 7px;
+    border-radius:5px;
+  }
+  .opp-card p{margin:0; color:var(--ink-dim); font-size:13.3px;}
+
+  .divider{
+    border:none;
+    border-top:1px solid var(--line);
+    margin:44px 0;
+  }
+
+  footer{
+    color:var(--ink-dim);
+    font-size:12.5px;
+    padding-top:24px;
+    border-top:1px solid var(--line);
+  }
+</style>
+
+<header class="doc-head">
+  <div class="eyebrow">Mühle · Vocaturo &amp; Asociados</div>
+  <h1>Auditoría end-to-end del panel de administración</h1>
+  <p class="subtitle">Recorrido funcional de los seis módulos del panel (Usuarios, Perfiles, Sectores, Permisos, Áreas, Reportes) contra el ambiente de desarrollo, con foco en persistencia real de datos, no solo en que la pantalla cargue.</p>
+  <div class="meta-row">
+    <div><span class="k">Ambiente</span><span class="v mono">vocaturo.desa.interdev.online</span></div>
+    <div><span class="k">Base</span><span class="v mono">MuhlePROD</span></div>
+    <div><span class="k">Alcance</span><span class="v">6 módulos</span></div>
+  </div>
+</header>
+
+<div class="summary-strip">
+  <div class="cell ok"><span class="num">9</span><span class="lbl">Bugs corregidos</span></div>
+  <div class="cell crit"><span class="num">2</span><span class="lbl">Pendientes</span></div>
+  <div class="cell warn"><span class="num">4</span><span class="lbl">Mejoras propuestas</span></div>
+  <div class="cell"><span class="num">6/6</span><span class="lbl">Módulos recorridos</span></div>
+</div>
+
+<section>
+  <div class="section-head"><span class="section-num">01</span><h2>Estado por módulo</h2></div>
+  <p class="section-desc">Qué se probó en cada módulo y en qué quedó — alta, edición, baja y persistencia real en base, no solo el render de la pantalla.</p>
+
+  <div class="module-group">
+    <div class="module-head"><h3>Áreas</h3><span class="pill ok">Verificado end-to-end</span></div>
+    <ul class="finding-list">
+      <li class="finding"><span class="mark fixed">✓</span><div class="body">Alta, edición y baja confirmadas con persistencia real en <code>Areas</code> y log en <code>M_AUDITORIA_ADMIN</code>.<div class="note">Validación de descripción duplicada y de sectores asociados al eliminar, ambas con modal correcto.</div></div></li>
+    </ul>
+  </div>
+
+  <div class="module-group">
+    <div class="module-head"><h3>Acciones (ABM de Permisos)</h3><span class="pill ok">Verificado end-to-end</span></div>
+    <ul class="finding-list">
+      <li class="finding"><span class="mark fixed">✓</span><div class="body">Alta y edición confirmadas, incluyendo los campos nuevos <code>IdPadre</code>, <code>Tipo</code>, <code>Orden</code> agregados a <code>dbo.Actions</code> esta sesión.</div></li>
+    </ul>
+  </div>
+
+  <div class="module-group">
+    <div class="module-head"><h3>Perfiles / Grupos</h3><span class="pill ok">Verificado</span></div>
+    <ul class="finding-list">
+      <li class="finding"><span class="mark fixed">✓</span><div class="body">Listado y edición de perfil correctos (<code>ADMINISTRACION</code> precarga bien Código y Nombre).</div></li>
+      <li class="finding"><span class="mark fixed">✓</span><div class="body">Matriz de Permisos Funcionales: toggle probado sobre <b>Consultores → Administrar usuarios</b>, persiste y revierte correctamente en <code>GroupsActions</code>.</div></li>
+    </ul>
+  </div>
+
+  <div class="module-group">
+    <div class="module-head"><h3>Usuarios</h3><span class="pill warn">Funciona, con un hueco</span></div>
+    <ul class="finding-list">
+      <li class="finding"><span class="mark fixed">✓</span><div class="body">Listado, alta y edición cargan y precargan bien (usuario, nombre, email, perfil, estado).</div></li>
+      <li class="finding"><span class="mark idea">i</span><div class="body">El formulario de edición no tiene campo <b>Sector</b>, aunque la grilla sí lo muestra por columna.<div class="note">Ver oportunidad de mejora #2.</div></div></li>
+    </ul>
+  </div>
+
+  <div class="module-group">
+    <div class="module-head"><h3>Sectores / Estructura</h3><span class="pill warn">Funciona, pulido parcial</span></div>
+    <ul class="finding-list">
+      <li class="finding"><span class="mark fixed">✓</span><div class="body">Header migrado al componente VCT estándar (antes un bloque gris armado a mano, inconsistente con el resto de la app).</div></li>
+      <li class="finding"><span class="mark fixed">✓</span><div class="body">Árbol de sectores rediseñado: acento de color a la izquierda, ícono por tarjeta, líneas de jerarquía más suaves.</div></li>
+      <li class="finding"><span class="mark fixed">✓</span><div class="body">Rama "Externos" se aplana correctamente bajo Vocaturo sin mostrar la tarjeta intermedia (decisión de negocio confirmada).</div></li>
+      <li class="finding"><span class="mark open">!</span><div class="body">Imagen de fondo rota: <code>../img/Vfondo Bordo.png</code> devuelve <b>404</b> en la tarjeta raíz.<div class="note">Pre-existente, no introducida esta sesión — hay que subir el archivo o sacar la referencia.</div></div></li>
+      <li class="finding"><span class="mark open">!</span><div class="body">El formulario de "Nuevo Sector" solo pide <b>Nombre</b> y <b>Email</b> — no hay forma visible de elegir Área o Sector Padre.<div class="note">No se pudo confirmar cómo queda posicionado un sector nuevo en el árbol.</div></div></li>
+    </ul>
+  </div>
+
+  <div class="module-group">
+    <div class="module-head"><h3>Reportes</h3><span class="pill ok">Verificado, 1 fix de datos</span></div>
+    <ul class="finding-list">
+      <li class="finding"><span class="mark fixed">✓</span><div class="body">Los 4 reportes (Actividad, Estructura de Sectores, Permisos por Perfil, Usuarios por Sector) cargan y filtran correctamente.</div></li>
+      <li class="finding"><span class="mark fixed">✓</span><div class="body">Reporte "Usuarios por Sector" mostraba 4 filas con Usuario/Email en blanco: eran registros huérfanos en <code>UsersSector</code> apuntando a usuarios ya borrados. Se cambió el <code>LEFT JOIN</code> a <code>Users</code> por <code>INNER JOIN</code>.</div></li>
+    </ul>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<section>
+  <div class="section-head"><span class="section-num">02</span><h2>Bugs corregidos esta sesión</h2></div>
+  <p class="section-desc">Los nueve hallazgos reales, en el orden en que aparecieron durante el testeo.</p>
+  <ul class="finding-list" style="border:1px solid var(--line);border-radius:14px;background:var(--surface);box-shadow:var(--shadow);">
+    <li class="finding"><span class="mark fixed">1</span><div class="body"><b>Alta de Área rota de punta a punta</b> — PKEY corrupto en <code>TRANSACTIONS</code>, wiring de "Asociar estados" faltante, y el motor exigiendo un input oculto <code>_ResultCode</code> que <code>goto()</code> nunca seteaba.</div></li>
+    <li class="finding"><span class="mark fixed">2</span><div class="body"><b>Edición de Áreas y Acciones venía vacía</b> — <code>data-vct-field</code> no coincidía con las claves reales del JSON de la grilla (mayúsculas/nombres distintos).</div></li>
+    <li class="finding"><span class="mark fixed">3</span><div class="body"><b>El ID autogenerado de Área era editable</b> — <code>prepareNew()</code> lo desbloqueaba, permitiendo texto libre (<code>@NEW_ID</code> tipado <code>INT</code> explotaba con "Test"). Se sacó <code>data-vct-primary-input</code> y se retipeó a <code>VARCHAR</code>.</div></li>
+    <li class="finding"><span class="mark fixed">4</span><div class="body"><b>Guardar en Áreas dejaba la pestaña "Editar" pegada</b> — <code>M_CONFIG_ADD_AREA</code> nunca limpiaba <code>ID_USER_SEL</code>, forzando <code>@VACTIVE_TAB='form'</code> en el próximo render.</div></li>
+    <li class="finding"><span class="mark fixed">5</span><div class="body"><b><code>M_CONFIG_ADD_ACTION</code> no sabía editar</b> — solo tenía rama de alta; si el código ya existía (el caso normal al editar) tiraba "ya existe" y no persistía nada.</div></li>
+    <li class="finding"><span class="mark fixed">6</span><div class="body"><b>Combo "Tipo de Acción" bloqueaba el guardado</b> — marcado obligatorio en el HTML sin persistencia real en ese momento; ahora persiste de verdad (<code>IdPadre</code>/<code>Tipo</code>/<code>Orden</code> agregados a <code>Actions</code>).</div></li>
+    <li class="finding"><span class="mark fixed">7</span><div class="body"><b>Mensaje de error de baja de Área sin estilo</b> — <code>M_CONFIG_DEL_AREA</code> nunca escribía <code>DESC_ERROR</code>, así que el modal propio no lo agarraba. También le faltaba el log de auditoría.</div></li>
+    <li class="finding"><span class="mark fixed">8</span><div class="body"><b>Reporte "Usuarios por Sector" con filas en blanco</b> — <code>LEFT JOIN</code> a <code>Users</code> dejaba pasar sectores huérfanos.</div></li>
+    <li class="finding"><span class="mark fixed">9</span><div class="body"><b>Header de Sectores/Estructura inconsistente</b> — bloque gris armado a mano en vez del componente VCT que usa el resto de la app.</div></li>
+  </ul>
+</section>
+
+<hr class="divider" />
+
+<section>
+  <div class="section-head"><span class="section-num">03</span><h2>Pendiente / sin resolver</h2></div>
+  <ul class="finding-list" style="border:1px solid var(--crit-line);border-radius:14px;background:var(--surface);box-shadow:var(--shadow);">
+    <li class="finding"><span class="mark open">!</span><div class="body"><b>Imagen <code>Vfondo Bordo.png</code> ausente</b> en el servidor (404), referenciada como fondo de la tarjeta raíz de Sectores.</div></li>
+    <li class="finding"><span class="mark open">!</span><div class="body"><b>Alta de Sector no permite elegir Área ni Sector Padre</b> desde el formulario — no se pudo confirmar el mecanismo real de asignación.</div></li>
+  </ul>
+</section>
+
+<hr class="divider" />
+
+<section>
+  <div class="section-head"><span class="section-num">04</span><h2>Oportunidades de mejora</h2></div>
+  <p class="section-desc">No son bugs — son huecos o inconsistencias que vale la pena resolver a propósito.</p>
+  <div class="opp-grid">
+    <div class="opp-card">
+      <h4><span class="tag">grilla</span> Acciones sin "Eliminar"</h4>
+      <p>Hoy solo existe la acción "Editar" en la grilla de Permisos. Si un permiso queda obsoleto, no hay forma de borrarlo desde la UI.</p>
+    </div>
+    <div class="opp-card">
+      <h4><span class="tag">form</span> Usuarios sin campo Sector</h4>
+      <p>La grilla de Usuarios muestra Sector, pero el formulario de edición no lo expone. Hoy ese dato solo se toca desde otro lado.</p>
+    </div>
+    <div class="opp-card">
+      <h4><span class="tag">motor</span> Dos versiones de vct-Table.js conviviendo</h4>
+      <p>Áreas/Acciones usan el motor viejo (v18.2.5, scraping de filas); Grupos usa el nuevo motor nativo basado en JSON con <code>vctConfirmarGuardar</code>. Ambos cargan en la misma página sin conflicto hoy, pero es deuda técnica.</p>
+    </div>
+    <div class="opp-card">
+      <h4><span class="tag">datos</span> Datos de prueba mezclados con reales</h4>
+      <p>Nombres como "Operaciones1" quedaron de las pruebas de esta sesión en <code>Areas</code>. Vale la pena una pasada de limpieza antes de dar por cerrado el ambiente de desa.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Informe generado a partir de un recorrido en vivo por navegador contra <span class="mono">vocaturo.desa.interdev.online</span>, con verificación directa en <span class="mono">MuhlePROD</span> para cada hallazgo de persistencia.
+</footer>

@@ -1,0 +1,18 @@
+/* Estilo Data Tables Small */
+
+/* Header cells Small*/
+
+table.dataTable thead th {
+    background: #173746;
+	font-size: 11px;
+	color: #FFFFFF;
+}
+
+table.dataTable tr td {
+	font-size: 11px;
+	background: #E0DCF7;
+	border: 1px solid threedlightshadow;
+	border-color: #00695d;
+	border-right: 1px solid threedlightshadow;
+	border-bottom: 1px solid threedlightshadow;
+}

@@ -1,0 +1,80 @@
+
+/* ========================================================================
+   VCT SELECT UNIFICADO - DESPLEGABLE DE FORMULARIOS = FILTROS DE GRILLA
+   ------------------------------------------------------------------------
+   PEGAR AL FINAL de vct-main.css (despues de todo lo existente).
+
+   Hay DOS componentes de select en la plataforma:
+   - VCT.Select      (filtros de grilla, etc.)  -> .vct-custom-select-*
+   - VCT.FormSelect  (modal / drawer / page generados por VCT_MAIN_RENDER_FORM,
+                      menu en un portal fuera del modal)  -> .vct-form-select-*
+   Cada uno tenia su propia estetica, por eso el desplegable del modal no se
+   veia igual al de los filtros. Este bloque copia, valor por valor, el estilo
+   del desplegable de .vct-custom-select (secciones "SELECT PERSONALIZADO VCT")
+   sobre .vct-form-select, de modo que ambos se vean IGUAL.
+
+   NO toca posicion, ancho, alto maximo ni z-index del menu del formulario:
+   los calcula VCT.FormSelect.position() en linea (abre arriba/abajo segun
+   el espacio disponible). Tampoco toca el boton (trigger) cerrado.
+   Los selectores llevan "html body" para ganar a las reglas de una sola clase
+   definidas antes, sin repetir clases.
+   ======================================================================== */
+html body .vct-form-select-menu{
+    padding:5px !important;
+    background:#fff !important;
+    border:1px solid rgba(102,6,45,.22) !important;
+    border-radius:9px !important;
+    box-shadow:
+        0 14px 34px rgba(15,23,42,.14),
+        0 3px 10px rgba(102,6,45,.08) !important;
+}
+
+html body .vct-form-select-option{
+    min-height:34px !important;
+    display:flex !important;
+    align-items:center !important;
+
+    margin:1px 0 !important;
+    padding:7px 10px !important;
+
+    color:#334155 !important;
+    background:transparent !important;
+    border:0 !important;
+    border-radius:7px !important;
+
+    font-family:var(--vct-font) !important;
+    font-size:12.5px !important;
+    font-weight:500 !important;
+    line-height:1.25 !important;
+
+    cursor:pointer !important;
+    user-select:none !important;
+
+    transition:background .12s ease,color .12s ease,padding-left .12s ease !important;
+}
+
+html body .vct-form-select-option:hover,
+html body .vct-form-select-option.is-focused{
+    color:#66062D !important;
+    background:rgba(102,6,45,.075) !important;
+    padding-left:13px !important;
+}
+
+html body .vct-form-select-option.is-selected{
+    color:#fff !important;
+    background:#66062D !important;
+    font-weight:600 !important;
+}
+
+html body .vct-form-select-option.is-selected:hover,
+html body .vct-form-select-option.is-selected.is-focused{
+    color:#fff !important;
+    background:#760A36 !important;
+}
+
+html body .vct-form-select-option.is-disabled{
+    color:#94a3b8 !important;
+    background:transparent !important;
+    cursor:not-allowed !important;
+    opacity:.7 !important;
+}

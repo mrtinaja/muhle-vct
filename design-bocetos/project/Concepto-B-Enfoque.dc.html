@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Concepto B — Editor en foco</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#F3F1F4;font-family:'Plus Jakarta Sans',sans-serif;}
+  .vc-card{background:#fff;border:1px solid #EDE9F0;border-radius:14px;box-shadow:0 1px 2px rgba(43,10,26,.03)}
+  .vc-toolgroup{display:flex;align-items:center;gap:2px;background:#F6F5F7;border-radius:9px;padding:3px}
+  .vc-toolbtn{height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;color:#4B4550;font-size:11px;font-weight:700;cursor:pointer;padding:0 8px;gap:5px}
+  .vc-toolbtn:hover{background:#fff;color:#66062D}
+  .vc-chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:999px;font-size:10px;font-weight:700;background:#F1EFF2;color:#5A5460;}
+</style>
+</helmet>
+
+<div style="width:1280px;height:880px;background:#F3F1F4;box-sizing:border-box;font-family:'Plus Jakarta Sans',sans-serif;display:flex;flex-direction:column;">
+
+  <div style="height:60px;flex:0 0 60px;background:#fff;border-bottom:1px solid #EDE9F0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;box-sizing:border-box;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span style="font-weight:800;font-size:18px;letter-spacing:-.02em;color:#66062D;">vocaturo</span>
+      <span style="width:1px;height:18px;background:#E5E1E9;"></span>
+      <span style="font-size:12px;color:#8A8390;font-weight:600;">Concepto B — Editor en foco</span>
+    </div>
+    <div style="width:30px;height:30px;border-radius:999px;background:#66062D;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;">VA</div>
+  </div>
+
+  <div style="flex:1 1 auto;padding:20px 28px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px;overflow:hidden;">
+
+    <!-- Collapsed summary bar -->
+    <div class="vc-card" style="flex:0 0 54px;height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:30px;height:30px;border-radius:9px;background:#F7EAF0;color:#66062D;display:flex;align-items:center;justify-content:center;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 6l7 11 2-3.3L20 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span style="font-size:12.5px;font-weight:800;color:#231F26;">TPL_BIENVENIDA</span>
+        <span style="font-size:11.5px;color:#6B6470;">Bienvenida a la plataforma</span>
+        <span class="vc-chip">Automático</span>
+        <span class="vc-chip">Analista</span>
+        <span class="vc-chip" style="background:#EAF8EF;color:#158A45;">● Activo</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;color:#66062D;font-size:11px;font-weight:800;cursor:pointer;">
+        Editar datos
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+
+    <!-- Asunto -->
+    <div class="vc-card" style="flex:0 0 56px;height:56px;display:flex;align-items:center;padding:0 18px;gap:14px;">
+      <span style="font-size:10.5px;font-weight:800;color:#6B6470;letter-spacing:.03em;white-space:nowrap;">ASUNTO</span>
+      <span style="flex:1;font-size:12.5px;color:#231F26;">¡Bienvenido a Vocaturo, {{NOMBRE}}!</span>
+      <div style="height:32px;padding:0 15px;border-radius:9px;background:#66062D;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;gap:6px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z" stroke="#fff" stroke-width="1.8"/></svg>
+        Guardar
+      </div>
+    </div>
+
+    <!-- Body: main editor -->
+    <div style="flex:1 1 auto;display:flex;gap:12px;min-height:0;">
+      <div class="vc-card" style="flex:1 1 auto;display:flex;flex-direction:column;min-width:0;overflow:hidden;">
+        <div style="height:46px;flex:0 0 46px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid #F0EDF2;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="vc-toolgroup"><div class="vc-toolbtn">Formato<svg width="9" height="9" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></div></div>
+            <div class="vc-toolgroup">
+              <div class="vc-toolbtn" style="width:28px;padding:0;">B</div>
+              <div class="vc-toolbtn" style="width:28px;padding:0;font-style:italic;">I</div>
+              <div class="vc-toolbtn" style="width:28px;padding:0;text-decoration:underline;">U</div>
+            </div>
+            <div class="vc-toolgroup">
+              <div class="vc-toolbtn" style="width:28px;padding:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h10M4 18h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+              <div class="vc-toolbtn" style="width:28px;padding:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M7 12h10M5 18h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+              <div class="vc-toolbtn" style="width:28px;padding:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M10 12h10M6 18h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+            </div>
+            <div class="vc-toolgroup">
+              <div class="vc-toolbtn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M9 15l6-6M10 6l1-1a4 4 0 0 1 6 6l-1 1M14 18l-1 1a4 4 0 0 1-6-6l1-1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                Insertar<svg width="9" height="9" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span style="font-size:9.5px;color:#B3AEBB;">24 palabras · autoguardado hace 8s</span>
+            <div class="vc-toolgroup">
+              <div class="vc-toolbtn" style="width:28px;padding:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M9 7L4 12l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 12h11a5 5 0 0 1 0 10h-1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              <div class="vc-toolbtn" style="width:28px;padding:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M15 7l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 12H9a5 5 0 0 0 0 10h1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            </div>
+            <div class="vc-toolbtn" style="background:#F6F5F7;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/></svg>Vista previa</div>
+          </div>
+        </div>
+
+        <div style="flex:1 1 auto;padding:22px 30px;overflow:hidden;">
+          <div style="max-width:640px;margin:0 auto;border:1px solid #EDE9F0;border-radius:10px;overflow:hidden;">
+            <div style="height:90px;background:#2B2B2C;display:flex;align-items:center;gap:14px;padding:0 22px;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 6l7 11 2-3.3L20 6" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span style="width:1px;height:26px;background:rgba(255,255,255,.3);"></span>
+              <span style="color:#fff;font-weight:800;font-size:19px;">vocaturo</span>
+            </div>
+            <div style="padding:20px;font-size:12px;line-height:1.75;color:#3A3540;">
+              <p style="margin:0 0 10px;">Hola <span style="background:#F7EAF0;color:#66062D;border-radius:5px;padding:1px 6px;font-weight:700;">{{NOMBRE}}</span>,</p>
+              <p style="margin:0 0 10px;">Tu cuenta en Vocaturo ya está activa. Desde la plataforma vas a poder seguir el estado de tus proyectos, coordinar reuniones con tu equipo y acceder a la documentación de cada servicio.</p>
+              <p style="margin:0;">Cualquier duda, estamos para ayudarte.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Collapsed variables rail -->
+      <div class="vc-card" style="width:52px;flex:0 0 52px;display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:16px;position:relative;">
+        <div style="width:30px;height:30px;border-radius:9px;background:#F7EAF0;color:#66062D;display:flex;align-items:center;justify-content:center;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M9 4v16" stroke="currentColor" stroke-width="1.8"/></svg>
+        </div>
+        <div style="width:26px;height:1px;background:#EDE9F0;"></div>
+        <span style="color:#B3AEBB;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 21a8 8 0 1 0-16 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/></svg></span>
+        <span style="color:#B3AEBB;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 7h18M6 7V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2m2 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+        <span style="color:#B3AEBB;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="17" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M3 9h18M8 2v4M16 2v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+
+        <!-- annotation bubble -->
+        <div style="position:absolute;right:60px;top:70px;width:200px;background:#231F26;color:#fff;border-radius:10px;padding:10px 12px;font-size:10px;line-height:1.5;box-shadow:0 10px 24px rgba(20,5,12,.25);">
+          Panel de variables colapsado: un clic lo expande. El editor gana todo el ancho disponible.
+          <div style="position:absolute;right:-5px;top:14px;width:10px;height:10px;background:#231F26;transform:rotate(45deg);"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":880}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

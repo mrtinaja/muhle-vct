@@ -1,0 +1,321 @@
+﻿/* vct-proyecto-alta.css - v1
+   Alta de proyecto (modal #vctModalProyecto de la Vista 360 de Cliente).
+   Solo estilos propios del alta: inputs, selects, botones y date picker son
+   los estandar de vct-main.css / vct-datepicker.css. */
+
+.vct-proy-alta {
+    --vct-proy-brand: #66062D;
+    --vct-proy-brand-soft: #F7EDF1;
+    --vct-proy-brand-border: #E5C9D4;
+    --vct-proy-line: #E2E8F0;
+    --vct-proy-text: #1F2937;
+    --vct-proy-muted: #64748B;
+    --vct-proy-ok: #047857;
+    --vct-proy-bad: #B91C1C;
+}
+
+/* input original: sigue en el DOM (valor, validacion, buffer) pero no se ve */
+.vct-proy-alta .vct-proy-source {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+    border: 0 !important;
+    opacity: 0 !important;
+}
+.vct-proy-alta .vct-field { position: relative; }
+
+/* ---------- servicios ---------- */
+.vct-proy-services {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+.vct-proy-service {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 52px;
+    padding: 10px 12px;
+    border: 1px solid var(--vct-proy-line);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--vct-proy-text);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+.vct-proy-service:hover { border-color: var(--vct-proy-brand-border); }
+.vct-proy-service:focus-visible { outline: 2px solid var(--vct-proy-brand); outline-offset: 2px; }
+.vct-proy-service-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 32px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #F1F5F9;
+    color: var(--vct-proy-muted);
+}
+.vct-proy-service-icon svg { width: 17px; height: 17px; }
+.vct-proy-service-name { flex: 1 1 auto; min-width: 0; }
+.vct-proy-service-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--vct-proy-line);
+    border-radius: 50%;
+    color: transparent;
+    font-size: 12px;
+}
+.vct-proy-service.is-selected {
+    border-color: var(--vct-proy-brand);
+    background: var(--vct-proy-brand-soft);
+    box-shadow: 0 0 0 1px var(--vct-proy-brand) inset;
+}
+.vct-proy-service.is-selected .vct-proy-service-icon { background: var(--vct-proy-brand); color: #fff; }
+.vct-proy-service.is-selected .vct-proy-service-check { background: var(--vct-proy-brand); border-color: var(--vct-proy-brand); color: #fff; }
+
+/* ---------- normas ---------- */
+.vct-proy-normas {
+    border: 1px solid var(--vct-proy-line);
+    border-radius: 10px;
+    background: #fff;
+    padding: 8px;
+}
+.vct-proy-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-height: 28px;
+    margin-bottom: 8px;
+}
+.vct-proy-chips-empty { color: var(--vct-proy-muted); font-size: 12px; align-self: center; padding: 0 4px; }
+.vct-proy-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 26px;
+    padding: 0 4px 0 10px;
+    border: 1px solid var(--vct-proy-brand-border);
+    border-radius: 999px;
+    background: var(--vct-proy-brand-soft);
+    color: var(--vct-proy-brand);
+    font-size: 12px;
+    font-weight: 600;
+}
+.vct-proy-chip-x {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+}
+.vct-proy-chip-x:hover { background: var(--vct-proy-brand); color: #fff; }
+.vct-proy-combo { position: relative; }
+.vct-proy-combo-icon {
+    position: absolute;
+    left: 11px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    color: var(--vct-proy-muted);
+    pointer-events: none;
+}
+.vct-proy-combo-icon svg { width: 15px; height: 15px; }
+/* le gana al padding fijo de los inputs de formulario de vct-main.css */
+html body .vct-form-shell.vct-proy-alta .vct-proy-normas input.vct-input.vct-proy-combo-input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]) {
+    width: 100%;
+    padding-left: 34px !important;
+}
+
+/* date picker a todo el ancho de la columna, como los demas campos */
+.vct-proy-alta .vct-datepicker { display: flex; width: 100%; }
+.vct-proy-alta .vct-datepicker-trigger { flex: 1 1 auto; width: 100%; }
+.vct-proy-combo-menu {
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 6px);
+    z-index: 30;
+    max-height: 240px;
+    overflow-y: auto;
+    padding: 6px;
+    border: 1px solid var(--vct-proy-line);
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, .14), 0 2px 6px rgba(15, 23, 42, .06);
+}
+.vct-proy-normas.is-open .vct-proy-combo-menu { display: block; }
+.vct-proy-combo-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 7px;
+    color: var(--vct-proy-text);
+    font-size: 13px;
+    cursor: pointer;
+}
+.vct-proy-combo-option:hover,
+.vct-proy-combo-option.is-active { background: #F1F5F9; }
+.vct-proy-combo-option.is-selected { color: var(--vct-proy-brand); font-weight: 600; }
+.vct-proy-combo-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--vct-proy-line);
+    border-radius: 4px;
+    font-size: 11px;
+}
+.vct-proy-combo-option.is-selected .vct-proy-combo-check { background: var(--vct-proy-brand); border-color: var(--vct-proy-brand); color: #fff; }
+.vct-proy-combo-empty { padding: 10px; color: var(--vct-proy-muted); font-size: 13px; }
+
+/* error de validacion del input original -> se marca el componente */
+.vct-proy-source.vct-field-error + .vct-proy-services .vct-proy-service,
+.vct-proy-source.vct-field-error + .vct-proy-normas { border-color: var(--vct-proy-bad); }
+
+/* fecha limite sin analista: se ve, pero en segundo plano */
+.vct-proy-alta .vct-field.vct-proy-muted { opacity: .72; }
+
+/* ---------- rentabilidad: tarjeta resumen ---------- */
+.vct-proy-rent-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px dashed var(--vct-proy-brand-border);
+    border-radius: 10px;
+    background: #FCFAFB;
+}
+.vct-proy-rent-card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: var(--vct-proy-brand-soft);
+    color: var(--vct-proy-brand);
+}
+.vct-proy-rent-card-icon svg { width: 18px; height: 18px; }
+.vct-proy-rent-card-copy { flex: 1 1 auto; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.vct-proy-rent-card-copy b { font-size: 13px; color: var(--vct-proy-text); }
+.vct-proy-rent-card-copy small { font-size: 12px; color: var(--vct-proy-muted); }
+.vct-proy-rent-kpis { flex: 1 1 auto; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; min-width: 0; }
+.vct-proy-rent-kpis span { display: flex; flex-direction: column; min-width: 0; }
+.vct-proy-rent-kpis small { font-size: 11px; color: var(--vct-proy-muted); text-transform: uppercase; letter-spacing: .02em; }
+.vct-proy-rent-kpis b { font-size: 13px; color: var(--vct-proy-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vct-proy-alta .is-positive { color: var(--vct-proy-ok); }
+.vct-proy-alta .is-negative { color: var(--vct-proy-bad); }
+
+/* ---------- rentabilidad: panel (sobre el modal) ---------- */
+.vct-proy-alta .vct-modal-dialog { position: relative; }
+.vct-proy-rent-panel {
+    display: none;
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(15, 23, 42, .32);
+    border-radius: inherit;
+}
+.vct-proy-rent-panel.is-open { display: flex; }
+.vct-proy-rent-sheet {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 760px;
+    max-height: 100%;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 24px 48px rgba(15, 23, 42, .22);
+    overflow: hidden;
+}
+.vct-proy-rent-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--vct-proy-line);
+}
+.vct-proy-rent-head h4 { margin: 0; font-size: 15px; color: var(--vct-proy-text); }
+.vct-proy-rent-head p { margin: 2px 0 0; font-size: 12px; color: var(--vct-proy-muted); }
+.vct-proy-rent-body {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 18px;
+    padding: 16px 18px;
+    overflow-y: auto;
+}
+.vct-proy-rent-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.vct-proy-rent-title { font-size: 12px; font-weight: 700; color: var(--vct-proy-brand); text-transform: uppercase; letter-spacing: .03em; }
+.vct-proy-rent-total {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    background: #F8FAFC;
+    font-size: 13px;
+    color: var(--vct-proy-muted);
+}
+.vct-proy-rent-total b { color: var(--vct-proy-text); }
+.vct-proy-rent-result {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--vct-proy-brand-border);
+    border-radius: 10px;
+    background: var(--vct-proy-brand-soft);
+}
+.vct-proy-rent-result div { display: flex; flex-direction: column; gap: 2px; }
+.vct-proy-rent-result span { font-size: 12px; color: var(--vct-proy-muted); }
+.vct-proy-rent-result b { font-size: 18px; color: var(--vct-proy-ok); }
+.vct-proy-rent-comment { grid-column: 1 / -1; }
+.vct-proy-alta .vct-proy-money { text-align: right; font-variant-numeric: tabular-nums; }
+.vct-proy-rent-foot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 18px;
+    border-top: 1px solid var(--vct-proy-line);
+}
+.vct-proy-rent-spacer { flex: 1 1 auto; }
+.vct-proy-empty { color: var(--vct-proy-muted); font-size: 13px; }
+
+@media (max-width: 768px) {
+    .vct-proy-services { grid-template-columns: 1fr; }
+    .vct-proy-rent-body,
+    .vct-proy-rent-result { grid-template-columns: 1fr; }
+    .vct-proy-rent-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .vct-proy-rent-card { flex-wrap: wrap; }
+    .vct-proy-rent-panel { padding: 8px; }
+}

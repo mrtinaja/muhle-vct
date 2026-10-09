@@ -1,0 +1,179 @@
+﻿/* vct-inicio.css - v5 (margenes en celular)
+   Inicio por perfil con los mismos componentes que las Vista 360:
+   .vct-360-stats-row / .vct-360-stat (KPIs), .vct-360-tabsbar (pestanias),
+   .vct-360-box (cajas con titulo e icono). La torta y las barras son las del
+   dashboard (.vct-dashboard-option-b). Aca solo lo propio: grilla de cajas,
+   filas de lista, etiquetas de estado y medidores por proyecto.
+   Colores y radios: variables de vct-main.css (--vct-*). */
+
+.vct-inicio .vct-ini-panel[hidden] { display: none !important; }
+
+.vct-inicio .vct-ini-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 12px; }
+.vct-inicio .vct-ini-hello {
+    margin: 0;
+    color: var(--vct-text-soft, #64748b);
+    font-size: 13px;
+}
+.vct-inicio .vct-ini-tabs { margin-bottom: 16px; }
+.vct-inicio .vct-ini-panel > .vct-360-stats-row { margin-bottom: 16px; }
+
+/* cajas en dos columnas */
+.vct-inicio .vct-ini-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+}
+.vct-inicio .vct-ini-box { margin: 0 !important; min-width: 0; }
+.vct-inicio .vct-ini-wide { margin-bottom: 16px !important; }
+.vct-inicio .vct-ini-box .vct-360-box-subtitle { margin: 2px 0 0; }
+.vct-inicio .vct-ini-box-body { padding-top: 4px; }
+
+/* filas de lista (mismo criterio que las gestiones del plan) */
+.vct-inicio .vct-ini-list { display: flex; flex-direction: column; }
+.vct-inicio .vct-ini-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 6px;
+    border-top: 1px solid #f1f5f9;
+    border-radius: var(--vct-radius-sm, 6px);
+    transition: background-color var(--vct-transition, .18s ease);
+}
+.vct-inicio .vct-ini-row:first-child { border-top: 0; }
+.vct-inicio .vct-ini-row:hover { background: #fcfcfd; }
+.vct-inicio .vct-ini-row-icon {
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--vct-radius, 9px);
+    background: var(--vct-primary-soft, rgba(102,6,45,.08));
+    color: var(--vct-primary, #66062D);
+}
+.vct-inicio .vct-ini-row-icon svg { width: 16px; height: 16px; }
+.vct-inicio .vct-ini-row-icon.is-blue   { background: var(--vct-info-bg, #e0f2fe);    color: var(--vct-info, #0369a1); }
+.vct-inicio .vct-ini-row-icon.is-purple { background: #f3e8ff; color: #7e22ce; }
+.vct-inicio .vct-ini-row-icon.is-green  { background: var(--vct-success-bg, #dcfce7); color: var(--vct-success, #15803d); }
+.vct-inicio .vct-ini-row-icon.is-orange { background: #ffedd5; color: #c2410c; }
+.vct-inicio .vct-ini-row-icon.is-red    { background: var(--vct-danger-bg, #fee2e2);  color: var(--vct-danger, #b91c1c); }
+.vct-inicio .vct-ini-row-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.vct-inicio .vct-ini-row-title { color: var(--vct-text, #1e293b); font-size: 13px; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
+.vct-inicio .vct-ini-row-meta { color: var(--vct-text-soft, #64748b); font-size: 12px; line-height: 1.4; overflow-wrap: anywhere; }
+.vct-inicio .vct-ini-row-meta .vct-ini-link { font-weight: 500; }
+
+.vct-inicio .vct-ini-empty {
+    padding: 18px 12px;
+    border: 1px dashed var(--vct-border, #e2e8f0);
+    border-radius: var(--vct-radius, 9px);
+    background: var(--vct-bg, #f8fafc);
+    color: var(--vct-text-soft, #64748b);
+    font-size: 12px;
+    text-align: center;
+}
+
+/* etiquetas a la derecha de cada fila (como los estados del plan) */
+.vct-inicio .vct-ini-pill { flex: 0 0 auto; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.vct-inicio .vct-ini-pill.is-bad  { background: var(--vct-danger-bg, #fee2e2);  color: var(--vct-danger, #b91c1c); }
+.vct-inicio .vct-ini-pill.is-warn { background: #ffedd5; color: #c2410c; }
+.vct-inicio .vct-ini-pill.is-ok   { background: var(--vct-success-bg, #dcfce7); color: var(--vct-success, #15803d); }
+.vct-inicio .vct-ini-pill.is-info { background: var(--vct-bg-soft, #f1f5f9);    color: #475569; }
+
+/* nombre de proyecto clicable */
+.vct-inicio .vct-ini-link {
+    display: inline; max-width: 100%; padding: 0; border: 0; background: transparent;
+    color: inherit; font: inherit; text-align: left; white-space: inherit; overflow-wrap: anywhere; cursor: pointer;
+}
+.vct-inicio .vct-ini-link:hover { color: var(--vct-primary, #66062D); text-decoration: underline; }
+
+/* avance y horas por proyecto */
+.vct-inicio .vct-ini-proj {
+    display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 8px 20px; align-items: center;
+    padding: 12px 6px; border-top: 1px solid #f1f5f9;
+}
+.vct-inicio .vct-ini-proj:first-child { border-top: 0; }
+.vct-inicio .vct-ini-proj-name { min-width: 0; color: var(--vct-text, #1e293b); font-size: 13px; font-weight: 600; }
+.vct-inicio .vct-ini-proj-name small { display: block; margin-top: 2px; color: var(--vct-text-soft, #64748b); font-size: 11px; font-weight: 400; }
+.vct-inicio .vct-ini-proj-bars { display: grid; gap: 7px; }
+.vct-inicio .vct-ini-meter { display: grid; grid-template-columns: 50px minmax(0, 1fr) auto; align-items: center; gap: 8px; font-size: 11px; color: var(--vct-text-soft, #64748b); }
+.vct-inicio .vct-ini-meter b { color: var(--vct-text, #1e293b); font-weight: 600; white-space: nowrap; }
+.vct-inicio .vct-ini-track { height: 6px; border-radius: 999px; background: var(--vct-bg-soft, #f1f5f9); overflow: hidden; }
+.vct-inicio .vct-ini-track > i { display: block; height: 100%; border-radius: inherit; background: var(--vct-primary, #66062D); }
+.vct-inicio .vct-ini-meter.is-hours .vct-ini-track > i { background: #94a3b8; }
+.vct-inicio .vct-ini-meter.is-hours.is-warn .vct-ini-track > i { background: #f97316; }
+.vct-inicio .vct-ini-meter.is-hours.is-over .vct-ini-track > i { background: var(--vct-danger, #b91c1c); }
+
+.vct-inicio .vct-ini-bell { position: relative; flex: 0 0 auto; }
+.vct-inicio .vct-ini-bell-btn {
+    position: relative; width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid var(--vct-border, #e2e8f0); border-radius: var(--vct-radius, 9px); background: #fff;
+    color: var(--vct-text-soft, #64748b); cursor: pointer; box-shadow: var(--vct-shadow-sm, 0 1px 3px rgba(15,23,42,.06));
+    transition: border-color var(--vct-transition, .18s ease), color var(--vct-transition, .18s ease);
+}
+.vct-inicio .vct-ini-bell-btn svg { width: 18px; height: 18px; }
+.vct-inicio .vct-ini-bell-btn:hover,
+.vct-inicio .vct-ini-bell-btn[aria-expanded="true"] { border-color: var(--vct-primary-border, rgba(102,6,45,.2)); color: var(--vct-primary, #66062D); }
+.vct-inicio .vct-ini-bell-btn.has-unread { color: var(--vct-primary, #66062D); }
+.vct-inicio .vct-ini-bell-badge {
+    position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box;
+    display: inline-flex; align-items: center; justify-content: center; border: 2px solid #fff; border-radius: 999px;
+    background: #dc2626; color: #fff; font-size: 10px; font-weight: 700; line-height: 1;
+}
+.vct-inicio .vct-ini-bell-panel {
+    position: absolute; top: calc(100% + 8px); right: 0; z-index: 60; width: min(380px, calc(100vw - 32px));
+    max-height: min(480px, 70vh); display: flex; flex-direction: column; overflow: hidden;
+    border: 1px solid var(--vct-border, #e2e8f0); border-radius: var(--vct-radius-lg, 12px); background: #fff;
+    box-shadow: var(--vct-shadow-lg, 0 15px 40px rgba(15,23,42,.16));
+}
+.vct-inicio .vct-ini-bell-panel[hidden] { display: none !important; }
+.vct-inicio .vct-ini-bell-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px;
+    border-bottom: 1px solid var(--vct-border, #e2e8f0); font-size: 13px; color: var(--vct-text, #1e293b);
+}
+.vct-inicio .vct-ini-bell-all { padding: 0; border: 0; background: transparent; color: var(--vct-primary, #66062D); font: inherit; font-size: 12px; cursor: pointer; }
+.vct-inicio .vct-ini-bell-all:hover { text-decoration: underline; }
+.vct-inicio .vct-ini-bell-ok { color: var(--vct-success, #15803d); font-size: 12px; }
+.vct-inicio .vct-ini-bell-empty { margin: 0; padding: 22px 14px; color: var(--vct-text-soft, #64748b); font-size: 12px; text-align: center; }
+.vct-inicio .vct-ini-bell-list { margin: 0; padding: 4px 0; list-style: none; overflow-y: auto; }
+.vct-inicio .vct-ini-notif { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-top: 1px solid #f1f5f9; }
+.vct-inicio .vct-ini-notif:first-child { border-top: 0; }
+.vct-inicio .vct-ini-notif.is-unread { background: #fef2f2; }
+.vct-inicio .vct-ini-notif-icon {
+    flex: 0 0 30px; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;
+    border-radius: var(--vct-radius, 9px); background: var(--vct-bg-soft, #f1f5f9); color: var(--vct-text-soft, #64748b);
+}
+.vct-inicio .vct-ini-notif-icon svg { width: 15px; height: 15px; }
+.vct-inicio .vct-ini-notif.is-unread .vct-ini-notif-icon { background: #fee2e2; color: #dc2626; }
+.vct-inicio .vct-ini-notif-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.vct-inicio .vct-ini-notif-title { color: var(--vct-text, #1e293b); font-size: 12px; font-weight: 500; line-height: 1.35; overflow-wrap: anywhere; }
+.vct-inicio .vct-ini-notif.is-unread .vct-ini-notif-title { color: #b91c1c; font-weight: 700; }
+.vct-inicio .vct-ini-notif-meta { color: var(--vct-text-soft, #64748b); font-size: 11px; line-height: 1.35; overflow-wrap: anywhere; }
+.vct-inicio .vct-ini-notif-date { color: var(--vct-text-muted, #94a3b8); font-size: 10px; }
+.vct-inicio .vct-ini-notif.is-unread .vct-ini-notif-date::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 5px; border-radius: 50%; background: #dc2626; vertical-align: 1px; }
+.vct-inicio .vct-ini-notif-read {
+    width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; padding: 0;
+    border: 1px solid var(--vct-border, #e2e8f0); border-radius: var(--vct-radius-sm, 6px); background: #fff;
+    color: var(--vct-text-soft, #64748b); cursor: pointer;
+}
+.vct-inicio .vct-ini-notif-read svg { width: 13px; height: 13px; }
+.vct-inicio .vct-ini-notif-read:hover { border-color: var(--vct-success, #15803d); color: var(--vct-success, #15803d); }
+
+@media (max-width: 900px) {
+    .vct-inicio .vct-ini-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+    .vct-inicio .vct-ini-proj { grid-template-columns: 1fr; }
+    .vct-inicio .vct-ini-row { align-items: flex-start; }
+    .vct-inicio .vct-ini-row .vct-ini-pill { margin-top: 2px; }
+}
+
+/* v5: margenes. El contenedor de la plataforma (.w3-container) trae 16px a la
+   izquierda y 0 a la derecha: el Inicio quedaba corrido. Mismos margenes que la
+   Vista 360 de Cliente. */
+html body .w3-container:has(> .vct-page.vct-inicio) { padding-left: 0 !important; padding-right: 0 !important; }
+.vct-inicio .vct-ini-box .vct-360-box-subtitle { margin: 2px 0 0 !important; color: var(--vct-text-soft, #64748b) !important; font-size: 12px !important; font-weight: 400 !important; line-height: 1.4 !important; }
+@media (max-width: 768px) {
+    html body .vct-page.vct-inicio { padding-left: 7px !important; padding-right: 7px !important; }
+}

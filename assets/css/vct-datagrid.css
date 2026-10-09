@@ -1,0 +1,486 @@
+﻿/* vct-datagrid.css - v1
+   ============================================================================
+   Estilos del motor de grilla de MAIN (vct-datagrid.js). Autocontenido y
+   namespaced .vctdg-*: no depende de las reglas de tablas/paginado de
+   vct-main.css (que se purgan) ni usa !important, salvo para ocultar filas
+   ([hidden]) que es una excepcion justificada.
+
+   Reglas de diseno vigentes:
+     - Paginado SIEMPRE centrado; selector de cantidad SIEMPRE a la derecha
+       (grid explicito con grid-column fijo, aunque el paginado este vacio).
+     - Nunca scroll horizontal: las celdas hacen wrap; en mobile cada fila
+       pasa a "tarjeta" usando data-label de cada <td>.
+   Tokens: se reusan los :root de vct-main.css (con fallback).
+   ============================================================================ */
+.vctdg{
+    --dg-primary:var(--vct-primary,#66062D);
+    --dg-border:var(--vct-border,#e2e8f0);
+    --dg-text:#334155;
+    --dg-muted:#64748b;
+    --dg-radius:9px;
+    --dg-font-size:11px;
+    width:100%;
+    box-sizing:border-box;
+    font-family:var(--vct-font,"Gotham","Gotham Book",-apple-system,"Segoe UI",Roboto,sans-serif);
+    color:var(--dg-text);
+}
+.vctdg *,.vctdg *::before,.vctdg *::after{box-sizing:border-box;}
+.vctdg table,.vctdg th,.vctdg td,.vctdg button,.vctdg input,.vctdg select{font-family:inherit;}
+
+/* ---------------------------------------------------------------- Toolbar */
+.vctdg-toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px 14px;
+    margin:0 0 12px;
+}
+.vctdg-filters{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:8px 10px;
+    flex:1 1 320px;
+    min-width:0;
+}
+/* Combos de filtro puestos en el slot "filters": el combo propio de la plataforma trae
+   width:100% !important (vct-main.css) y se apilaba uno por renglon -> ancho fijo. */
+.vctdg-filters > .vct-custom-select,
+.vctdg-filters > select.vct-select,
+.vctdg-filters > select.vctdg-select{
+    flex:0 0 190px;
+    width:190px !important;
+    min-width:0;
+}
+.vctdg-filters > .vct-custom-select .vct-custom-select-trigger{height:38px !important;}
+.vctdg-tools{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:flex-end;
+    gap:8px;
+    margin-left:auto;
+}
+.vctdg-meta{
+    font-size:12px;
+    color:var(--dg-muted);
+    white-space:nowrap;
+    margin-right:4px;
+}
+
+.vctdg-search{
+    position:relative;
+    display:flex;
+    align-items:center;
+    flex:1 1 220px;
+    max-width:380px;
+    min-width:160px;
+}
+.vctdg-search svg{
+    position:absolute;
+    left:11px;
+    color:var(--dg-muted);
+    pointer-events:none;
+}
+.vctdg-search input{
+    width:100%;
+    height:38px;
+    padding:0 12px 0 33px;
+    color:var(--dg-text);
+    background:#fff;
+    border:1px solid #cbd5e1;
+    border-radius:var(--dg-radius);
+    font-weight:500;font-size:12px;line-height:1;
+    font-family:inherit;
+    outline:none;
+    box-shadow:0 1px 2px rgba(15,23,42,.03);
+    transition:border-color .16s ease,box-shadow .16s ease;
+}
+.vctdg-search input::placeholder{color:#94a3b8;font-weight:400;}
+.vctdg-search input:hover{border-color:rgba(102,6,45,.45);}
+.vctdg-search input:focus{border-color:var(--dg-primary);box-shadow:0 0 0 3px rgba(102,6,45,.10);}
+.vctdg-search input::-webkit-search-cancel-button{cursor:pointer;}
+
+.vctdg-select{
+    height:38px;
+    padding:0 30px 0 11px;
+    color:var(--dg-text);
+    background:#fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>") no-repeat right 10px center;
+    border:1px solid #cbd5e1;
+    border-radius:var(--dg-radius);
+    font-weight:500;font-size:12px;line-height:1;
+    font-family:inherit;
+    appearance:none;
+    -webkit-appearance:none;
+    outline:none;
+    cursor:pointer;
+    transition:border-color .16s ease,box-shadow .16s ease;
+}
+.vctdg-select:hover{border-color:rgba(102,6,45,.45);}
+.vctdg-select:focus{border-color:var(--dg-primary);box-shadow:0 0 0 3px rgba(102,6,45,.10);}
+.vctdg-sortsel{display:none;}
+
+.vctdg-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    height:38px;
+    padding:0 12px;
+    color:var(--dg-text);
+    background:#fff;
+    border:1px solid #cbd5e1;
+    border-radius:var(--dg-radius);
+    font-weight:500;font-size:12px;line-height:1;
+    font-family:inherit;
+    cursor:pointer;
+    white-space:nowrap;
+    box-shadow:0 1px 2px rgba(15,23,42,.03);
+    transition:border-color .16s ease,background .16s ease,color .16s ease;
+}
+.vctdg-btn:hover{border-color:rgba(102,6,45,.45);background:rgba(102,6,45,.04);color:var(--dg-primary);}
+.vctdg-btn:focus-visible{outline:2px solid var(--dg-primary);outline-offset:2px;}
+.vctdg-btn:disabled{opacity:.5;cursor:not-allowed;}
+.vctdg-btn.is-busy{opacity:.65;cursor:progress;}
+.vctdg-btn-excel svg{color:#15803d;}
+.vctdg-btn-pdf svg{color:#b91c1c;}
+.vctdg-btn-charts svg{color:var(--dg-primary);}
+
+/* ------------------------------------------------------------------ Tabla */
+.vctdg-wrap{
+    width:100%;
+    border:1px solid var(--dg-border);
+    border-radius:12px;
+    background:#fff;
+    overflow:hidden;
+}
+.vctdg-table{
+    width:100%;
+    border-collapse:collapse;
+    table-layout:auto;
+    font-size:var(--dg-font-size);
+}
+.vctdg-table.is-fixed{table-layout:fixed;}
+.vctdg-table th{
+    position:relative;
+    padding:10px 12px;
+    text-align:left;
+    color:#475569;
+    background:#f8fafc;
+    border-bottom:1px solid var(--dg-border);
+    font-size:var(--dg-font-size);
+    font-weight:600;
+    white-space:normal;
+    vertical-align:middle;
+}
+.vctdg-table td{
+    padding:10px 12px;
+    color:var(--dg-text);
+    border-bottom:1px solid #eef2f6;
+    vertical-align:middle;
+    overflow-wrap:anywhere;
+    word-break:break-word;
+}
+.vctdg-table tbody tr:last-child td{border-bottom:0;}
+.vctdg-table tbody tr:hover td{background:rgba(102,6,45,.03);}
+.vctdg-table tbody tr[hidden]{display:none !important;}
+.vctdg-table .vct-text-center,.vctdg-table th.vct-text-center{text-align:center;}
+.vctdg-table .vct-text-right{text-align:right;}
+
+.vctdg-table tr.vctdg-empty td{
+    padding:28px 12px;
+    text-align:center;
+    color:var(--dg-muted);
+}
+
+/* Densidad compacta (grillas de muchas columnas, p.ej. Reportes) + layout fijo:
+   los numeros/fechas (td con data-vct-sort-value) no se parten ni ensanchan. */
+.vctdg.is-compact .vctdg-table th{padding:8px 6px;line-height:1.25;}
+.vctdg.is-compact .vctdg-table td{padding:8px 6px;}
+.vctdg.is-compact .vctdg-sort{margin-left:3px;}
+.vctdg-table.is-fixed td[data-vct-sort-value]{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* Orden */
+.vctdg-sortable{cursor:pointer;user-select:none;}
+.vctdg-sortable:hover{color:var(--dg-primary);}
+.vctdg-sortable:focus-visible{outline:2px solid var(--dg-primary);outline-offset:-2px;}
+.vctdg-sort{
+    display:inline-flex;
+    margin-left:5px;
+    vertical-align:middle;
+    color:#94a3b8;
+}
+.vctdg-sort .up,.vctdg-sort .down{transition:opacity .12s ease;}
+.vctdg-sortable.is-asc .vctdg-sort,.vctdg-sortable.is-desc .vctdg-sort{color:var(--dg-primary);}
+.vctdg-sortable.is-asc .vctdg-sort .down{opacity:.2;}
+.vctdg-sortable.is-desc .vctdg-sort .up{opacity:.2;}
+
+/* Ancho de columna redimensionable (opt-in) */
+.vctdg-resizer{
+    position:absolute;
+    top:0;
+    right:-4px;
+    z-index:2;
+    width:9px;
+    height:100%;
+    cursor:col-resize;
+    touch-action:none;
+}
+.vctdg-resizer::after{
+    content:"";
+    position:absolute;
+    top:22%;
+    bottom:22%;
+    left:4px;
+    width:1px;
+    background:#cbd5e1;
+    transition:background .12s ease,width .12s ease;
+}
+.vctdg-resizer:hover::after,.vctdg-table.is-resizing .vctdg-resizer::after{background:var(--dg-primary);width:2px;}
+.vctdg-table.is-resizing{user-select:none;cursor:col-resize;}
+
+/* Texto largo: recorte a N lineas + "Ver mas / Ver menos" (opt-in por columna) */
+.vctdg-clamp{
+    display:-webkit-box;
+    -webkit-box-orient:vertical;
+    -webkit-line-clamp:var(--vctdg-lines,2);
+    line-clamp:var(--vctdg-lines,2);
+    overflow:hidden;
+}
+.vctdg-truncatable.is-expanded .vctdg-clamp{
+    display:block;
+    -webkit-line-clamp:unset;
+    line-clamp:unset;
+    overflow:visible;
+}
+.vctdg-more{
+    display:none;
+    align-items:center;
+    gap:3px;
+    margin:3px 0 0;
+    padding:0;
+    color:var(--dg-primary);
+    background:none;
+    border:0;
+    font-weight:600;font-size:var(--dg-font-size);line-height:1.2;
+    font-family:inherit;
+    cursor:pointer;
+}
+.vctdg-more:hover{text-decoration:underline;}
+.vctdg-truncatable.has-overflow .vctdg-more{display:inline-flex;}
+.vctdg-more svg{flex:0 0 auto;transition:transform .14s ease;}
+.vctdg-truncatable.is-expanded .vctdg-more svg{transform:rotate(180deg);}
+/* en compacto (columnas angostas) el toggle es solo el chevron, con tooltip */
+.vctdg.is-compact .vctdg-more-t{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;}
+.vctdg.is-compact .vctdg-more{width:18px;height:18px;justify-content:center;margin-top:2px;border-radius:5px;}
+.vctdg.is-compact .vctdg-more:hover{background:rgba(102,6,45,.08);text-decoration:none;}
+
+/* ----------------------------------------- Contenido agnostico de celdas */
+.vctdg-icons{
+    display:inline-flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:4px;
+    vertical-align:middle;
+}
+.vctdg-icon-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:30px;
+    height:30px;
+    padding:0;
+    color:var(--dg-muted);
+    background:#fff;
+    border:1px solid var(--dg-border);
+    border-radius:8px;
+    cursor:pointer;
+    transition:color .14s ease,background .14s ease,border-color .14s ease;
+}
+.vctdg-icon-btn:hover{color:var(--dg-primary);border-color:rgba(102,6,45,.4);background:rgba(102,6,45,.05);}
+.vctdg-icon-btn.is-danger:hover{color:#b91c1c;border-color:rgba(185,28,28,.4);background:rgba(185,28,28,.06);}
+.vctdg-icon-btn.is-success:hover{color:#15803d;border-color:rgba(21,128,61,.4);background:rgba(21,128,61,.06);}
+.vctdg-icon-btn:focus-visible{outline:2px solid var(--dg-primary);outline-offset:2px;}
+.vctdg-icon-btn [data-vct-icon],.vctdg-icon-btn svg{width:15px;height:15px;}
+
+/* ------------------------------------------------------- Columnas de accion
+   Los botones de icono (Ver 360, Editar, Eliminar...) los genera cada SP con los
+   renderers de la plataforma (VCT_MAIN_RENDER_ACTION / VCT_MAIN_RENDER_FORM_ACTION) y
+   los atiende la plataforma por delegacion de eventos: el motor NO los toca ni los
+   clona, solo les da un lugar (celda angosta y centrada) y un aspecto unico.
+   Se reconoce la celda por .vct-table-action-cell (td) y .vct-col-action (th). */
+.vctdg th.vct-col-action,
+.vctdg td.vct-table-action-cell{
+    width:44px;
+    padding-left:4px;
+    padding-right:4px;
+    text-align:center;
+    white-space:nowrap;
+}
+.vctdg .vct-grid-icon-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:28px;
+    height:28px;
+    padding:0;
+    color:#234A7C;
+    background:#F8FBFE;
+    border:1px solid #D8E4EF;
+    border-radius:6px;
+    cursor:pointer;
+    box-shadow:0 1px 3px rgba(15,23,42,.03);
+    transition:background .14s ease,border-color .14s ease,color .14s ease,box-shadow .14s ease,transform .14s ease;
+}
+.vctdg .vct-grid-icon-btn:hover{
+    color:var(--dg-primary);
+    background:#FCF7F9;
+    border-color:rgba(102,6,45,.24);
+    box-shadow:0 3px 8px rgba(15,23,42,.08);
+    transform:translateY(-1px);
+}
+.vctdg .vct-grid-icon-btn:focus-visible{outline:2px solid var(--dg-primary);outline-offset:2px;}
+.vctdg .vct-grid-icon-btn svg,
+.vctdg .vct-grid-icon-btn [data-vct-icon]{width:16px;height:16px;}
+.vctdg .vct-grid-icon-btn-view{color:var(--dg-primary);}
+.vctdg .vct-grid-icon-btn-edit{color:#2F67C8;}
+.vctdg .vct-grid-icon-btn-delete{color:#b91c1c;}
+
+.vctdg-badge{
+    display:inline-flex;
+    align-items:center;
+    padding:3px 10px;
+    border-radius:999px;
+    font-size:var(--dg-font-size);
+    font-weight:600;
+    line-height:1.3;
+    white-space:nowrap;
+    color:#475569;
+    background:#f1f5f9;
+}
+.vctdg-badge.is-success{color:#166534;background:#dcfce7;}
+.vctdg-badge.is-warning{color:#92400e;background:#fef3c7;}
+.vctdg-badge.is-danger{color:#991b1b;background:#fee2e2;}
+.vctdg-badge.is-info{color:#1e40af;background:#dbeafe;}
+.vctdg-badge.is-brand{color:var(--dg-primary);background:#FBE9EF;}
+.vctdg-badge.is-neutral{color:#475569;background:#f1f5f9;}
+
+/* ------------------------------------------------------------------ Footer
+   Paginado centrado (col 2) / cantidad a la derecha (col 3): posiciones
+   explicitas, no dependen del orden ni de que el paginado este vacio. */
+.vctdg-footer{
+    display:grid;
+    grid-template-columns:1fr auto 1fr;
+    align-items:center;
+    gap:10px 14px;
+    margin-top:12px;
+}
+.vctdg-info{
+    grid-column:1;
+    font-size:var(--dg-font-size);
+    color:var(--dg-muted);
+}
+.vctdg-pager{
+    grid-column:2;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:4px;
+    min-height:32px;
+}
+.vctdg-size{
+    grid-column:3;
+    justify-self:end;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:var(--dg-font-size);
+    color:var(--dg-muted);
+    white-space:nowrap;
+}
+.vctdg-size .vctdg-select{height:32px;}
+.vctdg-page{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:32px;
+    height:32px;
+    padding:0 8px;
+    color:var(--dg-text);
+    background:#fff;
+    border:1px solid var(--dg-border);
+    border-radius:8px;
+    font-weight:600;font-size:12px;line-height:1;
+    font-family:inherit;
+    cursor:pointer;
+    transition:background .14s ease,color .14s ease,border-color .14s ease;
+}
+.vctdg-page:hover:not(:disabled):not(.is-active){border-color:rgba(102,6,45,.45);color:var(--dg-primary);background:rgba(102,6,45,.04);}
+.vctdg-page.is-active{color:#fff;background:var(--dg-primary);border-color:var(--dg-primary);cursor:default;}
+.vctdg-page:disabled{opacity:.4;cursor:not-allowed;}
+.vctdg-page:focus-visible{outline:2px solid var(--dg-primary);outline-offset:2px;}
+
+/* ------------------------------------------------------------------ Mobile
+   Sin scroll horizontal: cada fila es una tarjeta con "etiqueta: valor". */
+@media (max-width:768px){
+    .vctdg-toolbar{flex-direction:column;align-items:stretch;}
+    .vctdg-filters{flex:1 1 auto;}
+    .vctdg-filters > .vct-custom-select,
+    .vctdg-filters > select.vct-select,
+    .vctdg-filters > select.vctdg-select{flex:1 1 100%;width:100% !important;}
+    .vctdg-search{max-width:none;flex:1 1 100%;}
+    .vctdg-tools{margin-left:0;justify-content:flex-start;}
+    .vctdg-sortsel{display:block;flex:1 1 100%;}
+    .vctdg-wrap{border:0;background:transparent;border-radius:0;overflow:visible;}
+    .vctdg-table,.vctdg-table tbody,.vctdg-table tr,.vctdg-table td{display:block;width:100%;}
+    .vctdg-table thead{display:none;}
+    .vctdg-table colgroup{display:none;}
+    .vctdg-table tbody tr[data-vct-row]{
+        margin:0 0 10px;
+        padding:6px 0;
+        background:#fff;
+        border:1px solid var(--dg-border);
+        border-radius:12px;
+        box-shadow:0 1px 3px rgba(15,23,42,.05);
+    }
+    .vctdg-table tbody tr:hover td{background:transparent;}
+    .vctdg-table td{
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:12px;
+        padding:7px 14px;
+        border-bottom:0;
+        text-align:right;
+    }
+    .vctdg-table td::before{
+        content:attr(data-label);
+        flex:0 0 38%;
+        max-width:38%;
+        color:var(--dg-muted);
+        font-size:var(--dg-font-size);
+        font-weight:600;
+        text-align:left;
+    }
+    .vctdg-table td:not([data-label])::before{content:none;}
+    .vctdg-table td[data-label=""]::before{content:none;}
+    /* iconos de accion: juntos en una franja al pie de la tarjeta (Ver, Editar...) */
+    .vctdg-table tbody tr[data-vct-row]{display:flex;flex-wrap:wrap;}
+    .vctdg-table tbody tr[data-vct-row] > td{flex:0 0 100%;}
+    .vctdg-table tbody tr[data-vct-row] > td.vct-table-action-cell{
+        flex:0 0 auto;
+        width:auto;
+        order:100;
+        padding:8px 4px 4px 14px;
+    }
+    .vctdg-table tbody tr[data-vct-row] > td.vct-table-action-cell ~ td.vct-table-action-cell{padding-left:4px;}
+    .vctdg-table td.vctdg-truncatable{flex-wrap:wrap;}
+    .vctdg-table td.vctdg-truncatable .vctdg-clamp{flex:1 1 0;min-width:0;}
+    .vctdg-table td.vctdg-truncatable .vctdg-more{flex:0 0 100%;text-align:right;}
+    .vctdg-table tr.vctdg-empty,.vctdg-table tr.vctdg-empty td{display:block;}
+    .vctdg-footer{grid-template-columns:1fr auto;}
+    .vctdg-pager{grid-column:1 / -1;grid-row:1;}
+    .vctdg-info{grid-column:1;grid-row:2;}
+    .vctdg-size{grid-column:2;grid-row:2;}
+    .vctdg-size span{display:none;}
+}

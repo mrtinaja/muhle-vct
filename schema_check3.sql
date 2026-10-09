@@ -1,0 +1,7 @@
+-- Ajustar el nombre de la tabla si no es literalmente "Groups"
+SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_NAME = 'Groups'
+ORDER BY ORDINAL_POSITION;
+
+SELECT TOP 10 * FROM dbo.[Groups];

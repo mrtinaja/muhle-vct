@@ -1,0 +1,50 @@
+/* ==========================================================================
+   Vista 360 de Consultor - "Ultimos proyectos" en celular (pegar AL FINAL de
+   vct-main.css).
+   La tabla tiene 6 columnas con anchos en linea (width:20% !important...) y
+   una regla vieja (.vct-360-table x10 tbody tr) la pasa a bloque: cada celda
+   quedaba de 30-140px y el nombre del proyecto salia letra por letra.
+   En celular cada proyecto pasa a ser una tarjeta:
+       Cliente
+       Proyecto (+ rol)                 Estado
+       Inicio                           Fin
+       Avance
+   #mainContainer sube la especificidad por encima de la regla x10; los anchos
+   en linea no se pueden pisar, por eso se usa min-width.
+   ========================================================================== */
+@media (max-width:768px){
+    html body #mainContainer .vct-360-projects-recent table.vct-360-table.vct-360-project-table-recent-consultor thead{ display:none !important; }
+    html body #mainContainer .vct-360-projects-recent table.vct-360-table.vct-360-project-table-recent-consultor,
+    html body #mainContainer .vct-360-projects-recent table.vct-360-table.vct-360-project-table-recent-consultor tbody{
+        display:block !important; width:100% !important; table-layout:auto !important;
+    }
+    html body #mainContainer .vct-360-projects-recent table.vct-360-table.vct-360-project-table-recent-consultor tr{
+        display:grid !important; grid-template-columns:minmax(0,1fr) max-content !important; gap:4px 12px !important;
+        width:100% !important; height:auto !important; padding:12px 4px !important;
+        border-bottom:1px solid #EEF2F6 !important; box-sizing:border-box !important;
+    }
+    html body #mainContainer .vct-360-projects-recent table.vct-360-table.vct-360-project-table-recent-consultor td{
+        display:block !important; min-width:100% !important; max-width:none !important; height:auto !important;
+        padding:0 !important; border:0 !important; text-align:left !important;
+        white-space:normal !important; overflow-wrap:anywhere !important;
+    }
+    html body #mainContainer .vct-360-projects-recent table.vct-360-table.vct-360-project-table-recent-consultor td:nth-child(1){
+        grid-column:1 / -1 !important; grid-row:1 !important; font-size:12px !important; color:#64748B !important;
+    }
+    html body #mainContainer .vct-360-projects-recent table.vct-360-table.vct-360-project-table-recent-consultor td:nth-child(2){
+        grid-column:1 / 2 !important; grid-row:2 !important;
+    }
+    html body #mainContainer .vct-360-projects-recent table.vct-360-table.vct-360-project-table-recent-consultor td:nth-child(3){
+        grid-column:2 / 3 !important; grid-row:2 !important; align-self:start !important; min-width:max-content !important;
+    }
+    html body #mainContainer .vct-360-projects-recent table.vct-360-table.vct-360-project-table-recent-consultor td:nth-child(4){
+        grid-column:1 / 2 !important; grid-row:3 !important; font-size:12px !important; color:#64748B !important;
+    }
+    html body #mainContainer .vct-360-projects-recent table.vct-360-table.vct-360-project-table-recent-consultor td:nth-child(5){
+        grid-column:2 / 3 !important; grid-row:3 !important; font-size:12px !important; color:#64748B !important;
+        text-align:right !important; min-width:max-content !important;
+    }
+    html body #mainContainer .vct-360-projects-recent table.vct-360-table.vct-360-project-table-recent-consultor td:nth-child(6){
+        grid-column:1 / -1 !important; grid-row:4 !important;
+    }
+}

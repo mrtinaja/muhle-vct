@@ -1,0 +1,1435 @@
+﻿/* ========================================================================
+   VCT CONFIG PARAMETRIA - V2
+   ------------------------------------------------------------------------
+   Redisenio visual para alinear Parametria al mismo lenguaje que ya usa
+   Reportes (vct-reportes.css/js): header real con degrade blanco->rosado
+   (no tabs subrayadas), dropdown por categoria, breadcrumb, KPIs en flex
+   y graficos SVG (donut/barra) por ABM. Los bloques de componentes de
+   abajo (topnav, dropdown, breadcrumb, kpis, chart-grid, donut, barchart)
+   son una copia deliberada de los mismos bloques en vct-reportes.css,
+   solo re-escopeados a [data-vct-param-root] en vez de
+   [data-vct-report-root] -- misma logica, mismas clases, sin choque
+   posible porque cada uno vive bajo su propio atributo raiz.
+   Aislado de vct-main.css. Solo aplica dentro de [data-vct-param-root].
+   ======================================================================== */
+
+/* VCT.Config.activate (vct-main.js) solo sabe ocultar/mostrar elementos
+   marcados con [data-vct-config-panel] -- por eso oculta el panel de
+   Email Templates correctamente, pero no tiene ninguna noción de este
+   wrapper nuevo. Sin esta regla, [data-vct-param-root] queda siempre
+   visible y "tapa"/convive con el contenido de Emails al cambiar de
+   pestaña superior. */
+.vct-config-page[data-vct-config-active="email-templates"] [data-vct-param-root] {
+    display: none !important;
+}
+
+/* Paneles de ABM: ahora un solo nivel (uno por hoja de navegación,
+   ej. "gestiones-tipos"), ya no hay un nivel intermedio de "grupo" con
+   su propia barra de subpestañas -- el dropdown del header reemplaza esa
+   barra por completo (ver vct-config-parametria.js). */
+[data-vct-param-group-panel] {
+    display: none;
+}
+[data-vct-param-group-panel].is-active {
+    display: block;
+}
+
+/* Header real (no tabs), degrade blanco -> rosado: mismo lenguaje que
+   vct-reportes.css .vct-report-topnav. El borde oscuro solido pisaba al
+   sidebar, que ya usa ese mismo tono -- con degrade claro se distingue de
+   ambos (sidebar oscuro, body blanco). Sin negrita para marcar el activo:
+   alcanza con el pill blanco + color. Un grupo con mas de un item (ej.
+   Gestiones) abre un dropdown; un grupo de un solo item (Normas,
+   Viáticos) es link directo (data-vct-param-cat + data-vct-param-group en
+   el MISMO boton, sin dropdown -- ver vct-config-parametria.js). Debajo
+   del header, un breadcrumb chico muestra la ubicación actual. */
+.vct-param-topnav {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    height: 56px;
+    padding: 0 18px;
+    background: linear-gradient(100deg,#FFFFFF 0%,#FFFFFF 45%,#F6D2E1 100%);
+    border-bottom: 1px solid var(--vct-border, #e2e8f0);
+    border-radius: var(--vct-radius-lg, 12px) var(--vct-radius-lg, 12px) 0 0;
+}
+.vct-param-topnav-item {
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+.vct-param-topnav [data-vct-param-cat] {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    background: transparent;
+    padding: 9px 14px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #8A4560;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: color .15s ease, background-color .15s ease, transform .15s ease;
+}
+.vct-param-topnav [data-vct-param-cat]:active {
+    transform: scale(.96);
+}
+.vct-param-topnav [data-vct-param-cat] [data-vct-icon] {
+    width: 14px;
+    height: 14px;
+    color: currentColor;
+    opacity: .8;
+}
+.vct-param-topnav [data-vct-param-cat]:hover {
+    color: var(--vct-primary, #66062D);
+    background: rgba(102,6,45,.06);
+}
+.vct-param-topnav [data-vct-param-cat] .vct-param-chevron {
+    width: 11px;
+    height: 11px;
+    margin-left: -3px;
+    opacity: .65;
+    transition: transform .15s ease;
+}
+.vct-param-topnav [data-vct-param-cat][aria-expanded="true"] .vct-param-chevron {
+    transform: rotate(180deg);
+}
+.vct-param-topnav [data-vct-param-cat].is-active {
+    color: var(--vct-primary, #66062D);
+    background: #FFFFFF;
+    box-shadow: 0 1px 4px rgba(102,6,45,.12);
+}
+.vct-param-topnav [data-vct-param-cat].is-active [data-vct-icon] {
+    opacity: 1;
+}
+
+/* display:flex siempre (no display:none/is-open) para poder animar con
+   opacity+transform en vez de un corte seco -- visibility+pointer-events
+   se encargan de que quede realmente oculto/no clickeable cuando esta
+   cerrado. */
+.vct-param-dropdown {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 20;
+    min-width: 220px;
+    padding: 6px;
+    background: #FFFFFF;
+    border: 1px solid var(--vct-border, #e2e8f0);
+    border-radius: 10px;
+    box-shadow: 0 12px 28px rgba(15,23,42,.14);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-6px) scale(.98);
+    transform-origin: top left;
+    transition: opacity .16s ease, transform .16s ease, visibility .16s;
+}
+.vct-param-dropdown.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+}
+.vct-param-dropdown [data-vct-param-group] {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    border: none;
+    background: transparent;
+    padding: 9px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: left;
+    color: var(--vct-text, #334155);
+    cursor: pointer;
+    border-radius: 7px;
+    white-space: nowrap;
+    transition: color .13s ease, background-color .13s ease, transform .13s ease;
+}
+.vct-param-dropdown [data-vct-param-group] [data-vct-icon] {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    color: currentColor;
+    opacity: .7;
+    transition: opacity .13s ease;
+}
+.vct-param-dropdown [data-vct-param-group]:hover {
+    background: var(--vct-bg-soft, #F7F8FA);
+    color: var(--vct-primary, #66062D);
+    transform: translateX(2px);
+}
+.vct-param-dropdown [data-vct-param-group]:hover [data-vct-icon] {
+    opacity: 1;
+}
+.vct-param-dropdown [data-vct-param-group].is-active {
+    background: #FBE9EF;
+    color: var(--vct-primary, #66062D);
+}
+.vct-param-dropdown [data-vct-param-group].is-active [data-vct-icon] {
+    opacity: 1;
+}
+
+.vct-param-breadcrumb {
+    padding: 14px 20px 0;
+    margin-bottom: 4px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--vct-text-soft, #94a3b8);
+}
+
+/* KPIs (cards resumen arriba de cada grilla). Flex en vez de grid de N
+   columnas fijas: con flex:1 cada card reparte el 100% del ancho
+   disponible entre las que haya, sean 3 o 4 -- con grid de columnas
+   fijas, un ABM con menos KPIs que columnas dejaba un hueco vacío y no
+   llegaba al borde (bug ya encontrado y corregido en Reportes). */
+[data-vct-param-root] .vct-reports-kpis {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+/* Mismo componente visual .vct-soft-kpi que usan las grillas de Clientes/
+   Empleados (definido en vct-main.css), pero ESE viene pensado para vivir
+   dentro de un CSS grid de 4 columnas fijas (.vct-soft-kpi-grid) -- acá
+   cada panel tiene 3 o 4 KPIs distintos, y un grid de N columnas fijas
+   deja hueco/no llega al 100% del ancho cuando hay menos cards que
+   columnas. Se resuelve SIN tocar vct-main.css: el wrapper sigue siendo
+   .vct-reports-kpis (flex, ver arriba), y esta regla hace que las cards
+   .vct-soft-kpi se comporten como hijas de ese flex (reparten el 100%
+   del ancho entre las que haya) en vez de como hijas de un grid. */
+[data-vct-param-root] .vct-reports-kpis .vct-soft-kpi {
+    flex: 1 1 0;
+    min-width: 150px;
+    padding: 18px 20px !important;
+}
+/* .vct-soft-kpi de vct-main.css usa tonos MUY palidos (pensados para
+   Clientes/Empleados, donde conviven con mucho mas contenido alrededor).
+   Aca, con solo 3-4 cards y poco mas en el bloque, ese mismo pastel se
+   leia lavado -- casi sin diferencia contra el fondo blanco del panel
+   ("se acoplan a un fondo transparentado"). Se profundiza el color solo
+   en Parametria, sin tocar vct-main.css (Clientes/Empleados siguen con
+   el tono original). La regla base usa !important, hace falta igual
+   aca para poder pisarla. */
+[data-vct-param-root] .vct-soft-kpi.is-blue {
+    background: linear-gradient(135deg,#E3F0FF,#CFE6FF) !important;
+    border-color: #AACDF5 !important;
+}
+[data-vct-param-root] .vct-soft-kpi.is-green {
+    background: linear-gradient(135deg,#E1F7EC,#C9EEDA) !important;
+    border-color: #9FDDBC !important;
+}
+[data-vct-param-root] .vct-soft-kpi.is-orange {
+    background: linear-gradient(135deg,#FFF1DC,#FFE3B8) !important;
+    border-color: #F4CE8A !important;
+}
+[data-vct-param-root] .vct-soft-kpi.is-purple {
+    background: linear-gradient(135deg,#F0E7FF,#E1CFFB) !important;
+    border-color: #C9A8F0 !important;
+}
+[data-vct-param-root] .vct-soft-kpi.is-red {
+    background: linear-gradient(135deg,#FFE6E6,#FFCFCF) !important;
+    border-color: #F2A8A8 !important;
+}
+/* .vct-soft-kpi-value viene pensado (vct-main.css) para numeros cortos de
+   Clientes/Empleados (ej. "42") con 28px/weight 800 -- muy grande/negrita
+   para estos KPIs (algunos son montos, otros son conteos). Se achica y se
+   le baja el grosor solo acá, sin tocar vct-main.css (Clientes/Empleados
+   siguen igual). La regla base usa !important en TODAS sus propiedades,
+   asi que el override necesita !important tambien para poder pisarla. */
+[data-vct-param-root] .vct-soft-kpi-value {
+    font-size: 19px !important;
+    font-weight: 600 !important;
+    letter-spacing: normal !important;
+}
+
+/* Grafico por ABM: donut (Activo/Inactivo, Final/No final, etc.) y/o
+   barra (Top 5 por una dimension real de la fila -- FK o magnitud
+   numerica). Ningún ABM de Parametría tiene un par de fechas por fila,
+   así que a propósito no hay Gantt acá (ver notas en
+   VCT_MAIN_CONFIGURACION.sql, sección de datasets). */
+[data-vct-param-root] .vct-report-chart {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 16px 18px;
+    margin-bottom: 20px;
+    background: #fff;
+    border: 1px solid var(--vct-border, #e2e8f0);
+    border-radius: var(--vct-radius-lg, 12px);
+    transition: box-shadow .15s ease;
+}
+[data-vct-param-root] .vct-report-chart:hover {
+    box-shadow: 0 10px 22px rgba(15,23,42,.06);
+}
+[data-vct-param-root] .vct-report-chart-title {
+    margin-bottom: 14px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--vct-text, #1e293b);
+    text-align: center;
+}
+/* Columnas EXACTAS (no auto-fit): con 2 gráficos, 50/50 -- reparten
+   siempre el 100% del ancho entre sí mismos. Ningún ABM de Parametría
+   llega a 3 gráficos, así que no hace falta el modificador
+   data-vct-chart-cols="3" que sí usa Reportes. */
+[data-vct-param-root] .vct-report-chart-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    width: 100%;
+}
+[data-vct-param-root] .vct-report-chart-grid .vct-report-chart {
+    margin-bottom: 0;
+}
+@media (max-width: 900px) {
+    [data-vct-param-root] .vct-report-chart-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* justify-content:center: cuando el gráfico está solo en su card (el
+   caso más común, un donut por ABM), queda centrado en vez de pegado a
+   la izquierda con espacio vacío de un lado. */
+[data-vct-param-root] .vct-donut-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+}
+[data-vct-param-root] .vct-donut {
+    width: 110px;
+    height: 110px;
+    flex-shrink: 0;
+}
+[data-vct-param-root] .vct-donut-track {
+    fill: none;
+    stroke: var(--vct-bg-soft, #EEF1F5);
+    stroke-width: 3.6;
+}
+[data-vct-param-root] .vct-donut-seg {
+    fill: none;
+    stroke-width: 3.6;
+    stroke-linecap: butt;
+    transition: stroke-dasharray .4s ease, stroke-dashoffset .4s ease;
+}
+[data-vct-param-root] .vct-donut-seg.is-blue { stroke: #1466D8; }
+[data-vct-param-root] .vct-donut-seg.is-violet { stroke: #6D35B2; }
+[data-vct-param-root] .vct-donut-seg.is-mint { stroke: #0B7D55; }
+[data-vct-param-root] .vct-donut-seg.is-amber { stroke: #A96500; }
+[data-vct-param-root] .vct-donut-seg.is-coral { stroke: #D0455C; }
+[data-vct-param-root] .vct-donut-seg.is-primary { stroke: var(--vct-primary, #66062D); }
+[data-vct-param-root] .vct-donut-label {
+    font-size: 7.5px;
+    font-weight: 600;
+    fill: var(--vct-text, #1e293b);
+}
+[data-vct-param-root] .vct-donut-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+[data-vct-param-root] .vct-donut-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 4px;
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--vct-text, #1e293b);
+    transition: background-color .15s ease;
+}
+[data-vct-param-root] .vct-donut-legend-item:hover {
+    background: var(--vct-bg-soft, #F7F8FA);
+}
+[data-vct-param-root] .vct-donut-legend-item b {
+    margin-left: auto;
+    padding-left: 14px;
+    font-weight: 600;
+}
+[data-vct-param-root] .vct-donut-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+[data-vct-param-root] .vct-donut-dot.is-blue { background: #1466D8; }
+[data-vct-param-root] .vct-donut-dot.is-mint { background: #0B7D55; }
+[data-vct-param-root] .vct-donut-dot.is-amber { background: #A96500; }
+[data-vct-param-root] .vct-donut-dot.is-track { background: var(--vct-bg-soft, #EEF1F5); border: 1px solid var(--vct-border, #e2e8f0); }
+
+/* Barras verticales (Top 5 por columna): complementa el donut de cada
+   ABM con una segunda vista, cuando el ABM tiene una dimensión contable
+   real (FK a una tabla padre, o un campo numérico propio como Nivel). */
+[data-vct-param-root] .vct-barchart {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 16px;
+    height: 150px;
+    padding-top: 10px;
+}
+[data-vct-param-root] .vct-barchart-col {
+    flex: 1;
+    max-width: 64px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    height: 100%;
+}
+[data-vct-param-root] .vct-barchart-value {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: var(--vct-text, #1e293b);
+}
+[data-vct-param-root] .vct-barchart-bar {
+    width: 100%;
+    border-radius: 5px 5px 0 0;
+    background: var(--vct-primary, #66062D);
+    min-height: 3px;
+    transition: height .3s ease;
+}
+[data-vct-param-root] .vct-barchart-label {
+    font-size: 10.5px;
+    color: var(--vct-text-soft, #94a3b8);
+    text-align: center;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Mensaje honesto cuando un gráfico no tiene datos (ej. Top 5 por Tipo
+   de miembro cuando nadie completó ese campo todavía) -- reusa la misma
+   clase/lenguaje que .vct-gantt-empty en Reportes, sin necesitar el
+   resto del bloque Gantt (que Parametría no usa). */
+[data-vct-param-root] .vct-gantt-empty {
+    font-size: 12px;
+    color: var(--vct-text-soft, #94a3b8);
+    text-align: center;
+    padding: 20px 0;
+}
+
+@media (max-width: 768px) {
+    [data-vct-param-root] .vct-reports-kpis .vct-soft-kpi {
+        flex: 1 1 calc(50% - 6px);
+    }
+}
+
+/* .vct-config-panel (vct-main.css) NO tiene padding propio a propósito:
+   cada hijo existente (.vct-config-abm-header, .vct-grid-toolbar,
+   .vct-grid-footer) maneja su propio inset horizontal (14px/12px) vía su
+   propio padding, con el fondo blanco corriendo borde a borde del panel.
+   El bloque de KPIs no tiene ese padding propio, así que sin este ajuste
+   quedaría pegado al borde del panel en vez de alineado con el
+   header/toolbar de arriba y abajo. Se usa margin (no padding en el panel
+   entero, que duplicaría el inset ya aplicado por cada hijo existente)
+   para separarlo del borde sin tocar nada más. (El/los .vct-report-chart
+   de cada ABM ya no viven acá -- ahora están dentro del modal de
+   Gráficos, con su propio padding vía .vct-modal-body, así que no
+   necesitan este ajuste de inset.) */
+[data-vct-param-group-panel] > .vct-reports-kpis {
+    margin-left: 14px;
+    margin-right: 14px;
+    margin-top: 16px;
+}
+
+/* Modal de Gráficos por ABM (mismo mecanismo generico VCT.Modal de
+   vct-main.js que usa Reportes): acá como mucho hay 2 gráficos lado a
+   lado (nunca 3 como en Reportes), asi que 900px alcanza. */
+.vct-modal-charts .vct-modal-dialog {
+    width: min(900px, 96vw);
+    max-height: calc(100vh - 40px);
+}
+/* ========================================================================
+   VCT CONFIG PARAMETRIA - V2
+   ------------------------------------------------------------------------
+   Redisenio visual para alinear Parametria al mismo lenguaje que ya usa
+   Reportes (vct-reportes.css/js): header real con degrade blanco->rosado
+   (no tabs subrayadas), dropdown por categoria, breadcrumb, KPIs en flex
+   y graficos SVG (donut/barra) por ABM. Los bloques de componentes de
+   abajo (topnav, dropdown, breadcrumb, kpis, chart-grid, donut, barchart)
+   son una copia deliberada de los mismos bloques en vct-reportes.css,
+   solo re-escopeados a [data-vct-param-root] en vez de
+   [data-vct-report-root] -- misma logica, mismas clases, sin choque
+   posible porque cada uno vive bajo su propio atributo raiz.
+   Aislado de vct-main.css. Solo aplica dentro de [data-vct-param-root].
+   ======================================================================== */
+
+/* VCT.Config.activate (vct-main.js) solo sabe ocultar/mostrar elementos
+   marcados con [data-vct-config-panel] -- por eso oculta el panel de
+   Email Templates correctamente, pero no tiene ninguna noción de este
+   wrapper nuevo. Sin esta regla, [data-vct-param-root] queda siempre
+   visible y "tapa"/convive con el contenido de Emails al cambiar de
+   pestaña superior. */
+.vct-config-page[data-vct-config-active="email-templates"] [data-vct-param-root] {
+    display: none !important;
+}
+
+/* Paneles de ABM: ahora un solo nivel (uno por hoja de navegación,
+   ej. "gestiones-tipos"), ya no hay un nivel intermedio de "grupo" con
+   su propia barra de subpestañas -- el dropdown del header reemplaza esa
+   barra por completo (ver vct-config-parametria.js). */
+[data-vct-param-group-panel] {
+    display: none;
+}
+[data-vct-param-group-panel].is-active {
+    display: block;
+}
+
+/* Header real (no tabs), degrade blanco -> rosado: mismo lenguaje que
+   vct-reportes.css .vct-report-topnav. El borde oscuro solido pisaba al
+   sidebar, que ya usa ese mismo tono -- con degrade claro se distingue de
+   ambos (sidebar oscuro, body blanco). Sin negrita para marcar el activo:
+   alcanza con el pill blanco + color. Un grupo con mas de un item (ej.
+   Gestiones) abre un dropdown; un grupo de un solo item (Normas,
+   Viáticos) es link directo (data-vct-param-cat + data-vct-param-group en
+   el MISMO boton, sin dropdown -- ver vct-config-parametria.js). Debajo
+   del header, un breadcrumb chico muestra la ubicación actual. */
+.vct-param-topnav {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    height: 56px;
+    padding: 0 18px;
+    background: linear-gradient(100deg,#FFFFFF 0%,#FFFFFF 45%,#F6D2E1 100%);
+    border-bottom: 1px solid var(--vct-border, #e2e8f0);
+    border-radius: var(--vct-radius-lg, 12px) var(--vct-radius-lg, 12px) 0 0;
+}
+.vct-param-topnav-item {
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+.vct-param-topnav [data-vct-param-cat] {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    background: transparent;
+    padding: 9px 14px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #8A4560;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: color .15s ease, background-color .15s ease, transform .15s ease;
+}
+.vct-param-topnav [data-vct-param-cat]:active {
+    transform: scale(.96);
+}
+.vct-param-topnav [data-vct-param-cat] [data-vct-icon] {
+    width: 14px;
+    height: 14px;
+    color: currentColor;
+    opacity: .8;
+}
+.vct-param-topnav [data-vct-param-cat]:hover {
+    color: var(--vct-primary, #66062D);
+    background: rgba(102,6,45,.06);
+}
+/* El icono real de esta flecha es "chevrons-up-down" (un solo SVG con 2
+   trazos: uno apuntando arriba en y:4-9 y otro apuntando abajo en y:15-20,
+   dentro de un viewBox de 24x24 -- mismo icono y mismo fix que ya se
+   aplicó en vct-reportes.css). Pedido explicito: dejar solo la flecha de
+   abajo, sin tocar el SP ni el JS que arma el icono. clip-path recorta el
+   50% superior del contenedor del icono -- como los 2 trazos del SVG
+   caen limpiamente cada uno en su mitad (arriba/abajo) del viewBox, el
+   recorte elimina el trazo de arriba sin afectar al de abajo. */
+.vct-param-topnav [data-vct-param-cat] .vct-param-chevron {
+    width: 11px;
+    height: 11px;
+    margin-left: -3px;
+    opacity: .65;
+    clip-path: inset(50% 0 0 0);
+    transition: transform .15s ease;
+}
+.vct-param-topnav [data-vct-param-cat][aria-expanded="true"] .vct-param-chevron {
+    transform: rotate(180deg);
+}
+/* Activo: antes fondo blanco liso (se perdia contra el header, que ya
+   degrada a blanco de por si) -- mismo bug y mismo fix que Reportes.
+   Reusa EL MISMO rosa que ya usa .vct-param-dropdown [data-vct-param-
+   group].is-active mas abajo en este archivo (#FBE9EF), que a su vez es
+   el mismo rosa que usa Reportes -- consistente en los 2 headers. */
+.vct-param-topnav [data-vct-param-cat].is-active {
+    color: var(--vct-primary, #66062D);
+    background: #FBE9EF;
+    box-shadow: 0 1px 4px rgba(102,6,45,.12);
+}
+.vct-param-topnav [data-vct-param-cat].is-active [data-vct-icon] {
+    opacity: 1;
+}
+/* Hover: antes un tinte bordo muy sutil (6% opacidad, casi imperceptible).
+   Mismo criterio que Reportes: bordo institucional solido, texto/icono/
+   flecha en blanco para contraste. La pestaña ya activa no cambia a
+   bordo al pasarle el mouse (se excluye con :not(.is-active)), se queda
+   en su rosa. */
+.vct-param-topnav [data-vct-param-cat]:not(.is-active):hover {
+    color: #fff;
+    background: var(--vct-primary, #66062D);
+}
+.vct-param-topnav [data-vct-param-cat]:not(.is-active):hover [data-vct-icon],
+.vct-param-topnav [data-vct-param-cat]:not(.is-active):hover .vct-param-chevron {
+    color: #fff;
+    opacity: 1;
+}
+
+/* display:flex siempre (no display:none/is-open) para poder animar con
+   opacity+transform en vez de un corte seco -- visibility+pointer-events
+   se encargan de que quede realmente oculto/no clickeable cuando esta
+   cerrado. */
+.vct-param-dropdown {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 20;
+    min-width: 220px;
+    padding: 6px;
+    background: #FFFFFF;
+    border: 1px solid var(--vct-border, #e2e8f0);
+    border-radius: 10px;
+    box-shadow: 0 12px 28px rgba(15,23,42,.14);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-6px) scale(.98);
+    transform-origin: top left;
+    transition: opacity .16s ease, transform .16s ease, visibility .16s;
+}
+.vct-param-dropdown.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+}
+.vct-param-dropdown [data-vct-param-group] {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    border: none;
+    background: transparent;
+    padding: 9px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: left;
+    color: var(--vct-text, #334155);
+    cursor: pointer;
+    border-radius: 7px;
+    white-space: nowrap;
+    transition: color .13s ease, background-color .13s ease, transform .13s ease;
+}
+.vct-param-dropdown [data-vct-param-group] [data-vct-icon] {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    color: currentColor;
+    opacity: .7;
+    transition: opacity .13s ease;
+}
+.vct-param-dropdown [data-vct-param-group]:hover {
+    background: var(--vct-bg-soft, #F7F8FA);
+    color: var(--vct-primary, #66062D);
+    transform: translateX(2px);
+}
+.vct-param-dropdown [data-vct-param-group]:hover [data-vct-icon] {
+    opacity: 1;
+}
+.vct-param-dropdown [data-vct-param-group].is-active {
+    background: #FBE9EF;
+    color: var(--vct-primary, #66062D);
+}
+.vct-param-dropdown [data-vct-param-group].is-active [data-vct-icon] {
+    opacity: 1;
+}
+
+.vct-param-breadcrumb {
+    padding: 14px 20px 0;
+    margin-bottom: 4px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--vct-text-soft, #94a3b8);
+}
+
+/* KPIs (cards resumen arriba de cada grilla). Flex en vez de grid de N
+   columnas fijas: con flex:1 cada card reparte el 100% del ancho
+   disponible entre las que haya, sean 3 o 4 -- con grid de columnas
+   fijas, un ABM con menos KPIs que columnas dejaba un hueco vacío y no
+   llegaba al borde (bug ya encontrado y corregido en Reportes). */
+[data-vct-param-root] .vct-reports-kpis {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+/* Mismo componente visual .vct-soft-kpi que usan las grillas de Clientes/
+   Empleados (definido en vct-main.css), pero ESE viene pensado para vivir
+   dentro de un CSS grid de 4 columnas fijas (.vct-soft-kpi-grid) -- acá
+   cada panel tiene 3 o 4 KPIs distintos, y un grid de N columnas fijas
+   deja hueco/no llega al 100% del ancho cuando hay menos cards que
+   columnas. Se resuelve SIN tocar vct-main.css: el wrapper sigue siendo
+   .vct-reports-kpis (flex, ver arriba), y esta regla hace que las cards
+   .vct-soft-kpi se comporten como hijas de ese flex (reparten el 100%
+   del ancho entre las que haya) en vez de como hijas de un grid. */
+[data-vct-param-root] .vct-reports-kpis .vct-soft-kpi {
+    flex: 1 1 0;
+    min-width: 150px;
+    padding: 18px 20px !important;
+}
+/* .vct-soft-kpi de vct-main.css usa tonos MUY palidos (pensados para
+   Clientes/Empleados, donde conviven con mucho mas contenido alrededor).
+   Aca, con solo 3-4 cards y poco mas en el bloque, ese mismo pastel se
+   leia lavado -- casi sin diferencia contra el fondo blanco del panel
+   ("se acoplan a un fondo transparentado"). Se profundiza el color solo
+   en Parametria, sin tocar vct-main.css (Clientes/Empleados siguen con
+   el tono original). La regla base usa !important, hace falta igual
+   aca para poder pisarla. */
+[data-vct-param-root] .vct-soft-kpi.is-blue {
+    background: linear-gradient(135deg,#E3F0FF,#CFE6FF) !important;
+    border-color: #AACDF5 !important;
+}
+[data-vct-param-root] .vct-soft-kpi.is-green {
+    background: linear-gradient(135deg,#E1F7EC,#C9EEDA) !important;
+    border-color: #9FDDBC !important;
+}
+[data-vct-param-root] .vct-soft-kpi.is-orange {
+    background: linear-gradient(135deg,#FFF1DC,#FFE3B8) !important;
+    border-color: #F4CE8A !important;
+}
+[data-vct-param-root] .vct-soft-kpi.is-purple {
+    background: linear-gradient(135deg,#F0E7FF,#E1CFFB) !important;
+    border-color: #C9A8F0 !important;
+}
+[data-vct-param-root] .vct-soft-kpi.is-red {
+    background: linear-gradient(135deg,#FFE6E6,#FFCFCF) !important;
+    border-color: #F2A8A8 !important;
+}
+/* .vct-soft-kpi-value viene pensado (vct-main.css) para numeros cortos de
+   Clientes/Empleados (ej. "42") con 28px/weight 800 -- muy grande/negrita
+   para estos KPIs (algunos son montos, otros son conteos). Se achica y se
+   le baja el grosor solo acá, sin tocar vct-main.css (Clientes/Empleados
+   siguen igual). La regla base usa !important en TODAS sus propiedades,
+   asi que el override necesita !important tambien para poder pisarla. */
+[data-vct-param-root] .vct-soft-kpi-value {
+    font-size: 19px !important;
+    font-weight: 600 !important;
+    letter-spacing: normal !important;
+}
+
+/* Grafico por ABM: donut (Activo/Inactivo, Final/No final, etc.) y/o
+   barra (Top 5 por una dimension real de la fila -- FK o magnitud
+   numerica). Ningún ABM de Parametría tiene un par de fechas por fila,
+   así que a propósito no hay Gantt acá (ver notas en
+   VCT_MAIN_CONFIGURACION.sql, sección de datasets). */
+[data-vct-param-root] .vct-report-chart {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 16px 18px;
+    margin-bottom: 20px;
+    background: #fff;
+    border: 1px solid var(--vct-border, #e2e8f0);
+    border-radius: var(--vct-radius-lg, 12px);
+    transition: box-shadow .15s ease;
+}
+[data-vct-param-root] .vct-report-chart:hover {
+    box-shadow: 0 10px 22px rgba(15,23,42,.06);
+}
+[data-vct-param-root] .vct-report-chart-title {
+    margin-bottom: 14px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--vct-text, #1e293b);
+    text-align: center;
+}
+/* Columnas EXACTAS (no auto-fit): con 2 gráficos, 50/50 -- reparten
+   siempre el 100% del ancho entre sí mismos. Ningún ABM de Parametría
+   llega a 3 gráficos, así que no hace falta el modificador
+   data-vct-chart-cols="3" que sí usa Reportes. */
+[data-vct-param-root] .vct-report-chart-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    width: 100%;
+}
+[data-vct-param-root] .vct-report-chart-grid .vct-report-chart {
+    margin-bottom: 0;
+}
+@media (max-width: 900px) {
+    [data-vct-param-root] .vct-report-chart-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* justify-content:center: cuando el gráfico está solo en su card (el
+   caso más común, un donut por ABM), queda centrado en vez de pegado a
+   la izquierda con espacio vacío de un lado. */
+[data-vct-param-root] .vct-donut-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+}
+[data-vct-param-root] .vct-donut {
+    width: 110px;
+    height: 110px;
+    flex-shrink: 0;
+}
+[data-vct-param-root] .vct-donut-track {
+    fill: none;
+    stroke: var(--vct-bg-soft, #EEF1F5);
+    stroke-width: 3.6;
+}
+[data-vct-param-root] .vct-donut-seg {
+    fill: none;
+    stroke-width: 3.6;
+    stroke-linecap: butt;
+    transition: stroke-dasharray .4s ease, stroke-dashoffset .4s ease;
+}
+[data-vct-param-root] .vct-donut-seg.is-blue { stroke: #1466D8; }
+[data-vct-param-root] .vct-donut-seg.is-violet { stroke: #6D35B2; }
+[data-vct-param-root] .vct-donut-seg.is-mint { stroke: #0B7D55; }
+[data-vct-param-root] .vct-donut-seg.is-amber { stroke: #A96500; }
+[data-vct-param-root] .vct-donut-seg.is-coral { stroke: #D0455C; }
+[data-vct-param-root] .vct-donut-seg.is-primary { stroke: var(--vct-primary, #66062D); }
+[data-vct-param-root] .vct-donut-label {
+    font-size: 7.5px;
+    font-weight: 600;
+    fill: var(--vct-text, #1e293b);
+}
+[data-vct-param-root] .vct-donut-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+[data-vct-param-root] .vct-donut-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 4px;
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--vct-text, #1e293b);
+    transition: background-color .15s ease;
+}
+[data-vct-param-root] .vct-donut-legend-item:hover {
+    background: var(--vct-bg-soft, #F7F8FA);
+}
+[data-vct-param-root] .vct-donut-legend-item b {
+    margin-left: auto;
+    padding-left: 14px;
+    font-weight: 600;
+}
+[data-vct-param-root] .vct-donut-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+[data-vct-param-root] .vct-donut-dot.is-blue { background: #1466D8; }
+[data-vct-param-root] .vct-donut-dot.is-mint { background: #0B7D55; }
+[data-vct-param-root] .vct-donut-dot.is-amber { background: #A96500; }
+[data-vct-param-root] .vct-donut-dot.is-track { background: var(--vct-bg-soft, #EEF1F5); border: 1px solid var(--vct-border, #e2e8f0); }
+
+/* Barras verticales (Top 5 por columna): complementa el donut de cada
+   ABM con una segunda vista, cuando el ABM tiene una dimensión contable
+   real (FK a una tabla padre, o un campo numérico propio como Nivel). */
+[data-vct-param-root] .vct-barchart {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 16px;
+    height: 150px;
+    padding-top: 10px;
+}
+[data-vct-param-root] .vct-barchart-col {
+    flex: 1;
+    max-width: 64px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    height: 100%;
+}
+[data-vct-param-root] .vct-barchart-value {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: var(--vct-text, #1e293b);
+}
+[data-vct-param-root] .vct-barchart-bar {
+    width: 100%;
+    border-radius: 5px 5px 0 0;
+    background: var(--vct-primary, #66062D);
+    min-height: 3px;
+    transition: height .3s ease;
+}
+[data-vct-param-root] .vct-barchart-label {
+    font-size: 10.5px;
+    color: var(--vct-text-soft, #94a3b8);
+    text-align: center;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Mensaje honesto cuando un gráfico no tiene datos (ej. Top 5 por Tipo
+   de miembro cuando nadie completó ese campo todavía) -- reusa la misma
+   clase/lenguaje que .vct-gantt-empty en Reportes, sin necesitar el
+   resto del bloque Gantt (que Parametría no usa). */
+[data-vct-param-root] .vct-gantt-empty {
+    font-size: 12px;
+    color: var(--vct-text-soft, #94a3b8);
+    text-align: center;
+    padding: 20px 0;
+}
+
+@media (max-width: 768px) {
+    [data-vct-param-root] .vct-reports-kpis .vct-soft-kpi {
+        flex: 1 1 calc(50% - 6px);
+    }
+}
+
+/* .vct-config-panel (vct-main.css) NO tiene padding propio a propósito:
+   cada hijo existente (.vct-config-abm-header, .vct-grid-toolbar,
+   .vct-grid-footer) maneja su propio inset horizontal (14px/12px) vía su
+   propio padding, con el fondo blanco corriendo borde a borde del panel.
+   El bloque de KPIs no tiene ese padding propio, así que sin este ajuste
+   quedaría pegado al borde del panel en vez de alineado con el
+   header/toolbar de arriba y abajo. Se usa margin (no padding en el panel
+   entero, que duplicaría el inset ya aplicado por cada hijo existente)
+   para separarlo del borde sin tocar nada más. (El/los .vct-report-chart
+   de cada ABM ya no viven acá -- ahora están dentro del modal de
+   Gráficos, con su propio padding vía .vct-modal-body, así que no
+   necesitan este ajuste de inset.) */
+[data-vct-param-group-panel] > .vct-reports-kpis {
+    margin-left: 14px;
+    margin-right: 14px;
+    margin-top: 16px;
+}
+
+/* Modal de Gráficos por ABM (mismo mecanismo generico VCT.Modal de
+   vct-main.js que usa Reportes): acá como mucho hay 2 gráficos lado a
+   lado (nunca 3 como en Reportes), asi que 900px alcanza. */
+.vct-modal-charts .vct-modal-dialog {
+    width: min(900px, 96vw);
+    max-height: calc(100vh - 40px);
+}
+
+/* ========================================================================
+   VCT CONFIG PARAMETRIA - V2
+   ------------------------------------------------------------------------
+   Redisenio visual para alinear Parametria al mismo lenguaje que ya usa
+   Reportes (vct-reportes.css/js): header real con degrade blanco->rosado
+   (no tabs subrayadas), dropdown por categoria, breadcrumb, KPIs en flex
+   y graficos SVG (donut/barra) por ABM. Los bloques de componentes de
+   abajo (topnav, dropdown, breadcrumb, kpis, chart-grid, donut, barchart)
+   son una copia deliberada de los mismos bloques en vct-reportes.css,
+   solo re-escopeados a [data-vct-param-root] en vez de
+   [data-vct-report-root] -- misma logica, mismas clases, sin choque
+   posible porque cada uno vive bajo su propio atributo raiz.
+   Aislado de vct-main.css. Solo aplica dentro de [data-vct-param-root].
+   ======================================================================== */
+
+/* VCT.Config.activate (vct-main.js) solo sabe ocultar/mostrar elementos
+   marcados con [data-vct-config-panel] -- por eso oculta el panel de
+   Email Templates correctamente, pero no tiene ninguna noción de este
+   wrapper nuevo. Sin esta regla, [data-vct-param-root] queda siempre
+   visible y "tapa"/convive con el contenido de Emails al cambiar de
+   pestaña superior. */
+.vct-config-page[data-vct-config-active="email-templates"] [data-vct-param-root] {
+    display: none !important;
+}
+
+/* Paneles de ABM: ahora un solo nivel (uno por hoja de navegación,
+   ej. "gestiones-tipos"), ya no hay un nivel intermedio de "grupo" con
+   su propia barra de subpestañas -- el dropdown del header reemplaza esa
+   barra por completo (ver vct-config-parametria.js). */
+[data-vct-param-group-panel] {
+    display: none;
+}
+[data-vct-param-group-panel].is-active {
+    display: block;
+}
+
+/* Header real (no tabs), degrade blanco -> rosado: mismo lenguaje que
+   vct-reportes.css .vct-report-topnav. El borde oscuro solido pisaba al
+   sidebar, que ya usa ese mismo tono -- con degrade claro se distingue de
+   ambos (sidebar oscuro, body blanco). Sin negrita para marcar el activo:
+   alcanza con el pill blanco + color. Un grupo con mas de un item (ej.
+   Gestiones) abre un dropdown; un grupo de un solo item (Normas,
+   Viáticos) es link directo (data-vct-param-cat + data-vct-param-group en
+   el MISMO boton, sin dropdown -- ver vct-config-parametria.js). Debajo
+   del header, un breadcrumb chico muestra la ubicación actual. */
+.vct-param-topnav {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    height: 56px;
+    padding: 0 18px;
+    background: linear-gradient(100deg,#FFFFFF 0%,#FFFFFF 45%,#F6D2E1 100%);
+    border-bottom: 1px solid var(--vct-border, #e2e8f0);
+    border-radius: var(--vct-radius-lg, 12px) var(--vct-radius-lg, 12px) 0 0;
+}
+.vct-param-topnav-item {
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+.vct-param-topnav [data-vct-param-cat] {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    background: transparent;
+    padding: 9px 14px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #8A4560;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: color .15s ease, background-color .15s ease, transform .15s ease;
+}
+.vct-param-topnav [data-vct-param-cat]:active {
+    transform: scale(.96);
+}
+.vct-param-topnav [data-vct-param-cat] [data-vct-icon] {
+    width: 14px;
+    height: 14px;
+    color: currentColor;
+    opacity: .8;
+}
+.vct-param-topnav [data-vct-param-cat]:hover {
+    color: var(--vct-primary, #66062D);
+    background: rgba(102,6,45,.06);
+}
+/* El icono real de esta flecha es "chevrons-up-down" (un solo SVG con 2
+   trazos: uno apuntando arriba en y:4-9 y otro apuntando abajo en y:15-20,
+   dentro de un viewBox de 24x24 -- mismo icono y mismo fix que ya se
+   aplicó en vct-reportes.css). Pedido explicito: dejar solo la flecha de
+   abajo, sin tocar el SP ni el JS que arma el icono. clip-path recorta el
+   50% superior del contenedor del icono -- como los 2 trazos del SVG
+   caen limpiamente cada uno en su mitad (arriba/abajo) del viewBox, el
+   recorte elimina el trazo de arriba sin afectar al de abajo. */
+.vct-param-topnav [data-vct-param-cat] .vct-param-chevron {
+    width: 11px;
+    height: 11px;
+    margin-left: -3px;
+    opacity: .65;
+    clip-path: inset(50% 0 0 0);
+    transition: transform .15s ease;
+}
+.vct-param-topnav [data-vct-param-cat][aria-expanded="true"] .vct-param-chevron {
+    transform: rotate(180deg);
+}
+/* Activo: antes fondo blanco liso (se perdia contra el header, que ya
+   degrada a blanco de por si) -- mismo bug y mismo fix que Reportes.
+   Reusa EL MISMO rosa que ya usa .vct-param-dropdown [data-vct-param-
+   group].is-active mas abajo en este archivo (#FBE9EF), que a su vez es
+   el mismo rosa que usa Reportes -- consistente en los 2 headers. */
+.vct-param-topnav [data-vct-param-cat].is-active {
+    color: var(--vct-primary, #66062D);
+    background: #FBE9EF;
+    box-shadow: 0 1px 4px rgba(102,6,45,.12);
+}
+.vct-param-topnav [data-vct-param-cat].is-active [data-vct-icon] {
+    opacity: 1;
+}
+/* Hover: antes un tinte bordo muy sutil (6% opacidad, casi imperceptible).
+   Mismo criterio que Reportes: bordo institucional solido, texto/icono/
+   flecha en blanco para contraste. La pestaña ya activa no cambia a
+   bordo al pasarle el mouse (se excluye con :not(.is-active)), se queda
+   en su rosa. */
+.vct-param-topnav [data-vct-param-cat]:not(.is-active):hover {
+    color: #fff;
+    background: var(--vct-primary, #66062D);
+}
+.vct-param-topnav [data-vct-param-cat]:not(.is-active):hover [data-vct-icon],
+.vct-param-topnav [data-vct-param-cat]:not(.is-active):hover .vct-param-chevron {
+    color: #fff;
+    opacity: 1;
+}
+
+/* display:flex siempre (no display:none/is-open) para poder animar con
+   opacity+transform en vez de un corte seco -- visibility+pointer-events
+   se encargan de que quede realmente oculto/no clickeable cuando esta
+   cerrado. */
+.vct-param-dropdown {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 20;
+    min-width: 220px;
+    padding: 6px;
+    background: #FFFFFF;
+    border: 1px solid var(--vct-border, #e2e8f0);
+    border-radius: 10px;
+    box-shadow: 0 12px 28px rgba(15,23,42,.14);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-6px) scale(.98);
+    transform-origin: top left;
+    transition: opacity .16s ease, transform .16s ease, visibility .16s;
+}
+.vct-param-dropdown.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+}
+.vct-param-dropdown [data-vct-param-group] {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    border: none;
+    background: transparent;
+    padding: 9px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: left;
+    color: var(--vct-text, #334155);
+    cursor: pointer;
+    border-radius: 7px;
+    white-space: nowrap;
+    transition: color .13s ease, background-color .13s ease, transform .13s ease;
+}
+.vct-param-dropdown [data-vct-param-group] [data-vct-icon] {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    color: currentColor;
+    opacity: .7;
+    transition: opacity .13s ease;
+}
+.vct-param-dropdown [data-vct-param-group]:hover {
+    background: var(--vct-bg-soft, #F7F8FA);
+    color: var(--vct-primary, #66062D);
+    transform: translateX(2px);
+}
+.vct-param-dropdown [data-vct-param-group]:hover [data-vct-icon] {
+    opacity: 1;
+}
+.vct-param-dropdown [data-vct-param-group].is-active {
+    background: #FBE9EF;
+    color: var(--vct-primary, #66062D);
+}
+.vct-param-dropdown [data-vct-param-group].is-active [data-vct-icon] {
+    opacity: 1;
+}
+
+.vct-param-breadcrumb {
+    padding: 14px 20px 0;
+    margin-bottom: 4px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--vct-text-soft, #94a3b8);
+}
+
+/* KPIs (cards resumen arriba de cada grilla). Flex en vez de grid de N
+   columnas fijas: con flex:1 cada card reparte el 100% del ancho
+   disponible entre las que haya, sean 3 o 4 -- con grid de columnas
+   fijas, un ABM con menos KPIs que columnas dejaba un hueco vacío y no
+   llegaba al borde (bug ya encontrado y corregido en Reportes). */
+[data-vct-param-root] .vct-reports-kpis {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+/* Mismo componente visual .vct-soft-kpi que usan las grillas de Clientes/
+   Empleados (definido en vct-main.css), pero ESE viene pensado para vivir
+   dentro de un CSS grid de 4 columnas fijas (.vct-soft-kpi-grid) -- acá
+   cada panel tiene 3 o 4 KPIs distintos, y un grid de N columnas fijas
+   deja hueco/no llega al 100% del ancho cuando hay menos cards que
+   columnas. Se resuelve SIN tocar vct-main.css: el wrapper sigue siendo
+   .vct-reports-kpis (flex, ver arriba), y esta regla hace que las cards
+   .vct-soft-kpi se comporten como hijas de ese flex (reparten el 100%
+   del ancho entre las que haya) en vez de como hijas de un grid. */
+[data-vct-param-root] .vct-reports-kpis .vct-soft-kpi {
+    flex: 1 1 0;
+    min-width: 150px;
+    padding: 18px 20px !important;
+}
+/* .vct-soft-kpi de vct-main.css usa tonos MUY palidos (pensados para
+   Clientes/Empleados, donde conviven con mucho mas contenido alrededor).
+   Aca, con solo 3-4 cards y poco mas en el bloque, ese mismo pastel se
+   leia lavado -- casi sin diferencia contra el fondo blanco del panel
+   ("se acoplan a un fondo transparentado"). Se profundiza el color solo
+   en Parametria, sin tocar vct-main.css (Clientes/Empleados siguen con
+   el tono original). La regla base usa !important, hace falta igual
+   aca para poder pisarla. */
+[data-vct-param-root] .vct-soft-kpi.is-blue {
+    background: linear-gradient(135deg,#E3F0FF,#CFE6FF) !important;
+    border-color: #AACDF5 !important;
+}
+[data-vct-param-root] .vct-soft-kpi.is-green {
+    background: linear-gradient(135deg,#E1F7EC,#C9EEDA) !important;
+    border-color: #9FDDBC !important;
+}
+[data-vct-param-root] .vct-soft-kpi.is-orange {
+    background: linear-gradient(135deg,#FFF1DC,#FFE3B8) !important;
+    border-color: #F4CE8A !important;
+}
+[data-vct-param-root] .vct-soft-kpi.is-purple {
+    background: linear-gradient(135deg,#F0E7FF,#E1CFFB) !important;
+    border-color: #C9A8F0 !important;
+}
+[data-vct-param-root] .vct-soft-kpi.is-red {
+    background: linear-gradient(135deg,#FFE6E6,#FFCFCF) !important;
+    border-color: #F2A8A8 !important;
+}
+/* .vct-soft-kpi-value viene pensado (vct-main.css) para numeros cortos de
+   Clientes/Empleados (ej. "42") con 28px/weight 800 -- muy grande/negrita
+   para estos KPIs (algunos son montos, otros son conteos). Se achica y se
+   le baja el grosor solo acá, sin tocar vct-main.css (Clientes/Empleados
+   siguen igual). La regla base usa !important en TODAS sus propiedades,
+   asi que el override necesita !important tambien para poder pisarla. */
+[data-vct-param-root] .vct-soft-kpi-value {
+    font-size: 19px !important;
+    font-weight: 600 !important;
+    letter-spacing: normal !important;
+}
+
+/* Grafico por ABM: donut (Activo/Inactivo, Final/No final, etc.) y/o
+   barra (Top 5 por una dimension real de la fila -- FK o magnitud
+   numerica). Ningún ABM de Parametría tiene un par de fechas por fila,
+   así que a propósito no hay Gantt acá (ver notas en
+   VCT_MAIN_CONFIGURACION.sql, sección de datasets). */
+[data-vct-param-root] .vct-report-chart {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 16px 18px;
+    margin-bottom: 20px;
+    background: #fff;
+    border: 1px solid var(--vct-border, #e2e8f0);
+    border-radius: var(--vct-radius-lg, 12px);
+    transition: box-shadow .15s ease;
+}
+[data-vct-param-root] .vct-report-chart:hover {
+    box-shadow: 0 10px 22px rgba(15,23,42,.06);
+}
+[data-vct-param-root] .vct-report-chart-title {
+    margin-bottom: 14px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--vct-text, #1e293b);
+    text-align: center;
+}
+/* Columnas EXACTAS (no auto-fit): con 2 gráficos, 50/50 -- reparten
+   siempre el 100% del ancho entre sí mismos. Ningún ABM de Parametría
+   llega a 3 gráficos, así que no hace falta el modificador
+   data-vct-chart-cols="3" que sí usa Reportes. */
+[data-vct-param-root] .vct-report-chart-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    width: 100%;
+}
+[data-vct-param-root] .vct-report-chart-grid .vct-report-chart {
+    margin-bottom: 0;
+}
+@media (max-width: 900px) {
+    [data-vct-param-root] .vct-report-chart-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* justify-content:center: cuando el gráfico está solo en su card (el
+   caso más común, un donut por ABM), queda centrado en vez de pegado a
+   la izquierda con espacio vacío de un lado. */
+[data-vct-param-root] .vct-donut-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+}
+[data-vct-param-root] .vct-donut {
+    width: 110px;
+    height: 110px;
+    flex-shrink: 0;
+}
+[data-vct-param-root] .vct-donut-track {
+    fill: none;
+    stroke: var(--vct-bg-soft, #EEF1F5);
+    stroke-width: 3.6;
+}
+[data-vct-param-root] .vct-donut-seg {
+    fill: none;
+    stroke-width: 3.6;
+    stroke-linecap: butt;
+    transition: stroke-dasharray .4s ease, stroke-dashoffset .4s ease;
+}
+[data-vct-param-root] .vct-donut-seg.is-blue { stroke: #1466D8; }
+[data-vct-param-root] .vct-donut-seg.is-violet { stroke: #6D35B2; }
+[data-vct-param-root] .vct-donut-seg.is-mint { stroke: #0B7D55; }
+[data-vct-param-root] .vct-donut-seg.is-amber { stroke: #A96500; }
+[data-vct-param-root] .vct-donut-seg.is-coral { stroke: #D0455C; }
+[data-vct-param-root] .vct-donut-seg.is-primary { stroke: var(--vct-primary, #66062D); }
+[data-vct-param-root] .vct-donut-label {
+    font-size: 7.5px;
+    font-weight: 600;
+    fill: var(--vct-text, #1e293b);
+}
+[data-vct-param-root] .vct-donut-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+[data-vct-param-root] .vct-donut-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 4px;
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--vct-text, #1e293b);
+    transition: background-color .15s ease;
+}
+[data-vct-param-root] .vct-donut-legend-item:hover {
+    background: var(--vct-bg-soft, #F7F8FA);
+}
+[data-vct-param-root] .vct-donut-legend-item b {
+    margin-left: auto;
+    padding-left: 14px;
+    font-weight: 600;
+}
+[data-vct-param-root] .vct-donut-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+[data-vct-param-root] .vct-donut-dot.is-blue { background: #1466D8; }
+[data-vct-param-root] .vct-donut-dot.is-mint { background: #0B7D55; }
+[data-vct-param-root] .vct-donut-dot.is-amber { background: #A96500; }
+[data-vct-param-root] .vct-donut-dot.is-track { background: var(--vct-bg-soft, #EEF1F5); border: 1px solid var(--vct-border, #e2e8f0); }
+
+/* Barras verticales (Top 5 por columna): complementa el donut de cada
+   ABM con una segunda vista, cuando el ABM tiene una dimensión contable
+   real (FK a una tabla padre, o un campo numérico propio como Nivel). */
+[data-vct-param-root] .vct-barchart {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 16px;
+    height: 150px;
+    padding-top: 10px;
+}
+[data-vct-param-root] .vct-barchart-col {
+    flex: 1;
+    max-width: 64px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    height: 100%;
+}
+[data-vct-param-root] .vct-barchart-value {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: var(--vct-text, #1e293b);
+}
+[data-vct-param-root] .vct-barchart-bar {
+    width: 100%;
+    border-radius: 5px 5px 0 0;
+    background: var(--vct-primary, #66062D);
+    min-height: 3px;
+    transition: height .3s ease;
+}
+[data-vct-param-root] .vct-barchart-label {
+    font-size: 10.5px;
+    color: var(--vct-text-soft, #94a3b8);
+    text-align: center;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Mensaje honesto cuando un gráfico no tiene datos (ej. Top 5 por Tipo
+   de miembro cuando nadie completó ese campo todavía) -- reusa la misma
+   clase/lenguaje que .vct-gantt-empty en Reportes, sin necesitar el
+   resto del bloque Gantt (que Parametría no usa). */
+[data-vct-param-root] .vct-gantt-empty {
+    font-size: 12px;
+    color: var(--vct-text-soft, #94a3b8);
+    text-align: center;
+    padding: 20px 0;
+}
+
+@media (max-width: 768px) {
+    [data-vct-param-root] .vct-reports-kpis .vct-soft-kpi {
+        flex: 1 1 calc(50% - 6px);
+    }
+}
+
+/* .vct-config-panel (vct-main.css) NO tiene padding propio a propósito:
+   cada hijo existente (.vct-config-abm-header, .vct-grid-toolbar,
+   .vct-grid-footer) maneja su propio inset horizontal (14px/12px) vía su
+   propio padding, con el fondo blanco corriendo borde a borde del panel.
+   El bloque de KPIs no tiene ese padding propio, así que sin este ajuste
+   quedaría pegado al borde del panel en vez de alineado con el
+   header/toolbar de arriba y abajo. Se usa margin (no padding en el panel
+   entero, que duplicaría el inset ya aplicado por cada hijo existente)
+   para separarlo del borde sin tocar nada más. (El/los .vct-report-chart
+   de cada ABM ya no viven acá -- ahora están dentro del modal de
+   Gráficos, con su propio padding vía .vct-modal-body, así que no
+   necesitan este ajuste de inset.) */
+[data-vct-param-group-panel] > .vct-reports-kpis {
+    margin-left: 14px;
+    margin-right: 14px;
+    margin-top: 16px;
+}
+
+/* Modal de Gráficos por ABM (mismo mecanismo generico VCT.Modal de
+   vct-main.js que usa Reportes): acá como mucho hay 2 gráficos lado a
+   lado (nunca 3 como en Reportes), asi que 900px alcanza. */
+.vct-modal-charts .vct-modal-dialog {
+    width: min(900px, 96vw);
+    max-height: calc(100vh - 40px);
+}
+
+/* ============================================================
+   PATCH QUIRURGICO - vct-config-parametria.css
+   ------------------------------------------------------------
+   Mismo bug, mismo fix que en vct-reportes.css (ver PATCH_CHEVRON_
+   vct-reportes.css para la explicacion completa): el <svg> que
+   vct-main.js inyecta adentro de .vct-param-chevron trae sus
+   propios atributos width="16" height="16" fijos y no se achica al
+   tamano del contenedor (11x11px), por eso el clip-path:inset(50%)
+   no corta en la mitad real del icono y se ven pedacitos de las
+   dos flechas en vez de solo la de abajo.
+
+   Fix: una sola regla nueva, sin tocar nada existente.
+
+   IMPORTANTE: como el SP que ya tenes (VCT_MAIN_CONFIGURACION
+   completo que te mande) todavia no fue corrido, conviene agregar
+   esta regla ACA, en este mismo archivo, ANTES de subirlo al
+   server -- asi el ?v=6 que ya viene en ese SP sale andando bien
+   de una sola vez, sin necesitar un ?v=7 despues.
+   ============================================================ */
+
+.vct-param-chevron svg {
+    width: 100%;
+    height: 100%;
+}

@@ -1,0 +1,467 @@
+Sistema de gestión de proyectos
+de consultoría
+Resumen de reunión de relevamiento — definición del proceso operativo (núcleo del sistema)
+Participantes mencionados: Esteban (desarrollo del sistema), Juan, Santiago (Santi), Agustín.
+Objetivo de la reunión: revisar el avance del sistema y acordar cómo debe reflejar el proceso real de consultoría.
+Fuente: transcripción automática de la reunión. Algunos pasajes eran poco claros; los puntos marcados como "a
+definir" quedaron abiertos. 
+01 Resumen ejecutivo
+Mensaje central: antes de avanzar con gráficos, indicadores, permisos y autorizaciones, el sistema tiene que 
+reflejar y guiar el proceso de consultoría (la "cadena de valor"). Si el consultor, después de usarlo, igual
+necesita hacer la minuta y seguir con el Excel, el sistema no cumplió su objetivo.
+Decisiones y acuerdos principales
+Tema Acuerdo
+Cambio de fondo Hoy todo nace en la visita. En el nuevo modelo todo queda a nivel proyecto, con el 
+plan estratégico como eje.
+Visitas Quedan separadas (dependen de agenda, disponibilidad, norma y calificación del
+consultor). El consultor registra cada visita con un resumen de temas trabajados.
+Minuta de gestión Desaparece como formato, pero todo su contenido debe existir en el sistema (datos
+de entrada, riesgos, acciones, consideraciones).
+Inicio del proyecto Sin datos de entrada, consideraciones y gestión de lanzamiento completos, el proyecto
+no puede iniciarse.
+Fechas y % de avance Los define el consultor. El % surge de gestiones cumplidas sobre el total del ítem, y es
+dinámico.
+Cambios de fecha El consultor puede modificarlas, pero cada cambio genera una alerta inmediata al
+analista del proyecto.
+Gestiones Tipificadas (tipo / motivo / submotivo / resultado), no texto libre. El resultado
+determina si requiere próxima acción con fecha.
+Histórico No forzar datos desde 2018. Alcanza con el año anterior; los proyectos en curso deben
+estar bien cargados desde enero.
+Validación Llegar con un producto al 70–80%, probarlo primero con el equipo de oficina y luego
+con 1–2 consultores de confianza.
+Horizonte Implementación estimada para marzo 2027.
+Pág. 1 / 11
+=====
+02 El proceso de consultoría, contado por el equipo
+Relato de cómo Juan, Santiago y Agustín explicaron durante la reunión el proceso real de consultoría que el sistema tiene que reflejar. Las
+atribuciones a cada persona son aproximadas, porque la transcripción no siempre permite identificar quién habla.
+El punto de partida: primero el proceso, después lo demás
+La reunión arrancó con un planteo claro de parte del equipo de la consultora: lo que se necesita ver en el sistema no
+son todavía los gráficos, los indicadores ni los permisos, sino el proceso de trabajo de la consultora plasmado de
+punta a punta. La preocupación de Juan es concreta: que un consultor empiece a usar el sistema y, al final del día,
+igual tenga que hacer la minuta y seguir con el Excel. Si eso pasa, "no sirvió de nada" la inversión. Se reconoció
+también que cada uno se imaginaba la pantalla de una forma distinta, y que por eso hace falta mapear el proceso
+juntos una vez más.
+En palabras del equipo: "Asegurame que el sistema me guíe a hacer el proceso de consultoría. Que me lo
+evidencie."
+Cómo nace un proyecto
+El proyecto lo carga comercial / administración (Santiago), con los datos que ya surgen de la venta: cliente, normas,
+cantidad de días, horas y valores. Una vez cargado, llega a la consultora y se le asigna un analista; como señaló Santi,
+es el analista quien después asigna al consultor. Hoy muchas de estas cosas se resuelven hablando entre todos, pero el
+equipo explicó que la idea es dejarlo formalizado en el sistema, pensando en que la consultora crezca.
+La minuta de gestión y los datos de entrada
+Uno de los puntos más insistidos fue la minuta de gestión. El equipo explicó que ese formulario fue madurando con
+los años a partir de errores reales: cada dato que hoy tiene se agregó después de un problema, justamente para no
+volver a olvidarlo. Por eso el formato puede desaparecer, pero su contenido no. Agustín hizo notar que buena parte de
+esa información ya queda cargada cuando se da de alta el proyecto; la respuesta fue que da igual dónde se cargue,
+siempre que toda esa información esté en algún campo del sistema.
+Dentro de esos datos de entrada tienen un lugar central los riesgos iniciales, en "tiempo cero", cuando el proyecto
+todavía no empezó: lo que el equipo cree que puede pasar y las advertencias que se le dan al consultor ("ojo con
+esto", "ojo con la logística", "acá pasó tal cosa"). Esto aplica a todos los proyectos, más allá de la norma.
+El ejemplo que se dio: se le dice al consultor que tiene dos días por mes y que, cuando llegue la auditoría
+interna, va a tener además dos días de acompañamiento. A los diez meses llega la auditoría y tanto el consultor
+como el analista se olvidaron. El sistema tiene que servir para eso: tener presente la carga de horas, los
+acompañamientos y avisar a tiempo.
+El lanzamiento y las consideraciones
+Antes de que el proyecto arranque se hace la reunión de lanzamiento con el consultor, donde se le explica cómo es el
+proyecto. Se acordó que sin datos de entrada, consideraciones y gestión de lanzamiento completos, el proyecto no
+debería poder iniciarse: si no se da ese paso, "se manda al consultor sin saber en qué contexto está".
+Las consideraciones no terminan en el inicio. El equipo contó que hace un seguimiento de los proyectos cada 15 días
+y en esas reuniones va dejando indicaciones ("revisá esto", "fijate acá"). La idea es que queden escritas en el sistema,
+con fecha y autor, porque si no después no se hacen. Algunas serán para lectura interna, otras para el consultor y
+otras para el cliente.
+Sistema de gestión de la consultora · Resumen de reunión Pág. 2 / 11
+=====
+El trabajo del consultor sobre el plan estratégico
+Durante la ejecución el proyecto va generando información: por ejemplo, el informe diagnóstico, que va a la sección
+de documentación. El plan de trabajo se arma sobre los ítems de la norma y, en cada ítem, el consultor agrega las
+acciones (gestiones) que va a hacer, con plazo de inicio, plazo de fin y un estado para saber cómo viene. Se pidió no
+ser demasiado estrictos: hay puntos que se abren mucho (la política, por ejemplo: escribirla, difundirla, que se
+entienda) y el consultor puede cargar las acciones en el ítem general sin ir subtítulo por subtítulo.
+Sobre el avance, se recordó que se había pedido un porcentaje global y por requisito, y que es algo vivo: un requisito
+puede estar en 90% y bajar a 70% cuando el consultor se da cuenta de que falta una acción. Eso obliga al consultor a
+pensar el plan, y es lo que permite dejar de lado la minuta: los consultores van a estar en el cliente escribiendo
+directamente en el sistema.
+Las visitas
+El equipo describió cómo imagina el registro de la visita: el consultor anota el día, el horario ("trabajé el 28, de 9 a 17")
+y solo una mención de los temas trabajados; el detalle queda en el plan y sus acciones. A eso se suman los próximos
+temas a trabajar por el consultor y las próximas acciones que quedan para la empresa, porque hay proyectos con
+muchos días por mes donde el cliente también tiene tareas. Se discutió vincular cada visita con cada acción y se
+descartó: "va a ser un lío, no se va a cumplir". Lo importante es que la visita quede registrada, que el cliente pueda
+verla y que se sepa cuántas horas se usaron y cuántas quedan.
+Lo que tiene que ver el cliente
+Otro punto que el equipo remarcó fueron las acciones pendientes del cliente. El ejemplo fue el de una política que el
+cliente no aprueba aunque se le pidió muchas veces: el consultor ya hizo su parte, y lo que queda es un pendiente del
+cliente. Esas acciones se separan de las del plan ("para separar las aguas") y aparecen en el inicio del cliente. Así,
+cuando el cliente entra antes de una visita, ve qué quedó pendiente, qué riesgos identificó el consultor (por ejemplo,
+que se fue una persona clave de mantenimiento y nadie aprueba documentos) y puede exportar el plan y el estado
+para presentarlo a su gerencia.
+Control de fechas
+El consultor es quien define y puede modificar las fechas del plan, pero el equipo pidió que cada cambio genere una
+alarma al analista del proyecto en el momento, no cuando ya venció. La intención no es sancionar sino estar al tanto:
+después se le pregunta al consultor por qué la cambió y, si fue un error, se corrige.
+Otros tipos de servicio
+Para implementaciones desde cero y mantenimiento de normas no hay problema, porque se sigue trabajando sobre
+los requisitos. La duda aparece con servicios que no son de normas: se dio el ejemplo de Laura, que armó un plan
+propio para un cliente. Para esos casos el equipo planteó tres opciones: usar el plan de la norma, dejarlo en blanco y
+cargar los ítems a mano, o no usar plan y trabajar solo con acciones con fecha, adjuntando el plan en documentos.
+Auditoría y capacitación comparten la misma base y se definirán más adelante.
+El cierre del planteo
+Hacia el final, Esteban explicó que venía priorizando rehacer el modelo de datos (parametría, proyectos, consultores,
+viáticos, visitas) y acoplar el histórico. El equipo reconoció ese trabajo, pero pidió pulir primero este núcleo, que es el
+cambio de fondo: no preocuparse por encajar datos desde 2018, tener bien cargados los proyectos en curso desde
+enero, y llegar a una versión que puedan revisar primero en la oficina y después con uno o dos consultores de
+confianza, que son quienes van a usar el sistema todo el día.
+Sistema de gestión de la consultora · Resumen de reunión Pág. 3 / 11
+=====
+03 El cambio de fondo: de la visita al proyecto
+La pantalla del proyecto concentra el resumen (últimas gestiones y próximas visitas), el plan estratégico completo "de
+punta a punta", las gestiones, las visitas, el equipo, las normas, la rentabilidad, horarios y viáticos. Las gestiones
+pueden asignarse al proyecto en general o a un ítem puntual, y a un analista, a administración, al cliente u otra área.
+Estructura propuesta de la ficha del proyecto
+Encabezado
+Cliente, n° y descripción,
+normas, tipo de servicio,
+fecha inicio / fin, días
+contratados.
+Resumen
+Últimas gestiones,
+próximas visitas, horas
+usadas vs. contratadas.
+Plan estratégico
+Ítems de la norma con
+fechas, estado, % de
+avance y gestiones.
+Gestiones
+Todas las acciones del
+proyecto con su historial y
+estado.
+Visitas
+Registro por fecha: horario,
+horas, temas trabajados,
+próximos temas.
+Agenda del proyecto
+Calendario semanal / diario
+con feriados.
+Equipo
+Contacto del cliente,
+analista y consultores, con
+horas consumidas por cada
+uno.
+Normas · Rentabilidad ·
+Horarios · Viáticos
+Datos económicos y
+operativos del proyecto.
+Datos de entrada
+Contenido de la ex minuta
+de gestión que no se cargó
+en el alta.
+Consideraciones
+Observaciones con autor y
+fecha, al inicio y durante
+todo el proyecto.
+Riesgos
+Riesgo macro inicial +
+riesgos que identifica el
+consultor.
+Documentación
+Documentos generados (ej.
+informe diagnóstico). Al
+cierre, lecciones
+aprendidas.
+HOY
+Todo nace en la visita
+VISITA
+eje del sistema
+Tareas
+se desprenden de cada visita
+Minuta de gestión + plan en Excel
+información dispersa, fuera del sistema
+➜
+NUEVO MODELO
+Todo vive a nivel PROYECTO
+PROYECTO
+eje del sistema
+Plan estratégico
+ítems de la norma
+→ gestiones
+Visitas
+registro aparte
+(agenda/disponib.)
+Datos de entrada · Consideraciones · Riesgos
+reemplazan a la minuta de gestión (sin perder contenido)
+Sistema de gestión de la consultora · Resumen de reunión Pág. 4 / 11
+=====
+04 Flujo del proceso — Fase de inicio
+Datos de entrada: parte de la información de la minuta de gestión se carga en el alta del proyecto; el resto va en
+"Datos de entrada". Es indistinto dónde se cargue, lo importante es que toda esa información esté: cada dato
+de la minuta se agregó en su momento por un problema real ocurrido. Tarea: tomar el formulario de la minuta y
+verificar que cada dato tenga su campo.
+Comercial / Admin
+1. Alta de cliente y proyecto
+Normas, tipo de servicio (implementación / mantenimiento / otro),
+días y horas contratadas, valores. Asigna el analista.
+Sistema
+2. Alerta automática al analista
+Mail + aviso en su dashboard de inicio. Se crea una gestión tipificada
+con vencimiento: fecha límite para la reunión de lanzamiento.
+Analista
+3. Asigna consultor(es) y carga Datos de entrada
+Todo el contenido de la ex minuta de gestión: riesgos iniciales,
+acciones, consideraciones generales (logística, alertas, etc.).
+Analista + Consultor
+4. Reunión de lanzamiento
+Se explica el proyecto al consultor: días/mes, auditoría interna,
+acompañamientos, puntos de atención ('ojo con esto').
+¿Datos de entrada, consideraciones
+y gestión de lanzamiento
+completos?
+NO
+El proyecto
+NO puede iniciar
+SÍ
+Sistema
+5. Genera el plan estratégico base
+Según norma y servicio (parametría cargada por la consultora).
+Implementación desde cero: trae todos los requisitos de la norma.
+Consultor
+6. Arma su plan de trabajo
+Define orden de trabajo, fecha inicio / fin por ítem y carga las
+gestiones. El proyecto queda activo → pasa a la fase de ejecución.
+Sistema de gestión de la consultora · Resumen de reunión Pág. 5 / 11
+=====
+05 Flujo del proceso — Ejecución y cierre
+Al entrar, el consultor ve en su inicio las tareas pendientes y solo los clientes y proyectos que tiene asignados. Al abrir
+un proyecto ve el plan de trabajo, las tareas pendientes de la visita anterior con sus responsables y lo agendado para
+el día. La idea es que trabaje directamente en el sistema, en el cliente, sin minutas aparte: el sistema debe ser una
+herramienta de gestión de uso efectivo.
+Cierre del proyecto
+Documentación
+Queda guardada a nivel proyecto
+(activo o cerrado).
+Lecciones aprendidas
+Se pueden llevar a nivel cliente como
+referencia para futuros proyectos y
+visitas.
+Plan de referencia
+Un plan estratégico exitoso puede
+marcarse como referencia para armar
+uno nuevo.
+PROYECTO
+VIVO
+1. Entra al sistema
+Ve solo sus clientes y
+proyectos. Pendientes de
+la visita anterior.
+2. Trabaja en el cliente
+Según plan de trabajo
+y lo agendado para
+ese día.
+3. Registra la visita
+Fecha, horario, horas,
+temas trabajados, próximos
+temas (consultor y cliente).
+4. Actualiza el plan
+Gestiones, estado, % de
+avance, documentos
+generados.
+5. Seguimiento quincenal
+Consideraciones, riesgos,
+alertas y fechas
+modificadas.
+Alertas automáticas
+Cambio de fecha
+El consultor modifica una
+fecha del plan → aviso
+inmediato al analista
+del proyecto.
+Gestión vencida
+Vence la fecha sin
+cumplirse → estado
+'vencida' y contador
+de días de atraso.
+Pendientes del cliente
+Ej.: aprobar la política.
+Aparecen en el dashboard
+del cliente.
+Sistema de gestión de la consultora · Resumen de reunión Pág. 6 / 11
+=====
+06 Plan estratégico
+Cómo se calcula el % de avance (ejemplo ilustrativo)
+El avance se ve global del proyecto y por requisito. Es dinámico: si el consultor detecta que falta una acción y la
+agrega, el porcentaje del ítem baja. Esto obliga al consultor a pensar el plan. Fechas de inicio y fin de cada ítem las
+define el consultor.
+Variantes de plan según el servicio
+A · Norma desde cero
+Implementación: el sistema
+trae todos los requisitos de
+la norma
+automáticamente.
+B · Mantenimiento
+Sigue vinculado a los
+requisitos de la norma.
+Contenido a definir.
+C · Plan en blanco
+El consultor carga sus
+propios ítems y acciones.
+D · Sin plan
+Solo gestiones con fecha; el
+plan propio se adjunta en
+Documentos (servicios no
+normativos).
+Planes base por servicio, por norma y por sistema integrado: los define y carga la consultora (parametría). Para integrados se prevé una
+"norma integrada" que relacione las normas. En el alta se distingue implementación / mantenimiento, y con eso el sistema sabe qué plan
+aplica. Pendiente: lógica de recomendación del orden de implementación (o solo como guía).
+Proyecto
+cliente · normas
+tipo de servicio
+Plan estratégico
+por norma / servicio
+con versión
+Ítem / requisito
+ej. 4.1 Contexto
+inicio · fin · estado · %
+Sub-ítem
+ej. Política: escribir,
+difundir, comprender
+Gestiones
+tipo · responsable
+resultado · fechas
+Historial de la gestión
+ida y vuelta, adjuntos,
+gestiones que dispara
+El sub-ítem es opcional: no hace falta cargar
+acciones en cada subtítulo (flexibilidad).
+Ítem 4.1 (10 gestiones)
+50% 5 cumplidas de 10
+Mismo ítem, más adelante
+90% 9 cumplidas de 10
+Se agregan 3 gestiones
+69% 9 de 13 → el % baja
+Sistema de gestión de la consultora · Resumen de reunión Pág. 7 / 11
+=====
+07 Gestiones (acciones)
+Regla Detalle
+Quién las carga El consultor. El analista las ve (se evaluó un flujo de aprobación por estados; se
+consideró valioso pero difícil en la práctica, eventualmente solo para puntos clave).
+A qué se asocian A un ítem / sub-ítem del plan, o al proyecto en general.
+A quién se asignan Analista, administración, cliente u otra área.
+Tipos Lista predefinida y parametrizable (no texto libre). Si hace falta, se pide agregar un tipo
+nuevo.
+Historial Cada gestión guarda su ida y vuelta (consultor ↔ analista ↔ cliente), documentos
+adjuntos y gestiones que dispara.
+Pendientes del cliente Se cargan como gestiones fuera del plan (ej. "aprobar la política") y aparecen en el
+dashboard del cliente.
+Vencimiento Con fecha cargada y no cumplida → vencida. Cambio de fecha por el consultor → alerta
+al analista en el momento.
+Tipo
+Motivo
+Submotivo
+Resultado
+la clave
+¿Requiere
+próxima acción?
+SÍ
+Fecha de próxima acción
+(vencimiento)
+Si no se cumple → VENCIDA
+el sistema cuenta días de atraso
+Estados propuestos (nomenclatura a definir):
+Pendiente
+En proceso
+En espera
+Cumplida
+Cancelada
+Vencida
+Sistema de gestión de la consultora · Resumen de reunión Pág. 8 / 11
+=====
+08 Visitas, agenda, consideraciones y riesgos
+Visitas y agenda
+Asignación de visitas
+Se mantiene separada del plan, por disponibilidad y agenda
+del consultor, norma y calificación. Pueden estar precargadas
+desde el proyecto y el consultor podría modificarlas (a
+revisar).
+Registro de la visita (consultor)
+Fecha, horario (ej. 9 a 17 h), horas, temas trabajados (solo
+mención), próximos temas del consultor y próximas
+acciones del cliente. El detalle queda en el plan y sus
+gestiones.
+Control de horas
+Horas usadas vs. contratadas (ej. "se usaron 80 de 120 h") y
+horas por consultor.
+Agenda general
+Calendario semanal / diario con feriados. Idealmente por
+hora (tipo Outlook) en lugar de por día, para ver franjas
+reales.
+Se descartó vincular cada visita con cada gestión: se consideró complejo y difícil de cumplir. La visita se registra
+aparte, con su resumen de temas, y el cliente puede ver las visitas realizadas.
+Consideraciones vs. riesgos
+Consideraciones Riesgos
+Qué son Observaciones y puntos de atención ("ojo con
+esto, revisá aquello").
+Riesgo macro inicial (de los datos de entrada) +
+riesgos que identifica el consultor durante el
+proyecto.
+Cuándo Al inicio y durante toda la vida del proyecto
+(seguimiento cada 15 días).
+En cualquier momento, en una solapa propia.
+Quién Principalmente el analista / dirección; se registra
+quién la cargó y la fecha. Si se asigna al consultor,
+recibe aviso.
+El consultor (ej. "no se aprueban documentos por
+falta de personal en mantenimiento").
+Visibilidad Algunas internas, otras para el consultor y otras
+para el cliente.
+Visibles para el cliente.
+Sistema de gestión de la consultora · Resumen de reunión Pág. 9 / 11
+=====
+09 Perfiles de usuario
+Perfil Qué hace / qué ve
+Comercial / Admin Da de alta cliente y proyecto (normas, días, valores, tipo de servicio) y asigna el analista.
+Analista Recibe el proyecto, asigna consultor(es), completa datos de entrada, organiza el lanzamiento,
+carga consideraciones y recibe alertas (cambios de fecha, vencimientos).
+Consultor Ve solo sus clientes y proyectos. Arma y actualiza el plan, carga gestiones, fechas, % de avance,
+registra visitas, riesgos y documentos.
+Cliente Dashboard con sus acciones pendientes, riesgos identificados, visitas realizadas y próximas.
+Puede exportar el plan estratégico y el estado para reportar a su gerencia.
+Dirección / Gerencia Seguimiento quincenal, consideraciones, visión global. Revisar reglas (ej. qué puede crear cada
+perfil desde la ficha del cliente).
+Permisos y autorizaciones finas se trabajan después, con el sistema terminado. Hoy la prioridad es la operatoria.
+Otros servicios
+Auditoría y capacitación: misma base, sin plan estratégico. Formato a definir.
+Servicios no normativos (ej. un plan de riesgos armado por una consultora): usar la variante C o D del plan.
+• 
+• 
+Sistema de gestión de la consultora · Resumen de reunión Pág. 10 / 11
+=====
+10 Temas abiertos y próximos pasos
+# Acción Responsable
+1 Mapear y mostrar el flujo operativo completo (alta → lanzamiento → plan → ejecución
+→ cierre) en el sistema, al 70–80%, antes de avanzar con gráficos y permisos.
+Esteban
+2 Sesión dedicada para repasar el proceso paso a paso (usar la hoja existente con los
+pasos por tipo de servicio: 3 servicios, 16 pasos).
+Juan + Esteban
+3 Revisar el formulario de la minuta de gestión y asegurar un campo para cada dato (alta o
+datos de entrada).
+Esteban + consultora
+4 Definir tipificación de gestiones (tipo / motivo / submotivo / resultado) y nomenclatura
+de estados.
+Consultora
+5 Definir y cargar los planes base por servicio, norma e integrado; definir el plan de
+mantenimiento.
+Consultora
+6 Definir formato de auditoría, capacitación y servicios sin plan. A definir
+7 Armar la pantalla del perfil consultor y la del cliente. Esteban
+8 Agenda por hora en lugar de por día. Esteban (a evaluar)
+9 Validar con el equipo de oficina y luego con 1–2 consultores de confianza antes del
+lanzamiento.
+Todos
+10 Continuar adaptando el modelo de datos (parametría, proyectos, consultores, viáticos,
+visitas) y migrar histórico desde el año anterior; proyectos en curso cargados desde
+enero.
+Esteban
+Punto crítico: "Si esto no se hace bien de entrada, el resto no sirve". El resto (indicadores, gráficos, permisos) se
+ajusta después, pero la operatoria de consultoría tiene que estar resuelta primero.
+Sistema de gestión de la consultora · Resumen de reunión Pág. 11 / 11

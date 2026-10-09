@@ -1,0 +1,147 @@
+USE [MuhlePROD]
+GO
+/****** Object:  StoredProcedure [dbo].[M_CONFIG_ADD_GROUP] ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+ALTER   PROCEDURE [dbo].[M_CONFIG_ADD_GROUP]
+(@IPKEYJOB	AS VARCHAR(100),
+ @IUSERID	AS VARCHAR(100),
+ @ORETCODE	AS INT OUTPUT)
+AS
+
+BEGIN
+
+	DECLARE @ID_GROUP_SEL VARCHAR(50),
+			@NEW_ID		VARCHAR(50),
+			@NEW_NAME	VARCHAR(100),
+			@VEXISTE	INT,
+			@VID_LOG	VARCHAR(50),
+			@VDETALLE_LOG VARCHAR(500)
+
+	SELECT	@ID_GROUP_SEL = ISNULL(ID_GROUP_SEL,''),
+			@NEW_ID= ISNULL(NEW_ID,''),
+			@NEW_NAME=ISNULL(NEW_NAME,'')
+	FROM	M_CONFIG
+	WHERE	PAR_KEY = @IPKEYJOB;
+
+	SET @ORETCODE = 0
+
+	--ALTA
+	IF (@ID_GROUP_SEL = '') BEGIN
+
+		IF (@NEW_ID = '') BEGIN
+			SET @ORETCODE = 1
+			UPDATE	M_CONFIG
+			SET		DESC_ERROR = 'Debe Completar el campo Id'
+			WHERE	PAR_KEY = @IPKEYJOB;
+			RETURN
+		END ELSE BEGIN
+
+			SELECT	@VEXISTE = COUNT(1)
+			FROM	Groups
+			WHERE	Id = @NEW_ID
+
+			IF (@VEXISTE <> 0) BEGIN
+				SET @ORETCODE = 1
+				UPDATE	M_CONFIG
+				SET		DESC_ERROR = 'El Id ingresado ya existe'
+				WHERE	PAR_KEY = @IPKEYJOB;
+				RETURN
+			END
+		END
+
+		IF (@NEW_NAME = '') BEGIN
+			SET @ORETCODE = 1
+			UPDATE	M_CONFIG
+			SET		DESC_ERROR = 'Debe Completar el campo Perfil'
+			WHERE	PAR_KEY = @IPKEYJOB;
+			RETURN
+		END ELSE BEGIN
+
+			SELECT	@VEXISTE = COUNT(1)
+			FROM	Groups
+			WHERE	Name = @NEW_NAME
+
+			IF (@VEXISTE <> 0) BEGIN
+				SET @ORETCODE = 1
+				UPDATE	M_CONFIG
+				SET		DESC_ERROR = 'El Perfil ingresado ya existe'
+				WHERE	PAR_KEY = @IPKEYJOB;
+				RETURN
+			END
+		END
+
+		/* ====== Insert ====== */
+		BEGIN TRANSACTION
+
+			insert into Groups values (UPPER(@NEW_ID), @NEW_NAME, NEWID(), GETDATE(),'')
+
+		COMMIT TRANSACTION
+
+		SET @VID_LOG = UPPER(@NEW_ID);
+		SET @VDETALLE_LOG = 'Alta de perfil: ' + @NEW_NAME;
+
+		EXEC dbo.VCT_LOG_AUDITORIA
+		     @MODULO            = 'PERFILES',
+		     @ACCION            = 'ALTA',
+		     @USER_ID           = @IUSERID,
+		     @REGISTRO_AFECTADO = @VID_LOG,
+		     @DETALLE           = @VDETALLE_LOG;
+
+		RETURN;
+
+	--MODIFICA--
+	END ELSE BEGIN
+
+		DECLARE @VNAME_PREV VARCHAR(100)
+
+		SELECT	@VNAME_PREV = ISNULL(NAME,'')
+		FROM	Groups
+		WHERE	ID = @ID_GROUP_SEL
+
+		IF (@NEW_NAME = '') BEGIN
+			SET @ORETCODE = 1
+			UPDATE	M_CONFIG
+			SET		DESC_ERROR = 'Debe Completar el campo Perfil'
+			WHERE	PAR_KEY = @IPKEYJOB;
+			RETURN
+		END ELSE BEGIN
+
+			SELECT	@VEXISTE = COUNT(1)
+			FROM	Groups
+			WHERE	Name = @NEW_NAME
+			AND		Id <> @ID_GROUP_SEL
+
+			IF (@VEXISTE <> 0) BEGIN
+				SET @ORETCODE = 1
+				UPDATE	M_CONFIG
+				SET		DESC_ERROR = 'El Perfil ingresado ya existe'
+				WHERE	PAR_KEY = @IPKEYJOB;
+				RETURN
+			END
+		END
+
+		/* ====== Insert ====== */
+		BEGIN TRANSACTION
+
+			UPDATE Groups SET Name = @NEW_NAME WHERE Id = @ID_GROUP_SEL
+
+		COMMIT TRANSACTION
+
+		SET @VDETALLE_LOG = 'Edición de perfil: ' + @VNAME_PREV + ' -> ' + @NEW_NAME;
+
+		EXEC dbo.VCT_LOG_AUDITORIA
+		     @MODULO            = 'PERFILES',
+		     @ACCION            = 'MODIFICACION',
+		     @USER_ID           = @IUSERID,
+		     @REGISTRO_AFECTADO = @ID_GROUP_SEL,
+		     @DETALLE           = @VDETALLE_LOG;
+
+		RETURN;
+
+	END
+END

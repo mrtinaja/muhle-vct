@@ -1,0 +1,23 @@
+/* FIX_VCT_GET_SIDEBAR_V821: la V8.2 cortaba la sidebar a 8000 caracteres
+   (suma de literales VARCHAR). Se fuerza VARCHAR(MAX) desde el primer literal. */
+USE [MuhlePROD];
+GO
+SET NOCOUNT ON;
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+DECLARE @D NVARCHAR(MAX) = OBJECT_DEFINITION(OBJECT_ID('dbo.VCT_GET_SIDEBAR'));
+DECLARE @MK NVARCHAR(100) = N'''<style>''+';
+
+IF (DATALENGTH(@D) - DATALENGTH(REPLACE(@D, @MK, N''))) / DATALENGTH(@MK) <> 1
+BEGIN
+    RAISERROR('No se encontro el inicio del estilo en VCT_GET_SIDEBAR. No se aplico nada.',16,1);
+    RETURN;
+END;
+
+SET @D = REPLACE(@D, @MK, N'CONVERT(VARCHAR(MAX),''<style>'')+');
+IF CHARINDEX(N'ALTER PROCEDURE', @D) = 0 AND CHARINDEX(N'CREATE PROCEDURE', @D) > 0
+    SET @D = STUFF(@D, CHARINDEX(N'CREATE PROCEDURE', @D), 6, N'ALTER');
+EXEC sp_executesql @D;
+PRINT 'OK: VCT_GET_SIDEBAR V8.2 sin corte (VARCHAR(MAX)).';
+GO

@@ -1,0 +1,309 @@
+<title>Modelo de Permisos Vocaturo</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#f4f6f8; --bg-panel:#ffffff; --bg-code:#eef1f4; --bg-code-line:#e3e8ed;
+    --ink:#161b22; --ink-soft:#4b5563; --ink-faint:#8792a2; --line:#dde3ea;
+    --accent:#66062d; --accent-soft:#f2e3e9; --accent-ink:#66062d;
+    --good:#146c43; --good-bg:#e3f3ea;
+    --warn:#8a5a00; --warn-bg:#faf0da;
+    --bad:#a4243b; --bad-bg:#fbe6e9;
+    --todo:#5b5f97; --todo-bg:#eaeafb;
+    --shadow:0 1px 2px rgba(22,27,34,.04),0 8px 24px rgba(22,27,34,.05);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12151b; --bg-panel:#191d24; --bg-code:#0f1216; --bg-code-line:#1c2129;
+      --ink:#e8ebf0; --ink-soft:#aab2bf; --ink-faint:#6b7280; --line:#2a3038;
+      --accent:#e0a6bb; --accent-soft:#2a1920; --accent-ink:#eec3d3;
+      --good:#7fd4a6; --good-bg:#123322;
+      --warn:#e8bd6a; --warn-bg:#332608;
+      --bad:#f0919f; --bad-bg:#3a1720;
+      --todo:#b3b6ef; --todo-bg:#232152;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#12151b; --bg-panel:#191d24; --bg-code:#0f1216; --bg-code-line:#1c2129;
+    --ink:#e8ebf0; --ink-soft:#aab2bf; --ink-faint:#6b7280; --line:#2a3038;
+    --accent:#e0a6bb; --accent-soft:#2a1920; --accent-ink:#eec3d3;
+    --good:#7fd4a6; --good-bg:#123322;
+    --warn:#e8bd6a; --warn-bg:#332608;
+    --bad:#f0919f; --bad-bg:#3a1720;
+    --todo:#b3b6ef; --todo-bg:#232152;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+  }
+  *{ box-sizing:border-box; }
+  body{ background:var(--bg); color:var(--ink); font-family:"IBM Plex Sans",-apple-system,sans-serif; font-size:15.5px; line-height:1.65; margin:0; }
+  h1,h2,h3{ font-family:"Zilla Slab",Georgia,serif; color:var(--ink); text-wrap:balance; line-height:1.2; }
+  code,.mono{ font-family:"IBM Plex Mono",ui-monospace,monospace; }
+  a{ color:var(--accent-ink); }
+
+  .layout{ max-width:1180px; margin:0 auto; display:grid; grid-template-columns:230px minmax(0,1fr); gap:48px; padding:40px 32px 100px; }
+  @media (max-width:860px){ .layout{ grid-template-columns:1fr; } nav.toc{ position:static !important; order:2; } }
+
+  header.hero{ max-width:1180px; margin:0 auto; padding:36px 32px 0; }
+  .eyebrow{ display:inline-flex; align-items:center; gap:8px; font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent-ink); background:var(--accent-soft); padding:5px 10px; border-radius:5px; }
+  h1.title{ font-size:clamp(28px,4vw,40px); margin:16px 0 8px; font-weight:700; }
+  p.dek{ color:var(--ink-soft); font-size:17px; max-width:66ch; margin:0 0 4px; }
+  .thesis{ border-left:3px solid var(--accent); background:var(--accent-soft); border-radius:0 8px 8px 0; padding:14px 18px; margin-top:18px; max-width:70ch; font-size:14.5px; }
+  .thesis strong{ color:var(--accent-ink); }
+
+  nav.toc{ align-self:start; position:sticky; top:32px; font-size:13.5px; }
+  nav.toc .toc-title{ font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:10px; font-weight:600; }
+  nav.toc ol{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:2px; }
+  nav.toc li a{ display:block; text-decoration:none; color:var(--ink-soft); padding:5px 10px; border-radius:6px; }
+  nav.toc li a:hover{ color:var(--ink); background:var(--bg-panel); }
+
+  main{ min-width:0; }
+  section{ margin-bottom:52px; scroll-margin-top:24px; }
+  section > .section-head{ display:flex; align-items:baseline; gap:12px; margin-bottom:6px; }
+  .section-num{ font-family:"IBM Plex Mono",monospace; color:var(--accent-ink); font-size:13px; }
+  h2{ font-size:23px; margin:0; }
+  section > p.section-dek{ color:var(--ink-soft); margin:4px 0 22px; max-width:70ch; }
+  h3{ font-size:16.5px; margin:28px 0 10px; }
+  p{ margin:0 0 14px; max-width:74ch; }
+
+  .panel{ background:var(--bg-panel); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow); padding:20px 24px; margin:16px 0; }
+
+  code.inline{ background:var(--bg-code); border:1px solid var(--bg-code-line); padding:1px 6px; border-radius:4px; font-size:.9em; }
+  pre{ background:var(--bg-code); border:1px solid var(--bg-code-line); border-radius:10px; padding:16px 18px; overflow-x:auto; font-size:12.8px; line-height:1.6; margin:14px 0; }
+  pre code{ font-family:"IBM Plex Mono",monospace; color:var(--ink); }
+  .kw{ color:var(--accent-ink); }
+  .cm{ color:var(--ink-faint); font-style:italic; }
+
+  .table-wrap{ overflow-x:auto; margin:14px 0; }
+  table{ border-collapse:collapse; width:100%; font-size:13.3px; }
+  th{ text-align:left; font-weight:600; color:var(--ink-soft); font-size:11px; letter-spacing:.04em; text-transform:uppercase; padding:8px 11px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  td{ padding:9px 11px; border-bottom:1px solid var(--line); vertical-align:top; }
+  tr:last-child td{ border-bottom:none; }
+  table td code{ font-size:12px; }
+
+  .badge{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:3px 9px; border-radius:20px; white-space:nowrap; }
+  .badge.good{ background:var(--good-bg); color:var(--good); }
+  .badge.warn{ background:var(--warn-bg); color:var(--warn); }
+  .badge.bad{ background:var(--bad-bg); color:var(--bad); }
+  .badge.todo{ background:var(--todo-bg); color:var(--todo); }
+  .badge::before{ content:""; width:6px; height:6px; border-radius:50%; background:currentColor; }
+
+  .layers{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:20px 0; }
+  @media (max-width:760px){ .layers{ grid-template-columns:1fr; } }
+  .layer{ border-radius:12px; padding:16px 18px; border:1px solid var(--line); background:var(--bg-panel); }
+  .layer .tag{ font-family:"IBM Plex Mono",monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; }
+  .layer h4{ margin:6px 0 8px; font-family:"Zilla Slab",serif; font-size:16px; }
+  .layer .q{ font-size:12.5px; color:var(--ink-soft); font-style:italic; margin-bottom:10px; }
+  .layer ul{ margin:0; padding-left:18px; font-size:12.8px; color:var(--ink-soft); }
+  .layer.auth{ border-top:3px solid var(--accent-ink); }
+  .layer.nav{ border-top:3px solid #4a7fb5; }
+  .layer.ui{ border-top:3px solid #b58a4a; }
+
+  .callout{ border-left:3px solid var(--accent); background:var(--accent-soft); border-radius:0 8px 8px 0; padding:12px 16px; font-size:13.5px; margin:16px 0; }
+  .callout strong{ color:var(--accent-ink); }
+  .flow-steps{ counter-reset:step; list-style:none; margin:14px 0; padding:0; }
+  .flow-steps li{ counter-increment:step; position:relative; padding:6px 0 6px 34px; font-size:13.8px; }
+  .flow-steps li::before{ content:counter(step); position:absolute; left:0; top:4px; width:22px; height:22px; border-radius:50%; background:var(--accent); color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; font-family:"IBM Plex Mono",monospace; }
+
+  .mermaid{ background:var(--bg-panel); border:1px solid var(--line); border-radius:12px; padding:18px; margin:18px 0; }
+
+  footer{ max-width:1180px; margin:0 auto; padding:0 32px 60px; color:var(--ink-faint); font-size:12.5px; border-top:1px solid var(--line); padding-top:20px; }
+</style>
+
+<header class="hero">
+  <span class="eyebrow">Vocaturo / Mühle · Arquitectura</span>
+  <h1 class="title">Modelo de Permisos: análisis y diseño</h1>
+  <p class="dek">Separar autorización, navegación y representación de UI en tres contratos independientes — sin tablas nuevas, sin permisos por usuario, sin una segunda matriz de seguridad escondida en la capa de presentación.</p>
+  <div class="thesis"><strong>Principio que no se negocia:</strong> <code class="inline">GroupsActions + Actions</code> es la única fuente de verdad de autorización. <code class="inline">PrmActions</code> describe cómo se ve una acción ya autorizada — nunca decide si está autorizada.</div>
+</header>
+
+<div class="layout">
+  <nav class="toc">
+    <div class="toc-title">Contenido</div>
+    <ol>
+      <li><a href="#diagrama">1. Diagrama lógico</a></li>
+      <li><a href="#responsabilidad">2. Responsabilidad de cada tabla</a></li>
+      <li><a href="#integridad">3. Reglas de integridad</a></li>
+      <li><a href="#riesgos">4. Riesgos actuales</a></li>
+      <li><a href="#diseno">5. Diseño recomendado</a></li>
+      <li><a href="#flujo-backend">6. Flujo de autorización (backend)</a></li>
+      <li><a href="#flujo-pantalla">7. Flujo de construcción de pantalla</a></li>
+      <li><a href="#sin-abm">8. Tablas sin ABM</a></li>
+      <li><a href="#auditoria">9. Auditoría y versionado</a></li>
+      <li><a href="#decisiones">10. Decisiones a cerrar</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <section id="diagrama">
+      <div class="section-head"><span class="section-num">01</span><h2>Diagrama lógico</h2></div>
+      <p class="section-dek">Tres contratos, tres preguntas distintas. Ninguno reemplaza a otro.</p>
+
+      <div class="layers">
+        <div class="layer auth">
+          <span class="tag" style="color:var(--accent-ink)">Autorización</span>
+          <h4>Users → GroupsUserMembers → Groups → GroupsActions → Actions</h4>
+          <p class="q">"¿Puede este usuario ejecutar esta operación?"</p>
+          <ul><li>Única fuente de verdad de seguridad</li><li>Se valida siempre en el backend</li><li>1 usuario = 1 grupo</li></ul>
+        </div>
+        <div class="layer nav">
+          <span class="tag" style="color:#4a7fb5">Navegación</span>
+          <h4>Groups → SidebarGroups → Sidebar</h4>
+          <p class="q">"¿Qué pantallas debería ver este grupo?"</p>
+          <ul><li>Solo visibilidad/descubrimiento</li><li>Nunca se usa para autorizar</li></ul>
+        </div>
+        <div class="layer ui">
+          <span class="tag" style="color:#b58a4a">Representación UI</span>
+          <h4>Actions → PrmActions (+ Sidebar)</h4>
+          <p class="q">"¿Cómo se ve una acción autorizada en esta pantalla?"</p>
+          <ul><li>Botón, ícono, orden, destino</li><li>Depende de Actions, nunca al revés</li></ul>
+        </div>
+      </div>
+
+      <pre class="mermaid">
+erDiagram
+    USERS ||--|| GROUPSUSERMEMBERS : "1 fila por usuario"
+    GROUPSUSERMEMBERS }o--|| GROUPS : pertenece
+    GROUPS ||--o{ GROUPSACTIONS : otorga
+    GROUPSACTIONS }o--|| ACTIONS : autoriza
+    GROUPS ||--o{ SIDEBARGROUPS : ve
+    SIDEBARGROUPS }o--|| SIDEBAR : muestra
+    ACTIONS ||--o| PRMACTIONS : "se representa como"
+    SIDEBAR ||--o{ PRMACTIONS : "aloja botón en"
+      </pre>
+      <p>La relación que faltaba nombrar explícitamente en tu esquema original: <code class="inline">PrmActions.SideBarId → Sidebar.Id</code>. Ya existe como columna en la tabla real — falta que sea una <strong>FK declarada</strong>, no solo una convención. Con eso, el diagrama que propusiste queda completo: no falta ninguna relación adicional, falta <em>formalizar</em> las tres que ya están implícitas.</p>
+    </section>
+
+    <section id="responsabilidad">
+      <div class="section-head"><span class="section-num">02</span><h2>Responsabilidad exacta de cada tabla</h2></div>
+      <div class="table-wrap panel">
+        <table>
+          <tr><th>Tabla</th><th>Responsabilidad</th><th>NO debe hacer</th></tr>
+          <tr><td><code class="inline">Users</code></td><td>Identidad del usuario</td><td>Guardar permisos propios</td></tr>
+          <tr><td><code class="inline">Groups</code></td><td>Perfil funcional (el "rol")</td><td>—</td></tr>
+          <tr><td><code class="inline">GroupsUserMembers</code></td><td>Asignación usuario→grupo, funcionalmente 1:1</td><td>Admitir más de un grupo activo por usuario</td></tr>
+          <tr><td><code class="inline">Actions</code></td><td>Catálogo canónico e inmutable de capacidades del sistema</td><td>Borrarse mientras esté referenciada</td></tr>
+          <tr><td><code class="inline">GroupsActions</code></td><td>Matriz de autorización real (grant table)</td><td>Depender de si la pantalla es visible</td></tr>
+          <tr><td><code class="inline">Sidebar</code></td><td>Catálogo de pantallas/módulos de navegación</td><td>Decidir si algo está permitido</td></tr>
+          <tr><td><code class="inline">SidebarGroups</code></td><td>Qué pantallas ve cada grupo</td><td>Sustituir a GroupsActions como gate de seguridad</td></tr>
+          <tr><td><code class="inline">PrmActions</code></td><td>Metadata de representación: botón, ícono, orden, destino, comportamiento de una Action ya autorizada</td><td>Declarar una Action que no exista en <code class="inline">Actions</code>; decidir autorización</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <section id="integridad">
+      <div class="section-head"><span class="section-num">03</span><h2>Reglas de integridad recomendadas</h2></div>
+      <p class="section-dek">Nada de esto agrega tablas — son constraints sobre lo que ya existe.</p>
+      <pre><code><span class="cm">-- 1 usuario = 1 grupo, forzado en el motor, no solo en el SP de guardado</span>
+<span class="kw">ALTER TABLE</span> GroupsUserMembers
+  <span class="kw">ADD CONSTRAINT</span> PK_GroupsUserMembers <span class="kw">PRIMARY KEY</span> (UserMemberId);
+<span class="kw">ALTER TABLE</span> GroupsUserMembers
+  <span class="kw">ADD CONSTRAINT</span> FK_GUM_Group <span class="kw">FOREIGN KEY</span> (GroupId) <span class="kw">REFERENCES</span> Groups(Id);
+
+<span class="cm">-- Un mismo permiso no se otorga dos veces al mismo grupo
+-- YA EXISTE: PK_GroupsAction_GroupId_ActionId sobre (GroupId, ActionId) -- confirmado 13/9 con sp_help</span>
+<span class="kw">ALTER TABLE</span> GroupsActions
+  <span class="kw">ADD CONSTRAINT</span> FK_GA_Action <span class="kw">FOREIGN KEY</span> (ActionId) <span class="kw">REFERENCES</span> Actions(Id);
+
+<span class="cm">-- PrmActions SIEMPRE describe una Action real, nunca una propia</span>
+<span class="kw">ALTER TABLE</span> PrmActions
+  <span class="kw">ADD CONSTRAINT</span> FK_PRM_Action <span class="kw">FOREIGN KEY</span> (ActionID) <span class="kw">REFERENCES</span> Actions(Id),
+  <span class="kw">ADD CONSTRAINT</span> FK_PRM_Sidebar <span class="kw">FOREIGN KEY</span> (SideBarId) <span class="kw">REFERENCES</span> Sidebar(Id),
+  <span class="kw">ADD CONSTRAINT</span> UQ_PRM_Action <span class="kw">UNIQUE</span> (ActionID); <span class="cm">-- ver decisión #2</span>
+
+<span class="cm">-- Retirar una Action sin poder dejar huérfanos</span>
+<span class="kw">ALTER TABLE</span> Actions <span class="kw">ADD</span> IsActive <span class="kw">BIT NOT NULL DEFAULT</span> 1;</code></pre>
+      <p>Sobre <code class="inline">Actions.Id</code> como clave natural (<code class="inline">CLIENTES.CREATE</code>): es válido mantenerla — es legible, estable y ya es el contrato que consume todo el sistema. Lo único que hay que proteger es que <strong>nunca se reutilice</strong> un código para significar otra cosa una vez publicado.</p>
+    </section>
+
+    <section id="riesgos">
+      <div class="section-head"><span class="section-num">04</span><h2>Riesgos actuales</h2></div>
+      <div class="table-wrap panel">
+        <table>
+          <tr><th>Riesgo</th><th>Por qué importa</th><th>Severidad</th></tr>
+          <tr><td>Sin FKs declaradas en todo el esquema</td><td>Se puede borrar un Group o una Action y dejar filas huérfanas en GroupsActions/PrmActions/SidebarGroups sin que nada avise</td><td><span class="badge bad">alto</span></td></tr>
+          <tr><td>PrmActions sin FK a Actions</td><td>Se puede insertar un botón de UI para un código que no existe como permiso — exactamente el riesgo de "segunda matriz" que querés evitar</td><td><span class="badge bad">alto</span></td></tr>
+          <tr><td>1 usuario = 1 grupo no forzado en BD</td><td>Hoy depende de que el SP de guardado siempre haga DELETE+INSERT; un script manual o una futura API podría insertar una segunda fila sin que nada lo impida</td><td><span class="badge bad">alto</span></td></tr>
+          <tr><td>Nombre real de columna en GroupsActions</td><td>Confirmado con <code class="inline">sp_help</code>: es <code class="inline">ActionId</code> (tipo <code class="inline">Code</code> = UDT de <code class="inline">varchar(100)</code>, no una columna separada). Ya existe además <code class="inline">PK_GroupsAction_GroupId_ActionId</code> sobre (GroupId, ActionId)</td><td><span class="badge good">resuelto</span></td></tr>
+          <tr><td>Sin flag de baja en Actions</td><td>Hoy la única forma de "retirar" un permiso es no asignarlo, o borrar la fila (rompe FKs una vez existan)</td><td><span class="badge warn">medio</span></td></tr>
+          <tr><td>Cambios de catálogo (Actions/PrmActions/CAT_DATA) por INSERT manual en producción</td><td>No reproducible entre ambientes — ya nos pasó hoy mismo con el seed de CAT_DATA de Reportes</td><td><span class="badge warn">medio</span></td></tr>
+          <tr><td>Sin invalidación de caché definida</td><td>Si en algún punto se cachea el resultado de GroupsActions por Group, revocar un permiso no tiene efecto inmediato salvo que se defina qué evento limpia el caché</td><td><span class="badge todo">a definir</span></td></tr>
+          <tr><td>SPs de guardado no re-validan permisos del propio caller</td><td>Hoy la seguridad de escritura depende de que el frontend no muestre el botón — para una futura API independiente de Mühle esto deja de alcanzar</td><td><span class="badge bad">alto</span></td></tr>
+        </table>
+      </div>
+    </section>
+
+    <section id="diseno">
+      <div class="section-head"><span class="section-num">05</span><h2>Diseño recomendado</h2></div>
+      <p>Ninguna tabla nueva. El modelo que trajiste ya es correcto conceptualmente — lo que falta es declarar en el motor lo que hoy es solo convención de código:</p>
+      <ol class="flow-steps">
+        <li><s style="color:var(--ink-faint)">Confirmar el nombre real de columna en GroupsActions</s> — hecho: es <code class="inline">ActionId</code>, y la PK compuesta ya existe en producción.</li>
+        <li>Agregar las FKs que faltan (sección 3): <code class="inline">GroupsUserMembers→Groups</code>, <code class="inline">GroupsActions→Actions</code>, <code class="inline">PrmActions→Actions</code> y <code class="inline">PrmActions→Sidebar</code> — antes, limpiar duplicados si los hubiera.</li>
+        <li>Agregar <code class="inline">Actions.IsActive</code> para poder "apagar" sin borrar.</li>
+        <li>Nada de tabla nueva para representar la relación Action↔PrmActions↔Sidebar: ya existen las tres columnas, solo faltaba la FK.</li>
+      </ol>
+    </section>
+
+    <section id="flujo-backend">
+      <div class="section-head"><span class="section-num">06</span><h2>Flujo de autorización para una llamada backend</h2></div>
+      <ol class="flow-steps">
+        <li>El backend recibe la request con el usuario autenticado y el código de acción solicitado (ej. <code class="inline">CLIENTES.CREATE</code>).</li>
+        <li>Resuelve el grupo: <code class="inline">SELECT GroupId FROM GroupsUserMembers WHERE UserMemberId = @UserId</code> — con la PK de la sección 3, esto devuelve como máximo una fila por construcción.</li>
+        <li>Verifica el permiso: <code class="inline">SELECT 1 FROM GroupsActions WHERE GroupId=@GroupId AND ActionId=@ActionCode</code>.</li>
+        <li>Si no existe → <strong>rechaza</strong>, sin importar qué haya mostrado el frontend.</li>
+        <li>Si existe → ejecuta la operación real.</li>
+      </ol>
+      <p><strong>PrmActions y SidebarGroups no participan en este flujo.</strong> Ni se consultan para decidir si la operación procede.</p>
+    </section>
+
+    <section id="flujo-pantalla">
+      <div class="section-head"><span class="section-num">07</span><h2>Flujo de construcción de una pantalla y sus botones</h2></div>
+      <ol class="flow-steps">
+        <li>Al entrar a la app, se resuelve el <code class="inline">GroupId</code> del usuario (una sola vez).</li>
+        <li>Para armar el menú: <code class="inline">Sidebar ⋈ SidebarGroups WHERE GroupId=@GroupId</code> — solo navegación.</li>
+        <li>Dentro de una pantalla ligada a un <code class="inline">SideBarId</code>, para saber qué botones pintar: <code class="inline">PrmActions WHERE SideBarId=@SideBarId AND EXISTS (GroupsActions WHERE GroupId=@GroupId AND ActionId=PrmActions.ActionID)</code>.</li>
+        <li>El botón se pinta <em>solo</em> si esa intersección existe — pero el ícono, el orden y el destino salen de <code class="inline">PrmActions</code>, nunca la decisión de mostrarlo o no.</li>
+        <li>Al hacer clic, se dispara la operación real, que vuelve a pasar por el flujo de la sección 6 en el backend — el filtrado de UI nunca es la única barrera.</li>
+      </ol>
+    </section>
+
+    <section id="sin-abm">
+      <div class="section-head"><span class="section-num">08</span><h2>Estrategia para tablas sin ABM</h2></div>
+      <p>No hace falta ABM para <code class="inline">Actions</code>/<code class="inline">PrmActions</code>/<code class="inline">Sidebar</code> si el costo de construirlo no se justifica — pero el cambio tiene que dejar de ser un INSERT suelto en producción.</p>
+      <ul>
+        <li>Carpeta versionada en el repo (ej. <code class="inline">/db/seed/</code>), un script por feature, nunca editado in situ en un ambiente.</li>
+        <li>Cada script es <strong>idempotente</strong>: <code class="inline">IF NOT EXISTS (...) INSERT</code> o <code class="inline">MERGE</code>, nunca un <code class="inline">INSERT</code> crudo que falle o duplique en la segunda corrida.</li>
+        <li>Nunca <code class="inline">DELETE</code> físico de una <code class="inline">Action</code> en uso — solo <code class="inline">IsActive = 0</code>.</li>
+        <li>El script se commitea en el mismo PR que la funcionalidad que lo necesita — el historial de Git es el historial del catálogo.</li>
+        <li>Mismo criterio para <code class="inline">CAT_DATA</code> — el seed de Reportes que corrimos hoy a mano debería vivir como script versionado, no solo en esta conversación.</li>
+      </ul>
+    </section>
+
+    <section id="auditoria">
+      <div class="section-head"><span class="section-num">09</span><h2>Auditoría y versionado</h2></div>
+      <p>Dos historiales distintos, con dueños distintos — no conviene fusionarlos:</p>
+      <div class="table-wrap panel">
+        <table>
+          <tr><th>Historial</th><th>Qué registra</th><th>Dónde vive</th></tr>
+          <tr><td>Auditoría de <strong>uso</strong></td><td>Quién hizo qué en producción: altas, ediciones, asociaciones ejecutadas por un admin desde la UI</td><td><code class="inline">M_AUDITORIA_ADMIN</code> + <code class="inline">VCT_LOG_AUDITORIA</code> (ya existe, extenderlo a cualquier ABM nuevo)</td></tr>
+          <tr><td>Auditoría de <strong>configuración/esquema</strong></td><td>Qué cambió en el catálogo de Actions/PrmActions/Sidebar y por qué</td><td>Git — commit + PR de los scripts de la sección 8</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <section id="decisiones">
+      <div class="section-head"><span class="section-num">10</span><h2>Decisiones a cerrar (Martín / Esteban)</h2></div>
+      <ol class="flow-steps">
+        <li>¿Puede una misma <code class="inline">Action</code> tener más de una representación en <code class="inline">PrmActions</code> (aparecer en dos pantallas distintas)? Define si el <code class="inline">UNIQUE</code> es sobre <code class="inline">ActionID</code> solo o sobre <code class="inline">(ActionID, SideBarId)</code>.</li>
+        <li>¿Se agrega ya el <code class="inline">UNIQUE</code>/PK en <code class="inline">GroupsUserMembers.UserMemberId</code>? Requiere primero verificar que no haya usuarios con más de un grupo cargado hoy.</li>
+        <li>Política de retiro de <code class="inline">Actions</code>: ¿siempre <code class="inline">IsActive=0</code>, o se permite borrar cuando no tiene <code class="inline">GroupsActions</code> asociados?</li>
+        <li>¿Quién escribe los scripts de seed cuando se agrega una pantalla nueva — quien programa la feature, o un rol de administración de sistema?</li>
+        <li>¿Vale una tabla liviana de control (<code class="inline">script ejecutado / ambiente / fecha</code>) para trackear los seeds, o alcanza con disciplina manual?</li>
+        <li>¿Se cachea <code class="inline">GroupsActions</code> en el backend? Si sí, qué evento invalida el caché — cambios en <code class="inline">GroupsActions</code>, en <code class="inline">GroupsUserMembers</code>, o ambos.</li>
+        <li>Para la futura API independiente de Mühle: ¿revalida contra la base en cada request, o resuelve un claim/token precomputado? Si es lo segundo, definir TTL y refresh.</li>
+      </ol>
+    </section>
+
+  </main>
+</div>
+
+<footer>Documento de referencia interna — arquitectura de permisos Vocaturo/Mühle.</footer>

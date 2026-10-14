@@ -71,7 +71,7 @@ BEGIN
     ORDER BY ID DESC;
 
     SET @VE_TODO = CASE WHEN @SELF_CONS IS NULL AND @PERFIL IN ('GERENCIA','SQUAD','ADMINISTRACION','PROYECTOS') THEN 1 ELSE 0 END;
-    SET @SUBT = 'Disponibilidad por d' + CHAR(237) + 'a: libre, ocupado, bloqueado y feriados.';
+    SET @SUBT = 'Disponibilidad por d' + CHAR(237) + 'a: disponible, asignado, licencia, ocupado y feriados.';
 
     /* ---------- shell ---------- */
     BEGIN TRY
@@ -119,15 +119,27 @@ BEGIN
         SELECT @CONS_NOMBRE = LTRIM(RTRIM(ISNULL(APELLIDOS,'') + CASE WHEN ISNULL(NOMBRES,'')<>'' THEN ', '+NOMBRES ELSE '' END))
         FROM dbo.VCT_CONSULTORES WHERE ID = @CONS_ID;
 
-    /* ---------- alta/baja de bloqueo (dia NO disponible) ----------
-       Comando por buffer: TEXTO01=fecha(AAAA-MM-DD), TEXTO02=motivo,
-       FLAG01=1 marcar no disponible, FLAG02=1 quitar bloqueo. Solo con EDIT. */
+    /* ---------- alta/edicion/baja de fecha del consultor ----------
+       Comando por buffer:
+         TEXTO01 = fecha (AAAA-MM-DD)
+         TEXTO02 = motivo       (licencia: Vacaciones / Medica)
+         TEXTO03 = tipo         (DISPONIBLE/LICENCIA/OCUPADO/POTENCIAL/ORGANISMO/OBSERVACION)
+         TEXTO04 = descripcion  (obligatoria salvo DISPONIBLE/LICENCIA)
+         TEXTO05 = horas         (DISPONIBLE/POTENCIAL/ORGANISMO; resto = 0)
+         FLAG01 = 1 guardar, FLAG02 = 1 eliminar la fecha. Solo con EDIT.
+       Validaciones en el modal y en servidor; no persiste entradas invalidas. */
     IF @CAN_EDIT = 1 AND @CONS_ID IS NOT NULL
     BEGIN
-        DECLARE @B_FECHA VARCHAR(20)='', @B_MOT VARCHAR(200)='', @B_SET VARCHAR(10)='0', @B_DEL VARCHAR(10)='0', @B_D DATE;
+        DECLARE @B_FECHA VARCHAR(20)='', @B_MOT VARCHAR(200)='', @B_TIPO VARCHAR(20)='',
+                @B_DESC VARCHAR(400)='', @B_HOR VARCHAR(20)='',
+                @B_SET VARCHAR(10)='0', @B_DEL VARCHAR(10)='0',
+                @B_D DATE, @B_DISP BIT, @B_HORN DECIMAL(5,2);
         SELECT TOP 1
             @B_FECHA = LTRIM(RTRIM(ISNULL(CONVERT(VARCHAR(20),  TEXTO01),''))),
             @B_MOT   = LTRIM(RTRIM(ISNULL(CONVERT(VARCHAR(200), TEXTO02),''))),
+            @B_TIPO  = UPPER(LTRIM(RTRIM(ISNULL(CONVERT(VARCHAR(20),  TEXTO03),'')))),
+            @B_DESC  = LTRIM(RTRIM(ISNULL(CONVERT(VARCHAR(400), TEXTO04),''))),
+            @B_HOR   = LTRIM(RTRIM(ISNULL(CONVERT(VARCHAR(20),  TEXTO05),''))),
             @B_SET   = ISNULL(CONVERT(VARCHAR(10), FLAG01),'0'),
             @B_DEL   = ISNULL(CONVERT(VARCHAR(10), FLAG02),'0')
         FROM dbo.VCT_BUFFER WITH(NOLOCK) WHERE PAR_KEY = @IPKEYJOB;
@@ -137,15 +149,54 @@ BEGIN
             SET @B_D = CONVERT(DATE, @B_FECHA, 120);
             IF @B_DEL='1'
                 DELETE FROM dbo.VCT_PRM_AGENDA_CONSULTOR WHERE ID_CONSULTOR=@CONS_ID AND FECHA=@B_D;
-            ELSE IF EXISTS (SELECT 1 FROM dbo.VCT_PRM_AGENDA_CONSULTOR WHERE ID_CONSULTOR=@CONS_ID AND FECHA=@B_D)
-                UPDATE dbo.VCT_PRM_AGENDA_CONSULTOR
-                   SET DISPONIBLE=0, HORAS_CAPACIDAD=0, MOTIVO=NULLIF(@B_MOT,''), FECHA_UPD=GETDATE(), USUARIO_UPD=@U
-                 WHERE ID_CONSULTOR=@CONS_ID AND FECHA=@B_D;
             ELSE
-                INSERT INTO dbo.VCT_PRM_AGENDA_CONSULTOR (ID_CONSULTOR,FECHA,HORAS_CAPACIDAD,DISPONIBLE,MOTIVO,FECHA_ALTA,USUARIO_ALTA)
-                VALUES (@CONS_ID,@B_D,0,0,NULLIF(@B_MOT,''),GETDATE(),@U);
+            BEGIN
+                SET @B_HORN = 0;
+                IF @B_TIPO NOT IN ('DISPONIBLE','LICENCIA','OCUPADO','POTENCIAL','ORGANISMO','OBSERVACION')
+                    SET @MSG = 'Eleg&iacute; un tipo v&aacute;lido.';
+                ELSE IF @B_TIPO NOT IN ('DISPONIBLE','LICENCIA') AND @B_DESC = ''
+                    SET @MSG = 'Complet&aacute; la descripci&oacute;n de la fecha.';
+                ELSE IF @B_TIPO = 'LICENCIA' AND @B_MOT = ''
+                    SET @MSG = 'Eleg&iacute; el motivo de la licencia.';
+                ELSE IF @B_TIPO IN ('DISPONIBLE','POTENCIAL','ORGANISMO')
+                BEGIN
+                    DECLARE @B_HVALID DECIMAL(18,4);
+                    BEGIN TRY
+                        IF @B_HOR = '' OR @B_HOR LIKE '%[^0-9.]%'
+                            SET @MSG = 'Ingres&aacute; horas entre 0,5 y 24, en intervalos de media hora.';
+                        ELSE
+                        BEGIN
+                            SET @B_HVALID = CONVERT(DECIMAL(18,4), @B_HOR);
+                            IF @B_HVALID <= 0 OR @B_HVALID > 24 OR @B_HVALID * 2 <> FLOOR(@B_HVALID * 2)
+                                SET @MSG = 'Ingres&aacute; horas entre 0,5 y 24, en intervalos de media hora.';
+                            ELSE
+                                SET @B_HORN = CONVERT(DECIMAL(5,2), @B_HVALID);
+                        END;
+                    END TRY
+                    BEGIN CATCH
+                        SET @MSG = 'Ingres&aacute; horas entre 0,5 y 24, en intervalos de media hora.';
+                    END CATCH;
+                END;
 
-            UPDATE dbo.VCT_BUFFER SET TEXTO01=NULL, TEXTO02=NULL, FLAG01='0', FLAG02='0' WHERE PAR_KEY=@IPKEYJOB;
+                IF @MSG = ''
+                BEGIN
+                    SET @B_DISP = CASE WHEN @B_TIPO='DISPONIBLE' THEN 1 ELSE 0 END;
+                    IF @B_TIPO <> 'LICENCIA' SET @B_MOT = '';
+                    IF @B_TIPO IN ('DISPONIBLE','LICENCIA') SET @B_DESC = '';
+                    /* Horas cero para LICENCIA, OCUPADO y OBSERVACION. */
+                    IF EXISTS (SELECT 1 FROM dbo.VCT_PRM_AGENDA_CONSULTOR WHERE ID_CONSULTOR=@CONS_ID AND FECHA=@B_D)
+                        UPDATE dbo.VCT_PRM_AGENDA_CONSULTOR
+                           SET TIPO=@B_TIPO, DISPONIBLE=@B_DISP, HORAS_CAPACIDAD=@B_HORN,
+                               MOTIVO=NULLIF(@B_MOT,''), DESCRIPCION=NULLIF(@B_DESC,''),
+                               FECHA_UPD=GETDATE(), USUARIO_UPD=@U
+                         WHERE ID_CONSULTOR=@CONS_ID AND FECHA=@B_D;
+                    ELSE
+                        INSERT INTO dbo.VCT_PRM_AGENDA_CONSULTOR (ID_CONSULTOR,FECHA,TIPO,HORAS_CAPACIDAD,DISPONIBLE,MOTIVO,DESCRIPCION,FECHA_ALTA,USUARIO_ALTA)
+                        VALUES (@CONS_ID,@B_D,@B_TIPO,@B_HORN,@B_DISP,NULLIF(@B_MOT,''),NULLIF(@B_DESC,''),GETDATE(),@U);
+                END;
+            END;
+
+            UPDATE dbo.VCT_BUFFER SET TEXTO01=NULL, TEXTO02=NULL, TEXTO03=NULL, TEXTO04=NULL, TEXTO05=NULL, FLAG01='0', FLAG02='0' WHERE PAR_KEY=@IPKEYJOB;
         END;
     END;
 
@@ -176,16 +227,28 @@ BEGIN
     DECLARE @HASTA DATE = EOMONTH(@HOY, 12);
     DECLARE @DIAS_JSON VARCHAR(MAX) = '[]';
 
+    /* opciones de AÑO generadas en el server (año-1 .. año+2) para que el
+       widget custom de la plataforma las tenga al inicializarse (si las pone el
+       JS despues, el widget queda vacio). */
+    DECLARE @YA INT = YEAR(@HOY), @YEAR_OPTS VARCHAR(400) =
+        '<option value="'+CONVERT(VARCHAR(4),YEAR(@HOY)-1)+'">'+CONVERT(VARCHAR(4),YEAR(@HOY)-1)+'</option>'
+      + '<option value="'+CONVERT(VARCHAR(4),YEAR(@HOY)  )+'">'+CONVERT(VARCHAR(4),YEAR(@HOY)  )+'</option>'
+      + '<option value="'+CONVERT(VARCHAR(4),YEAR(@HOY)+1)+'">'+CONVERT(VARCHAR(4),YEAR(@HOY)+1)+'</option>'
+      + '<option value="'+CONVERT(VARCHAR(4),YEAR(@HOY)+2)+'">'+CONVERT(VARCHAR(4),YEAR(@HOY)+2)+'</option>';
+
     IF @CONS_ID IS NOT NULL
     BEGIN
         SET @DIAS_JSON = '[' + ISNULL(STUFF((
             SELECT ',{"f":"' + CONVERT(VARCHAR(10), R.FECHA, 120)
                  + '","e":"' + R.ESTADO
-                 + '","c":' + CONVERT(VARCHAR(10), CONVERT(DECIMAL(5,1), R.HORAS_CAPACIDAD))
-                 + ',"o":' + CONVERT(VARCHAR(10), CONVERT(DECIMAL(6,1), R.HORAS_OCUPADAS))
-                 + ',"d":' + CONVERT(VARCHAR(10), CONVERT(DECIMAL(6,1), R.HORAS_DISP))
-                 + ',"m":"' + REPLACE(REPLACE(REPLACE(ISNULL(R.MOTIVO,''),'\','/'),'"',''''),CHAR(10),' ') + '"}'
+                 + '","h":' + CONVERT(VARCHAR(10), CONVERT(DECIMAL(6,1), CASE WHEN R.ESTADO IN ('DISPONIBLE','POTENCIAL','ORGANISMO') THEN ISNULL(AG.HORAS_CAPACIDAD,R.HORAS) ELSE R.HORAS END))
+                 + ',"hc":' + CONVERT(VARCHAR(10),CONVERT(DECIMAL(5,2),ISNULL(AG.HORAS_CAPACIDAD,0)))
+                 + ',"t":"'  + ISNULL(R.TIPO,'')
+                 + '","n":"' + REPLACE(REPLACE(REPLACE(ISNULL(R.NOTA,''),'\','/'),'"',''''),CHAR(10),' ')
+                 + '","mo":"'+ REPLACE(REPLACE(REPLACE(ISNULL(R.MOTIVO,''),'\','/'),'"',''''),CHAR(10),' ')
+                 + '","de":"'+ REPLACE(REPLACE(REPLACE(ISNULL(R.DESCRIPCION,''),'\','/'),'"',''''),CHAR(10),' ') + '"}'
             FROM dbo.VCT_FN_AGENDA_CONSULTOR_RANGO(@CONS_ID, @DESDE, @HASTA) R
+            LEFT JOIN dbo.VCT_PRM_AGENDA_CONSULTOR AG ON AG.ID_CONSULTOR=@CONS_ID AND AG.FECHA=R.FECHA
             ORDER BY R.FECHA
             FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), 1, 1, ''), '') + ']';
     END;
@@ -199,8 +262,8 @@ BEGIN
     SET @HTML =
         '<link rel="stylesheet" href="../css/vct-inicio.css?v=5">'
       + '<link rel="stylesheet" href="../css/vct-agenda.css?v=3">'
-      + '<link rel="stylesheet" href="../css/vct-agenda-consultor.css?v=5">'
-      + '<script src="../js/vct-agenda-consultor.js?v=5"></script>'
+      + '<link rel="stylesheet" href="../css/vct-agenda-consultor.css?v=18">'
+      + '<script src="../js/vct-agenda-consultor.js?v=15"></script>'
       + '<div class="vct-page vct-page-main vct-agc-page" data-vct-page'
       + ' data-vct-sidebar-id="' + CONVERT(VARCHAR(20),@SIDEBAR_ID) + '"'
       + ' data-vct-form-id="' + ISNULL(@FORM_ID,'') + '"'
@@ -212,6 +275,10 @@ BEGIN
       + ' data-vct-agc-dias="' + @DIAS_JSON + '">'
 
       + '<section class="vct-card vct-agc-card">'
+      + CASE WHEN @MSG <> '' THEN '<p class="vct-agc-modal-err" role="alert">' + @MSG + '</p>' ELSE '' END
+      /* ===== layout SIEMPRE visible: toolbar + KPIs + leyenda + calendario.
+         Sin consultor elegido el calendario se dibuja en blanco (todo "no
+         cargado") y al elegir uno recarga y se puebla todo. ===== */
       + '<div class="vct-agenda-toolbar vct-agc-toolbar">'
       +   ISNULL(@SELECT_CONS,'')
       +   '<div class="vct-agenda-view-toggle" data-vct-agc-view-toggle>'
@@ -224,39 +291,35 @@ BEGIN
       +     '<h2 class="vct-agenda-title" data-vct-agc-title></h2>'
       +     '<button type="button" class="vct-agenda-nav-btn" data-vct-agc-next aria-label="Siguiente"><span data-vct-icon="chevron-right"></span></button>'
       +   '</div>'
-      +   '<div class="vct-agenda-toolbar-right"><div class="vct-agenda-jump">'
-      +     '<select class="vct-select vct-agenda-select-month" data-vct-agc-month>'
+      +   '<div class="vct-agenda-toolbar-right"><div class="vct-agenda-jump vct-agc-jump">'
+      +     '<select class="vct-select vct-agc-sel-month" data-vct-agc-month aria-label="Mes">'
       +       '<option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>'
       +       '<option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option>'
       +       '<option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>'
       +       '<option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>'
       +     '</select>'
-      +     '<select class="vct-select vct-agenda-select-year" data-vct-agc-year></select>'
+      +     '<select class="vct-select vct-agc-sel-year" data-vct-agc-year aria-label="Año">' + @YEAR_OPTS + '</select>'
       +   '</div></div>'
       + '</div>'
-
-      + '<div class="vct-360-stats-row vct-agc-stats" data-vct-agc-stats></div>'
-
+      + '<div class="vct-360-stats-row vct-agc-stats vct-360-visual-final" data-vct-agc-stats></div>'
       + '<div class="vct-agenda-legend vct-agc-legend">'
-      +   '<span class="vct-agenda-legend-item"><i class="vct-agc-dot vct-agc-dot-libre"></i>Libre</span>'
-      +   '<span class="vct-agenda-legend-item"><i class="vct-agc-dot vct-agc-dot-parcial"></i>Parcial</span>'
+      +   '<span class="vct-agenda-legend-item"><i class="vct-agc-dot vct-agc-dot-nocargado"></i>No cargado</span>'
+      +   '<span class="vct-agenda-legend-item"><i class="vct-agc-dot vct-agc-dot-disponible"></i>Disponible</span>'
+      +   '<span class="vct-agenda-legend-item"><i class="vct-agc-dot vct-agc-dot-asignado"></i>Asignado</span>'
+      +   '<span class="vct-agenda-legend-item"><i class="vct-agc-dot vct-agc-dot-licencia"></i>Licencia</span>'
       +   '<span class="vct-agenda-legend-item"><i class="vct-agc-dot vct-agc-dot-ocupado"></i>Ocupado</span>'
-      +   '<span class="vct-agenda-legend-item"><i class="vct-agc-dot vct-agc-dot-bloqueado"></i>No disponible</span>'
+      +   '<span class="vct-agenda-legend-item"><i class="vct-agc-dot vct-agc-dot-potencial"></i>Potencial</span>'
+      +   '<span class="vct-agenda-legend-item"><i class="vct-agc-dot vct-agc-dot-organismo"></i>Organismo</span>'
+      +   '<span class="vct-agenda-legend-item"><i class="vct-agc-dot vct-agc-dot-observacion"></i>Observaci' + CHAR(243) + 'n</span>'
       +   '<span class="vct-agenda-legend-item"><i class="vct-agc-dot vct-agc-dot-feriado"></i>Feriado</span>'
       + '</div>'
-
-      + CASE WHEN @NEED_PICK = 1
-             THEN '<div class="vct-agc-empty" data-vct-agc-empty>'
-                + '<span class="vct-agc-empty-icon" data-vct-icon="calendar-search"></span>'
-                + '<p>' + CASE WHEN @VE_TODO=1 THEN 'Eleg' + CHAR(237) + ' un consultor para ver su disponibilidad.'
-                               ELSE 'No se encontr' + CHAR(243) + ' tu ficha de consultor activa.' END + '</p></div>'
-             ELSE '<div class="vct-agenda-view-pane vct-agc-pane" data-vct-agc-pane></div>' END
-
+      + '<div class="vct-agenda-view-pane vct-agc-pane" data-vct-agc-pane></div>'
       + '</section>'
       + '</div>';
 
     SET @OUTPARAM1 = ISNULL(@HTML_SHELL,'') + @HTML;
 END
+
 GO
 
 PRINT 'OK: VCT_MAIN_AGENDA_CONSULTOR creado/actualizado.';

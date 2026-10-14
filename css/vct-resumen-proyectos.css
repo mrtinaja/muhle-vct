@@ -1,0 +1,114 @@
+/* Resumen 360 - v1. Solo tablas de proyectos recientes normalizadas por JS. */
+#mainContainer .vct-360-projects-recent[data-vct-recent-wrap] {
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+}
+#mainContainer table.vct-360-table.vct-360-project-table.vct-360-project-table-recent[data-vct-recent-layout] {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: var(--vct-recent-min-width, 760px) !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+    font-size: 12px !important;
+}
+#mainContainer table.vct-360-table.vct-360-project-table.vct-360-project-table-recent[data-vct-recent-layout] th,
+#mainContainer table.vct-360-table.vct-360-project-table.vct-360-project-table-recent[data-vct-recent-layout] td {
+    min-width: 0 !important;
+    max-width: none !important;
+    width: auto !important;
+    box-sizing: border-box !important;
+    padding: 10px 8px !important;
+    vertical-align: middle !important;
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+    text-align: left !important;
+    font-size: 12px !important;
+}
+#mainContainer table.vct-360-table.vct-360-project-table.vct-360-project-table-recent[data-vct-recent-layout] [data-vct-recent-col="servicios"],
+#mainContainer table.vct-360-table.vct-360-project-table.vct-360-project-table-recent[data-vct-recent-layout] [data-vct-recent-col="analista"],
+#mainContainer table.vct-360-table.vct-360-project-table.vct-360-project-table-recent[data-vct-recent-layout] [data-vct-recent-col="consultor"],
+#mainContainer table.vct-360-table.vct-360-project-table.vct-360-project-table-recent[data-vct-recent-layout] [data-vct-recent-col="estado"],
+#mainContainer table.vct-360-table.vct-360-project-table.vct-360-project-table-recent[data-vct-recent-layout] [data-vct-recent-col="acciones"] { text-align: center !important; }
+#mainContainer table.vct-360-table.vct-360-project-table.vct-360-project-table-recent[data-vct-recent-layout] .vct-360-project-name,
+#mainContainer table.vct-360-table.vct-360-project-table.vct-360-project-table-recent[data-vct-recent-layout] .vct-360-project-ref {
+    width: auto !important;
+    max-width: none !important;
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+}
+#mainContainer table.vct-360-table.vct-360-project-table.vct-360-project-table-recent[data-vct-recent-layout] .vct-360-project-ref { font-size: 11px !important; }
+#mainContainer table.vct-360-table.vct-360-project-table.vct-360-project-table-recent[data-vct-recent-layout] .vct-recent-progress {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+#mainContainer table.vct-360-table.vct-360-project-table.vct-360-project-table-recent[data-vct-recent-layout] .vct-360-progress {
+    display: block !important;
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 48px !important;
+    max-width: none !important;
+    height: 7px !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    background: #edf1f5 !important;
+    border-radius: 999px !important;
+}
+#mainContainer table.vct-360-table.vct-360-project-table.vct-360-project-table-recent[data-vct-recent-layout] .vct-360-progress-bar {
+    display: block !important;
+    height: 100% !important;
+    border-radius: inherit !important;
+    background: #66062d !important;
+}
+#mainContainer table.vct-360-table.vct-360-project-table.vct-360-project-table-recent[data-vct-recent-layout] .vct-360-progress-label {
+    display: block !important;
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    white-space: nowrap !important;
+    text-align: right !important;
+}
+@media (max-width: 768px) {
+    #mainContainer .vct-360-projects-recent[data-vct-recent-wrap] { overflow-x: hidden !important; }
+    #mainContainer table.vct-360-table.vct-360-project-table.vct-360-project-table-recent[data-vct-recent-layout],
+    #mainContainer table.vct-360-table.vct-360-project-table.vct-360-project-table-recent[data-vct-recent-layout] tbody {
+        display: block !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+    #mainContainer table.vct-360-table.vct-360-project-table.vct-360-project-table-recent[data-vct-recent-layout] colgroup,
+    #mainContainer table.vct-360-table.vct-360-project-table.vct-360-project-table-recent[data-vct-recent-layout] thead { display: none !important; }
+    #mainContainer table.vct-360-table.vct-360-project-table.vct-360-project-table-recent[data-vct-recent-layout] tbody tr {
+        display: block !important;
+        width: 100% !important;
+        height: auto !important;
+        padding: 12px 0 !important;
+        box-sizing: border-box !important;
+        border-bottom: 1px solid #edf1f5 !important;
+    }
+    #mainContainer table.vct-360-table.vct-360-project-table.vct-360-project-table-recent[data-vct-recent-layout] tbody td {
+        display: grid !important;
+        grid-template-columns: 80px minmax(0, 1fr) !important;
+        grid-column: auto !important;
+        grid-row: auto !important;
+        gap: 8px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        padding: 5px 8px !important;
+        border: 0 !important;
+        text-align: left !important;
+    }
+    #mainContainer table.vct-360-table.vct-360-project-table.vct-360-project-table-recent[data-vct-recent-layout] tbody td::before {
+        display: block !important;
+        content: attr(data-label) !important;
+        color: #64748b !important;
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+    }
+    #mainContainer table.vct-360-table.vct-360-project-table.vct-360-project-table-recent[data-vct-recent-layout] .vct-recent-cell-content { min-width: 0 !important; }
+}

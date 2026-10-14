@@ -1,14 +1,18 @@
-/* vct-agenda-consultor.js - v1
+/* vct-agenda-consultor.js - v15
    ============================================================================
    Agenda del consultor (dbo.VCT_MAIN_AGENDA_CONSULTOR). Reusa la estetica del
    calendario de feriados (clases de vct-agenda.css) pero pinta, por dia, el
-   ESTADO de disponibilidad del consultor que arma VCT_FN_AGENDA_CONSULTOR_RANGO.
+   ESTADO del consultor que arma VCT_FN_AGENDA_CONSULTOR_RANGO:
+
+     NO_CARGADO (blanco)  DISPONIBLE (azul)  ASIGNADO (verde, de las visitas)
+     LICENCIA (rosa)  OCUPADO/personal (gris)  POTENCIAL (naranja)
+     ORGANISMO (teal)  OBSERVACION (coral)  FERIADO_FIJO (rojo)  FERIADO_MOV (violeta)
 
    El SP manda todos los dias de una ventana amplia en data-vct-agc-dias (JSON);
-   aca navegamos los meses sin ir al server. El unico round-trip es cambiar de
-   consultor (solo perfiles VE_TODO): guarda IDSELEC01 y recarga la pantalla.
+   aca navegamos los meses sin ir al server. Round-trips: cambiar de consultor
+   (VE_TODO) y guardar/eliminar una fecha (modal), via newTaskForContactWithParams.
 
-   v1 = solo lectura.
+   v2 = alta/edicion por MODAL con TIPO (campos dinamicos + validaciones).
    ============================================================================ */
 (function (window, document) {
     "use strict";
@@ -19,17 +23,47 @@
     var DIAS_ABREV = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
     var DIAS_LARGO = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
 
+    /* tipos cargables desde el modal (DISPONIBLE, POTENCIAL y ORGANISMO llevan horas) */
+    var TIPOS = [
+        { v:"DISPONIBLE",  label:"Disponible",                need:"horas" },
+        { v:"LICENCIA",    label:"Licencia",                  need:"motivo" },
+        { v:"OCUPADO",     label:"Ocupado / personal",        need:"" },
+        { v:"POTENCIAL",   label:"Potencial",                 need:"desc" },
+        { v:"ORGANISMO",   label:"Organismo de certificación", need:"desc" },
+        { v:"OBSERVACION", label:"Observación",               need:"desc" }
+    ];
+    var MOTIVOS = ["Vacaciones","Médica"];
+
     function pad(n){ return (n<10?"0":"")+n; }
     function dateKey(d){ return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
     function sameDay(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
     function addDays(d,n){ var x=new Date(d); x.setDate(x.getDate()+n); return x; }
-    function wait(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
     function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
     function escAttr(s){ return esc(s).replace(/"/g,"&quot;"); }
-
-    /* estado -> etiqueta y clase */
-    function clsOf(e){ return "vct-agc-" + String(e||"libre").toLowerCase(); }
     function fmtH(n){ n = +n||0; return (Math.round(n*10)/10).toString(); }
+
+    function clsOf(e){
+        e = String(e||"NO_CARGADO").toUpperCase();
+        if (e==="FERIADO_FIJO") return "vct-agc-feriado-fijo";
+        if (e==="FERIADO_MOV")  return "vct-agc-feriado-mov";
+        return "vct-agc-" + e.toLowerCase();
+    }
+    function isFeriado(e){ return /^FERIADO/.test(String(e||"").toUpperCase()); }
+    function tipoLabel(v){ for(var i=0;i<TIPOS.length;i++){ if(TIPOS[i].v===v) return TIPOS[i].label; } return v||""; }
+    function estadoLabel(e){
+        switch(String(e||"").toUpperCase()){
+            case "DISPONIBLE":   return "Disponible";
+            case "ASIGNADO":     return "Asignado";
+            case "LICENCIA":     return "Licencia";
+            case "OCUPADO":      return "Ocupado / personal";
+            case "POTENCIAL":    return "Potencial";
+            case "ORGANISMO":    return "Organismo de certificación";
+            case "OBSERVACION":  return "Observación";
+            case "FERIADO_FIJO": return "Feriado nacional";
+            case "FERIADO_MOV":  return "Feriado movible";
+            default:             return "No cargado";
+        }
+    }
 
     function boot(){
         document.querySelectorAll("[data-vct-agc-root]").forEach(function(root){
@@ -42,7 +76,7 @@
     function init(root){
         var today = new Date(); today.setHours(0,0,0,0);
 
-        /* datos */
+        /* datos: {f,e,h,n,t,mo,de} por fecha */
         var dias = {};
         try {
             var raw = root.getAttribute("data-vct-agc-dias") || "[]";
@@ -59,10 +93,10 @@
         var btnNext  = root.querySelector("[data-vct-agc-next]");
         var viewBtns = root.querySelectorAll("[data-vct-agc-view]");
 
-        /* reload al cambiar de consultor (solo VE_TODO): arranca una tarea nueva
-           con ACTION=AGENDA_CONSULTOR + el consultor elegido. El separador de
-           parametros de start_params es ';' (NO '||'). Es la misma via que usa
-           el menu lateral (newTaskForContactWithParams). */
+        var canEdit = root.getAttribute("data-vct-agc-can-edit")==="1";
+        var consId  = root.getAttribute("data-vct-agc-cons") || "";
+
+        /* reload al cambiar de consultor (solo VE_TODO). Separador de start_params = ';' */
         if (selCons){
             selCons.addEventListener("change", function(){
                 var id = selCons.value || "";
@@ -76,61 +110,72 @@
 
         var state = { cursor: new Date(today), view: "month" };
 
+        /* dia sin registro = NO_CARGADO (blanco), tambien los fines de semana */
         function dayInfo(d){
             var k = dateKey(d);
             var r = dias[k];
             if (r) return r;
-            var wd = d.getDay();
-            if (wd===0 || wd===6) return { f:k, e:"FINDE", c:0, o:0, d:0, m:"" };
-            return { f:k, e:"LIBRE", c:8, o:0, d:8, m:"" };
+            return { f:k, e:"NO_CARGADO", h:0, n:"", t:"", mo:"", de:"" };
         }
 
-        /* ---- selects de navegacion ---- */
-        (function fillYears(){
-            var minY=today.getFullYear()-1, maxY=today.getFullYear()+2;
-            selYear.innerHTML="";
-            for(var y=minY;y<=maxY;y++){
-                var o=document.createElement("option"); o.value=String(y); o.textContent=String(y);
-                selYear.appendChild(o);
-            }
-        })();
-
+        /* ---- selects de navegacion ----
+           Las opciones de AÑO las genera el SP (server-side) para que el widget
+           custom (VCT Select) las tenga al inicializarse. Aca NO se tocan las
+           opciones (si el JS las reescribe, el widget queda desincronizado). */
+        var syncing = false;
         function syncSelects(){
-            selMonth.value=String(state.cursor.getMonth()+1);
-            selYear.value=String(state.cursor.getFullYear());
+            syncing = true;
+            if (selMonth){
+                selMonth.value = String(state.cursor.getMonth()+1);
+                try { selMonth.dispatchEvent(new Event("change", { bubbles:true })); } catch(e){}
+            }
+            if (selYear){
+                selYear.value = String(state.cursor.getFullYear());
+                try { selYear.dispatchEvent(new Event("change", { bubbles:true })); } catch(e){}
+            }
+            syncing = false;
         }
 
         /* ---- stats del mes visible ---- */
         function renderStats(){
             if (!statsEl) return;
             var y=state.cursor.getFullYear(), m=state.cursor.getMonth();
-            var cap=0, ocu=0, disp=0, bloq=0, fer=0;
+            var dispD=0, dispH=0, asigD=0, noDispD=0, ferD=0;
             var dim=new Date(y, m+1, 0).getDate();
             for(var i=1;i<=dim;i++){
-                var r=dayInfo(new Date(y,m,i));
-                cap += +r.c||0; ocu += +r.o||0; disp += +r.d||0;
-                if (r.e==="BLOQUEADO") bloq++;
-                if (r.e==="FERIADO") fer++;
+                var r=dayInfo(new Date(y,m,i)), e=String(r.e).toUpperCase();
+                if (e==="DISPONIBLE"){ dispD++; dispH += +r.h||0; }
+                else if (e==="ASIGNADO"){ asigD++; }
+                else if (e==="LICENCIA" || e==="OCUPADO") { noDispD++; }
+                else if (isFeriado(e)) { ferD++; }
             }
-            function tile(tone,label,val,sub,icon){
-                return '<div class="vct-360-stat" data-vct-tone="'+tone+'"><span>'
-                     + '<span class="vct-360-stat-label">'+label+'</span><b>'+val+'</b><small>'+sub+'</small></span>'
-                     + '<span class="vct-360-stat-icon"><span data-vct-icon="'+icon+'"></span></span></div>';
+            /* mismo componente que la pantalla Proyectos: .vct-soft-kpi
+               (icono en caja de color a la izq, titulo + numero grande + ayuda).
+               Colores Vocaturo: is-blue / is-green / is-orange / is-purple. */
+            function tile(variant,label,val,help,icon){
+                return '<article class="vct-soft-kpi '+variant+'">'
+                     + '<span class="vct-soft-kpi-icon" data-vct-icon="'+icon+'"></span>'
+                     + '<div class="vct-soft-kpi-copy">'
+                     +   '<span class="vct-soft-kpi-label">'+label+'</span>'
+                     +   '<strong class="vct-soft-kpi-value">'+val+'</strong>'
+                     +   '<span class="vct-soft-kpi-help">'+help+'</span>'
+                     + '</div></article>';
             }
             statsEl.innerHTML =
-                  tile("mint","Horas libres", fmtH(disp), "en el mes", "check")
-                + tile("violet","Horas ocupadas", fmtH(ocu), "visitas", "briefcase")
-                + tile("blue","Capacidad", fmtH(cap), "horas hábiles", "clock-3")
-                + tile("amber","No disponible", bloq, "día(s) bloqueado(s)", "ban");
+                  tile("is-blue","Disponible", dispD, fmtH(dispH)+"h en el mes", "check")
+                + tile("is-green","Asignado", asigD, "día(s) con visita", "briefcase")
+                + tile("is-orange","No disponible", noDispD, "licencia / ocupado", "clock-3")
+                + tile("is-purple","Feriados", ferD, "en el mes", "calendar");
+            if (window.VCT && VCT.Icon && typeof VCT.Icon.init === "function") VCT.Icon.init(statsEl);
         }
 
         /* ---- celda contenido ---- */
         function cellBadge(r){
-            if (r.e==="FERIADO" || r.e==="BLOQUEADO") return r.m ? '<span class="vct-agc-cell-note">'+esc(r.m)+'</span>' : '';
-            if (r.e==="FINDE") return '';
-            if (r.e==="OCUPADO") return '<span class="vct-agc-cell-note">Ocupado</span>';
-            if (r.e==="PARCIAL") return '<span class="vct-agc-cell-note">'+fmtH(r.d)+'h libres</span>';
-            return '<span class="vct-agc-cell-note">'+fmtH(r.d)+'h</span>'; /* LIBRE */
+            var e=String(r.e||"").toUpperCase();
+            if (e==="NO_CARGADO") return "";
+            var note = r.n ? esc(r.n) : estadoLabel(e);
+            var h = (e==="ASIGNADO"||e==="DISPONIBLE"||e==="POTENCIAL"||e==="ORGANISMO") && (+r.h>0) ? ' · '+fmtH(r.h)+'h' : '';
+            return '<span class="vct-agc-cell-note">'+note+h+'</span>';
         }
 
         /* ---- vistas ---- */
@@ -151,7 +196,7 @@
                         var cd=new Date(year,month-1,dayNum), k=dateKey(cd), r=dayInfo(cd);
                         var isToday=sameDay(cd,today);
                         var cls="vct-agenda-cell "+clsOf(r.e)+(isToday?" vct-agenda-cell-today":"");
-                        html+='<td class="'+cls+'" data-vct-agc-day="'+k+'"'+(r.m?' title="'+escAttr(r.m)+'"':'')+'>';
+                        html+='<td class="'+cls+'" data-vct-agc-day="'+k+'"'+(r.n?' title="'+escAttr(r.n)+'"':'')+'>';
                         html+='<span class="vct-agenda-daynum">'+dayNum+'</span>';
                         html+=cellBadge(r);
                         html+='</td>';
@@ -178,9 +223,10 @@
                 html+='<span class="vct-agenda-weekrow-month">'+MESES[d.getMonth()].substr(0,3)+'</span>';
                 html+='</div>';
                 html+='<div class="vct-agenda-weekrow-card vct-agc-weekcard">';
-                html+='<span class="vct-agc-badge '+clsOf(r.e)+'">'+estadoLabel(r)+'</span>';
-                if (r.m) html+='<span class="vct-agenda-weekrow-text">'+esc(r.m)+'</span>';
-                else if (r.e==="PARCIAL"||r.e==="LIBRE") html+='<span class="vct-agenda-weekrow-text">'+fmtH(r.d)+'h libres de '+fmtH(r.c)+'h</span>';
+                html+='<span class="vct-agc-badge '+clsOf(r.e)+'">'+estadoLabel(r.e)+'</span>';
+                if (r.n) html+='<span class="vct-agenda-weekrow-text">'+esc(r.n)+'</span>';
+                if ((String(r.e).toUpperCase()==="ASIGNADO"||String(r.e).toUpperCase()==="DISPONIBLE") && +r.h>0)
+                    html+='<span class="vct-agenda-weekrow-text">'+fmtH(r.h)+'h</span>';
                 html+='</div></div>';
             }
             html+='</div>';
@@ -188,70 +234,202 @@
             bindDayClicks();
         }
 
-        /* ---- edición de bloqueos (solo con permiso EDIT) ---- */
-        var canEdit = root.getAttribute("data-vct-agc-can-edit")==="1";
-        var consId  = root.getAttribute("data-vct-agc-cons") || "";
-        function saveBlock(fecha, motivo, unblock){
-            if (typeof window.newTaskForContactWithParams !== "function") return;
-            if (typeof window.vctSetActiveModule === "function") { try { vctSetActiveModule("9"); } catch(e){} }
-            var mot = String(motivo||"").replace(/[;=+]/g," ").trim().slice(0,200);
-            var params = "ACTION=AGENDA_CONSULTOR;IDSELEC01=" + consId + ";TEXTO01=" + fecha
-                       + (unblock ? ";FLAG02=1" : (";FLAG01=1;TEXTO02=" + mot));
-            newTaskForContactWithParams("VOCATURO", params, "VCT_GESTION", "Agenda");
-        }
-
         function renderDay(){
-            var d=state.cursor, r=dayInfo(d), key=dateKey(d), past=d<today;
+            var d=state.cursor, r=dayInfo(d), key=dateKey(d), e=String(r.e).toUpperCase();
             titleEl.textContent=DIAS_LARGO[d.getDay()]+" "+d.getDate()+" de "+MESES[d.getMonth()]+" "+d.getFullYear();
             var html='<div class="vct-agenda-day vct-agc-dayview '+clsOf(r.e)+'">';
             html+='<div class="vct-agenda-day-num">'+d.getDate()+'</div>';
             html+='<div class="vct-agenda-day-name">'+DIAS_LARGO[d.getDay()]+'</div>';
-            html+='<div class="vct-agc-dayview-badge"><span class="vct-agc-badge '+clsOf(r.e)+'">'+estadoLabel(r)+'</span></div>';
-            if (r.m) html+='<div class="vct-agc-dayview-note">'+esc(r.m)+'</div>';
-            if (r.e!=="FINDE" && r.e!=="FERIADO" && r.e!=="BLOQUEADO")
-                html+='<div class="vct-agc-dayview-hours">'+fmtH(r.d)+'h libres de '+fmtH(r.c)+'h ('+fmtH(r.o)+'h ocupadas)</div>';
+            html+='<div class="vct-agc-dayview-badge"><span class="vct-agc-badge '+clsOf(r.e)+'">'+estadoLabel(r.e)+'</span></div>';
+            if (r.n) html+='<div class="vct-agc-dayview-note">'+esc(r.n)+'</div>';
+            if ((e==="ASIGNADO"||e==="DISPONIBLE") && +r.h>0)
+                html+='<div class="vct-agc-dayview-hours">'+fmtH(r.h)+'h</div>';
 
-            if (canEdit && !past && r.e!=="FERIADO" && r.e!=="FINDE"){
-                if (r.e==="BLOQUEADO"){
-                    html+='<div class="vct-agc-edit"><button type="button" class="vct-btn vct-agc-btn-unblock" data-vct-agc-unblock>Quitar bloqueo (volver a disponible)</button></div>';
-                } else {
-                    html+='<div class="vct-agc-edit">'
-                        + '<input type="text" class="vct-input vct-agc-mot" placeholder="Motivo (vacaciones, licencia...)" maxlength="200">'
-                        + '<button type="button" class="vct-btn vct-agc-btn-block" data-vct-agc-block>Marcar no disponible</button>'
-                        + '</div>';
-                }
+            if (canEdit && consId && !isFeriado(e)){
+                html+='<div class="vct-agc-edit">'
+                    + '<button type="button" class="vct-btn vct-btn-primary vct-agc-btn-edit" data-vct-agc-edit-open>'
+                    + (r.t ? 'Editar fecha' : 'Agregar fecha') + '</button></div>';
             }
             html+='</div>';
             paneEl.innerHTML=html;
 
-            var bBtn=paneEl.querySelector("[data-vct-agc-block]");
-            if (bBtn) bBtn.addEventListener("click", function(){
-                var mot=(paneEl.querySelector(".vct-agc-mot")||{}).value||"";
-                saveBlock(key, mot, false);
-            });
-            var uBtn=paneEl.querySelector("[data-vct-agc-unblock]");
-            if (uBtn) uBtn.addEventListener("click", function(){ saveBlock(key, "", true); });
-        }
-
-        function estadoLabel(r){
-            switch(r.e){
-                case "FINDE": return "Fin de semana";
-                case "FERIADO": return "Feriado";
-                case "BLOQUEADO": return "No disponible";
-                case "OCUPADO": return "Ocupado";
-                case "PARCIAL": return "Parcial";
-                default: return "Libre";
-            }
+            var eBtn=paneEl.querySelector("[data-vct-agc-edit-open]");
+            if (eBtn) eBtn.addEventListener("click", function(){ openModal(key, r); });
         }
 
         function bindDayClicks(){
             paneEl.querySelectorAll("[data-vct-agc-day]").forEach(function(cell){
                 cell.addEventListener("click", function(){
-                    var p=cell.getAttribute("data-vct-agc-day").split("-");
-                    state.cursor=new Date(+p[0], +p[1]-1, +p[2]);
-                    state.view="day"; setView("day"); render();
+                    var key=cell.getAttribute("data-vct-agc-day"), p=key.split("-");
+                    var dObj=new Date(+p[0], +p[1]-1, +p[2]);
+                    var r=dayInfo(dObj);
+                    if (canEdit && consId && !isFeriado(r.e)) { openModal(key, r); }
+                    else { state.cursor=dObj; setView("day"); render(); }
                 });
             });
+        }
+
+        /* ---- guardar / eliminar via tarea nueva ---- */
+        function saveFecha(fecha, opt){
+            opt = opt || {};
+            if (typeof window.newTaskForContactWithParams !== "function") return;
+            if (typeof window.vctSetActiveModule === "function") { try { vctSetActiveModule("9"); } catch(e){} }
+            var clean=function(s){ return String(s==null?"":s).replace(/[;=+]/g," ").trim().slice(0,400); };
+            /* IMPORTANTE: NO enviar pares con valor vacio (ej. "TEXTO04=") porque
+               rompen el parseo de start_params en el server y el guardado se pierde.
+               Solo se agregan los campos con contenido. */
+            var parts = ["ACTION=AGENDA_CONSULTOR", "IDSELEC01=" + consId, "TEXTO01=" + fecha];
+            if (opt.del) {
+                parts.push("FLAG02=1");
+            } else {
+                parts.push("FLAG01=1");
+                var add=function(k,v){ v=clean(v); if (v!=="") parts.push(k + "=" + v); };
+                add("TEXTO03", opt.tipo);     /* tipo */
+                add("TEXTO02", opt.motivo);   /* motivo (licencia) */
+                add("TEXTO04", opt.desc);     /* descripcion */
+                add("TEXTO05", opt.horas);    /* horas: disponible, potencial u organismo */
+            }
+            newTaskForContactWithParams("VOCATURO", parts.join(";"), "VCT_GESTION", "Agenda");
+        }
+
+        /* ---- MODAL de alta/edicion ---- */
+        function openModal(key, r){
+            r = r || {};
+            var p=key.split("-"), dObj=new Date(+p[0],+p[1]-1,+p[2]);
+            var fechaTxt = DIAS_LARGO[dObj.getDay()]+", "+dObj.getDate()+" de "+MESES[dObj.getMonth()]+" "+dObj.getFullYear();
+            var exists = !!(r.t && String(r.t).length);
+
+            var opts = '<option value="">Elegí un tipo...</option>';
+            TIPOS.forEach(function(t){ opts += '<option value="'+t.v+'">'+esc(t.label)+'</option>'; });
+            var motOpts = '<option value="">Elegí un motivo...</option>';
+            MOTIVOS.forEach(function(m){ motOpts += '<option value="'+esc(m)+'">'+esc(m)+'</option>'; });
+
+            var ov=document.createElement("div");
+            ov.className="vct-modal vct-form-shell vct-form-compact is-open vct-agc-modal-ov";
+            ov.innerHTML =
+                '<div class="vct-modal-dialog vct-agc-modal" role="dialog" aria-modal="true" aria-label="Fecha del consultor">'
+              + '<div class="vct-modal-header vct-form-header vct-agc-modal-head">'
+              +   '<span class="vct-form-header-icon"><span data-vct-icon="calendar"></span></span>'
+              +   '<div class="vct-form-header-copy"><h3 class="vct-modal-title vct-agc-modal-title">'+(exists?'Editar':'Agregar')+' fecha</h3></div>'
+              +   '<button type="button" class="vct-form-close vct-agc-modal-x" data-x aria-label="Cerrar"><span data-vct-icon="x"></span></button>'
+              + '</div>'
+              + '<div class="vct-modal-body vct-form-body vct-agc-modal-body">'
+              +   '<div class="vct-agc-field">'
+              +     '<label class="vct-label vct-agc-flabel">Fecha</label>'
+              +     '<input type="text" class="vct-input vct-agc-fecha-ro" value="'+escAttr(fechaTxt)+'" readonly>'
+              +   '</div>'
+              +   '<div class="vct-agc-field">'
+              +     '<label class="vct-label vct-agc-flabel">Tipo <i class="vct-agc-req">*</i></label>'
+              +     '<select class="vct-select" data-vct-native="true" data-vct-custom-init="true" data-f-tipo>'+opts+'</select>'
+              +   '</div>'
+              +   '<div class="vct-agc-field" data-wrap-motivo hidden>'
+              +     '<label class="vct-label vct-agc-flabel">Motivo <i class="vct-agc-req">*</i></label>'
+              +     '<select class="vct-select" data-vct-native="true" data-vct-custom-init="true" data-f-motivo>'+motOpts+'</select>'
+              +   '</div>'
+              +   '<div class="vct-agc-field" data-wrap-desc hidden>'
+              +     '<label class="vct-label vct-agc-flabel">Descripción <i class="vct-agc-req">*</i></label>'
+              +     '<input type="text" class="vct-input" data-f-desc maxlength="400" placeholder="Detalle de la fecha">'
+              +   '</div>'
+              +   '<div class="vct-agc-field" data-wrap-horas hidden>'
+              +     '<label class="vct-label vct-agc-flabel">Horas <i class="vct-agc-req" data-horas-req>*</i></label>'
+              +     '<input type="number" class="vct-input" data-f-horas min="0" max="24" step="0.5" value="8">'
+              +   '</div>'
+              +   '<p class="vct-agc-modal-err" data-err hidden></p>'
+              + '</div>'
+              + '<div class="vct-modal-footer vct-form-footer vct-agc-modal-foot">'
+              +   '<div class="vct-agc-modal-foot-l">'
+              +     (exists ? '<button type="button" class="vct-btn vct-agc-btn-del" data-del>Eliminar</button>' : '')
+              +   '</div>'
+              +   '<div class="vct-agc-modal-foot-r">'
+              +     '<button type="button" class="vct-btn vct-btn-secondary" data-cancel>Cancelar</button>'
+              +     '<button type="button" class="vct-btn vct-btn-primary" data-save>Guardar</button>'
+              +   '</div>'
+              + '</div>'
+              + '</div>';
+            var wasModalOpen = document.body.classList.contains("vct-modal-open");
+            document.body.classList.add("vct-modal-open");
+            document.body.appendChild(ov);
+
+            var selTipo = ov.querySelector("[data-f-tipo]");
+            var selMot  = ov.querySelector("[data-f-motivo]");
+            var inpDesc = ov.querySelector("[data-f-desc]");
+            var inpHor  = ov.querySelector("[data-f-horas]");
+            var wrapMot = ov.querySelector("[data-wrap-motivo]");
+            var wrapDesc= ov.querySelector("[data-wrap-desc]");
+            var wrapHor = ov.querySelector("[data-wrap-horas]");
+            var errEl   = ov.querySelector("[data-err]");
+
+            function permitsHours(t){ return t === "DISPONIBLE" || t === "POTENCIAL" || t === "ORGANISMO"; }
+            var savedHours = r.hc != null ? r.hc : r.h;
+            var lastAvailableHours = (permitsHours(r.t) && +savedHours > 0) ? fmtH(savedHours) : "8";
+            var previousTipo = "";
+            var hoursRequired = ov.querySelector("[data-horas-req]");
+            function syncFields(){
+                var t = selTipo.value, available = permitsHours(t);
+                if (permitsHours(previousTipo) && isFinite(+inpHor.value) && +inpHor.value > 0)
+                    lastAvailableHours = inpHor.value;
+                wrapMot.hidden = t !== "LICENCIA";
+                wrapDesc.hidden = !t || t === "DISPONIBLE" || t === "LICENCIA";
+                inpDesc.required = !!t && t !== "DISPONIBLE" && t !== "LICENCIA";
+                wrapHor.hidden = !t;
+                inpHor.disabled = !available;
+                inpHor.required = available;
+                hoursRequired.hidden = !available;
+                inpHor.value = available ? lastAvailableHours : "0";
+                previousTipo = t;
+            }
+            selTipo.addEventListener("change", function(){ errEl.hidden=true; syncFields(); });
+
+            /* prefill */
+            if (r.t) selTipo.value = r.t;
+            if (r.mo) selMot.value = r.mo;
+            if (r.de) inpDesc.value = r.de;
+            if (+r.h>0) inpHor.value = fmtH(r.h);
+            syncFields();
+            if (window.VCT && VCT.FormSelect && typeof VCT.FormSelect.init === "function") VCT.FormSelect.init(ov);
+            ov.querySelectorAll(".vct-form-select").forEach(function(wrap){
+                if (wrap.__vctPortalMenu) wrap.__vctPortalMenu.classList.add("vct-agc-select-menu");
+            });
+            if (window.VCT && VCT.Icon && typeof VCT.Icon.init === "function") VCT.Icon.init(ov);
+
+            function close(){
+                ov.querySelectorAll(".vct-form-select").forEach(function(wrap){
+                    if (window.VCT && VCT.FormSelect && typeof VCT.FormSelect.close === "function") VCT.FormSelect.close(wrap);
+                    var menu = wrap.__vctPortalMenu;
+                    if (menu && menu.parentNode) menu.parentNode.removeChild(menu);
+                });
+                if (ov.parentNode) ov.parentNode.removeChild(ov);
+                if (!wasModalOpen) document.body.classList.remove("vct-modal-open");
+                document.removeEventListener("keydown", onKey);
+            }
+            function onKey(ev){ if (ev.key==="Escape") close(); }
+            document.addEventListener("keydown", onKey);
+            ov.addEventListener("mousedown", function(ev){ if (ev.target===ov) close(); });
+            ov.querySelector("[data-x]").addEventListener("click", close);
+            ov.querySelector("[data-cancel]").addEventListener("click", close);
+
+            var delBtn = ov.querySelector("[data-del]");
+            if (delBtn) delBtn.addEventListener("click", function(){
+                saveFecha(key, { del:true }); close();
+            });
+
+            ov.querySelector("[data-save]").addEventListener("click", function(){
+                var t = selTipo.value;
+                function fail(msg){ errEl.textContent=msg; errEl.hidden=false; }
+                if (!t) return fail("Elegí un tipo.");
+                if (permitsHours(t) && (!isFinite(+inpHor.value) || !(+inpHor.value>0) || +inpHor.value>24 || (+inpHor.value*2)%1!==0)) return fail("Ingresá horas entre 0,5 y 24, en intervalos de media hora.");
+                if (t==="LICENCIA" && !selMot.value) return fail("Elegí el motivo de la licencia.");
+                if (t!=="DISPONIBLE" && t!=="LICENCIA" && !inpDesc.value.trim()) return fail("Completá la descripción.");
+                saveFecha(key, {
+                    tipo:   t,
+                    motivo: (t==="LICENCIA") ? selMot.value : "",
+                    desc:   (t!=="DISPONIBLE" && t!=="LICENCIA") ? inpDesc.value.trim() : "",
+                    horas:  permitsHours(t) ? inpHor.value : "0"
+                });
+                close();
+            });
+
+            setTimeout(function(){ var trigger = ov.querySelector("[data-f-tipo] + .vct-form-select .vct-form-select-trigger"); (trigger || selTipo).focus(); }, 30);
         }
 
         function setView(v){
@@ -280,8 +458,8 @@
             else state.cursor=addDays(state.cursor,1);
             render();
         });
-        if (selMonth) selMonth.addEventListener("change", function(){ state.cursor.setMonth(+selMonth.value-1); render(); });
-        if (selYear)  selYear.addEventListener("change", function(){ state.cursor.setFullYear(+selYear.value); render(); });
+        if (selMonth) selMonth.addEventListener("change", function(){ if (syncing) return; state.cursor.setMonth(+selMonth.value-1); render(); });
+        if (selYear)  selYear.addEventListener("change", function(){ if (syncing) return; state.cursor.setFullYear(+selYear.value); render(); });
         viewBtns.forEach(function(b){ b.addEventListener("click", function(){ setView(b.getAttribute("data-vct-agc-view")); render(); }); });
 
         render();

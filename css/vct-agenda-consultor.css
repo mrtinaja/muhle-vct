@@ -1,112 +1,488 @@
-/* vct-agenda-consultor.css - v1
+/* vct-agenda-consultor.css - v18
    ============================================================================
    Agenda del consultor. Hereda la estructura del calendario (vct-agenda.css)
-   y agrega el color por ESTADO de disponibilidad. Paleta alineada con los
-   chips de servicio y las pills del 360:
-     LIBRE      verde   #0E9F6E
-     PARCIAL    ambar   #F59E0B
-     OCUPADO    bordo   #66062D  (marca)
-     BLOQUEADO  slate   #64748B  (rayado)
-     FERIADO    violeta #7F43C0
-     FINDE      gris    neutro
+   y pinta el color por ESTADO. Paleta aprobada:
+     NO_CARGADO   blanco
+     DISPONIBLE   azul    #2563EB
+     ASIGNADO     verde   #0E9F6E  (sale de las visitas)
+     LICENCIA     rosa    #EC4899
+     OCUPADO      gris    #64748B
+     POTENCIAL    naranja #F59E0B
+     ORGANISMO    teal    #0D9488
+     OBSERVACION  coral   #FF7A59
+     FERIADO_FIJO rojo    #E0304D
+     FERIADO_MOV  violeta #8B5CF6
+   + modal de alta/edicion con TIPO (campos dinamicos).
    ============================================================================ */
 
-/* ---- layout: full-width (como el resto de la app) + celdas más bajas para
-   que el mes entre sin scroll, incluso meses de 6 filas ---- */
+/* ---- layout: full-width + celdas bajas para que el mes entre sin scroll ---- */
 .vct-agc-card { padding: 14px 18px 18px; }
 .vct-agc-table td.vct-agenda-cell { height: 72px; }
 .vct-agc-table .vct-agenda-daynum { font-size: 12px; }
 
-/* ---- toolbar: selector de consultor ---- */
-.vct-agc-toolbar { flex-wrap: wrap; gap: 10px; }
-.vct-agc-pick { display: flex; flex-direction: column; gap: 2px; min-width: 220px; }
-.vct-agc-pick-label { font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: .03em; }
-.vct-agc-select-cons { height: 38px; min-width: 220px; }
+/* ---- toolbar: orden general ----
+   [Consultor] [Mes/Semana/Día]  ····  ‹ Título ›  [Mes][Año]
+   El nav central crece y empuja mes/año al extremo derecho; consultor y toggle
+   quedan compactos a la izquierda. */
+.vct-agc-toolbar { flex-wrap: wrap; align-items: center; gap: 10px 14px; }
 
-/* ---- stats ---- */
-.vct-agc-stats { margin: 4px 0 14px; }
+/* selector de consultor: compacto (200px, con ellipsis para nombres largos) */
+.vct-agc-pick { display: flex; flex-direction: column; gap: 2px; width: 200px; min-width: 200px; max-width: 200px; flex: 0 0 auto; }
+.vct-agc-pick-label { font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: .03em; }
+.vct-agc-select-cons { height: 38px; min-width: 0; width: 100%; }
+.vct-agc-pick .vct-custom-select,
+.vct-agc-pick .vct-custom-select-wrapper { width: 100% !important; min-width: 0 !important; }
+.vct-agc-pick .vct-custom-select-trigger { overflow: hidden; }
+.vct-agc-pick .vct-custom-select-trigger > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* toggle Mes/Semana/Día: compacto, sin crecer */
+.vct-agc-toolbar .vct-agenda-view-toggle { flex: 0 0 auto; }
+.vct-agc-toolbar .vct-agenda-view-btn { padding: 7px 13px; font-size: 12.5px; }
+
+/* nav central: ocupa el sobrante y centra el título */
+.vct-agc-toolbar .vct-agenda-nav { flex: 1 1 auto; justify-content: center; min-width: 200px; }
+
+/* mes + año: SIEMPRE visibles (no colapsar) */
+.vct-agc-toolbar .vct-agenda-toolbar-right { flex: 0 0 auto; }
+.vct-agc-jump { flex: 0 0 auto; display: flex; gap: 8px; align-items: center; }
+
+/* mes/año usan el VCT Select (enhancer de la plataforma). El widget custom se
+   inserta como hermano del <select> nativo (oculto): lo dimensionamos por
+   sibling adyacente para que mes sea mas ancho que año y queden alineados. */
+.vct-agc-jump .vct-custom-select,
+.vct-agc-jump .vct-custom-select-wrapper { min-width: 0; flex: 0 0 auto; }
+.vct-agc-jump [data-vct-agc-month] + .vct-custom-select,
+.vct-agc-jump [data-vct-agc-month] + .vct-custom-select-wrapper { width: 150px; }
+.vct-agc-jump [data-vct-agc-year] + .vct-custom-select,
+.vct-agc-jump [data-vct-agc-year] + .vct-custom-select-wrapper { width: 110px; }
+/* el menú desplegable NO debe heredar el ancho del trigger: que entre el nombre
+   completo del mes ("Septiembre", "Diciembre") sin cortar */
+.vct-agc-jump .vct-custom-select-menu,
+.vct-agc-jump .vct-custom-select-options { min-width: 180px; width: auto; }
+.vct-agc-jump .vct-custom-select-option { white-space: nowrap; }
+
+/* ---- estado vacío (sin consultor): bloque centrado tipo hero ---- */
+.vct-agc-hero {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; gap: 14px; padding: 54px 20px 60px; min-height: 280px;
+}
+.vct-agc-hero-icon {
+    width: 58px; height: 58px; display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 16px; background: rgba(102,6,45,.08); color: #66062D;
+}
+.vct-agc-hero-icon [data-vct-icon], .vct-agc-hero-icon svg { width: 27px; height: 27px; }
+.vct-agc-hero-title { margin: 0; font-size: 18px; font-weight: 700; color: #0f172a; }
+.vct-agc-hero-text { margin: 0; font-size: 14px; color: #64748b; max-width: 420px; line-height: 1.5; }
+.vct-agc-hero .vct-agc-pick { width: 300px; max-width: 100%; margin-top: 6px; }
+
+/* ---- stats (KPIs): cards horizontales; estilos al final del archivo. ---- */
 
 /* ---- leyenda ---- */
-.vct-agc-legend { gap: 16px; flex-wrap: wrap; }
+.vct-agc-legend { gap: 14px; flex-wrap: wrap; }
 .vct-agc-dot { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
-.vct-agc-dot-libre     { background: #0E9F6E; }
-.vct-agc-dot-parcial   { background: #F59E0B; }
-.vct-agc-dot-ocupado   { background: #66062D; }
-.vct-agc-dot-bloqueado { background: #64748B; }
-.vct-agc-dot-feriado   { background: #7F43C0; }
+.vct-agc-dot-nocargado  { background: #fff; border: 1px solid #cbd5e1; }
+.vct-agc-dot-disponible { background: #2563EB; }
+.vct-agc-dot-asignado   { background: #0E9F6E; }
+.vct-agc-dot-licencia   { background: #EC4899; }
+.vct-agc-dot-ocupado    { background: #64748B; }
+.vct-agc-dot-potencial  { background: #F59E0B; }
+.vct-agc-dot-organismo  { background: #0D9488; }
+.vct-agc-dot-observacion{ background: #FF7A59; }
+.vct-agc-dot-feriado    { background: linear-gradient(135deg, #E0304D 0 50%, #8B5CF6 50% 100%); }
 
-/* ---- celdas del mes: color por estado ---- */
+/* ---- celdas del mes ---- */
 .vct-agc-table .vct-agenda-cell { position: relative; vertical-align: top; }
-.vct-agc-table .vct-agenda-cell[data-vct-agc-day] { cursor: pointer; border-left: 3px solid transparent; transition: background .12s ease; }
-.vct-agc-table .vct-agenda-cell[data-vct-agc-day]:hover { filter: brightness(.98); }
-.vct-agc-cell-note { display: block; margin-top: 2px; font-size: 10.5px; line-height: 1.25; font-weight: 600; opacity: .9; }
+.vct-agc-table .vct-agenda-cell[data-vct-agc-day] { cursor: pointer; border-left: 3px solid transparent; transition: background .12s ease, filter .12s ease; }
+.vct-agc-table .vct-agenda-cell[data-vct-agc-day]:hover { filter: brightness(.97); }
+.vct-agc-cell-note { display: block; margin-top: 2px; font-size: 10.5px; line-height: 1.25; font-weight: 600; opacity: .95; }
 
-/* estados (celda mes) */
-.vct-agenda-cell.vct-agc-libre     { background: #ECFBF4; border-left-color: #0E9F6E; }
-.vct-agenda-cell.vct-agc-libre     .vct-agc-cell-note { color: #0E7D57; }
-.vct-agenda-cell.vct-agc-parcial   { background: #FEF5E7; border-left-color: #F59E0B; }
-.vct-agenda-cell.vct-agc-parcial   .vct-agc-cell-note { color: #B5760A; }
-.vct-agenda-cell.vct-agc-ocupado   { background: #F8E8EF; border-left-color: #66062D; }
-.vct-agenda-cell.vct-agc-ocupado   .vct-agc-cell-note { color: #66062D; }
-.vct-agenda-cell.vct-agc-feriado   { background: #F3EBFB; border-left-color: #7F43C0; }
-.vct-agenda-cell.vct-agc-feriado   .vct-agc-cell-note { color: #6A32A8; }
-.vct-agenda-cell.vct-agc-finde     { background: #F1F5F9; }
-.vct-agenda-cell.vct-agc-finde     .vct-agenda-daynum { color: #94a3b8; }
-.vct-agenda-cell.vct-agc-bloqueado {
-    border-left-color: #64748B;
-    background-color: #EEF1F5;
-    background-image: repeating-linear-gradient(45deg, rgba(100,116,139,.12) 0 6px, transparent 6px 12px);
-}
-.vct-agenda-cell.vct-agc-bloqueado .vct-agc-cell-note { color: #475569; }
+/* estados (celda mes): bg + barra izq + color de nota */
+.vct-agenda-cell.vct-agc-no_cargado  { background: #fff; }
+.vct-agenda-cell.vct-agc-disponible  { background: #EFF4FF; border-left-color: #2563EB; }
+.vct-agenda-cell.vct-agc-disponible  .vct-agc-cell-note { color: #1D4ED8; }
+.vct-agenda-cell.vct-agc-asignado    { background: #ECFBF4; border-left-color: #0E9F6E; }
+.vct-agenda-cell.vct-agc-asignado    .vct-agc-cell-note { color: #0E7D57; }
+.vct-agenda-cell.vct-agc-licencia    { background: #FCE7F3; border-left-color: #EC4899; }
+.vct-agenda-cell.vct-agc-licencia    .vct-agc-cell-note { color: #BE2063; }
+.vct-agenda-cell.vct-agc-ocupado     { background: #EEF1F5; border-left-color: #64748B; }
+.vct-agenda-cell.vct-agc-ocupado     .vct-agc-cell-note { color: #475569; }
+.vct-agenda-cell.vct-agc-potencial   { background: #FEF3E2; border-left-color: #F59E0B; }
+.vct-agenda-cell.vct-agc-potencial   .vct-agc-cell-note { color: #B5760A; }
+.vct-agenda-cell.vct-agc-organismo   { background: #E6FBF8; border-left-color: #0D9488; }
+.vct-agenda-cell.vct-agc-organismo   .vct-agc-cell-note { color: #0B7268; }
+.vct-agenda-cell.vct-agc-observacion { background: #FFF1EC; border-left-color: #FF7A59; }
+.vct-agenda-cell.vct-agc-observacion .vct-agc-cell-note { color: #C2410C; }
+.vct-agenda-cell.vct-agc-feriado-fijo{ background: #FDECEE; border-left-color: #E0304D; }
+.vct-agenda-cell.vct-agc-feriado-fijo .vct-agc-cell-note { color: #B01030; }
+.vct-agenda-cell.vct-agc-feriado-mov { background: #F3EBFB; border-left-color: #8B5CF6; }
+.vct-agenda-cell.vct-agc-feriado-mov .vct-agc-cell-note { color: #6D28D9; }
 
 /* hoy: aro por encima del color de estado */
 .vct-agc-table .vct-agenda-cell.vct-agenda-cell-today { outline: 2px solid #66062D; outline-offset: -2px; }
 
 /* ---- badges (semana / dia) ---- */
-.vct-agc-badge {
-    display: inline-block; padding: 2px 10px; border-radius: 999px;
-    font-size: 11.5px; font-weight: 700; line-height: 1.5;
-}
-.vct-agc-badge.vct-agc-libre     { background: #ECFBF4; color: #0E7D57; }
-.vct-agc-badge.vct-agc-parcial   { background: #FEF5E7; color: #B5760A; }
-.vct-agc-badge.vct-agc-ocupado   { background: #F8E8EF; color: #66062D; }
-.vct-agc-badge.vct-agc-bloqueado { background: #EEF1F5; color: #475569; }
-.vct-agc-badge.vct-agc-feriado   { background: #F3EBFB; color: #6A32A8; }
-.vct-agc-badge.vct-agc-finde     { background: #F1F5F9; color: #64748b; }
+.vct-agc-badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 700; line-height: 1.5; }
+.vct-agc-badge.vct-agc-no_cargado  { background: #F1F5F9; color: #64748b; }
+.vct-agc-badge.vct-agc-disponible  { background: #EFF4FF; color: #1D4ED8; }
+.vct-agc-badge.vct-agc-asignado    { background: #ECFBF4; color: #0E7D57; }
+.vct-agc-badge.vct-agc-licencia    { background: #FCE7F3; color: #BE2063; }
+.vct-agc-badge.vct-agc-ocupado     { background: #EEF1F5; color: #475569; }
+.vct-agc-badge.vct-agc-potencial   { background: #FEF3E2; color: #B5760A; }
+.vct-agc-badge.vct-agc-organismo   { background: #E6FBF8; color: #0B7268; }
+.vct-agc-badge.vct-agc-observacion { background: #FFF1EC; color: #C2410C; }
+.vct-agc-badge.vct-agc-feriado-fijo{ background: #FDECEE; color: #B01030; }
+.vct-agc-badge.vct-agc-feriado-mov { background: #F3EBFB; color: #6D28D9; }
 
 .vct-agc-weekcard { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
 /* barra lateral de color en la fila de semana */
-.vct-agenda-weekrow.vct-agc-libre     { border-left: 4px solid #0E9F6E; }
-.vct-agenda-weekrow.vct-agc-parcial   { border-left: 4px solid #F59E0B; }
-.vct-agenda-weekrow.vct-agc-ocupado   { border-left: 4px solid #66062D; }
-.vct-agenda-weekrow.vct-agc-bloqueado { border-left: 4px solid #64748B; }
-.vct-agenda-weekrow.vct-agc-feriado   { border-left: 4px solid #7F43C0; }
-.vct-agenda-weekrow.vct-agc-finde     { border-left: 4px solid #e2e8f0; }
+.vct-agenda-weekrow.vct-agc-no_cargado  { border-left: 4px solid #e2e8f0; }
+.vct-agenda-weekrow.vct-agc-disponible  { border-left: 4px solid #2563EB; }
+.vct-agenda-weekrow.vct-agc-asignado    { border-left: 4px solid #0E9F6E; }
+.vct-agenda-weekrow.vct-agc-licencia    { border-left: 4px solid #EC4899; }
+.vct-agenda-weekrow.vct-agc-ocupado     { border-left: 4px solid #64748B; }
+.vct-agenda-weekrow.vct-agc-potencial   { border-left: 4px solid #F59E0B; }
+.vct-agenda-weekrow.vct-agc-organismo   { border-left: 4px solid #0D9488; }
+.vct-agenda-weekrow.vct-agc-observacion { border-left: 4px solid #FF7A59; }
+.vct-agenda-weekrow.vct-agc-feriado-fijo{ border-left: 4px solid #E0304D; }
+.vct-agenda-weekrow.vct-agc-feriado-mov { border-left: 4px solid #8B5CF6; }
 
 /* ---- vista dia ---- */
 .vct-agc-dayview { text-align: center; }
 .vct-agc-dayview-badge { margin: 10px 0 6px; }
 .vct-agc-dayview-note { color: #475569; font-weight: 600; }
 .vct-agc-dayview-hours { margin-top: 6px; color: #64748b; font-size: 13px; }
+.vct-agc-edit { margin-top: 18px; display: flex; justify-content: center; }
 
-/* ---- edición de bloqueo (vista día) ---- */
-.vct-agc-edit { margin-top: 18px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.vct-agc-edit .vct-agc-mot { width: 300px; max-width: 90%; height: 38px; padding: 0 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; }
-.vct-agc-edit .vct-btn { border: none; border-radius: 8px; padding: 9px 20px; font-weight: 600; font-size: 13px; cursor: pointer; }
-.vct-agc-btn-block { background: #64748B; color: #fff; }
-.vct-agc-btn-block:hover { background: #475569; }
-.vct-agc-btn-unblock { background: #0E9F6E; color: #fff; }
-.vct-agc-btn-unblock:hover { background: #0E7D57; }
+/* ---- botones base (por si no estan globales) ---- */
+.vct-agc-page .vct-btn { border: none; border-radius: 8px; padding: 9px 20px; font-weight: 600; font-size: 13px; cursor: pointer; line-height: 1; }
+.vct-btn-primary { background: #66062D; color: #fff; }
+.vct-btn-primary:hover { background: #540525; }
+.vct-btn-ghost { background: #fff; color: #334155; border: 1px solid #cbd5e1 !important; }
+.vct-btn-ghost:hover { background: #f1f5f9; }
+.vct-agc-btn-del { background: #fff; color: #b91c1c; border: 1px solid #fecaca !important; }
+.vct-agc-btn-del:hover { background: #fef2f2; }
 
 /* ---- estado vacio (sin consultor elegido) ---- */
 .vct-agc-empty { text-align: center; padding: 48px 20px; color: #64748b; }
 .vct-agc-empty-icon { display: inline-flex; width: 42px; height: 42px; color: #94a3b8; margin-bottom: 8px; }
 .vct-agc-empty p { margin: 0; font-size: 15px; }
 
+/* ============================================================================
+   MODAL de alta/edicion de fecha
+   ============================================================================ */
+.vct-agc-modal-ov {
+    position: fixed; inset: 0; z-index: 9999;
+    background: rgba(15,23,42,.45);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px; animation: vct-agc-fade .12s ease;
+}
+@keyframes vct-agc-fade { from { opacity: 0; } to { opacity: 1; } }
+.vct-agc-modal {
+    width: 460px; max-width: 100%;
+    background: #fff; border-radius: 14px;
+    box-shadow: 0 24px 60px rgba(15,23,42,.28);
+    display: flex; flex-direction: column; overflow: hidden;
+    animation: vct-agc-pop .14s ease;
+}
+@keyframes vct-agc-pop { from { transform: translateY(8px) scale(.98); opacity: .6; } to { transform: none; opacity: 1; } }
+.vct-agc-modal-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px; border-bottom: 1px solid #eef2f7;
+}
+.vct-agc-modal-title { margin: 0; font-size: 16px; font-weight: 700; color: #66062D; }
+.vct-agc-modal-x {
+    border: none; background: transparent; font-size: 24px; line-height: 1;
+    color: #94a3b8; cursor: pointer; padding: 0 4px;
+}
+.vct-agc-modal-x:hover { color: #475569; }
+.vct-agc-modal-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+.vct-agc-field { display: flex; flex-direction: column; gap: 5px; }
+.vct-agc-flabel { font-size: 12px; font-weight: 600; color: #475569; }
+.vct-agc-req { color: #dc2626; font-style: normal; }
+.vct-agc-modal .vct-input, .vct-agc-modal .vct-select {
+    height: 42px; padding: 0 12px; border: 1px solid #cbd5e1; border-radius: 9px;
+    font-size: 14px; color: #0f172a; background: #fff; width: 100%;
+}
+.vct-agc-modal .vct-input:focus, .vct-agc-modal .vct-select:focus {
+    outline: none; border-color: #66062D; box-shadow: 0 0 0 3px rgba(102,6,45,.12);
+}
+.vct-agc-fecha-ro { background: #f8fafc !important; color: #475569 !important; font-weight: 600; }
+.vct-agc-modal-err {
+    margin: 0; padding: 8px 12px; border-radius: 8px;
+    background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c;
+    font-size: 12.5px; font-weight: 600;
+}
+.vct-agc-modal-foot {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; padding: 14px 20px; border-top: 1px solid #eef2f7; background: #fafbfc;
+}
+.vct-agc-modal-foot-r { display: flex; gap: 10px; margin-left: auto; }
+
 /* ---- responsive ---- */
 @media (max-width: 640px) {
     .vct-agc-pick { min-width: 100%; }
     .vct-agc-select-cons { min-width: 100%; }
     .vct-agc-cell-note { font-size: 9.5px; }
+    .vct-agc-modal { width: 100%; }
+}
+
+/* KPIs horizontales de Agenda del consultor, referencia visual v14.
+   Scope local: conserva los indicadores y el resto de las pantallas. */
+.vct-agc-page .vct-agc-stats {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+    margin: 4px 0 14px !important;
+}
+.vct-agc-stats .vct-soft-kpi {
+    --agc-kpi-accent: #8f184b;
+    min-width: 0 !important;
+    min-height: 70px !important;
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+    column-gap: 14px !important;
+    padding: 12px 18px !important;
+    background: #fff !important;
+    border: 1px solid #dedee2 !important;
+    border-radius: 15px !important;
+    box-shadow: 0 1px 3px rgba(31, 36, 45, .06) !important;
+}
+
+.vct-agc-stats .vct-soft-kpi.is-green { --agc-kpi-accent: #4b4b4b; }
+.vct-agc-stats .vct-soft-kpi.is-orange {
+    --agc-kpi-accent: #d26991;
+    border-color: #f3cfdd !important;
+}
+.vct-agc-stats .vct-soft-kpi.is-purple { --agc-kpi-accent: #919191; }
+.vct-agc-stats .vct-soft-kpi .vct-soft-kpi-icon {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 12px !important;
+    background: var(--agc-kpi-accent) !important;
+    color: #fff !important;
+}
+.vct-agc-stats .vct-soft-kpi-icon svg { width: 20px !important; height: 20px !important; }
+.vct-agc-stats .vct-soft-kpi-copy {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-rows: auto auto !important;
+    align-items: center !important;
+    gap: 2px 12px !important;
+}
+.vct-agc-stats .vct-soft-kpi-label {
+    grid-column: 1;
+    grid-row: 1;
+    color: #475569 !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    line-height: 1.25 !important;
+}
+.vct-agc-stats .vct-soft-kpi-help {
+    display: block !important;
+    grid-column: 1;
+    grid-row: 2;
+    color: #8290a9 !important;
+    font-size: 13px !important;
+    line-height: 1.25 !important;
+}
+.vct-agc-stats .vct-soft-kpi-value {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    color: #1f2937 !important;
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    text-align: right;
+    white-space: nowrap;
+}
+@media (max-width: 1100px) {
+    .vct-agc-page .vct-agc-stats { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+@media (max-width: 600px) {
+    .vct-agc-page .vct-agc-stats { grid-template-columns: minmax(0, 1fr) !important; gap: 10px !important; }
+    .vct-agc-stats .vct-soft-kpi { padding: 12px 16px !important; }
+}
+
+/* Alineacion de la toolbar de Agenda del consultor, v15. */
+.vct-agc-page .vct-agc-toolbar {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: flex-start;
+}
+.vct-agc-toolbar .vct-agenda-nav { min-height: 38px; }
+.vct-agc-toolbar .vct-agenda-title { min-width: 0; }
+.vct-agc-toolbar .vct-agenda-toolbar-right {
+    margin-left: auto;
+    align-self: flex-end;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    min-height: 38px;
+}
+.vct-agc-toolbar .vct-agc-jump {
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    align-items: center;
+}
+.vct-agc-jump .vct-select:not(.vct-custom-select-native) {
+    height: 38px;
+    min-width: 0;
+    box-sizing: border-box;
+    flex: 0 0 auto;
+}
+.vct-agc-jump [data-vct-agc-month]:not(.vct-custom-select-native) { width: 150px; }
+.vct-agc-jump [data-vct-agc-year]:not(.vct-custom-select-native) { width: 110px; }
+@media (max-width: 1100px) {
+    .vct-agc-toolbar .vct-agc-pick { order: 1; }
+    .vct-agc-toolbar .vct-agenda-view-toggle { order: 2; }
+    .vct-agc-toolbar .vct-agenda-toolbar-right { order: 3; }
+    .vct-agc-toolbar .vct-agenda-nav { order: 4; flex: 1 1 100%; }
+}
+
+/* KPIs publicados: vct-360-stat. Paleta Vocaturo; hover del Dashboard al final. */
+.vct-agc-page .vct-agc-stats .vct-360-stat {
+    --agc-kpi-accent: #8f184b;
+    min-width: 0 !important;
+    min-height: 70px !important;
+    display: grid !important;
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+    grid-template-rows: auto !important;
+    align-items: center !important;
+    column-gap: 14px !important;
+    padding: 12px 18px !important;
+    box-sizing: border-box !important;
+    background: #fff !important;
+    border: 1px solid #dedee2 !important;
+    border-radius: 15px !important;
+    box-shadow: 0 1px 3px rgba(31, 36, 45, .06) !important;
+    transform: none !important;
+    transition: none !important;
+}
+
+.vct-agc-page .vct-agc-stats .vct-360-stat[data-vct-tone="mint"] { --agc-kpi-accent: #4b4b4b; }
+.vct-agc-page .vct-agc-stats .vct-360-stat[data-vct-tone="amber"] {
+    --agc-kpi-accent: #d26991;
+    border-color: #f3cfdd !important;
+}
+.vct-agc-page .vct-agc-stats .vct-360-stat[data-vct-tone="violet"] { --agc-kpi-accent: #919191; }
+.vct-agc-page .vct-agc-stats .vct-360-stat::before,
+.vct-agc-page .vct-agc-stats .vct-360-stat::after,
+.vct-agc-page .vct-agc-stats .vct-360-stat small::before {
+    content: none !important;
+    display: none !important;
+}
+.vct-agc-page .vct-agc-stats .vct-360-stat > span:first-child {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-rows: auto auto !important;
+    align-items: center !important;
+    gap: 2px 12px !important;
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    min-width: 0 !important;
+}
+.vct-agc-page .vct-agc-stats .vct-360-stat-label {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    color: #475569 !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    line-height: 1.25 !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+}
+.vct-agc-page .vct-agc-stats .vct-360-stat small {
+    display: block !important;
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    color: #8290a9 !important;
+    background: transparent !important;
+    font-size: 13px !important;
+    font-weight: 400 !important;
+    line-height: 1.25 !important;
+}
+.vct-agc-page .vct-agc-stats .vct-360-stat b {
+    grid-column: 2 !important;
+    grid-row: 1 / 3 !important;
+    margin: 0 !important;
+    color: #1f2937 !important;
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    text-align: right !important;
+    white-space: nowrap !important;
+}
+.vct-agc-page .vct-agc-stats .vct-360-stat-icon {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+    border-radius: 12px !important;
+    color: #fff !important;
+    background: var(--agc-kpi-accent) !important;
+}
+.vct-agc-page .vct-agc-stats .vct-360-stat-icon > [data-vct-icon],
+.vct-agc-page .vct-agc-stats .vct-360-stat-icon > [data-vct-icon] svg {
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+    max-width: 20px !important;
+}
+/* Base del componente soft; hover del Dashboard al final. */
+.vct-agc-page .vct-agc-stats .vct-soft-kpi {
+    transform: none !important;
+    transition: none !important;
+}
+@media (max-width: 600px) {
+    .vct-agc-page .vct-agc-stats .vct-360-stat { padding: 12px 16px !important; }
+}
+
+
+/* Respeta hidden aunque el campo use display:flex. */
+.vct-agc-modal [hidden] { display: none !important; }
+/* Hover uniforme en las cuatro cards: ninguna queda marcada al entrar. */
+.vct-agc-page .vct-agc-stats .vct-360-stat,
+.vct-agc-page .vct-agc-stats .vct-soft-kpi {
+    transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease !important;
+}
+.vct-agc-page .vct-agc-stats .vct-360-stat:hover,
+.vct-agc-page .vct-agc-stats .vct-soft-kpi:hover {
+    transform: translateY(-1px) !important;
+    border-color: #a51b54 !important;
+    box-shadow: inset 0 -4px 0 #a51b54, 0 9px 22px rgba(15,23,42,.075) !important;
+}
+
+/* Modal de Agenda: comparte el shell y select portal de los formularios MAIN. */
+html body .vct-form-select-menu.vct-agc-select-menu { box-sizing: border-box !important; }
+.vct-agc-modal-ov.vct-form-shell .vct-agc-modal {
+    width: min(560px, 100%) !important;
+    max-height: calc(100vh - 36px);
+    max-height: calc(100dvh - 36px);
+    min-height: 0;
+    box-sizing: border-box;
+    animation: none;
+}
+.vct-agc-modal-ov .vct-agc-modal-head,
+.vct-agc-modal-ov .vct-agc-modal-foot { flex: 0 0 auto; }
+.vct-agc-modal-ov.vct-modal.vct-form-shell .vct-agc-modal-body {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+}
+.vct-agc-modal-ov .vct-agc-field { flex: 0 0 auto; }
+.vct-agc-modal-ov .vct-agc-modal-x {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+.vct-agc-modal-x [data-vct-icon], .vct-agc-modal-x svg { width: 18px; height: 18px; }
+.vct-agc-modal-ov .vct-agc-modal-foot { border-radius: 0 0 18px 18px; }
+.vct-agc-modal-ov .vct-agc-modal-foot-r { flex-wrap: wrap; }
+@media (max-width: 640px) {
+    .vct-agc-modal-ov.vct-form-shell .vct-agc-modal { max-height: calc(100dvh - 16px) !important; }
 }

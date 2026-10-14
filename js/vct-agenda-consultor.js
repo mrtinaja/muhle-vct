@@ -149,16 +149,23 @@
                 else if (e==="LICENCIA" || e==="OCUPADO") { noDispD++; }
                 else if (isFeriado(e)) { ferD++; }
             }
-            function tile(tone,label,val,sub,icon){
-                return '<div class="vct-360-stat" data-vct-tone="'+tone+'"><span>'
-                     + '<span class="vct-360-stat-label">'+label+'</span><b>'+val+'</b><small>'+sub+'</small></span>'
-                     + '<span class="vct-360-stat-icon"><span data-vct-icon="'+icon+'"></span></span></div>';
+            /* mismo componente que la pantalla Proyectos: .vct-soft-kpi
+               (icono en caja de color a la izq, titulo + numero grande + ayuda).
+               Colores Vocaturo: is-blue / is-green / is-orange / is-purple. */
+            function tile(variant,label,val,help,icon){
+                return '<article class="vct-soft-kpi '+variant+'">'
+                     + '<span class="vct-soft-kpi-icon" data-vct-icon="'+icon+'"></span>'
+                     + '<div class="vct-soft-kpi-copy">'
+                     +   '<span class="vct-soft-kpi-label">'+label+'</span>'
+                     +   '<strong class="vct-soft-kpi-value">'+val+'</strong>'
+                     +   '<span class="vct-soft-kpi-help">'+help+'</span>'
+                     + '</div></article>';
             }
             statsEl.innerHTML =
-                  tile("blue","Disponible", dispD, fmtH(dispH)+"h en el mes", "check")
-                + tile("mint","Asignado", asigD, "día(s) con visita", "briefcase")
-                + tile("amber","No disponible", noDispD, "licencia / ocupado", "clock-3")
-                + tile("violet","Feriados", ferD, "en el mes", "calendar");
+                  tile("is-blue","Disponible", dispD, fmtH(dispH)+"h en el mes", "check")
+                + tile("is-green","Asignado", asigD, "día(s) con visita", "briefcase")
+                + tile("is-orange","No disponible", noDispD, "licencia / ocupado", "clock-3")
+                + tile("is-purple","Feriados", ferD, "en el mes", "calendar");
             if (window.VCT && VCT.Icon && typeof VCT.Icon.init === "function") VCT.Icon.init(statsEl);
         }
 

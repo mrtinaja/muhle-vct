@@ -1,9 +1,10 @@
-﻿/* vct-proyecto-alta.css - v1
-   Alta de proyecto (modal #vctModalProyecto de la Vista 360 de Cliente).
+/* vct-proyecto-alta.css - v3
+   Alta de proyecto UNICA en pantalla completa (#vctProyectoAlta): Proyectos y Vista 360 de Cliente.
    Solo estilos propios del alta: inputs, selects, botones y date picker son
    los estandar de vct-main.css / vct-datepicker.css. */
 
-.vct-proy-alta {
+.vct-proy-alta,
+.vct-proy-alta-view {
     --vct-proy-brand: #66062D;
     --vct-proy-brand-soft: #F7EDF1;
     --vct-proy-brand-border: #E5C9D4;
@@ -85,114 +86,19 @@
 .vct-proy-service.is-selected .vct-proy-service-icon { background: var(--vct-proy-brand); color: #fff; }
 .vct-proy-service.is-selected .vct-proy-service-check { background: var(--vct-proy-brand); border-color: var(--vct-proy-brand); color: #fff; }
 
-/* ---------- normas ---------- */
+/* ---------- normas (caja) ---------- */
 .vct-proy-normas {
     border: 1px solid var(--vct-proy-line);
     border-radius: 10px;
     background: #fff;
-    padding: 8px;
-}
-.vct-proy-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    min-height: 28px;
-    margin-bottom: 8px;
-}
-.vct-proy-chips-empty { color: var(--vct-proy-muted); font-size: 12px; align-self: center; padding: 0 4px; }
-.vct-proy-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    height: 26px;
-    padding: 0 4px 0 10px;
-    border: 1px solid var(--vct-proy-brand-border);
-    border-radius: 999px;
-    background: var(--vct-proy-brand-soft);
-    color: var(--vct-proy-brand);
-    font-size: 12px;
-    font-weight: 600;
-}
-.vct-proy-chip-x {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 18px;
-    height: 18px;
-    border: 0;
-    border-radius: 50%;
-    background: transparent;
-    color: inherit;
-    font-size: 15px;
-    line-height: 1;
-    cursor: pointer;
-}
-.vct-proy-chip-x:hover { background: var(--vct-proy-brand); color: #fff; }
-.vct-proy-combo { position: relative; }
-.vct-proy-combo-icon {
-    position: absolute;
-    left: 11px;
-    top: 50%;
-    transform: translateY(-50%);
-    display: inline-flex;
-    color: var(--vct-proy-muted);
-    pointer-events: none;
-}
-.vct-proy-combo-icon svg { width: 15px; height: 15px; }
-/* le gana al padding fijo de los inputs de formulario de vct-main.css */
-html body .vct-form-shell.vct-proy-alta .vct-proy-normas input.vct-input.vct-proy-combo-input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]) {
-    width: 100%;
-    padding-left: 34px !important;
+    padding: 10px;
 }
 
 /* date picker a todo el ancho de la columna, como los demas campos */
 .vct-proy-alta .vct-datepicker { display: flex; width: 100%; }
 .vct-proy-alta .vct-datepicker-trigger { flex: 1 1 auto; width: 100%; }
-.vct-proy-combo-menu {
-    display: none;
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: calc(100% + 6px);
-    z-index: 30;
-    max-height: 240px;
-    overflow-y: auto;
-    padding: 6px;
-    border: 1px solid var(--vct-proy-line);
-    border-radius: 10px;
-    background: #fff;
-    box-shadow: 0 12px 28px rgba(15, 23, 42, .14), 0 2px 6px rgba(15, 23, 42, .06);
-}
-.vct-proy-normas.is-open .vct-proy-combo-menu { display: block; }
-.vct-proy-combo-option {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 10px;
-    border-radius: 7px;
-    color: var(--vct-proy-text);
-    font-size: 13px;
-    cursor: pointer;
-}
-.vct-proy-combo-option:hover,
-.vct-proy-combo-option.is-active { background: #F1F5F9; }
-.vct-proy-combo-option.is-selected { color: var(--vct-proy-brand); font-weight: 600; }
-.vct-proy-combo-check {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 16px;
-    width: 16px;
-    height: 16px;
-    border: 1px solid var(--vct-proy-line);
-    border-radius: 4px;
-    font-size: 11px;
-}
-.vct-proy-combo-option.is-selected .vct-proy-combo-check { background: var(--vct-proy-brand); border-color: var(--vct-proy-brand); color: #fff; }
-.vct-proy-combo-empty { padding: 10px; color: var(--vct-proy-muted); font-size: 13px; }
 
 /* error de validacion del input original -> se marca el componente */
-.vct-proy-source.vct-field-error + .vct-proy-services .vct-proy-service,
 .vct-proy-source.vct-field-error + .vct-proy-normas { border-color: var(--vct-proy-bad); }
 
 /* fecha limite sin analista: se ve, pero en segundo plano */
@@ -230,47 +136,12 @@ html body .vct-form-shell.vct-proy-alta .vct-proy-normas input.vct-input.vct-pro
 .vct-proy-alta .is-positive { color: var(--vct-proy-ok); }
 .vct-proy-alta .is-negative { color: var(--vct-proy-bad); }
 
-/* ---------- rentabilidad: panel (sobre el modal) ---------- */
-.vct-proy-alta .vct-modal-dialog { position: relative; }
-.vct-proy-rent-panel {
-    display: none;
-    position: absolute;
-    inset: 0;
-    z-index: 40;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-    background: rgba(15, 23, 42, .32);
-    border-radius: inherit;
-}
-.vct-proy-rent-panel.is-open { display: flex; }
-.vct-proy-rent-sheet {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    max-width: 760px;
-    max-height: 100%;
-    border-radius: 12px;
-    background: #fff;
-    box-shadow: 0 24px 48px rgba(15, 23, 42, .22);
-    overflow: hidden;
-}
-.vct-proy-rent-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 16px 18px 12px;
-    border-bottom: 1px solid var(--vct-proy-line);
-}
-.vct-proy-rent-head h4 { margin: 0; font-size: 15px; color: var(--vct-proy-text); }
-.vct-proy-rent-head p { margin: 2px 0 0; font-size: 12px; color: var(--vct-proy-muted); }
+/* ---------- rentabilidad: modal estandar; solo el contenido es propio ---------- */
+.vct-proy-rent-modal .vct-modal-dialog { max-width: 760px; }
 .vct-proy-rent-body {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px 18px;
-    padding: 16px 18px;
-    overflow-y: auto;
 }
 .vct-proy-rent-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .vct-proy-rent-title { font-size: 12px; font-weight: 700; color: var(--vct-proy-brand); text-transform: uppercase; letter-spacing: .03em; }
@@ -301,13 +172,7 @@ html body .vct-form-shell.vct-proy-alta .vct-proy-normas input.vct-input.vct-pro
 .vct-proy-rent-result b { font-size: 18px; color: var(--vct-proy-ok); }
 .vct-proy-rent-comment { grid-column: 1 / -1; }
 .vct-proy-alta .vct-proy-money { text-align: right; font-variant-numeric: tabular-nums; }
-.vct-proy-rent-foot {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 18px;
-    border-top: 1px solid var(--vct-proy-line);
-}
+.vct-proy-rent-modal .vct-form-footer { display: flex; align-items: center; gap: 8px; }
 .vct-proy-rent-spacer { flex: 1 1 auto; }
 .vct-proy-empty { color: var(--vct-proy-muted); font-size: 13px; }
 
@@ -317,5 +182,167 @@ html body .vct-form-shell.vct-proy-alta .vct-proy-normas input.vct-input.vct-pro
     .vct-proy-rent-result { grid-template-columns: 1fr; }
     .vct-proy-rent-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .vct-proy-rent-card { flex-wrap: wrap; }
-    .vct-proy-rent-panel { padding: 8px; }
 }
+
+/* ======================================================================
+   v3: servicios con fechas y horas, normas frecuentes + panel, picker
+   ====================================================================== */
+.vct-proy-srv-detail {
+    margin-top: 10px;
+    border: 1px solid var(--vct-proy-line);
+    border-radius: 10px;
+    background: #fff;
+    overflow: visible;
+}
+.vct-proy-srv-head,
+.vct-proy-srv-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr) 110px;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 12px;
+}
+.vct-proy-srv-head {
+    padding-top: 7px;
+    padding-bottom: 7px;
+    border-bottom: 1px solid var(--vct-proy-line);
+    background: #F8FAFC;
+    border-radius: 10px 10px 0 0;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--vct-proy-muted);
+    text-transform: uppercase;
+    letter-spacing: .03em;
+}
+.vct-proy-srv-row + .vct-proy-srv-row { border-top: 1px solid #EEF2F6; }
+.vct-proy-srv-name { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--vct-proy-text); min-width: 0; }
+.vct-proy-srv-name [data-vct-icon] { display: inline-flex; color: var(--vct-proy-brand); }
+.vct-proy-srv-name svg { width: 15px; height: 15px; }
+.vct-proy-alta .vct-proy-srv-hrs { text-align: right; font-weight: 700; }
+.vct-proy-srv-foot {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 12px;
+    border-top: 1px solid var(--vct-proy-line);
+    background: #FCFAFB;
+    border-radius: 0 0 10px 10px;
+}
+.vct-proy-srv-track { flex: 1 1 auto; height: 8px; border-radius: 6px; background: #EEF2F6; overflow: hidden; }
+.vct-proy-srv-track span { display: block; height: 100%; width: 0; border-radius: 6px; background: var(--vct-proy-brand); transition: width .2s ease; }
+.vct-proy-srv-total { font-size: 12px; font-weight: 700; white-space: nowrap; color: var(--vct-proy-muted); }
+.vct-proy-srv-foot.is-ok .vct-proy-srv-track span { background: var(--vct-proy-ok); }
+.vct-proy-srv-foot.is-ok .vct-proy-srv-total { color: var(--vct-proy-ok); }
+.vct-proy-srv-foot.is-under .vct-proy-srv-total { color: #B45309; }
+.vct-proy-srv-foot.is-over .vct-proy-srv-track span { background: var(--vct-proy-bad); }
+.vct-proy-srv-foot.is-over .vct-proy-srv-total { color: var(--vct-proy-bad); }
+
+/* normas: chips de las mas usadas */
+.vct-proy-norm-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.vct-proy-norm-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 12px 0 8px;
+    border: 1px solid var(--vct-proy-line);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--vct-proy-text);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.vct-proy-norm-chip:hover { border-color: var(--vct-proy-brand-border); }
+.vct-proy-norm-tick {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #F1F5F9;
+    color: var(--vct-proy-muted);
+    font-size: 11px;
+    line-height: 1;
+}
+.vct-proy-norm-chip.is-selected { border-color: var(--vct-proy-brand); background: var(--vct-proy-brand-soft); color: var(--vct-proy-brand); }
+.vct-proy-norm-chip.is-selected .vct-proy-norm-tick { background: var(--vct-proy-brand); color: #fff; }
+.vct-proy-norm-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #EEF2F6; }
+.vct-proy-norm-count { font-size: 12px; font-weight: 600; color: var(--vct-proy-brand); }
+.vct-proy-norm-count.is-empty { color: var(--vct-proy-muted); font-weight: 400; }
+.vct-proy-norm-foot .vct-btn [data-vct-icon] svg { width: 13px; height: 13px; }
+
+/* normas: modal "Ver todas" (estructura de modal estandar) */
+.vct-proy-norm-modal .vct-modal-dialog { max-width: 560px; }
+.vct-proy-norm-search { position: relative; margin-bottom: 8px; }
+.vct-proy-norm-search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); display: inline-flex; color: var(--vct-proy-muted); pointer-events: none; z-index: 1; }
+.vct-proy-norm-search-icon svg { width: 15px; height: 15px; }
+html body .vct-proy-alta-view .vct-proy-norm-modal input.vct-input.vct-proy-norm-q:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]) { width: 100%; padding-left: 34px !important; }
+.vct-proy-norm-list { max-height: 340px; overflow-y: auto; }
+.vct-proy-norm-group { position: sticky; top: 0; z-index: 1; padding: 8px 0 4px; background: #fff; font-size: 11px; font-weight: 700; color: var(--vct-proy-brand); text-transform: uppercase; letter-spacing: .03em; }
+.vct-proy-norm-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 7px 8px; border: 0; border-radius: 7px; background: transparent; font: inherit; font-size: 13px; color: var(--vct-proy-text); text-align: left; cursor: pointer; }
+.vct-proy-norm-item:hover { background: #F8FAFC; }
+.vct-proy-norm-box { flex: 0 0 16px; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #CBD5E1; border-radius: 4px; background: #fff; color: #fff; font-size: 11px; line-height: 1; }
+.vct-proy-norm-item.is-selected { color: var(--vct-proy-brand); font-weight: 600; }
+.vct-proy-norm-item.is-selected .vct-proy-norm-box { background: var(--vct-proy-brand); border-color: var(--vct-proy-brand); }
+.vct-proy-norm-modal .vct-form-footer { display: flex; align-items: center; gap: 8px; }
+.vct-proy-norm-sel { font-size: 12px; font-weight: 600; color: var(--vct-proy-brand); }
+
+/* servicios: aviso de rango en la misma linea */
+.vct-proy-srv-msg { grid-column: 1 / -1; font-size: 12px; font-weight: 600; color: var(--vct-proy-bad); }
+.vct-proy-srv-row.is-error .vct-datepicker-trigger { border-color: var(--vct-proy-bad) !important; }
+
+.vct-proy-warn { color: #B45309; }
+.vct-proy-source.vct-field-error + .vct-proy-srv-wrap .vct-proy-service { border-color: var(--vct-proy-bad); }
+
+@media (max-width: 768px) {
+    .vct-proy-srv-head { display: none; }
+    .vct-proy-srv-row { grid-template-columns: 1fr 1fr; }
+    .vct-proy-srv-name { grid-column: 1 / -1; }
+}
+
+/* campos de texto/numero al ancho de su columna (como los combos) */
+.vct-proy-alta .vct-input,
+.vct-proy-alta .vct-textarea,
+.vct-proy-alta .vct-datepicker-trigger { box-sizing: border-box; max-width: 100%; }
+html body .vct-form-shell.vct-proy-alta input.vct-input[readonly]:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]) { background: #F8FAFC !important; color: #64748B !important; }
+
+/* ---------- vista de pantalla completa ----------
+   Cerrada no se ve. Abierta oculta el resto de la pantalla ([data-vct-page]). */
+.vct-proy-alta-view { display: none; }
+.vct-proy-alta-view.is-open { display: block; }
+[data-vct-page].vct-proy-alta-on > :not(.vct-proy-alta-view) { display: none !important; }
+
+/* encabezado: volver + icono (mismo criterio que el editor de templates) */
+.vct-proy-alta .vct-form-header { display: flex; align-items: center; gap: 10px; }
+.vct-proy-back-btn {
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    color: var(--vct-proy-brand);
+    background: #fff;
+    border: 1px solid rgba(102, 6, 45, .2);
+    border-radius: 9px;
+    cursor: pointer;
+}
+.vct-proy-back-btn:hover { background: var(--vct-proy-brand-soft); }
+.vct-proy-back-btn svg { width: 16px; height: 16px; }
+.vct-proy-head-icon {
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--vct-proy-brand);
+    background: rgba(102, 6, 45, .08);
+    border-radius: 9px;
+}
+.vct-proy-head-icon svg { width: 16px; height: 16px; }
+.vct-proy-alta .vct-form-footer { display: flex; justify-content: flex-end; gap: 8px; }

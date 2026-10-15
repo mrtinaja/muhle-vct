@@ -1,4 +1,4 @@
-/* vct-agenda-consultor.css - v18
+/* vct-agenda-consultor.css - v19
    ============================================================================
    Agenda del consultor. Hereda la estructura del calendario (vct-agenda.css)
    y pinta el color por ESTADO. Paleta aprobada:
@@ -485,4 +485,38 @@ html body .vct-form-select-menu.vct-agc-select-menu { box-sizing: border-box !im
 .vct-agc-modal-ov .vct-agc-modal-foot-r { flex-wrap: wrap; }
 @media (max-width: 640px) {
     .vct-agc-modal-ov.vct-form-shell .vct-agc-modal { max-height: calc(100dvh - 16px) !important; }
+}
+
+/* ============================================================================
+   Mobile (<=600px): toolbar sin desborde, v19.
+   En celular mes+año (2 x ~182px) no entran en el ancho de la card y el mes
+   quedaba cortado contra el borde izquierdo. Fix: la fila mes/año ocupa el 100%
+   y los dos selects comparten el ancho (50% c/u), sin topes fijos.
+   ============================================================================ */
+@media (max-width: 600px) {
+    .vct-agc-page .vct-agc-toolbar .vct-agenda-toolbar-right {
+        margin-left: 0 !important;
+        width: 100% !important;
+        flex: 1 1 100% !important;
+        justify-content: flex-start !important;
+    }
+    .vct-agc-page .vct-agc-jump {
+        width: 100% !important;
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        gap: 10px !important;
+    }
+    /* cada select (y su widget custom del enhancer) comparte la fila */
+    .vct-agc-page .vct-agc-jump > .vct-select,
+    .vct-agc-page .vct-agc-jump > .vct-custom-select,
+    .vct-agc-page .vct-agc-jump > .vct-custom-select-wrapper,
+    .vct-agc-page .vct-agc-jump [data-vct-agc-month] + .vct-custom-select,
+    .vct-agc-page .vct-agc-jump [data-vct-agc-month] + .vct-custom-select-wrapper,
+    .vct-agc-page .vct-agc-jump [data-vct-agc-year] + .vct-custom-select,
+    .vct-agc-page .vct-agc-jump [data-vct-agc-year] + .vct-custom-select-wrapper {
+        flex: 1 1 0 !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+    }
 }

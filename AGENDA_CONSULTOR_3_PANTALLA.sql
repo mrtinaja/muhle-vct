@@ -262,7 +262,7 @@ BEGIN
     SET @HTML =
         '<link rel="stylesheet" href="../css/vct-inicio.css?v=5">'
       + '<link rel="stylesheet" href="../css/vct-agenda.css?v=3">'
-      + '<link rel="stylesheet" href="../css/vct-agenda-consultor.css?v=18">'
+      + '<link rel="stylesheet" href="../css/vct-agenda-consultor.css?v=19">'
       + '<script src="../js/vct-agenda-consultor.js?v=16"></script>'
       + '<div class="vct-page vct-page-main vct-agc-page" data-vct-page'
       + ' data-vct-sidebar-id="' + CONVERT(VARCHAR(20),@SIDEBAR_ID) + '"'

@@ -1,0 +1,51 @@
+/* DIAG_LANZAMIENTO_ESQUEMA - solo lectura. Para armar las grillas del Lanzamiento
+   (datos de entrada, consideraciones, reunion de lanzamiento, inicio) sobre el modelo existente.
+   Pasar el resultado de todas las grillas. */
+USE [MuhlePROD];
+SET NOCOUNT ON;
+
+/* 0. tablas que existen hoy del modelo de proyectos y documentos */
+SELECT T.name AS TABLA, (SELECT SUM(P.rows) FROM sys.partitions P WHERE P.object_id = T.object_id AND P.index_id IN (0,1)) AS FILAS
+FROM sys.tables T
+WHERE T.name LIKE 'VCT_PROYECTOS%' OR T.name LIKE 'VCT_PRM_DOCUMENTOS%' OR T.name LIKE 'VCT_DOCUMENTOS%'
+ORDER BY T.name;
+
+/* 1. columnas de las tablas que usa el lanzamiento */
+SELECT C.TABLE_NAME, C.ORDINAL_POSITION, C.COLUMN_NAME, C.DATA_TYPE, C.CHARACTER_MAXIMUM_LENGTH AS LARGO, C.IS_NULLABLE,
+       COLUMNPROPERTY(OBJECT_ID('dbo.' + C.TABLE_NAME), C.COLUMN_NAME, 'IsIdentity') AS ES_IDENTITY
+FROM INFORMATION_SCHEMA.COLUMNS C
+WHERE C.TABLE_SCHEMA = 'dbo'
+  AND (C.TABLE_NAME LIKE 'VCT_PROYECTOS_DOC%' OR C.TABLE_NAME LIKE 'VCT_PRM_DOCUMENTOS%'
+       OR C.TABLE_NAME IN ('VCT_PROYECTOS','VCT_PRM_PROYECTOS_ESTADOS'))
+ORDER BY C.TABLE_NAME, C.ORDINAL_POSITION;
+
+/* 2. tipos de documento ya usados en proyectos */
+SELECT TIPO, COUNT(*) AS CANT FROM dbo.VCT_PROYECTOS_DOCUMENTOS WITH(NOLOCK) GROUP BY TIPO ORDER BY TIPO;
+
+/* 3. documentos parametrizados (minutas de gestion = datos de entrada) */
+SELECT D.*, (SELECT COUNT(*) FROM dbo.VCT_PRM_DOCUMENTOS_ITEMS I WITH(NOLOCK) WHERE I.ID_DOCUMENTO = D.ID) AS ITEMS
+FROM dbo.VCT_PRM_DOCUMENTOS D WITH(NOLOCK) ORDER BY D.ID;
+
+/* 4. items de las minutas RE-PP-022 (los datos de entrada por servicio) */
+SELECT D.CODIGO AS DOC, I.*
+FROM dbo.VCT_PRM_DOCUMENTOS_ITEMS I WITH(NOLOCK)
+INNER JOIN dbo.VCT_PRM_DOCUMENTOS D WITH(NOLOCK) ON D.ID = I.ID_DOCUMENTO
+WHERE D.CODIGO LIKE 'RE-PP-022%'
+ORDER BY D.CODIGO, I.ORDEN, I.ID;
+
+/* 5. estados de proyecto */
+SELECT * FROM dbo.VCT_PRM_PROYECTOS_ESTADOS WITH(NOLOCK) ORDER BY ID;
+
+/* 6. documentos que ya tiene el proyecto (1347) */
+DECLARE @P INT;
+SELECT @P = ID FROM dbo.VCT_PROYECTOS WITH(NOLOCK) WHERE CODIGO = '1347' OR ID = 1347;
+SELECT D.* FROM dbo.VCT_PROYECTOS_DOCUMENTOS D WITH(NOLOCK) WHERE D.ID_PROYECTO = @P;
+
+/* 7. subtipos y reglas de acciones del lanzamiento / inicio */
+SELECT ST.ID, ST.ID_TIPO, ST.CODIGO, ST.DESCRIPCION, ST.ACTIVO FROM dbo.VCT_PRM_ACCIONES_SUBTIPOS ST WITH(NOLOCK) ORDER BY ST.ID_TIPO, ST.ORDEN;
+SELECT ID, CODIGO, CODIGO_EVENTO, ID_SUBTIPO, DESTINATARIO_ROL, DIAS_VENCIMIENTO, GENERA_EMAIL, ID_EMAIL_TEMPLATE, ACTIVO
+FROM dbo.VCT_PRM_ACCIONES_REGLAS WITH(NOLOCK) ORDER BY CODIGO_EVENTO, ID;
+
+/* 8. objetos viejos del lanzamiento que quedaron en la base */
+SELECT name, type_desc, modify_date FROM sys.objects
+WHERE name LIKE 'VCT_PROYECTO_LANZ%' OR name LIKE 'VCT_PROYECTO_MINUTAS%' OR name = 'VCT_HTML_ESC' OR name LIKE 'VCT_PROYECTO_PLAN%' OR name LIKE 'VCT_PROYECTO_VISITA%';

@@ -1,0 +1,62 @@
+/* vct-notif.css - v1
+   Campanita de notificaciones en el header, a la izquierda de las iniciales
+   del usuario (#muhleTopBar). La arma dbo.VCT_NOTIF_RENDER desde
+   dbo.VCT_GET_HEADER y la ubica js/vct-notif.js. */
+
+#muhleTopBar.w3-muhle-topbar.vct-has-notif { width: auto !important; }
+
+#muhleTopBar .vct-notif-bell { position: relative; flex: 0 0 auto; display: flex; align-items: center; color: #333233; }
+#muhleTopBar .vct-notif-bell-btn {
+    position: relative; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center;
+    margin: 0; padding: 0; border: 1px solid rgba(102,6,45,.14); border-radius: 50%; background: #fff;
+    color: #66062D; cursor: pointer; box-shadow: 0 2px 8px rgba(102,6,45,.08);
+    transition: background .18s ease, border-color .18s ease;
+}
+#muhleTopBar .vct-notif-bell-btn svg { width: 18px; height: 18px; }
+#muhleTopBar .vct-notif-bell-btn:hover,
+#muhleTopBar .vct-notif-bell-btn[aria-expanded="true"] { background: rgba(102,6,45,.06); border-color: rgba(102,6,45,.24); }
+#muhleTopBar .vct-notif-bell-badge {
+    position: absolute; top: -5px; right: -5px; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box;
+    display: inline-flex; align-items: center; justify-content: center; border: 2px solid #fff; border-radius: 999px;
+    background: #dc2626; color: #fff; font-size: 10px; font-weight: 700; line-height: 1;
+}
+
+#muhleTopBar .vct-notif-bell-panel {
+    position: absolute; top: calc(100% + 8px); right: -8px; z-index: 1500; width: min(380px, calc(100vw - 24px));
+    max-height: min(480px, 70vh); display: flex; flex-direction: column; overflow: hidden; text-align: left;
+    border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; color: #1e293b;
+    box-shadow: 0 15px 40px rgba(15,23,42,.16); font-family: var(--vct-font, Arial, sans-serif);
+}
+#muhleTopBar .vct-notif-bell-panel[hidden] { display: none !important; }
+#muhleTopBar .vct-notif-bell-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px;
+    border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #1e293b;
+}
+#muhleTopBar .vct-notif-bell-ok { color: #15803d; font-size: 12px; }
+#muhleTopBar .vct-notif-bell-empty { margin: 0; padding: 22px 14px; color: #64748b; font-size: 12px; text-align: center; }
+#muhleTopBar .vct-notif-bell-list { margin: 0; padding: 4px 0; list-style: none; overflow-y: auto; }
+#muhleTopBar .vct-notif-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-top: 1px solid #f1f5f9; }
+#muhleTopBar .vct-notif-item:first-child { border-top: 0; }
+#muhleTopBar .vct-notif-item.is-unread { background: #fef2f2; }
+#muhleTopBar .vct-notif-item-icon {
+    flex: 0 0 30px; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 9px; background: #f1f5f9; color: #64748b;
+}
+#muhleTopBar .vct-notif-item-icon svg { width: 15px; height: 15px; }
+#muhleTopBar .vct-notif-item.is-unread .vct-notif-item-icon { background: #fee2e2; color: #dc2626; }
+#muhleTopBar .vct-notif-item-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+#muhleTopBar .vct-notif-item-title { color: #1e293b; font-size: 12px; font-weight: 500; line-height: 1.35; overflow-wrap: anywhere; }
+#muhleTopBar .vct-notif-item.is-unread .vct-notif-item-title { color: #b91c1c; font-weight: 700; }
+#muhleTopBar .vct-notif-item-meta { color: #64748b; font-size: 11px; line-height: 1.35; overflow-wrap: anywhere; }
+#muhleTopBar .vct-notif-item-date { color: #94a3b8; font-size: 10px; }
+#muhleTopBar .vct-notif-item.is-unread .vct-notif-item-date::before {
+    content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 5px; border-radius: 50%; background: #dc2626; vertical-align: 1px;
+}
+#muhleTopBar .vct-notif-link {
+    display: inline; margin: 0; padding: 0; border: 0; background: transparent; color: inherit; font: inherit;
+    text-align: left; cursor: pointer;
+}
+#muhleTopBar .vct-notif-link:hover { color: #66062D; text-decoration: underline; }
+
+/* el holder que trae el header nunca se ve: el JS lo mueve al topbar */
+[data-vct-notif-holder] { display: none !important; }

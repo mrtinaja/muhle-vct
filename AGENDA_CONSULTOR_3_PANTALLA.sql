@@ -251,6 +251,21 @@ BEGIN
             LEFT JOIN dbo.VCT_PRM_AGENDA_CONSULTOR AG ON AG.ID_CONSULTOR=@CONS_ID AND AG.FECHA=R.FECHA
             ORDER BY R.FECHA
             FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), 1, 1, ''), '') + ']';
+    END
+    ELSE
+    BEGIN
+        /* sin consultor elegido: igual mostramos los FERIADOS (fijo/movible)
+           de dbo.Calendar, para que el calendario no quede totalmente vacio. */
+        SET @DIAS_JSON = '[' + ISNULL(STUFF((
+            SELECT ',{"f":"' + CONVERT(VARCHAR(10), cal.Fecha, 120)
+                 + '","e":"' + CASE WHEN CONVERT(INT, ISNULL(cal.Feriado,0)) = 2 THEN 'FERIADO_MOV' ELSE 'FERIADO_FIJO' END
+                 + '","h":0,"hc":0,"t":"'
+                 + '","n":"' + REPLACE(REPLACE(REPLACE(ISNULL(cal.HolidayText,''),'\','/'),'"',''''),CHAR(10),' ')
+                 + '","mo":"","de":""}'
+            FROM dbo.Calendar cal
+            WHERE cal.Fecha BETWEEN @DESDE AND @HASTA AND cal.IsHoliday = 1
+            ORDER BY cal.Fecha
+            FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), 1, 1, ''), '') + ']';
     END;
 
     /* escape para atributo HTML (igual que el calendario de feriados) */
@@ -262,7 +277,7 @@ BEGIN
     SET @HTML =
         '<link rel="stylesheet" href="../css/vct-inicio.css?v=5">'
       + '<link rel="stylesheet" href="../css/vct-agenda.css?v=3">'
-      + '<link rel="stylesheet" href="../css/vct-agenda-consultor.css?v=19">'
+      + '<link rel="stylesheet" href="../css/vct-agenda-consultor.css?v=20">'
       + '<script src="../js/vct-agenda-consultor.js?v=16"></script>'
       + '<div class="vct-page vct-page-main vct-agc-page" data-vct-page'
       + ' data-vct-sidebar-id="' + CONVERT(VARCHAR(20),@SIDEBAR_ID) + '"'

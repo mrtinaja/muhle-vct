@@ -40,6 +40,24 @@
             }
         }catch(e){ feriados={}; }
 
+        /* Actividades de Proyecto 360: datos de lectura; Feriados conserva su fuente. */
+        var hasActivities=root.hasAttribute("data-vct-calendar-events");
+        var activities={};
+        if(hasActivities){
+            try{JSON.parse(root.getAttribute("data-vct-calendar-events")||"[]").forEach(function(e){
+                if(!activities[e.f]) activities[e.f]=[];
+                activities[e.f].push(e);
+            });}catch(e){activities={};}
+        }
+        function activityBadges(key,compact){
+            var items=activities[key]||[];
+            var shown=compact&&items.length>2?items.slice(0,1):items;
+            return '<div class="vct-agenda-events">'+shown.map(function(e){
+                var tone=e.k==="AGENDADA"?" is-planned":e.k==="REGISTRADA"?"":" is-pending";
+                return '<span class="vct-agenda-event'+tone+'" title="'+escapeAttr(e.x)+'">'+escapeHtml(e.x)+'</span>';
+            }).join("")+(compact&&items.length>2?'<span class="vct-agenda-event">+ '+(items.length-1)+' actividades</span>':'')+'</div>';
+        }
+
         var today=new Date();
         var state={ view:"month", cursor:new Date(today.getFullYear(),today.getMonth(),today.getDate()) };
 
@@ -50,6 +68,15 @@
         var btnPrev=root.querySelector("[data-vct-agenda-prev]");
         var btnNext=root.querySelector("[data-vct-agenda-next]");
         var viewButtons=root.querySelectorAll("[data-vct-agenda-view]");
+        /* Mes y anio nativos: el enhancer antiguo confunde wrappers adyacentes. */
+        [selMonth,selYear].forEach(function(select){
+            if(!select)return;
+            var wrapper=select.nextElementSibling;
+            if(wrapper&&wrapper.classList.contains("vct-custom-select-wrapper"))wrapper.remove();
+            select.dataset.vctCustomInit="true";
+            select.setAttribute("data-vct-native","true");
+            select.style.removeProperty("display");
+        });
         var proxyDelete=root.querySelector("[data-vct-agenda-proxy-delete]");
         var btnCreate=root.querySelector(".vct-agenda-btn-new");
 
@@ -62,6 +89,7 @@
         }
 
         function openDayModal(dateObj){
+            if(hasActivities){state.cursor=new Date(dateObj);setView("day");return;}
             if(!canEdit) return;
             if(isPast(dateObj)) return; // no se editan/agregan feriados en fechas pasadas
             var key=dateKey(dateObj);
@@ -170,6 +198,7 @@
                         if(fer && fer.texto){
                             html+='<span class="vct-agenda-holiday-label">'+escapeHtml(fer.texto)+'</span>';
                         }
+                        if(hasActivities) html+=activityBadges(key,true);
                         html+='</td>';
                     }
                     dayNum++;
@@ -209,7 +238,9 @@
                 html+='<span class="vct-agenda-weekrow-month">'+MESES[d.getMonth()].substr(0,3)+'</span>';
                 html+='</div>';
 
-                if(fer && fer.texto){
+                if(hasActivities){
+                    html+='<div class="vct-agenda-weekrow-card">'+((activities[key]||[]).length?activityBadges(key):'<span class="vct-agenda-event-detail">Sin visitas</span>')+'</div>';
+                }else if(fer && fer.texto){
                     var esPuente=(String(fer.tipo)==="2");
                     html+='<div class="vct-agenda-weekrow-card'+(esPuente?" is-movible":" is-fijo")+'">';
                     html+='<span class="vct-agenda-weekrow-badge">'+(esPuente?"Movible":"Fijo")+'</span>';
@@ -241,7 +272,9 @@
             var html='<div class="vct-agenda-day'+(isPastDay?" vct-agenda-cell-past":"")+'" data-vct-agenda-day="'+key+'">';
             html+='<div class="vct-agenda-day-num">'+d.getDate()+'</div>';
             html+='<div class="vct-agenda-day-name">'+DIAS_CORTOS[d.getDay()]+" de "+MESES[d.getMonth()]+" de "+d.getFullYear()+'</div>';
-            if(fer && fer.texto){
+            if(hasActivities){
+                html+=((activities[key]||[]).length?activityBadges(key):'<p class="vct-agenda-event-detail">Sin visitas en esta fecha.</p>');
+            }else if(fer && fer.texto){
                 var tipoClass=(String(fer.tipo)==="2") ? "vct-agenda-movible" : "vct-agenda-fijo";
                 var tipoLabel=(String(fer.tipo)==="2") ? "Feriado movible" : "Feriado fijo";
                 html+='<div class="vct-agenda-day-holiday '+tipoClass+'">'+tipoLabel+' · '+escapeHtml(fer.texto)+'</div>';
@@ -249,7 +282,7 @@
             }else if(canEdit && !isPastDay){
                 html+='<div class="vct-agenda-day-hint">Click para cargar un feriado en esta fecha.</div>';
             }
-            html+='<div class="vct-agenda-day-placeholder">Próximamente: agenda de consultores para este día.</div>';
+            if(!hasActivities) html+='<div class="vct-agenda-day-placeholder">Próximamente: agenda de consultores para este día.</div>';
             html+='</div>';
             paneEl.innerHTML=html;
 
@@ -262,6 +295,7 @@
         function syncJumpSelects(){
             selMonth.value=String(state.cursor.getMonth()+1);
             selYear.value=String(state.cursor.getFullYear());
+            if(typeof window.initVctCustomSelects==="function") window.initVctCustomSelects(root);
         }
 
         function render(){

@@ -93,6 +93,15 @@
         var btnNext  = root.querySelector("[data-vct-agc-next]");
         var viewBtns = root.querySelectorAll("[data-vct-agc-view]");
 
+        /* Mes y anio nativos: el enhancer antiguo confunde wrappers adyacentes. */
+        [selMonth,selYear].forEach(function(select){
+            if(!select)return;
+            var wrapper=select.nextElementSibling;
+            if(wrapper&&wrapper.classList.contains("vct-custom-select-wrapper"))wrapper.remove();
+            select.dataset.vctCustomInit="true";
+            select.setAttribute("data-vct-native","true");
+            select.style.removeProperty("display");
+        });
         var canEdit = root.getAttribute("data-vct-agc-can-edit")==="1";
         var consId  = root.getAttribute("data-vct-agc-cons") || "";
 

@@ -60,11 +60,19 @@
                 activities[e.f].push(e);
             });}catch(e){activities={};}
         }
+        /* PV_FERIADOS_V17: feriado y actividad se muestran juntos. */
+        function projectHolidayBadge(fer){
+            if(!root.closest("[data-vct-pv],[data-vct-acc]") || !fer || !fer.texto) return "";
+            var movable=String(fer.tipo)==="2";
+            return '<span class="vct-agenda-event vct-pv-calendar-holiday '+(movable?'is-movible':'is-fijo')+'">'
+                +(movable?'Feriado movible':'Feriado fijo')+' · '+escapeHtml(fer.texto)+'</span>';
+        }
         function activityBadges(key,compact){
             var items=activities[key]||[];
             var shown=compact&&items.length>2?items.slice(0,1):items;
             return '<div class="vct-agenda-events">'+shown.map(function(e){
-                var tone=e.k==="AGENDADA"?" is-planned":e.k==="REGISTRADA"?"":" is-pending";
+                /* e.c = color por estado (Acciones: V/H/P/L); si no, tono por e.k (visitas 360) */
+                var tone=e.c?(" ev-"+e.c):(e.k==="AGENDADA"?" is-planned":e.k==="REGISTRADA"?"":" is-pending");
                 return '<span class="vct-agenda-event'+tone+'" title="'+escapeAttr(e.x)+'">'+escapeHtml(e.x)+'</span>';
             }).join("")+(compact&&items.length>2?'<span class="vct-agenda-event">+ '+(items.length-1)+' actividades</span>':'')+'</div>';
         }
@@ -155,6 +163,7 @@
            NAVEGACION / SELECTS
            ------------------------------------------------------------ */
         function fillYearSelect(){
+            if(!selYear) return;
             var prevValue=selYear.value;
             selYear.innerHTML="";
             var minY=today.getFullYear()-3, maxY=today.getFullYear()+3;
@@ -250,7 +259,7 @@
                 html+='</div>';
 
                 if(hasActivities){
-                    html+='<div class="vct-agenda-weekrow-card">'+((activities[key]||[]).length?activityBadges(key):'<span class="vct-agenda-event-detail">Sin visitas</span>')+'</div>';
+                    html+='<div class="vct-agenda-weekrow-card">'+projectHolidayBadge(fer)+((activities[key]||[]).length?activityBadges(key):'<span class="vct-agenda-event-detail">Sin actividades del proyecto</span>')+'</div>';
                 }else if(fer && fer.texto){
                     var esPuente=(String(fer.tipo)==="2");
                     html+='<div class="vct-agenda-weekrow-card'+(esPuente?" is-movible":" is-fijo")+'">';
@@ -284,7 +293,7 @@
             html+='<div class="vct-agenda-day-num">'+d.getDate()+'</div>';
             html+='<div class="vct-agenda-day-name">'+DIAS_CORTOS[d.getDay()]+" de "+MESES[d.getMonth()]+" de "+d.getFullYear()+'</div>';
             if(hasActivities){
-                html+=((activities[key]||[]).length?activityBadges(key):'<p class="vct-agenda-event-detail">Sin visitas en esta fecha.</p>');
+                html+=projectHolidayBadge(fer)+((activities[key]||[]).length?activityBadges(key):'<p class="vct-agenda-event-detail">Sin actividades del proyecto en esta fecha.</p>');
             }else if(fer && fer.texto){
                 var tipoClass=(String(fer.tipo)==="2") ? "vct-agenda-movible" : "vct-agenda-fijo";
                 var tipoLabel=(String(fer.tipo)==="2") ? "Feriado movible" : "Feriado fijo";
@@ -303,10 +312,39 @@
             }
         }
 
+        /* PV_CAL_SELECT_V15: widgets VCT solo en Proyecto 360.
+           Cada select tiene contenedor propio para aislar el enhancer legado.
+           El select sigue siendo fuente del valor y del evento change. */
+        function syncProjectJump(){
+            if(!root.closest("[data-vct-pv],[data-vct-acc]")) return false;
+            var api=window.VCT && window.VCT.FormSelect;
+            if(!api || typeof api.build!=="function") return false;
+            [selMonth,selYear].forEach(function(select){
+                if(!select) return;
+                var holder=select.parentElement;
+                if(!holder.classList.contains("vct-pv-cal-select")){
+                    holder=document.createElement("span");
+                    holder.className="vct-form-shell vct-pv-cal-select";
+                    select.parentNode.insertBefore(holder,select);
+                    holder.appendChild(select);
+                }
+                select.classList.add("vct-select");
+                select.setAttribute("data-vct-native","true");
+                select.setAttribute("data-vct-custom-init","true");
+                api.build(select);
+                var widget=holder.querySelector(".vct-form-select");
+                if(!widget) return;
+                var trigger=widget.querySelector(".vct-form-select-trigger");
+                if(trigger) trigger.setAttribute("aria-label",select===selMonth ? "Mes del calendario" : "Año del calendario");
+                if(widget.__vctPortalMenu) widget.__vctPortalMenu.classList.add("vct-pv-cal-select-menu");
+                if(typeof api.sync==="function") api.sync(select,widget);
+            });
+            return true;
+        }
         function syncJumpSelects(){
-            selMonth.value=String(state.cursor.getMonth()+1);
-            selYear.value=String(state.cursor.getFullYear());
-            if(typeof window.initVctCustomSelects==="function") window.initVctCustomSelects(root);
+            if(selMonth) selMonth.value=String(state.cursor.getMonth()+1);
+            if(selYear) selYear.value=String(state.cursor.getFullYear());
+            if(!syncProjectJump() && typeof window.initVctCustomSelects==="function") window.initVctCustomSelects(root);
         }
 
         function render(){
@@ -340,19 +378,19 @@
             render();
         }
 
-        btnPrev.addEventListener("click", goPrev);
-        btnNext.addEventListener("click", goNext);
+        if(btnPrev) btnPrev.addEventListener("click", goPrev);
+        if(btnNext) btnNext.addEventListener("click", goNext);
         for(var v=0; v<viewButtons.length; v++){
             viewButtons[v].addEventListener("click", function(ev){
                 setView(ev.currentTarget.getAttribute("data-vct-agenda-view"));
             });
         }
-        selMonth.addEventListener("change", function(){
+        if(selMonth) selMonth.addEventListener("change", function(){
             var m=parseInt(selMonth.value,10), y=state.cursor.getFullYear();
             state.cursor=new Date(y,m-1,Math.min(state.cursor.getDate(),new Date(y,m,0).getDate()));
             render();
         });
-        selYear.addEventListener("change", function(){
+        if(selYear) selYear.addEventListener("change", function(){
             var y=parseInt(selYear.value,10), m=state.cursor.getMonth();
             state.cursor=new Date(y,m,Math.min(state.cursor.getDate(),new Date(y,m+1,0).getDate()));
             render();
@@ -377,6 +415,36 @@
         if(!dateInput || !grid) return;
 
         modal.setAttribute("data-vct-agenda-enhanced","1");
+        /* CIERRE_CAL_V12: conserva el input ISO y el contrato del formulario. */
+        dateInput.setAttribute("data-vct-datepicker", "");
+        /* PICKER_V20: CSS independiente de si el JS ya estaba inicializado. */
+        if(!document.querySelector('link[data-vct-feriado-picker="20"]')){
+            var pickerCss=document.createElement("link");pickerCss.rel="stylesheet";
+            pickerCss.href="../css/vct-datepicker.css?v=20";
+            pickerCss.setAttribute("data-vct-feriado-picker","20");document.head.appendChild(pickerCss);
+        }
+        function initFeriadoPicker(){
+            if(window.VCT && window.VCT.Datepicker) window.VCT.Datepicker.init(modal);
+            /* El formulario legacy asigna .value sin disparar change al abrir. */
+            var wrap=dateInput.closest(".vct-datepicker");
+            var label=wrap && wrap.querySelector(".vct-datepicker-value");
+            if(label){
+                var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(dateInput.value||"");
+                var text=m ? m[3]+"/"+m[2]+"/"+m[1] : "Seleccionar fecha";
+                if(label.textContent!==text) label.textContent=text;
+                label.classList.toggle("is-placeholder",!m);
+            }
+        }
+        var pickerApi=window.VCT && window.VCT.Datepicker;
+        if(pickerApi) initFeriadoPicker();
+        if(!pickerApi || !(pickerApi.version>=20)){
+            var script=document.querySelector('script[data-vct-feriado-picker="20"]');
+            if(!script){
+                script=document.createElement("script");script.src="../js/vct-datepicker.js?v=20";
+                script.setAttribute("data-vct-feriado-picker","20");
+                script.addEventListener("load",initFeriadoPicker);document.head.appendChild(script);
+            } else script.addEventListener("load",initFeriadoPicker);
+        }
 
         var preview=document.createElement("div");
         preview.className="vct-agenda-drawer-preview";
@@ -392,7 +460,7 @@
            .value hasta el submit -- lo unico que cambia en vivo es el
            texto de ese span. Confirmado inspeccionando el HTML real. */
         var observer=null;
-        var OBSERVE_OPTS={ characterData:true, childList:true, subtree:true };
+        var OBSERVE_OPTS={ characterData:true, childList:true, subtree:true, attributes:true, attributeFilter:["class","hidden","aria-hidden","value"] };
 
         function setPreview(html){
             /* preview vive adentro del propio modal observado -- si no
@@ -404,6 +472,7 @@
         }
 
         function update(){
+            initFeriadoPicker();
             var val=dateInput.value;
             if(!val){
                 setPreview('<span>Elegí una fecha para ver el resumen</span>');
@@ -523,6 +592,54 @@
         }
     }
 
+    /* ---- ACTIVIDADES con horario (vista semana estilo Google Calendar) ---- */
+    var ACT_TIPOS = [
+        { v:"REUNION_CLIENTE", label:"Reuniones con clientes", color:"#2563EB" },
+        { v:"PROYECTO",        label:"Proyectos",              color:"#0E9F6E" },
+        { v:"TAREA",           label:"Tareas",                 color:"#F59E0B" },
+        { v:"CAPACITACION",    label:"Capacitaciones",         color:"#8B5CF6" },
+        { v:"AUDITORIA",       label:"Auditorías",             color:"#EC4899" },
+        { v:"OTRO",            label:"Otros",                  color:"#64748B" }
+    ];
+    function tipoColor(t){
+        t = String(t||"").toUpperCase();
+        for(var i=0;i<ACT_TIPOS.length;i++){ if(ACT_TIPOS[i].v===t) return ACT_TIPOS[i].color; }
+        return "#64748B";
+    }
+    function hexToRgba(hex, a){
+        hex = String(hex||"").replace("#","");
+        if(hex.length===3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+        var n = parseInt(hex,16);
+        if(isNaN(n)) return "rgba(100,116,139,"+a+")";
+        return "rgba("+((n>>16)&255)+","+((n>>8)&255)+","+(n&255)+","+a+")";
+    }
+    function hmToMin(s){ var p=String(s||"0:0").split(":"); return (+p[0])*60 + (+(p[1]||0)); }
+    /* mini iconos (agregar / editar) para la Agenda del consultor */
+    var SVG_PLUS='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+    var SVG_PEN ='<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+    /* empaqueta actividades solapadas en "carriles" (left/width %) estilo GCal */
+    function layoutDay(evs){
+        evs = evs.slice().sort(function(a,b){ return hmToMin(a.hd)-hmToMin(b.hd) || hmToMin(a.hh)-hmToMin(b.hh); });
+        var clusters=[], cur=[], curEnd=-1;
+        evs.forEach(function(e){
+            var s=hmToMin(e.hd), en=hmToMin(e.hh);
+            if(cur.length && s>=curEnd){ clusters.push(cur); cur=[]; curEnd=-1; }
+            cur.push(e); curEnd=Math.max(curEnd,en);
+        });
+        if(cur.length) clusters.push(cur);
+        clusters.forEach(function(cl){
+            var lanes=[];
+            cl.forEach(function(e){
+                var s=hmToMin(e.hd), en=hmToMin(e.hh), placed=false;
+                for(var L=0;L<lanes.length;L++){ if(lanes[L]<=s){ e._lane=L; lanes[L]=en; placed=true; break; } }
+                if(!placed){ e._lane=lanes.length; lanes.push(en); }
+            });
+            var N=lanes.length;
+            cl.forEach(function(e){ e._lanes=N; });
+        });
+        return evs;
+    }
+
     function boot(){
         document.querySelectorAll("[data-vct-agc-root]").forEach(function(root){
             if (root.getAttribute("data-vct-agc-inited")==="1") return;
@@ -541,6 +658,17 @@
             JSON.parse(raw).forEach(function(r){ dias[r.f] = r; });
         } catch(e){ dias = {}; }
 
+        /* actividades con horario: {id,f,hd,hh,t,ti,su,c} -> agrupadas por fecha */
+        var actsByDay = {};
+        try {
+            var rawA = root.getAttribute("data-vct-agc-acts") || "[]";
+            JSON.parse(rawA).forEach(function(a){ (actsByDay[a.f] = actsByDay[a.f] || []).push(a); });
+        } catch(e){ actsByDay = {}; }
+        function actsOf(k){ return actsByDay[k] || []; }
+
+        /* ventana horaria de la grilla semanal (estilo Google Calendar) */
+        var GRID_START = 7, GRID_END = 20, HOUR_PX = 40;
+
         var paneEl   = root.querySelector("[data-vct-agc-pane]");
         var statsEl  = root.querySelector("[data-vct-agc-stats]");
         var titleEl  = root.querySelector("[data-vct-agc-title]");
@@ -550,6 +678,26 @@
         var btnPrev  = root.querySelector("[data-vct-agc-prev]");
         var btnNext  = root.querySelector("[data-vct-agc-next]");
         var viewBtns = root.querySelectorAll("[data-vct-agc-view]");
+        /* CONS360_V16: VCT_MAIN_CONSULTORES_V360 omite el selector de vista.
+           Se agrega solo en el calendario embebido y solo si falta. */
+        if(root.classList.contains("vct-agc-v360") && !viewBtns.length){
+            var toolbar=root.querySelector(".vct-agenda-toolbar");
+            if(toolbar){
+                var toggle=document.createElement("div");
+                toggle.className="vct-agenda-view-toggle";
+                toggle.setAttribute("data-vct-agc-view-toggle","");
+                toggle.setAttribute("role","group");
+                toggle.setAttribute("aria-label","Vista del calendario del consultor");
+                [["month","Mes"],["week","Semana"],["day","Día"]].forEach(function(item){
+                    var button=document.createElement("button");
+                    button.type="button";button.className="vct-agenda-view-btn";
+                    button.setAttribute("data-vct-agc-view",item[0]);button.textContent=item[1];
+                    toggle.appendChild(button);
+                });
+                toolbar.appendChild(toggle);
+                viewBtns=root.querySelectorAll("[data-vct-agc-view]");
+            }
+        }
 
         /* Mes y anio nativos: el enhancer antiguo confunde wrappers adyacentes. */
         [selMonth,selYear].forEach(function(select){
@@ -575,7 +723,7 @@
 
         if (!paneEl) return; /* sin consultor elegido: solo queda el prompt */
 
-        var state = { cursor: new Date(today), view: "month" };
+        var state = { cursor: new Date(today), view: root.classList.contains("vct-agc-v360") ? "month" : "week", selDay: null };
 
         /* dia sin registro = NO_CARGADO (blanco), tambien los fines de semana */
         function dayInfo(d){
@@ -583,6 +731,46 @@
             var r = dias[k];
             if (r) return r;
             return { f:k, e:"NO_CARGADO", h:0, n:"", t:"", mo:"", de:"" };
+        }
+
+        /* Estados que el consultor PUEDE declarar/editar (sus propios tipos).
+           ASIGNADO (trabajo asignado por administracion/comercial) y los FERIADOS
+           NO se editan. NO_CARGADO = dia vacio -> se puede crear. */
+        function isEditableType(e){
+            e = String(e||"").toUpperCase();
+            return e==="DISPONIBLE" || e==="LICENCIA" || e==="OCUPADO" ||
+                   e==="POTENCIAL"  || e==="ORGANISMO" || e==="OBSERVACION";
+        }
+        function canEditDay(r){
+            if (!(canEdit && consId)) return false;
+            var e = String((r&&r.e)||"NO_CARGADO").toUpperCase();
+            if (isFeriado(e)) return false;
+            if (e==="ASIGNADO") return false;              /* asignado por admin/comercial */
+            return e==="NO_CARGADO" || isEditableType(e);  /* vacio -> crear; propios -> editar */
+        }
+        /* tipo vigente del dia (para editar): el TIPO guardado o, si viene vacio,
+           el propio estado cuando es uno de los tipos del consultor. */
+        function tipoDe(r){
+            if (r && r.t && String(r.t).length) return r.t;
+            var e = String((r&&r.e)||"").toUpperCase();
+            return isEditableType(e) ? e : "";
+        }
+        /* mini boton +/lapiz (solo donde el consultor puede crear/editar) */
+        function editIcon(r, key){
+            if (!canEditDay(r)) return "";
+            var has = !!tipoDe(r);
+            return '<button type="button" class="vct-agc-dayedit-btn '+(has?'is-edit':'is-add')+'"'
+                 + ' data-vct-agc-editday="'+key+'" title="'+(has?'Editar':'Agregar')+'" aria-label="'+(has?'Editar':'Agregar')+'">'
+                 + (has?SVG_PEN:SVG_PLUS) + '</button>';
+        }
+        function bindEditIcons(){
+            paneEl.querySelectorAll("[data-vct-agc-editday]").forEach(function(b){
+                b.addEventListener("click", function(ev){
+                    ev.stopPropagation();
+                    var key=b.getAttribute("data-vct-agc-editday"), p=key.split("-");
+                    openModal(key, dayInfo(new Date(+p[0],+p[1]-1,+p[2])));
+                });
+            });
         }
 
         /* ---- selects de navegacion ----
@@ -640,10 +828,41 @@
         function cellBadge(r){
             var e=String(r.e||"").toUpperCase();
             if (e==="NO_CARGADO") return "";
-            var note = r.n ? esc(r.n) : estadoLabel(e);
+            /* preferimos la descripcion (observacion/potencial/organismo), luego la nota, luego el label */
+            var note = r.de ? esc(r.de) : (r.n ? esc(r.n) : estadoLabel(e));
             var h = (e==="ASIGNADO"||e==="DISPONIBLE"||e==="POTENCIAL"||e==="ORGANISMO") && (+r.h>0) ? ' · '+fmtH(r.h)+'h' : '';
-            return '<span class="vct-agc-cell-note">'+note+h+'</span>';
+            return '<span class="vct-agc-cell-note" title="'+escAttr(estadoLabel(e)+(r.de?': '+r.de:(r.n?': '+r.n:'')))+'">'+note+h+'</span>';
         }
+        /* chips de ACTIVIDADES para la celda del mes (se ven tambien en Mes) */
+        function monthActs(key){
+            var items=actsOf(key); if(!items.length) return "";
+            items=items.slice().sort(function(a,b){ return hmToMin(a.hd)-hmToMin(b.hd); });
+            var shown=items.slice(0,2), h='<div class="vct-agc-cell-acts">';
+            shown.forEach(function(e){
+                var c=e.c||tipoColor(e.t);
+                h+='<span class="vct-agc-cell-act" style="border-left-color:'+c+';background:'+hexToRgba(c,0.12)+'" title="'+escAttr((e.hd?e.hd+' ':'')+e.ti)+'">'+(e.hd?'<b>'+esc(e.hd)+'</b> ':'')+esc(e.ti)+'</span>';
+            });
+            if(items.length>2) h+='<span class="vct-agc-cell-actmore">+'+(items.length-2)+' más</span>';
+            h+='</div>';
+            return h;
+        }
+        /* lista de ACTIVIDADES del dia (se ven tambien en Dia) */
+        function dayActs(key){
+            var items=actsOf(key).slice().sort(function(a,b){ return hmToMin(a.hd)-hmToMin(b.hd); });
+            if(!items.length) return "";
+            var h='<div class="vct-agc-dayview-acts">';
+            items.forEach(function(e){
+                var c=e.c||tipoColor(e.t);
+                h+='<div class="vct-agc-dayview-act" style="--evc:'+c+'">'
+                    + (e.hd?'<span class="vct-agc-dayview-act-time">'+esc(e.hd)+' – '+esc(e.hh)+'</span>':'')
+                    + '<span class="vct-agc-dayview-act-ti">'+esc(e.ti)+'</span>'
+                    + (e.su?'<span class="vct-agc-dayview-act-su">'+esc(e.su)+'</span>':'')
+                    + '</div>';
+            });
+            h+='</div>';
+            return h;
+        }
+        function isTimed(e){ return e && e.hd && e.hd!==e.hh; }
 
         /* ---- vistas ---- */
         function renderMonth(){
@@ -666,6 +885,7 @@
                         html+='<td class="'+cls+'" data-vct-agc-day="'+k+'"'+(r.n?' title="'+escAttr(r.n)+'"':'')+'>';
                         html+='<span class="vct-agenda-daynum">'+dayNum+'</span>';
                         html+=cellBadge(r);
+                        html+=monthActs(k);
                         html+='</td>';
                     }
                     dayNum++;
@@ -677,41 +897,223 @@
             bindDayClicks();
         }
 
-        /* vista SEMANA estilo Google Calendar: 7 columnas (encabezado dia/numero
-           con "hoy" marcado) y, por dia, el ESTADO como entrada con sus horas.
-           Clic en la columna abre el modal (crear/editar), via bindDayClicks. */
-        function renderWeek(){
-            var start=addDays(state.cursor, -state.cursor.getDay()), end=addDays(start,6);
-            titleEl.textContent=start.getDate()+" "+MESES[start.getMonth()].substr(0,3)+" - "+end.getDate()+" "+MESES[end.getMonth()].substr(0,3)+" "+end.getFullYear();
-            var head='<div class="vct-agc-week-head">';
-            var body='<div class="vct-agc-week-body">';
-            for(var i=0;i<7;i++){
-                var d=addDays(start,i), k=dateKey(d), r=dayInfo(d), isToday=sameDay(d,today);
-                var e=String(r.e||"").toUpperCase(), isWknd=(d.getDay()===0||d.getDay()===6);
-                head+='<div class="vct-agc-wday'+(isToday?" is-today":"")+'">'
-                    + '<span class="vct-agc-wday-name">'+DIAS_ABREV[i]+'</span>'
-                    + '<span class="vct-agc-wday-num">'+d.getDate()+'</span></div>';
-                var entry='';
-                if (e!=="NO_CARGADO"){
-                    var hrs=(e==="ASIGNADO"||e==="DISPONIBLE"||e==="POTENCIAL"||e==="ORGANISMO") && (+r.h>0)
-                            ? '<span class="vct-agc-wentry-h">'+fmtH(r.h)+' h</span>' : '';
-                    entry='<div class="vct-agc-wentry '+clsOf(r.e)+'">'
-                        + '<span class="vct-agc-wentry-label">'+estadoLabel(r.e)+'</span>'
-                        + (r.n ? '<span class="vct-agc-wentry-note">'+esc(r.n)+'</span>' : '')
-                        + hrs + '</div>';
+        /* ===== vista SEMANA estilo Google Calendar =====
+           Layout de 3 columnas: mini-mes + leyenda (izq), grilla por horas con
+           bloques de actividad (centro) y panel de detalle del dia (der).
+           Semana de LUNES a DOMINGO (como el mock). */
+        function weekStart(d){ var x=new Date(d); x.setHours(0,0,0,0); x.setDate(x.getDate()-((x.getDay()+6)%7)); return x; }
+
+        function miniMonthHtml(base, wkStart, wkEnd){
+            var y=base.getFullYear(), m=base.getMonth();
+            var first=new Date(y,m,1), startW=first.getDay(), dim=new Date(y,m+1,0).getDate();
+            var h='<div class="vct-agc-mini">'
+                + '<div class="vct-agc-mini-head"><button type="button" class="vct-agc-mini-nav" data-vct-agc-mini-prev>‹</button>'
+                + '<span class="vct-agc-mini-title">'+MESES[m]+' '+y+'</span>'
+                + '<button type="button" class="vct-agc-mini-nav" data-vct-agc-mini-next>›</button></div>'
+                + '<table class="vct-agc-mini-tab"><thead><tr>'
+                + ['D','L','M','M','J','V','S'].map(function(x){return '<th>'+x+'</th>';}).join("")
+                + '</tr></thead><tbody><tr>';
+            var cell=1-startW, total=Math.ceil((startW+dim)/7)*7;
+            for(var i=0;i<total;i++){
+                if(i>0 && i%7===0) h+='</tr><tr>';
+                if(cell<1 || cell>dim){ h+='<td class="is-out"></td>'; }
+                else{
+                    var cd=new Date(y,m,cell), k=dateKey(cd);
+                    var inWk = cd>=wkStart && cd<=wkEnd;
+                    var cls=(sameDay(cd,today)?"is-today ":"")+(inWk?"is-wk ":"");
+                    h+='<td class="'+cls.trim()+'" data-vct-agc-mini-day="'+k+'">'+cell+'</td>';
                 }
-                body+='<div class="vct-agc-wcol'+(isWknd?" is-wknd":"")+(isToday?" is-today":"")+'"'
-                    + ' data-vct-agc-day="'+k+'"'+(r.n?' title="'+escAttr(r.n)+'"':'')+'>'+entry+'</div>';
+                cell++;
             }
-            head+='</div>'; body+='</div>';
-            paneEl.innerHTML='<div class="vct-agc-week">'+head+body+'</div>';
-            bindDayClicks();
+            h+='</tr></tbody></table></div>';
+            return h;
+        }
+
+        function legendSideHtml(){
+            var h='<div class="vct-agc-side-legend"><div class="vct-agc-side-legend-ttl">Mis agendas</div>';
+            ACT_TIPOS.forEach(function(t){
+                h+='<div class="vct-agc-side-legend-row"><span class="vct-agc-side-dot" style="background:'+t.color+'"></span>'+esc(t.label)+'</div>';
+            });
+            h+='</div>';
+            return h;
+        }
+
+        function detailHtml(selD){
+            var k=dateKey(selD), evs=layoutDay(actsOf(k));
+            evs.sort(function(a,b){ return hmToMin(a.hd)-hmToMin(b.hd); });
+            var h='<div class="vct-agc-detail-head"><span class="vct-agc-detail-ttl">'
+                + DIAS_ABREV[selD.getDay()]+' '+selD.getDate()+' de '+MESES[selD.getMonth()]+'</span></div>'
+                + '<div class="vct-agc-detail-list">';
+            if(!evs.length){ h+='<div class="vct-agc-detail-empty">Sin actividades este día.</div>'; }
+            evs.forEach(function(e){
+                var c=e.c||tipoColor(e.t);
+                h+='<div class="vct-agc-detail-item" style="--evc:'+c+'">'
+                    + '<div class="vct-agc-detail-time">'+esc(e.hd)+' – '+esc(e.hh)+'</div>'
+                    + '<div class="vct-agc-detail-name">'+esc(e.ti)+'</div>'
+                    + (e.su?'<div class="vct-agc-detail-sub">'+esc(e.su)+'</div>':'')
+                    + '</div>';
+            });
+            h+='</div>';
+            return h;
+        }
+
+        function renderWeek(){
+            var start=weekStart(state.cursor), end=addDays(start,6);
+            titleEl.textContent=start.getDate()+" "+MESES[start.getMonth()].substr(0,3)+" – "+end.getDate()+" "+MESES[end.getMonth()].substr(0,3)+" "+end.getFullYear();
+            /* dia seleccionado para el panel: hoy si cae en la semana y tiene
+               actividades; si no, el primer dia de la semana con actividades;
+               si no, hoy (o el lunes). */
+            if(!(state.selDay && state.selDay>=start && state.selDay<=end)){
+                var pick=null;
+                if(today>=start && today<=end && actsOf(dateKey(today)).length) pick=new Date(today);
+                if(!pick){ for(var pi=0;pi<7;pi++){ var pd=addDays(start,pi); if(actsOf(dateKey(pd)).length){ pick=pd; break; } } }
+                if(!pick) pick=(today>=start && today<=end)?new Date(today):new Date(start);
+                state.selDay=pick;
+            }
+
+            var hours=[]; for(var hH=GRID_START; hH<=GRID_END; hH++) hours.push(hH);
+            var bodyH=(GRID_END-GRID_START)*HOUR_PX;
+
+            /* encabezado de dias */
+            var head='<div class="vct-agc-cal-head"><div class="vct-agc-cal-gutter"></div>';
+            for(var i=0;i<7;i++){
+                var d=addDays(start,i), isToday=sameDay(d,today);
+                head+='<div class="vct-agc-cal-day'+(isToday?" is-today":"")+'" data-vct-agc-dayhead="'+dateKey(d)+'">'
+                    + '<span class="vct-agc-cal-dname">'+DIAS_ABREV[d.getDay()]+'</span>'
+                    + '<span class="vct-agc-cal-dnum">'+d.getDate()+'</span>'
+                    + '</div>';
+            }
+            head+='</div>';
+
+            /* banda "todo el dia": feriados (y estado diario declarado) que no
+               tienen horario -> se marcan arriba de la grilla. */
+            var allday='<div class="vct-agc-allday"><div class="vct-agc-allday-gutter">Todo el día</div>';
+            var hayAllday=false;
+            for(var ad=0; ad<7; ad++){
+                var adD=addDays(start,ad), adK=dateKey(adD), adR=dayInfo(adD), adE=String(adR.e||"").toUpperCase();
+                allday+='<div class="vct-agc-allday-cell" data-vct-agc-col="'+adK+'">';
+                if(adE!=="NO_CARGADO"){
+                    hayAllday=true;
+                    var adLbl=estadoLabel(adR.e);
+                    var adTxt=(adR.de ? adR.de : (adR.n ? adR.n : adLbl));
+                    allday+='<span class="vct-agc-allday-chip '+clsOf(adR.e)+'" title="'+escAttr(adLbl+(adR.n?(": "+adR.n):""))+'">'+esc(adTxt)+'</span>';
+                }
+                /* actividades SIN hora: tambien van en la banda (no entran en la grilla) */
+                actsOf(adK).filter(function(e){ return !isTimed(e); }).forEach(function(e){
+                    hayAllday=true;
+                    var ac=e.c||tipoColor(e.t);
+                    allday+='<span class="vct-agc-allday-chip" style="background:'+hexToRgba(ac,0.14)+';color:'+ac+'" title="'+escAttr(e.ti)+'">'+esc(e.ti)+'</span>';
+                });
+                allday+='</div>';
+            }
+            allday+='</div>';
+            if(!hayAllday) allday='';
+
+            /* columna de horas */
+            var times='<div class="vct-agc-cal-times" style="height:'+bodyH+'px">';
+            hours.forEach(function(hv){ times+='<div class="vct-agc-cal-hour" style="height:'+HOUR_PX+'px"><span>'+pad(hv)+':00</span></div>'; });
+            times+='</div>';
+
+            /* columnas de dias con bloques */
+            var cols='<div class="vct-agc-cal-cols" style="height:'+bodyH+'px">';
+            for(var j=0;j<7;j++){
+                var cd=addDays(start,j), ck=dateKey(cd);
+                var isWknd=(cd.getDay()===0||cd.getDay()===6);
+                cols+='<div class="vct-agc-cal-col'+(isWknd?" is-wknd":"")+(sameDay(cd,today)?" is-today":"")+'" data-vct-agc-col="'+ck+'" style="background-size:100% '+HOUR_PX+'px">';
+                /* banda de DISPONIBILIDAD: si el dia tiene horas cargadas, se pinta
+                   desde las 09:00 por la cantidad de horas (8h -> 09:00-17:00,
+                   4h -> 09:00-13:00). Va de fondo; las actividades van encima. */
+                var di=dayInfo(cd), dstate=String(di.e||"").toUpperCase();
+                /* estados "todo el dia" (licencia/vacaciones, feriado, ocupado, observacion):
+                   sin horas -> se pinta la COLUMNA ENTERA con el color del estado. */
+                if (dstate!=="NO_CARGADO" && !(+di.h>0)){
+                    cols+='<div class="vct-agc-fullday '+clsOf(di.e)+'" title="'+escAttr(estadoLabel(di.e)+(di.de?': '+di.de:(di.n?': '+di.n:'')))+'"></div>';
+                }
+                /* banda de DISPONIBILIDAD: si el dia tiene horas cargadas, se pinta
+                   desde las 09:00 por la cantidad de horas (8h -> 09:00-17:00,
+                   4h -> 09:00-13:00). Va de fondo; las actividades van encima. */
+                else if (+di.h>0 && !isFeriado(dstate)){
+                    var avTop=(9-GRID_START)*HOUR_PX, avH=Math.min((GRID_END-9), (+di.h))*HOUR_PX;
+                    cols+='<div class="vct-agc-avail '+clsOf(di.e)+'" style="top:'+avTop+'px;height:'+avH+'px" title="'+escAttr(estadoLabel(di.e)+' · '+fmtH(di.h)+'h')+'"></div>';
+                }
+                var evs=layoutDay(actsOf(ck).filter(isTimed));
+                evs.forEach(function(e){
+                    var s=hmToMin(e.hd), en=hmToMin(e.hh);
+                    var topMin=s-GRID_START*60, durMin=Math.max(20, en-s);
+                    var top=Math.max(0, topMin/60*HOUR_PX);
+                    var hgt=Math.max(18, durMin/60*HOUR_PX-2);
+                    var lane=e._lane||0, lanes=e._lanes||1;
+                    var w=100/lanes, left=lane*w;
+                    var c=e.c||tipoColor(e.t);
+                    cols+='<div class="vct-agc-ev" data-vct-agc-ev="'+e.id+'" data-vct-agc-ev-day="'+ck+'"'
+                        + ' style="top:'+top+'px;height:'+hgt+'px;left:calc('+left+'% + 2px);width:calc('+w+'% - 4px);'
+                        + 'border-left-color:'+c+';background:'+hexToRgba(c,0.13)+'">'
+                        + '<span class="vct-agc-ev-time">'+esc(e.hd)+' – '+esc(e.hh)+'</span>'
+                        + '<span class="vct-agc-ev-ti">'+esc(e.ti)+'</span>'
+                        + (e.su?'<span class="vct-agc-ev-su">'+esc(e.su)+'</span>':'')
+                        + '</div>';
+                });
+                cols+='</div>';
+            }
+            cols+='</div>';
+
+            paneEl.innerHTML='<div class="vct-agc-gcal">'
+                + '<aside class="vct-agc-side">'+miniMonthHtml(state.cursor,start,end)+legendSideHtml()+'</aside>'
+                + '<div class="vct-agc-cal">'+head+allday
+                + '<div class="vct-agc-cal-body">'+times+cols+'</div></div>'
+                + '<aside class="vct-agc-detail" data-vct-agc-detail>'+detailHtml(state.selDay)+'</aside>'
+                + '</div>';
+
+            bindWeekClicks();
+        }
+
+        function bindWeekClicks(){
+            /* mini-mes: navegar de mes y elegir dia */
+            var mp=paneEl.querySelector("[data-vct-agc-mini-prev]"), mn=paneEl.querySelector("[data-vct-agc-mini-next]");
+            if(mp) mp.addEventListener("click", function(){ state.cursor=new Date(state.cursor.getFullYear(),state.cursor.getMonth()-1,1); render(); });
+            if(mn) mn.addEventListener("click", function(){ state.cursor=new Date(state.cursor.getFullYear(),state.cursor.getMonth()+1,1); render(); });
+            paneEl.querySelectorAll("[data-vct-agc-mini-day]").forEach(function(td){
+                td.addEventListener("click", function(){
+                    var p=td.getAttribute("data-vct-agc-mini-day").split("-");
+                    state.cursor=new Date(+p[0],+p[1]-1,+p[2]); state.selDay=new Date(state.cursor); render();
+                });
+            });
+            /* clic en encabezado, columna o bloque -> abre el modal directo
+               (editable y no feriado), quedando en la vista Semana. Feriado /
+               no editable -> no hace nada (se queda en Semana). */
+            function enterDay(key){
+                var p=key.split("-"), dObj=new Date(+p[0],+p[1]-1,+p[2]), r=dayInfo(dObj);
+                if (canEditDay(r)) { openModal(key, r); }
+                else { state.cursor=dObj; setView("day"); render(); }
+            }
+            paneEl.querySelectorAll("[data-vct-agc-dayhead]").forEach(function(h){
+                h.addEventListener("click", function(){ enterDay(h.getAttribute("data-vct-agc-dayhead")); });
+            });
+            paneEl.querySelectorAll("[data-vct-agc-col]").forEach(function(col){
+                col.addEventListener("click", function(ev){
+                    if(ev.target.closest("[data-vct-agc-ev]")) return; /* el bloque lo maneja abajo */
+                    enterDay(col.getAttribute("data-vct-agc-col"));
+                });
+            });
+            paneEl.querySelectorAll("[data-vct-agc-ev]").forEach(function(b){
+                b.addEventListener("click", function(){ enterDay(b.getAttribute("data-vct-agc-ev-day")); });
+            });
+            markSelCol(dateKey(state.selDay));
+        }
+        function refreshDetail(){
+            var det=paneEl.querySelector("[data-vct-agc-detail]");
+            if(det) det.innerHTML=detailHtml(state.selDay);
+        }
+        function markSelCol(key){
+            paneEl.querySelectorAll("[data-vct-agc-col]").forEach(function(c){ c.classList.toggle("is-sel", c.getAttribute("data-vct-agc-col")===key); });
+            paneEl.querySelectorAll("[data-vct-agc-dayhead]").forEach(function(h){ h.classList.toggle("is-sel", h.getAttribute("data-vct-agc-dayhead")===key); });
         }
 
         function renderDay(){
             var d=state.cursor, r=dayInfo(d), key=dateKey(d), e=String(r.e).toUpperCase();
             titleEl.textContent=DIAS_LARGO[d.getDay()]+" "+d.getDate()+" de "+MESES[d.getMonth()]+" "+d.getFullYear();
-            var html='<div class="vct-agenda-day vct-agc-dayview '+clsOf(r.e)+'">';
+            var editable = canEditDay(r);
+            var html='<div class="vct-agenda-day vct-agc-dayview '+clsOf(r.e)+(editable?' is-editable':'')+'"'+(editable?' data-vct-agc-dayedit':'')+'>';
             html+='<div class="vct-agenda-day-num">'+d.getDate()+'</div>';
             html+='<div class="vct-agenda-day-name">'+DIAS_LARGO[d.getDay()]+'</div>';
             html+='<div class="vct-agc-dayview-badge"><span class="vct-agc-badge '+clsOf(r.e)+'">'+estadoLabel(r.e)+'</span></div>';
@@ -719,25 +1121,23 @@
             if ((e==="ASIGNADO"||e==="DISPONIBLE") && +r.h>0)
                 html+='<div class="vct-agc-dayview-hours">'+fmtH(r.h)+'h</div>';
 
-            if (canEdit && consId && !isFeriado(e)){
-                html+='<div class="vct-agc-edit">'
-                    + '<button type="button" class="vct-btn vct-btn-primary vct-agc-btn-edit" data-vct-agc-edit-open>'
-                    + (r.t ? 'Editar fecha' : 'Agregar fecha') + '</button></div>';
-            }
+            html+=dayActs(key);
             html+='</div>';
             paneEl.innerHTML=html;
 
-            var eBtn=paneEl.querySelector("[data-vct-agc-edit-open]");
-            if (eBtn) eBtn.addEventListener("click", function(){ openModal(key, r); });
+            /* clic en la tarjeta del dia -> abre el modal directo (sin boton intermedio) */
+            var card=paneEl.querySelector("[data-vct-agc-dayedit]");
+            if (card) card.addEventListener("click", function(){ openModal(key, r); });
         }
 
         function bindDayClicks(){
+            /* Mes: clic en un dia -> abre el modal de edicion (si es editable y
+               no es feriado). Feriado -> vista Dia (solo lectura). */
             paneEl.querySelectorAll("[data-vct-agc-day]").forEach(function(cell){
                 cell.addEventListener("click", function(){
                     var key=cell.getAttribute("data-vct-agc-day"), p=key.split("-");
-                    var dObj=new Date(+p[0], +p[1]-1, +p[2]);
-                    var r=dayInfo(dObj);
-                    if (canEdit && consId && !isFeriado(r.e)) { openModal(key, r); }
+                    var dObj=new Date(+p[0], +p[1]-1, +p[2]), r=dayInfo(dObj);
+                    if (canEditDay(r)) { openModal(key, r); }
                     else { state.cursor=dObj; setView("day"); render(); }
                 });
             });
@@ -771,10 +1171,13 @@
             r = r || {};
             var p=key.split("-"), dObj=new Date(+p[0],+p[1]-1,+p[2]);
             var fechaTxt = DIAS_LARGO[dObj.getDay()]+", "+dObj.getDate()+" de "+MESES[dObj.getMonth()]+" "+dObj.getFullYear();
-            var exists = !!(r.t && String(r.t).length);
+            var curTipo = tipoDe(r);          /* tipo vigente (TIPO guardado o el propio estado) */
+            var exists = !!curTipo;           /* hay algo cargado -> Editar */
+            var lockedLicense = String(curTipo).toUpperCase()==="LICENCIA";
+            /* Una licencia se elimina antes de poder cambiar el tipo del dia. */
 
             var opts = '<option value="">Elegí un tipo...</option>';
-            TIPOS.forEach(function(t){ opts += '<option value="'+t.v+'">'+esc(t.label)+'</option>'; });
+            TIPOS.forEach(function(t){ if(!lockedLicense || t.v==="LICENCIA") opts += '<option value="'+t.v+'">'+esc(t.label)+'</option>'; });
             var motOpts = '<option value="">Elegí un motivo...</option>';
             MOTIVOS.forEach(function(m){ motOpts += '<option value="'+esc(m)+'">'+esc(m)+'</option>'; });
 
@@ -835,7 +1238,7 @@
 
             function permitsHours(t){ return t === "DISPONIBLE" || t === "POTENCIAL" || t === "ORGANISMO"; }
             var savedHours = r.hc != null ? r.hc : r.h;
-            var lastAvailableHours = (permitsHours(r.t) && +savedHours > 0) ? fmtH(savedHours) : "8";
+            var lastAvailableHours = (permitsHours(curTipo) && +savedHours > 0) ? fmtH(savedHours) : "8";
             var previousTipo = "";
             var hoursRequired = ov.querySelector("[data-horas-req]");
             function syncFields(){
@@ -855,7 +1258,7 @@
             selTipo.addEventListener("change", function(){ errEl.hidden=true; syncFields(); });
 
             /* prefill */
-            if (r.t) selTipo.value = r.t;
+            if (curTipo) selTipo.value = curTipo;
             if (r.mo) selMot.value = r.mo;
             if (r.de) inpDesc.value = r.de;
             if (+r.h>0) inpHor.value = fmtH(r.h);
@@ -890,6 +1293,7 @@
             ov.querySelector("[data-save]").addEventListener("click", function(){
                 var t = selTipo.value;
                 function fail(msg){ errEl.textContent=msg; errEl.hidden=false; }
+                if (lockedLicense && t!=="LICENCIA") return fail("Eliminá primero la licencia o vacaciones para cargar otra actividad.");
                 if (!t) return fail("Elegí un tipo.");
                 if (permitsHours(t) && (!isFinite(+inpHor.value) || !(+inpHor.value>0) || +inpHor.value>24 || (+inpHor.value*2)%1!==0)) return fail("Ingresá horas entre 0,5 y 24, en intervalos de media hora.");
                 if (t==="LICENCIA" && !selMot.value) return fail("Elegí el motivo de la licencia.");
@@ -908,10 +1312,14 @@
 
         function setView(v){
             state.view=v;
-            viewBtns.forEach(function(b){ b.classList.toggle("is-active", b.getAttribute("data-vct-agc-view")===v); });
+            viewBtns.forEach(function(b){ var active=b.getAttribute("data-vct-agc-view")===v; b.classList.toggle("is-active",active); b.setAttribute("aria-pressed",active ? "true" : "false"); });
         }
 
         function render(){
+            /* la vista semana (Google Calendar) trae su propio layout: sin fila de KPIs */
+            if (statsEl) statsEl.style.display = (state.view==="week") ? "none" : "";
+            root.classList.toggle("vct-agc-weekmode", state.view==="week");
+            setView(state.view);
             if (state.view==="week") renderWeek();
             else if (state.view==="day") renderDay();
             else renderMonth();
@@ -932,8 +1340,8 @@
             else state.cursor=addDays(state.cursor,1);
             render();
         });
-        if (selMonth) selMonth.addEventListener("change", function(){ if (syncing) return; state.cursor.setMonth(+selMonth.value-1); render(); });
-        if (selYear)  selYear.addEventListener("change", function(){ if (syncing) return; state.cursor.setFullYear(+selYear.value); render(); });
+        if (selMonth) selMonth.addEventListener("change", function(){ if (syncing) return; var day=state.cursor.getDate(), m=+selMonth.value-1, y=state.cursor.getFullYear(); state.cursor=new Date(y,m,Math.min(day,new Date(y,m+1,0).getDate())); render(); });
+        if (selYear)  selYear.addEventListener("change", function(){ if (syncing) return; var y=+selYear.value,m=state.cursor.getMonth(),day=state.cursor.getDate(); state.cursor=new Date(y,m,Math.min(day,new Date(y,m+1,0).getDate())); render(); });
         viewBtns.forEach(function(b){ b.addEventListener("click", function(){ setView(b.getAttribute("data-vct-agc-view")); render(); }); });
 
         render();

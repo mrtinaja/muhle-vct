@@ -595,6 +595,12 @@
 .vct-agenda-event{display:block;padding:2px 5px;border-radius:8px;font-size:10.5px;font-weight:600;line-height:1.3;overflow-wrap:anywhere;background:#ECFBF4;color:#0E7D57;}
 .vct-agenda-event.is-planned{background:#EFF4FF;color:#1D4ED8;}
 .vct-agenda-event.is-pending{background:#FEF3E2;color:#B5760A;}
+/* colores por estado de ACCIONES (vista calendario unificada, solo lectura):
+   V=Vencida (rojo) H=Hoy (ambar) P=Proximos 7 dias (bordo) L=Mas adelante (gris) */
+.vct-agenda-event.ev-V{background:#FDE7EA;color:#B4232F;}
+.vct-agenda-event.ev-H{background:#FEF3E2;color:#B5760A;}
+.vct-agenda-event.ev-P{background:#FBEAF1;color:#8C1D47;}
+.vct-agenda-event.ev-L{background:#EEF1F4;color:#51607A;}
 .vct-agenda-event-detail{font-size:12px;color:#475569;overflow-wrap:anywhere;}
 .vct-agenda-calendar-range{margin:8px 0;font-size:12px;color:#64748b;}
 .vct-agenda-cell-empty{border-color:transparent;}
@@ -675,6 +681,17 @@
 
 /* ---- celdas del mes ---- */
 .vct-agc-cell-note { display: block; margin-top: 2px; font-size: 10.5px; line-height: 1.25; font-weight: 600; opacity: .95; }
+/* chips de ACTIVIDADES en la celda del mes */
+.vct-agc-cell-acts{display:flex;flex-direction:column;gap:2px;margin-top:3px}
+.vct-agc-cell-act{display:block;border-left:3px solid #cbd5e1;border-radius:4px;padding:1px 5px;font-size:9.5px;font-weight:600;color:#1f2937;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
+.vct-agc-cell-act b{font-weight:700}
+.vct-agc-cell-actmore{font-size:9px;font-weight:700;color:#8C1D47}
+/* lista de ACTIVIDADES en la vista Dia */
+.vct-agc-dayview-acts{display:flex;flex-direction:column;gap:8px;width:100%;max-width:460px;margin:12px auto 0;text-align:left}
+.vct-agc-dayview-act{border-left:4px solid var(--evc,#cbd5e1);background:#faf9f8;border-radius:8px;padding:8px 11px}
+.vct-agc-dayview-act-time{display:block;font-size:12px;color:#475569}
+.vct-agc-dayview-act-ti{display:block;font-size:13.5px;font-weight:700;color:#1f2937;margin-top:1px}
+.vct-agc-dayview-act-su{display:block;font-size:12.5px;color:#64748b;margin-top:1px}
 
 /* estados (celda mes): bg + barra izq + color de nota */
 .vct-agenda-cell.vct-agc-no_cargado  { background:#fff; }
@@ -1059,7 +1076,7 @@ html body .vct-form-select-menu.vct-agc-select-menu { box-sizing: border-box !im
 }
 
 /* Las notas mensuales usan el mismo badge que las actividades de las vistas 360. */
-.vct-agc-cell-note{display:-webkit-box;margin-top:3px;padding:2px 5px;border-radius:8px;font-size:10.5px;line-height:1.3;overflow:hidden;overflow-wrap:anywhere;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.vct-agc-cell-note{display:-webkit-box;line-clamp:2;margin-top:3px;padding:2px 5px;border-radius:8px;font-size:10.5px;line-height:1.3;overflow:hidden;overflow-wrap:anywhere;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
 .vct-agenda-cell.vct-agc-disponible .vct-agc-cell-note{background:#EFF4FF;color:#1D4ED8;}
 .vct-agenda-cell.vct-agc-asignado .vct-agc-cell-note{background:#ECFBF4;color:#0E7D57;}
 .vct-agenda-cell.vct-agc-licencia .vct-agc-cell-note{background:#FCE7F3;color:#BE2063;}
@@ -1106,4 +1123,473 @@ html body .vct-form-select-menu.vct-agc-select-menu { box-sizing: border-box !im
   .vct-agc-week,.vct-agc-week-head,.vct-agc-week-body{min-width:0}
   .vct-agc-wcol{min-height:120px}
   .vct-agc-wday-num{font-size:16px;width:28px;height:28px;line-height:28px}
+}
+
+/* ============================================================================
+   Vista SEMANA estilo Google Calendar - v2 (grilla por horas + mini-mes + panel)
+   Reemplaza visualmente a .vct-agc-week* (que queda sin uso).
+   ============================================================================ */
+.vct-agc-gcal{display:flex;gap:14px;align-items:stretch}
+.vct-agc-gcal *{box-sizing:border-box}
+/* en vista semana (Google Calendar) ocultamos KPIs y leyenda de estados (no aplican) */
+.vct-agc-weekmode .vct-soft-kpi-grid.vct-agc-stats,
+.vct-agc-weekmode .vct-agenda-legend.vct-agc-legend{display:none!important}
+
+/* --- sidebar: mini-mes + leyenda --- */
+.vct-agc-side{flex:0 0 210px;display:flex;flex-direction:column;gap:16px}
+.vct-agc-mini-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.vct-agc-mini-title{font-size:14px;font-weight:700;color:#1f2937}
+.vct-agc-mini-nav{border:0;background:transparent;cursor:pointer;font-size:18px;line-height:1;color:#66062D;padding:2px 8px;border-radius:6px}
+.vct-agc-mini-nav:hover{background:rgba(102,6,45,.08)}
+.vct-agc-mini-tab{width:100%;border-collapse:collapse;table-layout:fixed}
+.vct-agc-mini-tab th{font-size:10px;font-weight:600;color:#94a3b8;padding:3px 0;text-align:center}
+.vct-agc-mini-tab td{font-size:11.5px;text-align:center;padding:4px 0;color:#334155;cursor:pointer;border-radius:50%;position:relative}
+.vct-agc-mini-tab td.is-out{color:transparent;cursor:default}
+.vct-agc-mini-tab td.is-wk{background:rgba(102,6,45,.08)}
+.vct-agc-mini-tab td.is-today{background:#66062D;color:#fff;font-weight:700}
+.vct-agc-mini-tab td:not(.is-out):not(.is-today):hover{background:rgba(102,6,45,.14)}
+.vct-agc-side-legend-ttl{font-size:12px;font-weight:700;color:#334155;margin-bottom:8px}
+.vct-agc-side-legend-row{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#475569;padding:3px 0}
+.vct-agc-side-dot{width:13px;height:13px;border-radius:4px;flex:0 0 auto}
+
+/* --- calendario central --- */
+.vct-agc-cal{flex:1 1 auto;min-width:0;border:1px solid #e7e3e0;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;background:#fff}
+.vct-agc-cal-head{display:flex;border-bottom:1px solid #e7e3e0;background:#fff;position:sticky;top:0;z-index:3}
+.vct-agc-cal-gutter{flex:0 0 54px}
+.vct-agc-cal-day{flex:1 1 0;min-width:0;text-align:center;padding:8px 2px;border-left:1px solid #ece8e5;cursor:pointer}
+.vct-agc-cal-day.is-sel{background:rgba(102,6,45,.05)}
+.vct-agc-cal-dname{display:block;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.02em}
+.vct-agc-cal-dnum{display:inline-block;margin-top:3px;width:32px;height:32px;line-height:32px;border-radius:50%;font-size:17px;font-weight:700;color:#1f2937}
+.vct-agc-cal-day.is-today .vct-agc-cal-dnum{background:#66062D;color:#fff}
+/* banda "todo el dia" (feriados / estado diario sin horario) */
+.vct-agc-allday{display:flex;border-bottom:1px solid #e7e3e0;background:#fff}
+.vct-agc-allday-gutter{flex:0 0 54px;display:flex;align-items:center;justify-content:flex-end;padding-right:7px;font-size:9px;color:#94a3b8;text-align:right}
+.vct-agc-allday-cell{flex:1 1 0;min-width:0;border-left:1px solid #ece8e5;padding:3px;display:flex;align-items:center;cursor:pointer;min-height:26px}
+.vct-agc-allday-chip{display:block;width:100%;font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:#eef1f5;color:#51607a}
+.vct-agc-allday-chip.vct-agc-feriado-fijo{background:#FDE7EC;color:#B0223B}
+.vct-agc-allday-chip.vct-agc-feriado-mov{background:#F0EAFB;color:#6D28D9}
+.vct-agc-allday-chip.vct-agc-licencia{background:#FCE7F1;color:#BE2A6A}
+.vct-agc-allday-chip.vct-agc-ocupado{background:#EEF1F5;color:#51607A}
+.vct-agc-allday-chip.vct-agc-disponible{background:#E7F0FE;color:#1D4ED8}
+.vct-agc-allday-chip.vct-agc-potencial{background:#FEF3E2;color:#B5760A}
+.vct-agc-allday-chip.vct-agc-organismo{background:#E2F6F3;color:#0B7A68}
+.vct-agc-allday-chip.vct-agc-observacion{background:#FFF0EB;color:#C2410C}
+.vct-agc-allday-chip.vct-agc-asignado{background:#E6F6EF;color:#0E7D57}
+.vct-agc-cal-body{display:flex;overflow-y:auto;max-height:520px;padding-top:12px}
+.vct-agc-cal-times{flex:0 0 54px;position:relative}
+.vct-agc-cal-hour{border-top:1px solid #f0ece9;position:relative}
+.vct-agc-cal-hour span{position:absolute;top:-8px;right:7px;font-size:10px;color:#94a3b8;background:#fff;padding:0 2px}
+.vct-agc-cal-cols{flex:1 1 auto;min-width:0;display:flex;position:relative}
+.vct-agc-cal-col{flex:1 1 0;min-width:0;position:relative;border-left:1px solid #ece8e5;cursor:pointer;background-image:linear-gradient(to bottom,#f0ece9 1px,transparent 1px);background-repeat:repeat-y}
+.vct-agc-cal-col.is-wknd{background-color:#faf8f7}
+.vct-agc-cal-col.is-sel{background-color:rgba(102,6,45,.035)}
+.vct-agc-ev{position:absolute;border-left:3px solid #cbd5e1;border-radius:6px;padding:3px 6px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;gap:1px;box-shadow:0 1px 2px rgba(20,20,20,.06);z-index:1}
+.vct-agc-ev:hover{box-shadow:0 2px 8px rgba(20,20,20,.14);z-index:2}
+/* banda de DISPONIBILIDAD (horas cargadas, desde 09:00): va de fondo */
+.vct-agc-avail{position:absolute;left:3px;right:3px;z-index:0;border-radius:6px;border:1px dashed rgba(100,116,139,.5);background:rgba(203,213,225,.22)}
+.vct-agc-avail.vct-agc-disponible{border-color:rgba(37,99,235,.55);background:rgba(37,99,235,.10)}
+.vct-agc-avail.vct-agc-asignado{border-color:rgba(14,159,110,.55);background:rgba(14,159,110,.10)}
+.vct-agc-avail.vct-agc-potencial{border-color:rgba(245,158,11,.55);background:rgba(245,158,11,.10)}
+.vct-agc-avail.vct-agc-organismo{border-color:rgba(13,148,136,.55);background:rgba(13,148,136,.10)}
+.vct-agc-avail.vct-agc-ocupado{border-color:rgba(100,116,139,.55);background:rgba(100,116,139,.10)}
+.vct-agc-avail.vct-agc-licencia{border-color:rgba(236,72,153,.55);background:rgba(236,72,153,.10)}
+/* dia completo (estados todo-el-dia: licencia/vacaciones, feriado, ocupado, observacion) */
+.vct-agc-fullday{position:absolute;inset:0;z-index:0;pointer-events:none}
+.vct-agc-fullday.vct-agc-licencia{background:rgba(236,72,153,.14)}
+.vct-agc-fullday.vct-agc-ocupado{background:rgba(100,116,139,.14)}
+.vct-agc-fullday.vct-agc-observacion{background:rgba(255,122,89,.15)}
+.vct-agc-fullday.vct-agc-feriado-fijo{background:rgba(224,48,77,.12)}
+.vct-agc-fullday.vct-agc-feriado-mov{background:rgba(139,92,246,.12)}
+.vct-agc-fullday.vct-agc-asignado{background:rgba(14,159,110,.12)}
+/* vista Dia editable: clic en la tarjeta abre el modal */
+.vct-agc-dayview.is-editable{cursor:pointer}
+.vct-agc-dayview.is-editable:hover{background:rgba(102,6,45,.03)}
+/* mini boton +/lapiz (solo Agenda del consultor) */
+.vct-agc-cal-day{position:relative}
+.vct-agenda-cell{position:relative}
+.vct-agc-dayedit-btn{position:absolute;top:4px;right:4px;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1px solid #e4d8de;border-radius:6px;background:#fff;color:#8C1D47;cursor:pointer;opacity:.75;transition:background .12s,color .12s,opacity .12s;z-index:2}
+.vct-agc-dayedit-btn.is-add{color:#7a8699}
+.vct-agc-dayedit-btn:hover{opacity:1;background:#66062D;color:#fff;border-color:#66062D}
+.vct-agc-dayedit-btn svg{display:block}
+.vct-agc-cal-day .vct-agc-dayedit-btn{top:6px;right:6px}
+.vct-agc-ev-time{font-size:10px;color:#475569;line-height:1.1}
+.vct-agc-ev-ti{font-size:12px;font-weight:700;color:#1f2937;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vct-agc-ev-su{font-size:11px;color:#64748b;line-height:1.2;overflow:hidden;text-overflow:ellipsis}
+
+/* --- panel de detalle --- */
+.vct-agc-detail{flex:0 0 280px;border:1px solid #e7e3e0;border-radius:14px;background:#fff;padding:14px;overflow-y:auto;max-height:560px}
+.vct-agc-detail-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.vct-agc-detail-ttl{font-size:16px;font-weight:700;color:#1f2937}
+.vct-agc-detail-list{display:flex;flex-direction:column;gap:10px}
+.vct-agc-detail-empty{font-size:13px;color:#94a3b8;padding:8px 0}
+.vct-agc-detail-item{border-left:4px solid var(--evc,#cbd5e1);background:#faf9f8;border-radius:8px;padding:9px 11px}
+.vct-agc-detail-time{font-size:12px;color:#475569}
+.vct-agc-detail-name{font-size:13.5px;font-weight:700;color:#1f2937;margin-top:1px}
+.vct-agc-detail-sub{font-size:12.5px;color:#64748b;margin-top:1px}
+
+/* --- responsive --- */
+@media (max-width:1100px){
+  .vct-agc-detail{flex-basis:230px}
+  .vct-agc-side{flex-basis:180px}
+}
+@media (max-width:900px){
+  .vct-agc-side,.vct-agc-detail{display:none}
+}
+@media (max-width:640px){
+  .vct-agc-cal-cols{min-width:560px}
+  .vct-agc-cal-body{overflow-x:auto}
+}
+
+
+/* PV_CAL_COMPACTO_V14: solo Agenda de Proyecto 360.
+   La altura puede crecer si hay actividades, para no ocultarlas. */
+[data-vct-pv] [data-vct-panel="agenda"] > .vct-360-box {
+    padding:12px 14px;
+}
+[data-vct-pv] [data-vct-panel="agenda"] .vct-agenda-toolbar {
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:flex-start;
+    gap:8px 16px;
+    margin-bottom:8px;
+}
+[data-vct-pv] [data-vct-panel="agenda"] .vct-agenda-nav {
+    flex:0 1 auto;
+    justify-content:flex-start;
+    gap:8px;
+    min-width:0;
+}
+[data-vct-pv] [data-vct-panel="agenda"] .vct-agenda-title {
+    font-size:16px;
+    line-height:1.25;
+    min-width:0;
+}
+[data-vct-pv] [data-vct-panel="agenda"] .vct-agenda-nav-btn {
+    width:32px;
+    height:32px;
+    min-width:32px;
+    flex:0 0 32px;
+}
+[data-vct-pv] [data-vct-panel="agenda"] .vct-agenda-view-toggle {
+    flex:0 0 auto;
+    justify-self:auto;
+    min-height:32px;
+}
+[data-vct-pv] [data-vct-panel="agenda"] .vct-agenda-view-btn {
+    padding:7px 10px;
+    font-size:12px;
+    line-height:18px;
+}
+[data-vct-pv] [data-vct-panel="agenda"] .vct-agenda-jump {
+    margin-left:auto;
+    max-width:100%;
+    flex:0 1 auto;
+}
+[data-vct-pv] [data-vct-panel="agenda"] .vct-agenda-table {
+    border-spacing:3px;
+}
+[data-vct-pv] [data-vct-panel="agenda"] .vct-agenda-table thead th {
+    padding-top:3px;
+    padding-bottom:5px;
+}
+[data-vct-pv] [data-vct-panel="agenda"] .vct-agenda-cell {
+    height:56px !important;
+    min-height:56px !important;
+    padding:4px !important;
+    vertical-align:top;
+}
+[data-vct-pv] [data-vct-panel="agenda"] .vct-agenda-daynum {
+    height:20px;
+    min-width:20px;
+    font-size:12px;
+}
+@media(max-width:600px) {
+    [data-vct-pv] [data-vct-panel="agenda"] > .vct-360-box {padding:10px 8px;}
+    [data-vct-pv] [data-vct-panel="agenda"] .vct-agenda-toolbar {gap:6px 10px;}
+    [data-vct-pv] [data-vct-panel="agenda"] .vct-agenda-nav {gap:6px;}
+    [data-vct-pv] [data-vct-panel="agenda"] .vct-agenda-title {font-size:14px;}
+    [data-vct-pv] [data-vct-panel="agenda"] .vct-agenda-view-btn {padding:7px 9px;}
+    [data-vct-pv] [data-vct-panel="agenda"] .vct-agenda-jump {gap:6px;}
+}
+
+/* PV_CAL_SELECT_V15: mantiene toolbar compacta y dropdowns institucionales. */
+[data-vct-pv] [data-vct-panel="agenda"] .vct-agenda-jump > .vct-pv-cal-select {
+    display:inline-flex;position:relative;width:112px;min-width:0;flex:0 1 112px;
+    margin:0;padding:0;border:0;background:transparent;box-shadow:none;
+}
+[data-vct-pv] [data-vct-panel="agenda"] .vct-agenda-jump > .vct-pv-cal-select:last-child {width:82px;flex-basis:82px;}
+[data-vct-pv] .vct-pv-cal-select > select {display:none !important;}
+[data-vct-pv] .vct-pv-cal-select > .vct-form-select {width:100%;min-width:0;}
+[data-vct-pv] .vct-pv-cal-select .vct-form-select-trigger {
+    display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;
+    height:32px;min-height:32px;padding:0 10px;border:1px solid #cbd5e1;
+    border-radius:9px;background:#fff;color:#1f2937;font:inherit;font-size:12px;cursor:pointer;
+}
+[data-vct-pv] .vct-pv-cal-select .vct-form-select-chevron {width:14px;height:14px;flex:0 0 14px;}
+[data-vct-pv] .vct-pv-cal-select .vct-form-select-trigger:focus-visible {outline:2px solid #66062D;outline-offset:2px;}
+.vct-form-select-menu.vct-pv-cal-select-menu {
+    box-sizing:border-box;overflow-y:auto;padding:4px;border:1px solid #e2dbe0;
+    border-radius:10px;background:#fff;color:#1f2937;box-shadow:0 8px 24px rgba(40,15,27,.16);
+    font-family:inherit;font-size:12px;
+}
+.vct-pv-cal-select-menu .vct-form-select-option {padding:7px 9px;border-radius:6px;cursor:pointer;}
+.vct-pv-cal-select-menu .vct-form-select-option:hover {background:#f7f0f3;color:#66062D;}
+.vct-pv-cal-select-menu .vct-form-select-option.is-selected {background:#f6e8ee;color:#66062D;font-weight:600;}
+
+/* PV_FERIADOS_V17: conserva los colores institucionales de feriados. */
+[data-vct-pv] .vct-pv-calendar-holiday {margin-bottom:5px;}
+[data-vct-pv] .vct-pv-calendar-holiday.is-fijo {background:#FDE7EC;color:#B0223B;}
+[data-vct-pv] .vct-pv-calendar-holiday.is-movible {background:#F0EAFB;color:#6D28D9;}
+
+/* CONS360_COMPACTO_V18: solo VCT_MAIN_CONSULTORES_V360. */
+.vct-agc-v360 .vct-agc-card {padding:12px 14px;}
+.vct-agc-v360 .vct-agenda-toolbar {
+    display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-start;
+    gap:8px 16px;margin-bottom:8px;
+}
+.vct-agc-v360 .vct-agenda-nav {flex:0 1 auto;justify-content:flex-start;gap:8px;min-width:0;}
+.vct-agc-v360 .vct-agenda-title {font-size:16px;line-height:1.25;min-width:0;}
+.vct-agc-v360 .vct-agenda-nav-btn {width:32px;height:32px;min-width:32px;flex:0 0 32px;}
+.vct-agc-v360 .vct-agenda-view-toggle {flex:0 0 auto;min-height:32px;justify-self:auto;}
+.vct-agc-v360 .vct-agenda-view-btn {font-size:12px;line-height:18px;padding:7px 10px;}
+.vct-agc-v360 .vct-agenda-legend {margin-top:0;margin-bottom:8px;}
+.vct-agc-v360 .vct-agenda-table {border-spacing:3px;}
+.vct-agc-v360 .vct-agenda-table thead th {padding-top:3px;padding-bottom:5px;}
+.vct-agc-v360 .vct-agenda-cell {height:56px !important;min-height:56px !important;padding:4px !important;vertical-align:top;}
+.vct-agc-v360 .vct-agenda-daynum {height:20px;min-width:20px;font-size:12px;}
+@media(max-width:600px) {
+    .vct-agc-v360 .vct-agc-card {padding:10px 8px;}
+    .vct-agc-v360 .vct-agenda-toolbar {gap:6px 10px;}
+    .vct-agc-v360 .vct-agenda-nav {gap:6px;}
+    .vct-agc-v360 .vct-agenda-title {font-size:14px;}
+    .vct-agc-v360 .vct-agenda-view-btn {padding:7px 9px;}
+}
+
+/* PICKER_V20: estilos del componente compartido usados por Feriados. */
+﻿/* vct-datepicker.css - v1
+   Estilos del picker de fecha (vct-datepicker.js). Compartido por todas las pantallas con DataGrid
+   (el motor vct-datagrid.js lo carga solo cuando hay un <input type="date"> en una grilla).
+   Movido tal cual desde vct-reportes.css. */
+
+/* ============================================================================
+   DATE PICKER PROPIO (vct-datepicker.js)
+   ----------------------------------------------------------------------------
+   Mismo recorte visual que los combos ya estandarizados en vct-main.css
+   (.vct-custom-select-trigger/-menu/-option): altura 38px, radius 9/10px,
+   sombra doble, fade+slide, is-dropup para colision con el viewport. No se
+   copian valores a ojo -- son los mismos numeros que .vct-custom-select-*.
+   ============================================================================ */
+.vct-datepicker{
+    position:relative;
+    display:inline-flex;
+    font-family:var(--vct-font);
+}
+
+/* El <input type="date"> real sigue en el DOM (sigue siendo la fuente de
+   verdad del valor que se envia al servidor) pero oculto visualmente --
+   misma tecnica que .vct-custom-select-native en vct-main.css. */
+.vct-datepicker-native{
+    position:absolute !important;
+    width:1px !important;
+    height:1px !important;
+    padding:0 !important;
+    margin:-1px !important;
+    overflow:hidden !important;
+    clip:rect(0,0,0,0) !important;
+    white-space:nowrap !important;
+    border:0 !important;
+    opacity:0 !important;
+    pointer-events:none !important;
+}
+
+.vct-datepicker-trigger{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    height:38px;
+    min-width:148px;
+    padding:7px 10px 7px 11px;
+    box-sizing:border-box;
+    color:#334155;
+    background:#fff;
+    border:1px solid #cbd5e1;
+    border-radius:9px;
+    font-family:var(--vct-font);
+    font-size:13px;
+    font-weight:500;
+    text-align:left;
+    cursor:pointer;
+    outline:none;
+    box-shadow:0 1px 2px rgba(15,23,42,.03);
+    transition:border-color .16s ease,box-shadow .16s ease,background .16s ease;
+}
+.vct-datepicker-trigger:hover{
+    border-color:rgba(102,6,45,.45);
+}
+.vct-datepicker.is-open .vct-datepicker-trigger,
+.vct-datepicker-trigger:focus{
+    border-color:#66062D;
+    box-shadow:0 0 0 3px rgba(102,6,45,.10);
+}
+.vct-datepicker-value.is-placeholder{
+    color:#94a3b8;
+    font-weight:400;
+}
+.vct-datepicker-icon{
+    flex:0 0 auto;
+    display:inline-flex;
+    color:#64748b;
+    transition:color .16s ease;
+}
+.vct-datepicker.is-open .vct-datepicker-icon{
+    color:#66062D;
+}
+
+.vct-datepicker-menu{
+    position:absolute;
+    top:calc(100% + 5px);
+    left:0;
+    z-index:1200;
+    width:264px;
+    padding:10px;
+    box-sizing:border-box;
+    visibility:hidden;
+    opacity:0;
+    transform:translateY(-4px);
+    pointer-events:none;
+    background:#fff;
+    border:1px solid rgba(102,6,45,.22);
+    border-radius:10px;
+    box-shadow:
+        0 14px 34px rgba(15,23,42,.14),
+        0 3px 10px rgba(102,6,45,.08);
+    transition:opacity .14s ease,transform .14s ease,visibility .14s ease;
+}
+.vct-datepicker.is-open .vct-datepicker-menu{
+    visibility:visible;
+    opacity:1;
+    transform:translateY(0);
+    pointer-events:auto;
+}
+.vct-datepicker.is-dropup .vct-datepicker-menu{
+    top:auto;
+    bottom:calc(100% + 5px);
+    transform:translateY(4px);
+}
+.vct-datepicker.is-dropup.is-open .vct-datepicker-menu{
+    transform:translateY(0);
+}
+
+.vct-datepicker-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:8px;
+}
+.vct-datepicker-title{
+    font-size:13px;
+    font-weight:600;
+    color:#1e293b;
+    text-transform:capitalize;
+}
+.vct-datepicker-nav{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:26px;
+    height:26px;
+    border:0;
+    border-radius:7px;
+    background:transparent;
+    color:#64748b;
+    font-size:18px;
+    line-height:1;
+    cursor:pointer;
+    transition:background .12s ease,color .12s ease;
+}
+.vct-datepicker-nav:hover{
+    background:rgba(102,6,45,.075);
+    color:#66062D;
+}
+
+.vct-datepicker-table{
+    width:100%;
+    border-collapse:collapse;
+}
+.vct-datepicker-table th{
+    font-size:11px;
+    font-weight:600;
+    color:#94a3b8;
+    padding:4px 0;
+    text-align:center;
+}
+.vct-datepicker-cell{
+    width:14.28%;
+    height:30px;
+    text-align:center;
+    font-size:12.5px;
+    font-weight:500;
+    color:#334155;
+    border-radius:7px;
+    cursor:pointer;
+    transition:background .12s ease,color .12s ease;
+}
+.vct-datepicker-cell:hover{
+    background:rgba(102,6,45,.075);
+    color:#66062D;
+}
+.vct-datepicker-cell-empty{
+    cursor:default;
+}
+.vct-datepicker-cell-weekend{
+    color:#94a3b8;
+}
+.vct-datepicker-cell-today{
+    box-shadow:inset 0 0 0 1px rgba(102,6,45,.35);
+    font-weight:700;
+}
+.vct-datepicker-cell-selected{
+    color:#fff !important;
+    background:#66062D;
+    font-weight:600;
+}
+.vct-datepicker-cell-selected:hover{
+    background:#760A36;
+    color:#fff;
+}
+
+
+#vctAgendaFeriadoModal .vct-datepicker {width:100%;min-width:0;}
+#vctAgendaFeriadoModal .vct-datepicker-trigger {width:100%;min-width:0;}
+#vctAgendaFeriadoModal .vct-datepicker-menu {max-width:calc(100vw - 32px);}
+
+/* ACC_FERIADOS_V21: toolbar compacta del calendario de Acciones. */
+[data-vct-acc] .vct-acc-cal-unified .vct-agenda-toolbar {display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-start;gap:8px 16px;margin-bottom:8px;}
+[data-vct-acc] .vct-acc-cal-unified .vct-agenda-nav {flex:0 1 auto;justify-content:flex-start;gap:8px;min-width:0;}
+[data-vct-acc] .vct-acc-cal-unified .vct-agenda-title {font-size:16px;line-height:1.25;min-width:0;}
+[data-vct-acc] .vct-acc-cal-unified .vct-agenda-nav-btn {width:32px;height:32px;min-width:32px;flex:0 0 32px;}
+[data-vct-acc] .vct-acc-cal-unified .vct-agenda-view-toggle {flex:0 0 auto;min-height:32px;justify-self:auto;}
+[data-vct-acc] .vct-acc-cal-unified .vct-agenda-view-btn {font-size:12px;line-height:18px;padding:7px 10px;}
+[data-vct-acc] .vct-acc-cal-unified .vct-agenda-jump {margin-left:auto;max-width:100%;flex:0 1 auto;}
+[data-vct-acc] .vct-acc-cal-unified .vct-agenda-table {border-spacing:3px;}
+[data-vct-acc] .vct-acc-cal-unified .vct-agenda-table thead th {padding-top:3px;padding-bottom:5px;}
+[data-vct-acc] .vct-acc-cal-unified .vct-agenda-cell {height:56px !important;min-height:56px !important;padding:4px !important;vertical-align:top;}
+[data-vct-acc] .vct-acc-cal-unified .vct-agenda-daynum {height:20px;min-width:20px;font-size:12px;}
+[data-vct-acc] .vct-acc-cal-unified .vct-agenda-jump > .vct-pv-cal-select {display:inline-flex;position:relative;width:112px;min-width:0;flex:0 1 112px;margin:0;padding:0;border:0;background:transparent;box-shadow:none;}
+[data-vct-acc] .vct-acc-cal-unified .vct-agenda-jump > .vct-pv-cal-select:last-child {width:82px;flex-basis:82px;}
+[data-vct-acc] .vct-pv-cal-select > select {display:none !important;}
+[data-vct-acc] .vct-pv-cal-select > .vct-form-select {width:100%;min-width:0;}
+[data-vct-acc] .vct-pv-cal-select .vct-form-select-trigger {display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;height:32px;min-height:32px;padding:0 10px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;color:#1f2937;font:inherit;font-size:12px;cursor:pointer;}
+[data-vct-acc] .vct-pv-cal-select .vct-form-select-chevron {width:14px;height:14px;flex:0 0 14px;}
+[data-vct-acc] .vct-pv-cal-select .vct-form-select-trigger:focus-visible {outline:2px solid #66062D;outline-offset:2px;}
+[data-vct-acc] .vct-pv-calendar-holiday {margin-bottom:5px;}
+[data-vct-acc] .vct-pv-calendar-holiday.is-fijo {background:#FDE7EC;color:#B0223B;}
+[data-vct-acc] .vct-pv-calendar-holiday.is-movible {background:#F0EAFB;color:#6D28D9;}
+@media(max-width:600px){
+ [data-vct-acc] .vct-acc-cal-unified .vct-agenda-toolbar {gap:6px 10px;}
+ [data-vct-acc] .vct-acc-cal-unified .vct-agenda-nav {gap:6px;}
+ [data-vct-acc] .vct-acc-cal-unified .vct-agenda-title {font-size:14px;}
+ [data-vct-acc] .vct-acc-cal-unified .vct-agenda-view-btn {padding:7px 9px;}
 }

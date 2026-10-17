@@ -488,8 +488,8 @@ BEGIN
     '+ISNULL(@HTML_MODAL_CREATE,'')+'
     '+ISNULL(@HTML_MODAL_DELETE,'')+'
 </div>
-<link rel="stylesheet" href="../css/vct-agenda.css?v=11">
-<script src="../js/vct-agenda.js?v=10"></script>';
+<link rel="stylesheet" href="../css/vct-calendario.css?v=1">
+<script src="../js/vct-calendario.js?v=1"></script>';
  
     SET @OUTPARAM1=ISNULL(@HTML_SHELL,'')+ISNULL(@HTML,'');
 END

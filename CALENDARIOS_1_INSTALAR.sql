@@ -101,8 +101,8 @@ BEGIN
     END;
 
     SET @HTML=CONVERT(VARCHAR(MAX),'''')+
-      ''<link rel="stylesheet" href="../css/vct-agenda.css?v=20261016-2">''+
-      CASE WHEN @ENTITY=''CONSULTOR'' THEN ''<link rel="stylesheet" href="../css/vct-agenda-consultor.css?v=20261016-2">'' ELSE '''' END+
+      ''<link rel="stylesheet" href="../css/vct-calendario.css?v=1">''+
+      CASE WHEN @ENTITY=''CONSULTOR'' THEN ''<link rel="stylesheet" href="../css/vct-calendario.css?v=1">'' ELSE '''' END+
       ''<div class="vct-agenda-page vct-calendar-embedded''+CASE WHEN @ENTITY=''CONSULTOR'' THEN '' vct-agc-page'' ELSE '''' END+''" ''+
       CASE WHEN @ENTITY=''CONSULTOR'' THEN ''data-vct-agc-root data-vct-agc-can-edit="0" data-vct-agc-cons="''+CONVERT(VARCHAR(20),@ENTITY_ID)+''" data-vct-agc-dias="''+@JSON+''"''
            ELSE ''data-vct-agenda-root data-vct-agenda-can-edit="0" data-vct-feriados="[]" data-vct-calendar-events="''+@JSON+''"'' END+''>''+
@@ -127,7 +127,7 @@ BEGIN
            ELSE ''Disponibilidad, asignaciones y feriados del consultor. La carga y edici&oacute;n se realiza desde Agenda Consultor.'' END+''</p>''+
       CASE WHEN @ENTITY=''PROYECTO'' AND NOT EXISTS(SELECT 1 FROM #VCT_CALENDAR_EVENTS) THEN ''<p class="vct-agenda-calendar-range">Sin visitas en este per&iacute;odo.</p>'' ELSE '''' END+
       ''<div class="vct-agenda-view-pane" ''+CASE WHEN @ENTITY=''CONSULTOR'' THEN ''data-vct-agc-pane'' ELSE ''data-vct-agenda-view-pane'' END+''></div>''+
-      ''</section></div><script src="../js/''+CASE WHEN @ENTITY=''CONSULTOR'' THEN ''vct-agenda-consultor.js?v=20261016-2'' ELSE ''vct-agenda.js?v=20261016-2'' END+''"></script>'';
+      ''</section></div><script src="../js/''+CASE WHEN @ENTITY=''CONSULTOR'' THEN ''vct-calendario.js?v=1'' ELSE ''vct-calendario.js?v=1'' END+''"></script>'';
 END;
 ';
  END;

@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parte logístico · opciones de árbol y avance</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --b:#66062D; --b2:#8C1D47; --b3:#CF6F92; --bs:#F6EAEF; --bs2:#FBF7F9; --bs3:#FCF7F9; --bb:#E5C9D4;
+  --tx:#1f2937; --tx2:#334155; --tx3:#475569; --mu:#64748b; --mu2:#94a3b8;
+  --ln:#e2e8f0; --ln2:#eef2f6; --bg:#f8fafc;
+  --ok:#16a34a; --okb:#ECFDF3; --okl:#BBF7D0;
+  --run:#2563eb; --runb:#EFF6FF; --runl:#BFDBFE;
+  --late:#dc2626; --lateb:#FEF2F2; --latel:#FECACA;
+  --pen:#b45309; --penb:#FFFBEB; --penl:#FDE68A;
+  --font:"Gotham","Montserrat","Segoe UI",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#f1f4f8;font-family:var(--font);color:var(--tx);font-size:12px}
+.page{max-width:1440px;margin:0 auto;padding:20px 16px 60px}
+.note{background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:10px 14px;color:#713f12;font-size:12px;line-height:1.5;margin-bottom:14px}
+.note b{color:#5b2c06}
+.switch{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px}
+.switch button{font-family:inherit;font-size:12px;font-weight:600;height:34px;padding:0 14px;border-radius:8px;border:1px solid var(--ln);background:#fff;color:var(--tx3);cursor:pointer}
+.switch button.on{background:var(--b);border-color:var(--b);color:#fff}
+.opt{display:none}.opt.on{display:block}
+.box{background:#fff;border:1px solid var(--ln);border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+.box+.box{margin-top:14px}
+.bh{display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--ln2)}
+.bh h3{margin:0;font-size:12.5px;font-weight:700;color:var(--tx)}
+.ic{width:30px;height:30px;border-radius:8px;background:var(--bs);color:var(--b);display:inline-flex;align-items:center;justify-content:center}
+.ic svg{width:16px;height:16px}
+.desc{margin:10px 0 0;color:var(--mu);font-size:11.5px;line-height:1.5}
+.desc b{color:var(--b)}
+/* toolbar */
+.tb{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 0 12px}
+.srch{position:relative;flex:0 1 300px}
+.srch svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--mu2)}
+.srch input{width:100%;height:32px;border:1px solid #cbd5e1;border-radius:7px;padding:0 10px 0 31px;font-family:inherit;font-size:11.5px}
+.sel{height:32px;border:1px solid #cbd5e1;border-radius:7px;padding:0 28px 0 10px;font-family:inherit;font-size:11.5px;color:var(--mu);background:#fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'><path d='m6 9 6 6 6-6'/></svg>") no-repeat right 8px center;appearance:none;width:160px}
+.sp{flex:1}
+.btn{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 11px;border:1px solid #D7E0E9;border-radius:7px;background:#fff;font-family:inherit;font-size:11.5px;font-weight:600;color:#25344C;cursor:pointer}
+.btn .bi{width:20px;height:20px;border-radius:5px;background:var(--bs);color:var(--b);display:inline-flex;align-items:center;justify-content:center}
+.btn svg{width:13px;height:13px}
+.seg{display:inline-flex;border:1px solid #D7E0E9;border-radius:7px;overflow:hidden}
+.seg span{height:30px;padding:0 10px;display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--mu);background:#fff;border-left:1px solid #D7E0E9}
+.seg span:first-child{border-left:0}
+.seg span.on{background:var(--bs);color:var(--b)}
+.seg svg{width:13px;height:13px}
+/* badges */
+.bd{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:999px;font-size:10px;font-weight:600;border:1px solid;white-space:nowrap}
+.bd i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.bd.ok{color:#166534;background:var(--okb);border-color:var(--okl)}
+.bd.run{color:#1e40af;background:var(--runb);border-color:var(--runl)}
+.bd.late{color:#b91c1c;background:var(--lateb);border-color:var(--latel)}
+.bd.pen{color:#92400e;background:var(--penb);border-color:var(--penl)}
+.bd.neu{color:var(--tx3);background:var(--bg);border-color:var(--ln)}
+.av{width:24px;height:24px;border-radius:50%;background:#eef2f6;color:var(--tx3);font-size:9.5px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.av.c{background:var(--bs);color:var(--b)}
+.dots{width:30px;height:30px;border:1px solid var(--ln);border-radius:8px;background:#fff;display:inline-flex;align-items:center;justify-content:center;color:var(--tx3);font-size:16px;line-height:1}
+.chip{display:inline-flex;align-items:center;height:18px;padding:0 7px;border-radius:5px;background:var(--bs);color:var(--b);font-size:10px;font-weight:700;letter-spacing:.02em}
+.chip.g{background:#f1f5f9;color:var(--tx3);font-weight:600}
+.muted{color:var(--mu2)}
+.late-t{color:var(--late);font-weight:600}
+/* ===== OPCION A: arbol con guias ===== */
+.ta{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--ln);border-radius:12px;overflow:hidden;table-layout:fixed}
+.ta th{background:var(--bg);color:var(--tx3);font-size:10.5px;font-weight:600;text-align:left;padding:9px 10px;border-bottom:1px solid var(--ln)}
+.ta td{padding:8px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle;font-size:11.5px;color:var(--tx2)}
+.ta tr:last-child td{border-bottom:0}
+.ta .c{text-align:center}
+.it{display:flex;align-items:flex-start;gap:8px}
+.car{width:18px;height:18px;flex:0 0 18px;border-radius:5px;border:1px solid var(--ln);display:inline-flex;align-items:center;justify-content:center;color:var(--mu);font-size:9px;margin-top:1px}
+.car.op{background:var(--b);border-color:var(--b);color:#fff;transform:rotate(90deg)}
+.it b{font-weight:600;color:var(--tx);line-height:1.35}
+.it small{display:block;color:var(--mu2);font-size:10px;margin-top:2px;font-weight:500}
+tr.top.open td{background:var(--bs3)}
+tr.top.open td:first-child{box-shadow:inset 3px 0 0 var(--b)}
+/* guias */
+.tree{position:relative;padding-left:26px}
+.tree:before{content:"";position:absolute;left:9px;top:-9px;bottom:-9px;border-left:1.5px dashed var(--bb)}
+.tree.last:before{bottom:50%}
+.tree:after{content:"";position:absolute;left:9px;top:50%;width:12px;border-top:1.5px dashed var(--bb)}
+.tree.l2{padding-left:50px}
+.tree.l2:before{left:33px}.tree.l2:after{left:33px}
+tr.kid td{background:#fff}
+tr.kid td:first-child{box-shadow:inset 3px 0 0 var(--bs)}
+.acc{display:flex;align-items:flex-start;gap:8px}
+.acc .ai{width:20px;height:20px;flex:0 0 20px;border-radius:6px;border:1.5px solid #cbd5e1;background:#fff;display:inline-flex;align-items:center;justify-content:center;margin-top:1px}
+.acc .ai.done{background:var(--b);border-color:var(--b);color:#fff}
+.acc .ai svg{width:11px;height:11px}
+.acc b{font-weight:500;color:var(--tx2)}
+.acc.done b{color:var(--mu);text-decoration:line-through;text-decoration-color:#cbd5e1}
+.acc small{display:flex;gap:6px;align-items:center;color:var(--mu2);font-size:10px;margin-top:3px}
+tr.foot td{background:#fff;padding:6px 10px 10px}
+.links{display:flex;gap:16px;padding-left:26px}
+.lk{display:inline-flex;align-items:center;gap:6px;color:var(--b);font-weight:600;font-size:11px;cursor:pointer}
+.lk svg{width:13px;height:13px}
+/* avance segmentado */
+.seg-bar{display:flex;height:7px;border-radius:999px;overflow:hidden;background:var(--ln2)}
+.seg-bar span{display:block;height:100%}
+.s-ok{background:var(--b)}.s-run{background:var(--b3)}.s-late{background:var(--late)}
+.avw{display:flex;align-items:center;gap:8px}
+.avw .seg-bar{flex:1}
+.avw b{font-size:10.5px;min-width:30px;text-align:right}
+.cnt{font-size:10px;color:var(--mu)}
+/* gantt mini */
+.gm{position:relative;height:8px;border-radius:999px;background:#f1f5f9}
+.gm .bar{position:absolute;top:0;height:8px;border-radius:999px}
+.gm .bar .fill{position:absolute;left:0;top:0;bottom:0;border-radius:999px;background:rgba(255,255,255,.45)}
+.gm .tdy{position:absolute;top:-4px;width:2px;height:16px;background:var(--b);border-radius:2px}
+.b-run{background:var(--run)}.b-late{background:var(--late)}.b-ok{background:var(--ok)}.b-pen{background:#94a3b8}
+.dot-acc{position:absolute;top:1px;width:6px;height:6px;border-radius:50%;background:var(--b);border:1px solid #fff}
+/* ===== OPCION B: agrupado por capitulo ===== */
+.chap{border:1px solid var(--ln);border-radius:12px;overflow:hidden;margin-top:10px;background:#fff}
+.ch-h{display:grid;grid-template-columns:44px 1fr 220px 120px 90px;align-items:center;gap:14px;padding:12px 14px;background:var(--bs2);border-bottom:1px solid var(--ln2)}
+.ring{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.ring>span{width:30px;height:30px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:700;color:var(--b)}
+.ch-h h4{margin:0;font-size:12.5px;font-weight:700;color:var(--b)}
+.ch-h p{margin:2px 0 0;font-size:10.5px;color:var(--mu)}
+.minis{display:flex;gap:6px;flex-wrap:wrap}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:12px}
+.ic-card{border:1px solid var(--ln);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:9px;background:#fff}
+.ic-card.late{border-color:var(--latel);box-shadow:inset 3px 0 0 var(--late)}
+.ic-card .r1{display:flex;align-items:flex-start;gap:8px}
+.ic-card .r1 b{flex:1;font-weight:600;font-size:11.5px;line-height:1.35}
+.ic-card .r2{display:flex;align-items:center;gap:10px;font-size:10.5px;color:var(--mu)}
+.ic-card .r2 svg{width:12px;height:12px}
+.ic-card .r2 span{display:inline-flex;align-items:center;gap:4px}
+.ic-card .acts{display:flex;flex-direction:column;gap:5px;border-top:1px dashed var(--ln);padding-top:8px}
+.ic-card .acts div{display:flex;align-items:center;gap:7px;font-size:10.5px;color:var(--tx3)}
+.ck{width:14px;height:14px;border-radius:4px;border:1.5px solid #cbd5e1;display:inline-flex;align-items:center;justify-content:center;flex:0 0 14px}
+.ck.on{background:var(--b);border-color:var(--b);color:#fff}
+.ck svg{width:9px;height:9px}
+.ic-card .acts .dt{margin-left:auto;color:var(--mu2)}
+/* ===== OPCION C: cronograma ===== */
+.gc{border:1px solid var(--ln);border-radius:12px;overflow:hidden}
+.gc-h,.gc-r{display:grid;grid-template-columns:330px 1fr;}
+.gc-h{background:var(--bg);border-bottom:1px solid var(--ln)}
+.gc-h .l{padding:9px 12px;font-size:10.5px;font-weight:600;color:var(--tx3)}
+.months{display:grid;grid-template-columns:repeat(12,1fr);position:relative}
+.months div{padding:9px 0;text-align:center;font-size:10px;font-weight:600;color:var(--tx3);border-left:1px solid var(--ln)}
+.months div.wk{color:var(--b);background:var(--bs3)}
+.gc-r{border-bottom:1px solid #f1f5f9;min-height:40px}
+.gc-r:last-child{border-bottom:0}
+.gc-r .l{padding:8px 12px;display:flex;align-items:center;gap:8px;font-size:11px;border-right:1px solid var(--ln)}
+.gc-r .l b{font-weight:600;flex:1;line-height:1.3}
+.gc-r.sub .l{padding-left:38px;background:#fff}
+.gc-r.sub .l b{font-weight:500;color:var(--tx3)}
+.lane{position:relative;background-image:linear-gradient(to right,var(--ln2) 1px,transparent 1px);background-size:calc(100%/12) 100%}
+.gbar{position:absolute;top:50%;transform:translateY(-50%);height:16px;border-radius:5px;display:flex;align-items:center;overflow:hidden}
+.gbar .pf{position:absolute;left:0;top:0;bottom:0;background:rgba(0,0,0,.18)}
+.gbar em{position:relative;font-style:normal;font-size:9.5px;font-weight:700;color:#fff;padding:0 7px;white-space:nowrap}
+.g-run{background:var(--run)}.g-late{background:var(--late)}.g-ok{background:var(--ok)}.g-pen{background:#94a3b8}
+.gsub{height:8px;border-radius:999px;opacity:.55}
+.mil{position:absolute;top:50%;width:12px;height:12px;background:var(--b);transform:translate(-50%,-50%) rotate(45deg);border-radius:2px;box-shadow:0 0 0 2px #fff}
+.today{position:absolute;top:0;bottom:0;width:2px;background:var(--b);opacity:.55;z-index:0}
+.gbar,.mil{z-index:1}
+.months .hoy{position:absolute;top:2px;bottom:2px;width:2px;background:var(--b);border:0;padding:0}
+.months .hoy:after{content:"Hoy";position:absolute;left:4px;top:-1px;font-size:9px;font-weight:700;color:var(--b)}
+.adot{position:absolute;top:50%;width:8px;height:8px;border-radius:50%;transform:translate(-50%,-50%);border:1.5px solid #fff;z-index:1}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:10.5px;color:var(--mu)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+/* panel lateral (opcion A detalle) */
+.split{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:14px;align-items:start}
+.drawer{border:1px solid var(--ln);border-radius:12px;overflow:hidden;background:#fff;position:sticky;top:10px}
+.dw-h{padding:12px 14px;background:linear-gradient(180deg,var(--bs2),#fff);border-bottom:1px solid var(--ln2)}
+.dw-h small{color:var(--mu);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.dw-h h4{margin:3px 0 0;font-size:12.5px;color:var(--tx);line-height:1.35}
+.dw-b{padding:12px 14px;display:flex;flex-direction:column;gap:12px}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kv div{background:var(--bg);border:1px solid var(--ln2);border-radius:8px;padding:8px 10px}
+.kv small{display:block;color:var(--mu);font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.kv b{font-size:12px}
+.tl{list-style:none;margin:0;padding:0 0 0 14px;border-left:2px solid var(--bs)}
+.tl li{position:relative;padding:0 0 10px 10px;font-size:10.5px;color:var(--tx3)}
+.tl li:before{content:"";position:absolute;left:-19px;top:2px;width:8px;height:8px;border-radius:50%;background:#fff;border:2px solid var(--b3)}
+.tl li.d:before{background:var(--b);border-color:var(--b)}
+.tl li b{display:block;color:var(--tx2);font-weight:600;font-size:11px}
+.hint{font-size:10.5px;color:var(--mu);background:var(--bg);border:1px dashed #cbd5e1;border-radius:8px;padding:8px 10px;line-height:1.45}
+.pros{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.pros div{border:1px solid var(--ln);border-radius:10px;padding:10px 12px;font-size:11px;line-height:1.5;color:var(--tx3);background:#fff}
+.pros b{display:block;font-size:11px;color:var(--b);margin-bottom:3px}
+.pros ul{margin:0;padding-left:16px}
+@media (max-width:900px){.split{grid-template-columns:1fr}.cards{grid-template-columns:1fr}.ch-h{grid-template-columns:44px 1fr}.ch-h>*:nth-child(n+3){display:none}.gc-h,.gc-r{grid-template-columns:180px 1fr}.pros{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="note"><b>Boceto · Parte logístico (proyecto 1347).</b> Tres opciones para el árbol del plan, sobre el mismo estilo institucional de la Vista 360 (header, tarjetas, botones y ⋮ quedan como están). Los datos son de ejemplo con el rango real del proyecto (15/10/2026 → 31/12/2026, hoy 16/10). Se pueden combinar: por ejemplo, la opción A como vista principal y la C como segunda vista del mismo selector.</div>
+
+<div class="switch">
+  <button class="on" data-o="a">Opción A · Árbol con guías + panel de detalle</button>
+  <button data-o="b">Opción B · Agrupado por capítulo (tarjetas)</button>
+  <button data-o="c">Opción C · Cronograma (Gantt)</button>
+</div>
+
+<!-- ======================= OPCION A ======================= -->
+<section class="opt on" id="o-a">
+<div class="box">
+  <div class="bh"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 5h8M13 12h8M13 19h8M3 17l2 2 4-4M3 7l2 2 4-4"/></svg></span><h3>Parte logístico</h3></div>
+  <div class="tb">
+    <div class="srch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input placeholder="Buscar ítem, subítem o acción..."></div>
+    <select class="sel"><option>Todos los estados</option></select>
+    <select class="sel"><option>Responsable</option></select>
+    <span class="seg"><span class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M7 12h14M11 18h10"/></svg>Árbol</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h10M7 12h12M5 18h8"/></svg>Cronograma</span></span>
+    <span class="sp"></span>
+    <button class="btn"><span class="bi">⤢</span>Expandir todo</button>
+    <button class="btn"><span class="bi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg></span>Finalizar carga</button>
+    <button class="btn"><span class="bi">+</span>Ítem</button>
+  </div>
+
+  <div class="split">
+  <table class="ta">
+    <colgroup><col><col style="width:84px"><col style="width:84px"><col style="width:150px"><col style="width:86px"><col style="width:132px"><col style="width:46px"><col style="width:44px"></colgroup>
+    <thead><tr><th>Ítem</th><th class="c">Inicio</th><th class="c">Fin</th><th>Cronograma</th><th class="c">Estado</th><th>Avance</th><th class="c">Resp.</th><th></th></tr></thead>
+    <tbody>
+      <tr class="top open">
+        <td><div class="it"><span class="car op">▶</span><div><b><span class="chip">4.1</span> Comprensión de la organización y de su contexto</b><small>2 subítems · 3 acciones</small></div></div></td>
+        <td class="c">16/10/2026</td><td class="c">23/10/2026</td>
+        <td><div class="gm"><span class="bar b-run" style="left:1%;width:12%"><span class="fill" style="width:33%"></span></span><span class="tdy" style="left:2%"></span></div></td>
+        <td class="c"><span class="bd run"><i></i>En curso</span></td>
+        <td><div class="avw"><div class="seg-bar"><span class="s-ok" style="width:33%"></span><span class="s-run" style="width:34%"></span></div><b>33%</b></div><div class="cnt">1 de 3 acciones</div></td>
+        <td class="c"><span class="av">JB</span></td><td class="c"><span class="dots">⋮</span></td>
+      </tr>
+      <tr class="kid">
+        <td><div class="tree"><div class="it"><span class="chip g">Subítem</span><b style="font-weight:500">Determinar acciones (ITI-03-01 Análisis de contexto)</b></div></div></td>
+        <td class="c muted" colspan="2">hereda 16/10 → 23/10</td><td></td>
+        <td class="c"><span class="bd ok"><i></i>Cumplido</span></td>
+        <td><div class="avw"><div class="seg-bar"><span class="s-ok" style="width:100%"></span></div><b>100%</b></div></td>
+        <td class="c"><span class="av">JB</span></td><td class="c"><span class="dots">⋮</span></td>
+      </tr>
+      <tr class="kid">
+        <td><div class="tree l2"><div class="acc done"><span class="ai done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span><div><b>Relevar contexto interno y externo</b><small><span class="chip g">Tarea</span>Trabajo sobre ítem · cerrada 19/10</small></div></div></div></td>
+        <td class="c muted">16/10</td><td class="c">19/10/2026</td><td></td>
+        <td class="c"><span class="bd ok"><i></i>Cumplida</span></td><td></td>
+        <td class="c"><span class="av c">JB</span></td><td class="c"><span class="dots">⋮</span></td>
+      </tr>
+      <tr class="kid">
+        <td><div class="tree"><div class="it"><span class="chip g">Subítem</span><b style="font-weight:500">Avance de acciones</b></div></div></td>
+        <td class="c muted" colspan="2">hereda 16/10 → 23/10</td><td></td>
+        <td class="c"><span class="bd pen"><i></i>Pendiente</span></td>
+        <td><div class="avw"><div class="seg-bar"><span class="s-run" style="width:50%"></span></div><b>0%</b></div></td>
+        <td class="c"><span class="av">AA</span></td><td class="c"><span class="dots">⋮</span></td>
+      </tr>
+      <tr class="kid">
+        <td><div class="tree l2"><div class="acc"><span class="ai"></span><div><b>Validar FODA con la dirección</b><small><span class="chip g">Solicitud</span>Pendiente del cliente</small></div></div></div></td>
+        <td class="c muted">—</td><td class="c">22/10/2026</td><td></td>
+        <td class="c"><span class="bd pen"><i></i>Pendiente</span></td><td></td>
+        <td class="c"><span class="av">AA</span></td><td class="c"><span class="dots">⋮</span></td>
+      </tr>
+      <tr class="kid">
+        <td><div class="tree last"><div class="acc"><span class="ai"></span><div><b>Cargar matriz de partes interesadas</b><small><span class="chip g">Tarea</span>Acción del ítem · vence en 7 días</small></div></div></div></td>
+        <td class="c muted">—</td><td class="c">23/10/2026</td><td></td>
+        <td class="c"><span class="bd run"><i></i>En proceso</span></td><td></td>
+        <td class="c"><span class="av c">JB</span></td><td class="c"><span class="dots">⋮</span></td>
+      </tr>
+      <tr class="foot"><td colspan="8"><div class="links"><span class="lk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>Nueva acción en 4.1</span><span class="lk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>Agregar subítem</span></div></td></tr>
+      <tr class="top">
+        <td><div class="it"><span class="car">▶</span><div><b><span class="chip">4.2</span> Comprensión de las necesidades y expectativas de las partes interesadas</b><small>1 subítem · 2 acciones</small></div></div></td>
+        <td class="c">19/10/2026</td><td class="c">30/10/2026</td>
+        <td><div class="gm"><span class="bar b-pen" style="left:5%;width:19%"></span><span class="tdy" style="left:2%"></span></div></td>
+        <td class="c"><span class="bd pen"><i></i>Pendiente</span></td>
+        <td><div class="avw"><div class="seg-bar"></div><b>0%</b></div><div class="cnt">0 de 2 acciones</div></td>
+        <td class="c"><span class="av">JB</span></td><td class="c"><span class="dots">⋮</span></td>
+      </tr>
+      <tr class="top">
+        <td><div class="it"><span class="car">▶</span><div><b><span class="chip">4.3</span> Determinación del alcance del sistema de gestión</b><small>sin acciones</small></div></div></td>
+        <td class="c">15/10/2026</td><td class="c late-t">15/10/2026</td>
+        <td><div class="gm"><span class="bar b-late" style="left:0;width:3%"></span><span class="tdy" style="left:2%"></span></div></td>
+        <td class="c"><span class="bd late"><i></i>Vencido</span></td>
+        <td><div class="avw"><div class="seg-bar"><span class="s-late" style="width:100%"></span></div><b>0%</b></div><div class="cnt">venció hace 1 día</div></td>
+        <td class="c"><span class="av">AA</span></td><td class="c"><span class="dots">⋮</span></td>
+      </tr>
+      <tr class="top">
+        <td><div class="it"><span class="car">▶</span><div><b><span class="chip" style="background:#1f2937;color:#fff">Hito</span> Realización de auditoría interna</b><small>hito · sin subítems</small></div></div></td>
+        <td class="c">01/12/2026</td><td class="c">05/12/2026</td>
+        <td><div class="gm"><span class="tdy" style="left:2%"></span><span class="mil" style="left:72%;width:9px;height:9px"></span></div></td>
+        <td class="c"><span class="bd neu"><i></i>Programado</span></td>
+        <td class="muted">—</td>
+        <td class="c"><span class="av c">JB</span></td><td class="c"><span class="dots">⋮</span></td>
+      </tr>
+      <tr class="top">
+        <td><div class="it"><span class="car">▶</span><div><b><span class="chip">5.1</span> Liderazgo y compromiso</b><small>sin fechas · falta para finalizar la carga</small></div></div></td>
+        <td class="c late-t" colspan="2" style="color:#b45309">Sin fechas</td>
+        <td><div class="gm"><span class="tdy" style="left:2%"></span></div></td>
+        <td class="c"><span class="bd pen"><i></i>Pendiente</span></td>
+        <td class="muted">—</td>
+        <td class="c muted">—</td><td class="c"><span class="dots">⋮</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <aside class="drawer">
+    <div class="dw-h"><small>Detalle del ítem</small><h4>4.1 Comprensión de la organización y de su contexto</h4></div>
+    <div class="dw-b">
+      <div class="kv">
+        <div><small>Rango</small><b>16/10 → 23/10</b></div>
+        <div><small>Días restantes</small><b>7</b></div>
+        <div><small>Acciones</small><b>1 / 3</b></div>
+        <div><small>Responsable</small><b>Bracamonte</b></div>
+      </div>
+      <div><div class="avw"><div class="seg-bar" style="height:9px"><span class="s-ok" style="width:33%"></span><span class="s-run" style="width:34%"></span></div><b>33%</b></div>
+        <div class="legend" style="margin-top:6px"><span><i style="background:var(--b)"></i>Cumplidas 1</span><span><i style="background:var(--b3)"></i>En curso 1</span><span><i style="background:var(--ln2);border:1px solid var(--ln)"></i>Pendientes 1</span></div></div>
+      <ul class="tl">
+        <li class="d"><b>Relevar contexto interno y externo</b>Cumplida 19/10 · JB</li>
+        <li><b>Cargar matriz de partes interesadas</b>En proceso · vence 23/10 · JB</li>
+        <li><b>Validar FODA con la dirección</b>Pendiente del cliente · vence 22/10 · AA</li>
+      </ul>
+      <div class="hint">Se abre al hacer clic en la fila (no reemplaza el ⋮). Muestra el avance desglosado y las acciones en orden de vencimiento, sin tener que expandir el árbol.</div>
+    </div>
+  </aside>
+  </div>
+
+  <div class="pros">
+    <div><b>Qué cambia respecto de hoy</b><ul>
+      <li>Líneas guía punteadas en bordó para ver qué cuelga de cada ítem.</li>
+      <li>Ítem abierto con borde bordó a la izquierda y fondo suave; subítems y acciones en blanco (se separan de la fila de botones).</li>
+      <li>Acciones con casilla (✓ bordó si está cumplida), tipo como chip y subtipo/estado debajo.</li>
+      <li>"Nueva acción" y "Agregar subítem" pasan a links bordó, sin botón, para que no se confundan con filas.</li>
+      <li>Avance segmentado: cumplidas (bordó) · en curso (rosa) · vencidas (rojo), con "1 de 3 acciones" debajo.</li>
+      <li>Cronograma con punto por acción y línea de "hoy"; hitos como rombo.</li>
+    </ul></div>
+    <div><b>Para tener en cuenta</b><ul>
+      <li>Usa los datos que ya existen (ítems, subítems, acciones, estados).</li>
+      <li>El panel de detalle es opcional: si no se quiere, la tabla ocupa todo el ancho.</li>
+      <li>Filtro por responsable nuevo (equipo del proyecto).</li>
+      <li>"Sin fechas" en naranja marca lo que falta para Finalizar carga.</li>
+    </ul></div>
+  </div>
+</div>
+</section>
+
+<!-- ======================= OPCION B ======================= -->
+<section class="opt" id="o-b">
+<div class="box">
+  <div class="bh"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 5h8M13 12h8M13 19h8M3 17l2 2 4-4M3 7l2 2 4-4"/></svg></span><h3>Parte logístico</h3></div>
+  <div class="tb">
+    <div class="srch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input placeholder="Buscar ítem..."></div>
+    <select class="sel"><option>Todos los estados</option></select>
+    <span class="sp"></span>
+    <button class="btn"><span class="bi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg></span>Finalizar carga</button>
+    <button class="btn"><span class="bi">+</span>Ítem</button>
+  </div>
+
+  <div class="chap">
+    <div class="ch-h">
+      <div class="ring" style="background:conic-gradient(var(--b) 0 22%, var(--b3) 22% 40%, var(--late) 40% 52%, var(--ln2) 52% 100%)"><span>22%</span></div>
+      <div><h4>Capítulo 4 · Contexto de la organización</h4><p>4 ítems · 16/10 → 13/11 · 2 de 9 acciones cumplidas</p></div>
+      <div class="minis"><span class="bd ok"><i></i>1 cumplido</span><span class="bd run"><i></i>2 en curso</span><span class="bd late"><i></i>1 vencido</span></div>
+      <div class="cnt">Responsables <span class="av">JB</span> <span class="av">AA</span></div>
+      <div style="text-align:right"><span class="lk">Contraer ▴</span></div>
+    </div>
+    <div class="cards">
+      <div class="ic-card">
+        <div class="r1"><span class="chip">4.1</span><b>Comprensión de la organización y de su contexto</b><span class="bd run"><i></i>En curso</span><span class="dots" style="width:26px;height:26px">⋮</span></div>
+        <div class="r2"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>16/10 → 23/10</span><span>7 días</span><span style="margin-left:auto"><span class="av">JB</span></span></div>
+        <div class="avw"><div class="seg-bar"><span class="s-ok" style="width:33%"></span><span class="s-run" style="width:34%"></span></div><b>33%</b></div>
+        <div class="acts">
+          <div><span class="ck on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span>Relevar contexto interno y externo<span class="dt">19/10</span></div>
+          <div><span class="ck"></span>Cargar matriz de partes interesadas<span class="dt">23/10</span></div>
+          <div><span class="ck"></span>Validar FODA con la dirección <span class="chip g">cliente</span><span class="dt">22/10</span></div>
+          <div><span class="lk">+ Nueva acción</span><span class="lk" style="margin-left:12px">+ Subítem (2)</span></div>
+        </div>
+      </div>
+      <div class="ic-card late">
+        <div class="r1"><span class="chip">4.3</span><b>Determinación del alcance del sistema de gestión</b><span class="bd late"><i></i>Vencido</span><span class="dots" style="width:26px;height:26px">⋮</span></div>
+        <div class="r2"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>15/10 → 15/10</span><span class="late-t">venció hace 1 día</span><span style="margin-left:auto"><span class="av">AA</span></span></div>
+        <div class="avw"><div class="seg-bar"><span class="s-late" style="width:100%"></span></div><b>0%</b></div>
+        <div class="acts"><div class="muted">Sin acciones cargadas.</div><div><span class="lk">+ Nueva acción</span><span class="lk" style="margin-left:12px">+ Subítem</span></div></div>
+      </div>
+      <div class="ic-card">
+        <div class="r1"><span class="chip">4.2</span><b>Necesidades y expectativas de las partes interesadas</b><span class="bd pen"><i></i>Pendiente</span><span class="dots" style="width:26px;height:26px">⋮</span></div>
+        <div class="r2"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>19/10 → 30/10</span><span>empieza en 3 días</span><span style="margin-left:auto"><span class="av">JB</span></span></div>
+        <div class="avw"><div class="seg-bar"></div><b>0%</b></div>
+        <div class="acts"><div><span class="ck"></span>Identificar partes interesadas<span class="dt">27/10</span></div><div><span class="ck"></span>Requisitos legales aplicables<span class="dt">30/10</span></div></div>
+      </div>
+      <div class="ic-card">
+        <div class="r1"><span class="chip">4.4</span><b>Sistema de gestión y sus procesos</b><span class="bd ok"><i></i>Cumplido</span><span class="dots" style="width:26px;height:26px">⋮</span></div>
+        <div class="r2"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>16/10 → 13/11</span><span>fin real 16/10</span><span style="margin-left:auto"><span class="av">JB</span></span></div>
+        <div class="avw"><div class="seg-bar"><span class="s-ok" style="width:100%"></span></div><b>100%</b></div>
+        <div class="acts"><div><span class="ck on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span>Mapa de procesos<span class="dt">16/10</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chap">
+    <div class="ch-h">
+      <div class="ring" style="background:conic-gradient(var(--ln2) 0 100%)"><span>0%</span></div>
+      <div><h4>Capítulo 5 · Liderazgo</h4><p>3 ítems · sin fechas cargadas</p></div>
+      <div class="minis"><span class="bd pen"><i></i>3 pendientes</span></div>
+      <div class="cnt">—</div>
+      <div style="text-align:right"><span class="lk">Expandir ▾</span></div>
+    </div>
+  </div>
+  <div class="chap">
+    <div class="ch-h">
+      <div class="ring" style="background:conic-gradient(var(--ln2) 0 100%)"><span>—</span></div>
+      <div><h4>Hitos · Auditorías y certificación</h4><p>3 hitos · próximo: auditoría interna 01/12</p></div>
+      <div class="minis"><span class="bd neu"><i></i>3 programados</span></div>
+      <div class="cnt">Responsables <span class="av c">JB</span></div>
+      <div style="text-align:right"><span class="lk">Expandir ▾</span></div>
+    </div>
+  </div>
+
+  <div class="pros">
+    <div><b>Qué cambia</b><ul>
+      <li>Los 47 ítems se agrupan por capítulo de la norma (4, 5, 6…, tomado del número del ítem) con un anillo de avance por capítulo.</li>
+      <li>Cada ítem es una tarjeta con rango, días restantes, avance segmentado y sus acciones como checklist.</li>
+      <li>Ítems vencidos con borde rojo a la izquierda.</li>
+    </ul></div>
+    <div><b>Para tener en cuenta</b><ul>
+      <li>Más visual y cómodo para el seguimiento, menos denso para la carga de fechas.</li>
+      <li>El capítulo sale del código del ítem (4.1 → 4); los hitos van en un grupo propio.</li>
+      <li>Para cargar fechas masivamente conviene mantener la tabla (opción A) como segunda vista.</li>
+    </ul></div>
+  </div>
+</div>
+</section>
+
+<!-- ======================= OPCION C ======================= -->
+<section class="opt" id="o-c">
+<div class="box">
+  <div class="bh"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 5h8M13 12h8M13 19h8M3 17l2 2 4-4M3 7l2 2 4-4"/></svg></span><h3>Parte logístico</h3></div>
+  <div class="tb">
+    <div class="srch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input placeholder="Buscar ítem..."></div>
+    <select class="sel"><option>Todos los estados</option></select>
+    <span class="seg"><span>Árbol</span><span class="on">Cronograma</span></span>
+    <span class="seg"><span class="on">Semanas</span><span>Meses</span></span>
+    <span class="sp"></span>
+    <button class="btn"><span class="bi">+</span>Ítem</button>
+  </div>
+
+  <div class="gc">
+    <div class="gc-h"><div class="l">Ítem</div>
+      <div class="months">
+        <span class="hoy" style="left:5.5%"></span><div class="wk">12/10</div><div>19/10</div><div>26/10</div><div>02/11</div><div>09/11</div><div>16/11</div><div>23/11</div><div>30/11</div><div>07/12</div><div>14/12</div><div>21/12</div><div>28/12</div>
+      </div>
+    </div>
+    <div class="gc-r"><div class="l"><span class="car op">▶</span><b>4.1 Comprensión de la organización</b><span class="av">JB</span></div>
+      <div class="lane"><span class="today" style="left:5.5%"></span><span class="gbar g-run" style="left:4.5%;width:9.5%"><span class="pf" style="width:33%"></span><em>33%</em></span><span class="adot" style="left:8%;background:var(--b)"></span><span class="adot" style="left:13%;background:var(--b3)"></span></div></div>
+    <div class="gc-r sub"><div class="l"><b>Determinar acciones</b><span class="bd ok" style="height:18px"><i></i>OK</span></div>
+      <div class="lane"><span class="today" style="left:5.5%"></span><span class="gbar g-run gsub" style="left:4.5%;width:9.5%"></span></div></div>
+    <div class="gc-r sub"><div class="l"><b>Avance de acciones</b><span class="bd pen" style="height:18px"><i></i>Pend.</span></div>
+      <div class="lane"><span class="today" style="left:5.5%"></span><span class="gbar g-run gsub" style="left:4.5%;width:9.5%"></span></div></div>
+    <div class="gc-r"><div class="l"><span class="car">▶</span><b>4.2 Partes interesadas</b><span class="av">JB</span></div>
+      <div class="lane"><span class="today" style="left:5.5%"></span><span class="gbar g-pen" style="left:8.5%;width:15.5%"><em>0%</em></span></div></div>
+    <div class="gc-r"><div class="l"><span class="car">▶</span><b>4.3 Alcance del sistema</b><span class="av">AA</span></div>
+      <div class="lane"><span class="today" style="left:5.5%"></span><span class="gbar g-late" style="left:4%;width:1.6%"></span><span style="position:absolute;left:7%;top:50%;transform:translateY(-50%);font-size:9.5px;font-weight:700;color:var(--late)">vencido</span></div></div>
+    <div class="gc-r"><div class="l"><span class="car">▶</span><b>4.4 Sistema y procesos</b><span class="av">JB</span></div>
+      <div class="lane"><span class="today" style="left:5.5%"></span><span class="gbar g-ok" style="left:4.5%;width:40%"><span class="pf" style="width:100%"></span><em>100%</em></span></div></div>
+    <div class="gc-r"><div class="l"><span class="car">▶</span><b>5.1 Liderazgo y compromiso</b><span class="bd pen" style="height:18px"><i></i>Sin fechas</span></div>
+      <div class="lane"><span class="today" style="left:5.5%"></span></div></div>
+    <div class="gc-r"><div class="l"><span class="chip" style="background:#1f2937;color:#fff">Hito</span><b>Auditoría interna</b><span class="av c">JB</span></div>
+      <div class="lane"><span class="today" style="left:5.5%"></span><span class="mil" style="left:71%"></span><span class="mil" style="left:76%"></span></div></div>
+    <div class="gc-r"><div class="l"><span class="chip" style="background:#1f2937;color:#fff">Hito</span><b>Auditoría de certificación</b><span class="av">—</span></div>
+      <div class="lane"><span class="today" style="left:5.5%"></span><span class="mil" style="left:88%"></span></div></div>
+  </div>
+  <div class="legend">
+    <span><i style="background:var(--run)"></i>En curso</span><span><i style="background:#94a3b8"></i>Pendiente</span><span><i style="background:var(--late)"></i>Vencido</span><span><i style="background:var(--ok)"></i>Cumplido</span>
+    <span><i style="background:var(--b);transform:rotate(45deg)"></i>Hito</span><span><i style="background:var(--b);border-radius:50%"></i>Vencimiento de acción</span><span><i style="background:var(--b);width:2px"></i>Hoy</span>
+  </div>
+
+  <div class="pros">
+    <div><b>Qué cambia</b><ul>
+      <li>Vista de cronograma a lo ancho del rango real del proyecto, por semanas o por meses.</li>
+      <li>Cada barra muestra el avance (parte oscura) y los vencimientos de sus acciones como puntos.</li>
+      <li>Hitos como rombo bordó; línea "Hoy" bordó.</li>
+    </ul></div>
+    <div><b>Para tener en cuenta</b><ul>
+      <li>Ideal para la reunión de seguimiento con el cliente y para detectar solapamientos.</li>
+      <li>Es una vista de lectura: la carga sigue en el árbol (selector Árbol / Cronograma).</li>
+      <li>En el futuro se podría arrastrar la barra para cambiar fechas (dispara el aviso al analista que ya existe).</li>
+    </ul></div>
+  </div>
+</div>
+</section>
+
+</div>
+<script>
+document.querySelectorAll(".switch button").forEach(function(b){
+  b.addEventListener("click",function(){
+    document.querySelectorAll(".switch button").forEach(function(x){x.classList.toggle("on",x===b)});
+    document.querySelectorAll(".opt").forEach(function(o){o.classList.toggle("on",o.id==="o-"+b.getAttribute("data-o"))});
+  });
+});
+</script>
+</body>
+</html>

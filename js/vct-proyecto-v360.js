@@ -1,4 +1,5 @@
-/* vct-proyecto-v360.js - v12 (mail al consultor al iniciar el proyecto)
+/* vct-proyecto-v360.js - v17 (parte logistico: capitulos con tarjetas + cronograma)
+   v12 (mail al consultor al iniciar el proyecto)
    v11 (desplegables con VCT.FormSelect)
    v10 (selects y fechas de los modales del lanzamiento)
    v9 (lanzamiento: alta / edicion / eliminar; menu de 3 puntos con confirm)
@@ -247,6 +248,46 @@
             if (w) VCT.FormSelect.sync(el, w);
         }
     }
+    /* accion del plan: subtipos del tipo elegido; resultado solo con estado final */
+    function plTipif(m) {
+        var fs = window.VCT && VCT.FormSelect;
+        var t = m.querySelector("[data-vct-pv-tipo]"), s = m.querySelector("[data-vct-pv-sub-tipo]");
+        if (t && s) {
+            var tv = t.value;
+            Array.prototype.forEach.call(s.options, function (o) {
+                if (!o.value) return;
+                var ok = !!tv && o.getAttribute("data-tipo") === tv;
+                o.disabled = !ok; o.hidden = !ok;
+            });
+            var w = s.parentNode ? s.parentNode.querySelector(".vct-form-select") : null;
+            var menu = w ? w.__vctPortalMenu : null;
+            if (menu) menu.querySelectorAll(".vct-form-select-option").forEach(function (d) {
+                var v = d.getAttribute("data-value");
+                if (!v) return;
+                var o = null;
+                Array.prototype.forEach.call(s.options, function (x) { if (x.value === v) o = x; });
+                var off = !!(o && o.disabled);
+                if (off) d.style.setProperty("display", "none", "important"); else d.style.removeProperty("display");
+                d.classList.toggle("is-disabled", off);
+                d.setAttribute("aria-disabled", off ? "true" : "false");
+            });
+            var cur = s.options[s.selectedIndex];
+            if (cur && cur.disabled) setVal(s, "");
+            else if (w && fs && fs.sync) fs.sync(s, w);
+        }
+        var e = m.querySelector("[data-vct-pv-estado]"), r = m.querySelector("[data-vct-pv-resultado]");
+        if (e && r) {
+            var oe = e.options[e.selectedIndex];
+            var fin = !!(oe && oe.getAttribute("data-final") === "1");
+            r.disabled = !fin;
+            if (fin) r.setAttribute("data-req", "Resultado");
+            else { r.removeAttribute("data-req"); r.classList.remove("is-invalid"); if (r.value) setVal(r, ""); }
+            var star = m.querySelector("[data-vct-pv-res-req]");
+            if (star) star.hidden = !fin;
+            var w2 = r.parentNode ? r.parentNode.querySelector(".vct-form-select") : null;
+            if (w2 && fs && fs.sync) fs.sync(r, w2);
+        }
+    }
     function syncPreg(m) {
         var wrap = m.querySelector("[data-vct-pv-preg-wrap]");
         if (!wrap) return;
@@ -265,7 +306,7 @@
     function openLz(btn, key, edit) {
         var m = lzModal(btn, key);
         if (!m) return;
-        lzId = edit ? (btn.getAttribute("data-id") || "") : "";
+        lzId = btn.getAttribute("data-id") || "";
         m.setAttribute("data-vct-pv-mode", edit ? "edit" : "new");
         m.setAttribute("data-vct-pv-item", edit ? (btn.getAttribute("data-f-item") || "") : "");
         var t = m.querySelector("[data-vct-pv-mtitle]");
@@ -277,12 +318,23 @@
         m.querySelectorAll("[data-vct-pv-f]").forEach(function (f) {
             var k = f.getAttribute("data-vct-pv-f");
             if (edit) setVal(f, btn.getAttribute("data-f-" + k) || "");
+            else if (btn.hasAttribute("data-f-" + k)) setVal(f, btn.getAttribute("data-f-" + k) || "");
             else if (f.tagName === "SELECT" && !f.hasAttribute("data-vct-pv-def")) setVal(f, f.options.length ? f.options[0].value : "");
             else setVal(f, f.getAttribute("data-vct-pv-def") || "");
             f.classList.remove("is-invalid");
         });
         syncPreg(m);
         syncMail(m);
+        plTipif(m);
+        /* item del plan: un sub-item no tiene fechas propias */
+        var padre = m.querySelector('[data-vct-pv-f="padre"]');
+        if (padre) {
+            var esSub = !!padre.value;
+            m.querySelectorAll("[data-vct-pv-only-top]").forEach(function (x) { x.hidden = esSub; });
+            m.querySelectorAll("[data-vct-pv-only-sub]").forEach(function (x) { x.hidden = !esSub; });
+            var tt = m.querySelector("[data-vct-pv-mtitle]");
+            if (tt && esSub) tt.innerHTML = edit ? "Editar sub&iacute;tem" : "Agregar sub&iacute;tem";
+        }
         showError(m, null);
         var sv = m.querySelector("[data-vct-pv-save]");
         if (sv) sv.disabled = false;
@@ -315,21 +367,136 @@
             errs.push("Dato es obligatorio: elija uno de la minuta o escr\u00edbalo.");
         if (errs.length) { showError(m, errs); return; }
         showError(m, null);
-        enviar(btn, m.getAttribute("data-vct-pv-cmd"), lzId, campos, "lanzamiento");
+        var cmdM = m.getAttribute("data-vct-pv-cmd") || "";
+        enviar(btn, cmdM, lzId, campos, /^PV_PL_/.test(cmdM) ? "plan" : "lanzamiento");
     }
 
     /* ---------------- eliminar / confirmar (alerta nativa, como en las otras grillas) ---------------- */
     function confirmar(btn) {
         var cmd = btn.getAttribute("data-vct-pv-confirm") || "";
         var msg = /_BORRAR$/.test(cmd) ? "\u00bfEliminar este registro?" : (btn.getAttribute("data-msg") || "\u00bfConfirma?");
+        if (/_BORRAR$/.test(cmd) && btn.getAttribute("data-nombre")) msg += "\n\n" + btn.getAttribute("data-nombre");
         if (cmd === "PV_IN_BORRAR") msg = "\u00bfDeshacer el inicio del proyecto?\n" + (btn.getAttribute("data-msg") || "");
         if (!window.confirm(msg)) return;
-        enviar(btn, cmd, btn.getAttribute("data-id") || "0", {}, "lanzamiento");
+        var extra = {};
+        if (btn.hasAttribute("data-t11")) extra.TEXTO11 = btn.getAttribute("data-t11");
+        enviar(btn, cmd, btn.getAttribute("data-id") || "0", extra, /^PV_PL_/.test(cmd) ? "plan" : "lanzamiento");
     }
+    /* calendario dentro de un modal: se muestra completo (no lo recorta el scroll del cuerpo del modal) */
+    function dpPlace(wrap) {
+        var menu = wrap ? wrap.querySelector(".vct-datepicker-menu") : null;
+        var trg = wrap ? wrap.querySelector(".vct-datepicker-trigger") : null;
+        var dlg = wrap ? wrap.closest(".vct-modal-dialog") : null;
+        if (!menu || !trg || !dlg) return;
+        if (!wrap.classList.contains("is-open")) { menu.removeAttribute("style"); return; }
+        menu.style.position = "fixed";
+        menu.style.transform = "none";
+        menu.style.transition = "opacity .14s ease";
+        menu.style.bottom = "auto";
+        menu.style.right = "auto";
+        menu.style.zIndex = "13000";
+        menu.style.top = "0px"; menu.style.left = "0px";
+        var r = trg.getBoundingClientRect(), d = dlg.getBoundingClientRect();
+        var w = menu.offsetWidth, h = menu.offsetHeight, gap = 5;
+        var left = Math.max(d.left + 8, Math.min(r.left, d.right - w - 8));
+        var top = r.bottom + gap;
+        if (top + h > d.bottom - 8 && r.top - gap - h >= d.top + 8) top = r.top - gap - h;
+        else if (top + h > window.innerHeight - 8) top = Math.max(8, window.innerHeight - 8 - h);
+        /* corrige si el modal tiene transform (el fixed se mide desde el modal) */
+        var m0 = menu.getBoundingClientRect();
+        menu.style.left = Math.round(left - m0.left) + "px";
+        menu.style.top = Math.round(top - m0.top) + "px";
+    }
+    document.addEventListener("click", function (e) {
+        var t = e.target && e.target.closest ? e.target.closest(".vct-datepicker-trigger") : null;
+        if (!t || !t.closest("[data-vct-pv-modal]")) return;
+        var wrap = t.closest(".vct-datepicker");
+        setTimeout(function () { dpPlace(wrap); }, 0);
+    });
+    document.addEventListener("scroll", function (e) {
+        var b = e.target && e.target.closest ? e.target.closest("[data-vct-pv-modal]") : null;
+        if (!b) return;
+        b.querySelectorAll(".vct-datepicker.is-open").forEach(dpPlace);
+    }, true);
     function quitarConsultor(btn) {
         if (!window.confirm("\u00bfEliminar este registro?")) return;
         enviar(btn, "PV_EQ_BAJA", btn.getAttribute("data-vct-pv-baja") || "", {}, "equipo");
     }
+
+    /* ---------------- parte logistico: capitulos, tarjetas, cronograma ---------------- */
+    function plChap(ch, open) {
+        if (!ch) return;
+        ch.classList.toggle("is-open", typeof open === "boolean" ? open : !ch.classList.contains("is-open"));
+        plAllLabel(ch.closest("[data-pl-box]"));
+    }
+    /* capitulos abiertos: se recuerdan al volver despues de grabar (por proyecto) */
+    function plKey(box) { var m = box ? box.closest("[data-vct-pv-proyecto]") : null; return "vct.pv.plan.open." + (m ? m.getAttribute("data-vct-pv-proyecto") : ""); }
+    function plSave(box) {
+        if (!box) return;
+        var a = [];
+        box.querySelectorAll("[data-pl-chap].is-open").forEach(function (c) { a.push(c.getAttribute("data-pl-chap")); });
+        try { window.sessionStorage.setItem(plKey(box), a.join(",")); } catch (e) { }
+    }
+    function plAllLabel(box) {
+        if (!box) return;
+        plSave(box);
+        var b = box.querySelector("[data-pl-chap-all]");
+        if (!b) return;
+        var cs = box.querySelectorAll("[data-pl-chap]:not([hidden])"), todos = cs.length > 0;
+        cs.forEach(function (c) { if (!c.classList.contains("is-open")) todos = false; });
+        var sp = b.querySelectorAll("span");
+        if (sp.length) sp[sp.length - 1].textContent = todos ? "Contraer todo" : "Expandir todo";
+        b.setAttribute("data-pl-open", todos ? "1" : "0");
+    }
+    function plView(box, v) {
+        if (!box) return;
+        box.querySelectorAll("[data-pl-view]").forEach(function (b) { b.classList.toggle("is-on", b.getAttribute("data-pl-view") === v); });
+        box.querySelectorAll("[data-pl-pane]").forEach(function (p) { p.hidden = p.getAttribute("data-pl-pane") !== v; });
+        box.classList.toggle("is-gantt", v === "gantt");
+        try { window.localStorage.setItem("vct.pv.plan.view", v); } catch (e) { }
+    }
+    function plFiltrar(box) {
+        if (!box) return;
+        var q = ((box.querySelector("[data-pl-buscar]") || {}).value || "").toLowerCase().trim();
+        var e = (box.querySelector("[data-pl-estado]") || {}).value || "";
+        var ok = function (el) { return (!q || (el.getAttribute("data-pl-search") || "").indexOf(q) >= 0) && (!e || el.getAttribute("data-pl-est") === e); };
+        var hay = 0;
+        box.querySelectorAll("[data-pl-chap]").forEach(function (ch) {
+            var n = 0;
+            ch.querySelectorAll("[data-pl-card]").forEach(function (c) { var v = ok(c); c.hidden = !v; if (v) n++; });
+            ch.hidden = n === 0;
+            if (n > 0 && (q || e)) ch.classList.add("is-open");
+            hay += n;
+        });
+        var nr = box.querySelector("[data-pl-nores]");
+        if (nr) nr.hidden = hay > 0 || !box.querySelector("[data-pl-chap]");
+        var caps = {};
+        box.querySelectorAll("[data-pl-grow]").forEach(function (r) {
+            var v = ok(r); r.hidden = !v;
+            if (v) caps[r.getAttribute("data-pl-cap")] = 1;
+            box.querySelectorAll('[data-pl-gparent="' + r.getAttribute("data-pl-grow") + '"]').forEach(function (x) { x.hidden = !v; });
+        });
+        box.querySelectorAll("[data-pl-gchap]").forEach(function (r) { r.hidden = !caps[r.getAttribute("data-pl-gchap")]; });
+        plAllLabel(box);
+    }
+    function plInit() {
+        document.querySelectorAll("[data-pl-box]").forEach(function (box) {
+            if (box.__plInit) return;
+            box.__plInit = true;
+            var v = "cards";
+            try { v = window.localStorage.getItem("vct.pv.plan.view") || "cards"; } catch (e) { }
+            plView(box, v === "gantt" ? "gantt" : "cards");
+            var g = null;
+            try { g = window.sessionStorage.getItem(plKey(box)); } catch (e) { }
+            if (g !== null && g !== "") {
+                var abiertos = "," + g + ",";
+                box.querySelectorAll("[data-pl-chap]").forEach(function (c) { c.classList.toggle("is-open", abiertos.indexOf("," + c.getAttribute("data-pl-chap") + ",") >= 0); });
+            }
+            plAllLabel(box);
+        });
+    }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", plInit); else plInit();
+    setTimeout(plInit, 400);
 
     /* ---------------- eventos ---------------- */
     document.addEventListener("click", function (e) {
@@ -341,6 +508,19 @@
         if (bt) { e.preventDefault(); bellPanel(bt.closest("[data-vct-pv-bell]")); return; }
         if (t.closest("[data-vct-pv-bell-go]")) bellPanel(null, false);
         else if (!t.closest("[data-vct-pv-bell-panel]")) bellPanel(null, false);
+
+        var plv = t.closest("[data-pl-view]");
+        if (plv) { e.preventDefault(); plView(plv.closest("[data-pl-box]"), plv.getAttribute("data-pl-view")); return; }
+        var pla = t.closest("[data-pl-chap-all]");
+        if (pla) {
+            e.preventDefault();
+            var bx = pla.closest("[data-pl-box]"), abrir = pla.getAttribute("data-pl-open") !== "1";
+            if (bx) bx.querySelectorAll("[data-pl-chap]:not([hidden])").forEach(function (c) { c.classList.toggle("is-open", abrir); });
+            plAllLabel(bx);
+            return;
+        }
+        var plc = t.closest("[data-pl-chap-toggle]");
+        if (plc && !t.closest("button,a,[data-vctdg-rowmenu]")) { e.preventDefault(); plChap(plc.closest("[data-pl-chap]")); return; }
 
         /* quitar consultor del equipo; lanzamiento: alta, edicion, eliminar */
         var bj = t.closest("[data-vct-pv-baja]");
@@ -399,13 +579,16 @@
         }
     });
     document.addEventListener("change", function (e) {
+        if (e.target && e.target.matches && e.target.matches("[data-pl-estado]")) { plFiltrar(e.target.closest(".vct-pl-box")); return; }
         var m = e.target && e.target.closest ? e.target.closest("[data-vct-pv-modal]") : null;
         if (!m) return;
         if (e.target.matches("[data-vct-pv-vence]")) syncFechas(m);
         if (e.target.matches('[data-vct-pv-f="item"]')) syncPreg(m);
         if (e.target.matches('[data-vct-pv-f="enviar"]')) syncMail(m);
+        if (e.target.matches("[data-vct-pv-tipo],[data-vct-pv-estado]")) plTipif(m);
     });
     document.addEventListener("input", function (e) {
+        if (e.target && e.target.matches && e.target.matches("[data-pl-buscar]")) { plFiltrar(e.target.closest(".vct-pl-box")); return; }
         if (!e.target || !e.target.matches || !e.target.matches("[data-vct-pv-buscar]")) return;
         filtrar(e.target.closest("[data-vct-pv-modal]"), e.target.value);
     });

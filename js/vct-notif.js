@@ -1,4 +1,4 @@
-/* vct-notif.js - v1
+/* vct-notif.js - v2 (decodifica acentos escritos como entidades en titulo / subtitulo del header)
    ============================================================================
    Campanita de notificaciones en el header de todas las pantallas.
    - dbo.VCT_GET_HEADER trae la campanita (dbo.VCT_NOTIF_RENDER) dentro de
@@ -18,7 +18,23 @@
 
     function topBox() { return document.querySelector("#muhleTopBar .vct-header-right-container"); }
 
+    /* titulo / subtitulo del header: si llegan como texto "seg&uacute;n" se muestran con el acento */
+    var decoder = document.createElement("textarea");
+    function fixEntities() {
+        var roots = document.querySelectorAll("#vctAppHeader, #muhleTopBar");
+        Array.prototype.forEach.call(roots, function (root) {
+            var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false), n;
+            while ((n = walker.nextNode())) {
+                if (/&(#\d+|[a-zA-Z]+);/.test(n.nodeValue)) {
+                    decoder.innerHTML = n.nodeValue;
+                    n.nodeValue = decoder.value;
+                }
+            }
+        });
+    }
+
     function place() {
+        fixEntities();
         var holders = document.querySelectorAll("[data-vct-notif-holder]");
         if (!holders.length) return;
         var box = topBox();

@@ -1,15 +1,16 @@
 /* ============================================================================
-   FIX_CALENDARIO_ASSETS
+   FIX_CALENDARIO_ASSETS  (v2 - deteccion de cabecera robusta)
    ----------------------------------------------------------------------------
    Repunta la pantalla "Calendario"/feriados (dbo.VCT_MAIN_CALENDARIO) al par
-   UNIFICADO de assets de calendario:
+   UNIFICADO de assets:
        vct-agenda.css?v=11  ->  vct-calendario.css?v=1
        vct-agenda.js?v=10   ->  vct-calendario.js?v=1
-   (El consultor y el embebido 360 se repuntan por sus propios scripts:
-    AGENDA_CONSULTOR_3_PANTALLA.sql y CALENDARIOS_1_INSTALAR.sql.)
 
-   Surgical REPLACE sobre la definicion vigente + CREATE->ALTER. Re-ejecutable:
-   si ya apunta a vct-calendario, avisa y no toca nada.
+   v2: la deteccion CREATE->ALTER ya NO se ancla en 'PROCEDURE' (el comentario de
+   este SP contiene "DROP PROCEDURE dbo.VCT_MAIN_AGENDA", que confundia al patch).
+   Ahora busca el primer 'CREATE' seguido de 'PROC' y soporta CREATE OR ALTER.
+
+   Surgical REPLACE + ALTER. Re-ejecutable.
    ============================================================================ */
 USE [MuhlePROD];
 GO
@@ -17,7 +18,7 @@ SET NOCOUNT ON; SET ANSI_NULLS ON; SET QUOTED_IDENTIFIER ON;
 GO
 DECLARE @Name SYSNAME = N'dbo.VCT_MAIN_CALENDARIO';
 DECLARE @D NVARCHAR(MAX) = OBJECT_DEFINITION(OBJECT_ID(@Name));
-DECLARE @P INT, @CreatePos INT, @AlterPos INT, @Start INT, @Prefix NVARCHAR(MAX), @Changed BIT = 0;
+DECLARE @Changed BIT = 0;
 
 IF @D IS NULL
 BEGIN
@@ -37,18 +38,28 @@ BEGIN
     RETURN;
 END;
 
-/* CREATE -> ALTER en la cabecera */
-SET @P = CHARINDEX(N'PROCEDURE', UPPER(@D));
-IF @P = 0 BEGIN RAISERROR('No se identifico PROCEDURE.',16,1); RETURN; END;
-SET @Prefix = LEFT(@D, @P - 1);
-SET @CreatePos = CHARINDEX(REVERSE(N'CREATE'), REVERSE(UPPER(@Prefix)));
-SET @AlterPos  = CHARINDEX(REVERSE(N'ALTER'),  REVERSE(UPPER(@Prefix)));
-SET @CreatePos = CASE WHEN @CreatePos > 0 THEN DATALENGTH(@Prefix)/2 - @CreatePos - 4 ELSE 0 END;
-SET @AlterPos  = CASE WHEN @AlterPos  > 0 THEN DATALENGTH(@Prefix)/2 - @AlterPos  - 3 ELSE 0 END;
-SET @Start = CASE WHEN @CreatePos > 0 AND @P - @CreatePos <= 40 THEN @CreatePos
-                  WHEN @AlterPos  > 0 AND @P - @AlterPos  <= 40 THEN @AlterPos ELSE 0 END;
-IF @Start = 0 BEGIN RAISERROR('No se identifico la cabecera CREATE/ALTER.',16,1); RETURN; END;
-SET @D = STUFF(@D, @Start, @P - @Start, N'ALTER ');
+/* ---- CREATE [OR ALTER] PROCEDURE -> ALTER PROCEDURE (robusto) ---- */
+DECLARE @up NVARCHAR(MAX) = UPPER(@D);
+DECLARE @cp INT = 0, @scan INT = 1, @probe INT;
+WHILE 1 = 1
+BEGIN
+    SET @cp = CHARINDEX(N'CREATE', @up, @scan);
+    IF @cp = 0 BREAK;
+    SET @probe = CHARINDEX(N'PROC', @up, @cp);
+    IF @probe > 0 AND @probe <= @cp + 30 BREAK;  /* este CREATE es el de la cabecera */
+    SET @scan = @cp + 6;
+END;
+
+IF @cp = 0
+BEGIN
+    RAISERROR('No se identifico la cabecera CREATE ... PROCEDURE.',16,1);
+    RETURN;
+END;
+
+IF SUBSTRING(@up, @cp, 15) = N'CREATE OR ALTER'
+    SET @D = STUFF(@D, @cp, 15, N'ALTER');   /* CREATE OR ALTER PROCEDURE -> ALTER PROCEDURE */
+ELSE
+    SET @D = STUFF(@D, @cp, 6, N'ALTER');     /* CREATE PROCEDURE -> ALTER PROCEDURE */
 
 BEGIN TRY
     EXEC sys.sp_executesql @D;

@@ -276,8 +276,8 @@ BEGIN
 
     SET @HTML =
         '<link rel="stylesheet" href="../css/vct-inicio.css?v=5">'
-      + '<link rel="stylesheet" href="../css/vct-calendario.css?v=1">'
-      + '<script src="../js/vct-calendario.js?v=1"></script>'
+      + '<link rel="stylesheet" href="../css/vct-calendario.css?v=2">'
+      + '<script src="../js/vct-calendario.js?v=2"></script>'
       + '<div class="vct-page vct-page-main vct-agc-page" data-vct-page'
       + ' data-vct-sidebar-id="' + CONVERT(VARCHAR(20),@SIDEBAR_ID) + '"'
       + ' data-vct-form-id="' + ISNULL(@FORM_ID,'') + '"'

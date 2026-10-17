@@ -1070,3 +1070,40 @@ html body .vct-form-select-menu.vct-agc-select-menu { box-sizing: border-box !im
 .vct-agenda-cell.vct-agc-feriado-fijo .vct-agc-cell-note{background:#FDECEE;color:#B01030;}
 .vct-agenda-cell.vct-agc-feriado-mov .vct-agc-cell-note{background:#F3EBFB;color:#6D28D9;}
 @media(max-width:600px){.vct-agc-cell-note{font-size:9px;padding:2px 3px;}}
+
+/* ============================================================================
+   Vista SEMANA estilo Google Calendar (Agenda del consultor) - v1
+   7 columnas con encabezado dia/numero (hoy marcado) y, por dia, el/los
+   ESTADO(S) como entradas apilables (soporta 1 a varias). Clic en la columna
+   abre el modal (crear/editar). Colores por estado via --wc.
+   ============================================================================ */
+.vct-agc-week{display:flex;flex-direction:column;min-width:640px}
+.vct-agc-week-head{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));position:sticky;top:0;z-index:2;background:#fff;border-bottom:1px solid #e7e3e0}
+.vct-agc-wday{text-align:center;padding:8px 4px;border-left:1px solid #ece8e5}
+.vct-agc-wday:first-child{border-left:0}
+.vct-agc-wday-name{display:block;font-size:11px;font-weight:600;color:#64748b}
+.vct-agc-wday-num{display:inline-block;margin-top:2px;width:34px;height:34px;line-height:34px;border-radius:50%;font-size:19px;font-weight:700;color:#1f2937}
+.vct-agc-wday.is-today .vct-agc-wday-num{background:#66062D;color:#fff}
+.vct-agc-week-body{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.vct-agc-wcol{min-height:360px;border-left:1px solid #ece8e5;padding:6px;display:flex;flex-direction:column;gap:5px;cursor:pointer;transition:background .12s}
+.vct-agc-wcol:first-child{border-left:0}
+.vct-agc-wcol.is-wknd{background:#faf8f7}
+.vct-agc-wcol:hover{background:rgba(102,6,45,.04)}
+.vct-agc-wentry{border-left:3px solid var(--wc,#cbd5e1);background:color-mix(in srgb,var(--wc,#cbd5e1) 13%,#fff);border-radius:7px;padding:5px 8px;overflow:hidden}
+.vct-agc-wentry-label{display:block;font-size:12px;font-weight:700;color:#1f2937;line-height:1.25}
+.vct-agc-wentry-note{display:block;font-size:11px;color:#64748b;line-height:1.3;overflow:hidden;text-overflow:ellipsis}
+.vct-agc-wentry-h{display:inline-block;margin-top:2px;font-size:10.5px;font-weight:700;color:var(--wc,#64748b)}
+.vct-agc-wentry.vct-agc-disponible{--wc:#2563EB}
+.vct-agc-wentry.vct-agc-asignado{--wc:#0E9F6E}
+.vct-agc-wentry.vct-agc-licencia{--wc:#EC4899}
+.vct-agc-wentry.vct-agc-ocupado{--wc:#64748B}
+.vct-agc-wentry.vct-agc-potencial{--wc:#F59E0B}
+.vct-agc-wentry.vct-agc-organismo{--wc:#0D9488}
+.vct-agc-wentry.vct-agc-observacion{--wc:#FF7A59}
+.vct-agc-wentry.vct-agc-feriado-fijo{--wc:#E0304D}
+.vct-agc-wentry.vct-agc-feriado-mov{--wc:#8B5CF6}
+@media (max-width:640px){
+  .vct-agc-week,.vct-agc-week-head,.vct-agc-week-body{min-width:0}
+  .vct-agc-wcol{min-height:120px}
+  .vct-agc-wday-num{font-size:16px;width:28px;height:28px;line-height:28px}
+}

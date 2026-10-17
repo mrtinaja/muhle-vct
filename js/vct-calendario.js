@@ -677,27 +677,34 @@
             bindDayClicks();
         }
 
+        /* vista SEMANA estilo Google Calendar: 7 columnas (encabezado dia/numero
+           con "hoy" marcado) y, por dia, el ESTADO como entrada con sus horas.
+           Clic en la columna abre el modal (crear/editar), via bindDayClicks. */
         function renderWeek(){
             var start=addDays(state.cursor, -state.cursor.getDay()), end=addDays(start,6);
             titleEl.textContent=start.getDate()+" "+MESES[start.getMonth()].substr(0,3)+" - "+end.getDate()+" "+MESES[end.getMonth()].substr(0,3)+" "+end.getFullYear();
-            var html='<div class="vct-agenda-weeklist">';
+            var head='<div class="vct-agc-week-head">';
+            var body='<div class="vct-agc-week-body">';
             for(var i=0;i<7;i++){
                 var d=addDays(start,i), k=dateKey(d), r=dayInfo(d), isToday=sameDay(d,today);
-                html+='<div class="vct-agenda-weekrow '+clsOf(r.e)+'" data-vct-agc-day="'+k+'">';
-                html+='<div class="vct-agenda-weekrow-date'+(isToday?" is-today":"")+'">';
-                html+='<span class="vct-agenda-weekrow-dayname">'+DIAS_ABREV[i]+'</span>';
-                html+='<span class="vct-agenda-weekrow-daynum">'+d.getDate()+'</span>';
-                html+='<span class="vct-agenda-weekrow-month">'+MESES[d.getMonth()].substr(0,3)+'</span>';
-                html+='</div>';
-                html+='<div class="vct-agenda-weekrow-card vct-agc-weekcard">';
-                html+='<span class="vct-agc-badge '+clsOf(r.e)+'">'+estadoLabel(r.e)+'</span>';
-                if (r.n) html+='<span class="vct-agenda-weekrow-text">'+esc(r.n)+'</span>';
-                if ((String(r.e).toUpperCase()==="ASIGNADO"||String(r.e).toUpperCase()==="DISPONIBLE") && +r.h>0)
-                    html+='<span class="vct-agenda-weekrow-text">'+fmtH(r.h)+'h</span>';
-                html+='</div></div>';
+                var e=String(r.e||"").toUpperCase(), isWknd=(d.getDay()===0||d.getDay()===6);
+                head+='<div class="vct-agc-wday'+(isToday?" is-today":"")+'">'
+                    + '<span class="vct-agc-wday-name">'+DIAS_ABREV[i]+'</span>'
+                    + '<span class="vct-agc-wday-num">'+d.getDate()+'</span></div>';
+                var entry='';
+                if (e!=="NO_CARGADO"){
+                    var hrs=(e==="ASIGNADO"||e==="DISPONIBLE"||e==="POTENCIAL"||e==="ORGANISMO") && (+r.h>0)
+                            ? '<span class="vct-agc-wentry-h">'+fmtH(r.h)+' h</span>' : '';
+                    entry='<div class="vct-agc-wentry '+clsOf(r.e)+'">'
+                        + '<span class="vct-agc-wentry-label">'+estadoLabel(r.e)+'</span>'
+                        + (r.n ? '<span class="vct-agc-wentry-note">'+esc(r.n)+'</span>' : '')
+                        + hrs + '</div>';
+                }
+                body+='<div class="vct-agc-wcol'+(isWknd?" is-wknd":"")+(isToday?" is-today":"")+'"'
+                    + ' data-vct-agc-day="'+k+'"'+(r.n?' title="'+escAttr(r.n)+'"':'')+'>'+entry+'</div>';
             }
-            html+='</div>';
-            paneEl.innerHTML=html;
+            head+='</div>'; body+='</div>';
+            paneEl.innerHTML='<div class="vct-agc-week">'+head+body+'</div>';
             bindDayClicks();
         }
 

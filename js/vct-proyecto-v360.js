@@ -1,4 +1,4 @@
-/* vct-proyecto-v360.js - v17 (parte logistico: capitulos con tarjetas + cronograma)
+/* vct-proyecto-v360.js - v18 (encabezado 3 filas, resumen por etapas, editar datos del proyecto)
    v12 (mail al consultor al iniciar el proyecto)
    v11 (desplegables con VCT.FormSelect)
    v10 (selects y fechas de los modales del lanzamiento)
@@ -368,7 +368,7 @@
         if (errs.length) { showError(m, errs); return; }
         showError(m, null);
         var cmdM = m.getAttribute("data-vct-pv-cmd") || "";
-        enviar(btn, cmdM, lzId, campos, /^PV_PL_/.test(cmdM) ? "plan" : "lanzamiento");
+        enviar(btn, cmdM, lzId, campos, /^PV_PL_/.test(cmdM) ? "plan" : /^PV_PROY_/.test(cmdM) ? "resumen" : "lanzamiento");
     }
 
     /* ---------------- eliminar / confirmar (alerta nativa, como en las otras grillas) ---------------- */
@@ -497,6 +497,26 @@
     }
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", plInit); else plInit();
     setTimeout(plInit, 400);
+
+    /* ---------------- encabezado: fila 3 flexible (PV_HEADER_V2) ----------------
+       Los datos no se cortan ni se pisan: si no entran, se compactan en este orden:
+       cargo del contacto > domicilio > email > telefono > contacto (pasan a icono con el dato en el tooltip).
+       Como ultimo recurso el nombre del cliente se corta con "...". */
+    function hdFit() {
+        document.querySelectorAll("[data-vct-pv-fit]").forEach(function (r) {
+            r.classList.remove("no-cg", "cli-shrink");
+            r.querySelectorAll(".is-ico").forEach(function (x) { x.classList.remove("is-ico"); });
+            if (!r.clientWidth) return;
+            var ico = function (sel) { var e = r.querySelector(sel); if (e) e.classList.add("is-ico"); };
+            var pasos = [function () { r.classList.add("no-cg"); }, function () { ico(".vct-pv-hd-dom"); }, function () { ico(".vct-pv-hd-mail"); },
+                         function () { ico(".vct-pv-hd-tel"); }, function () { ico(".vct-pv-hd-con"); }, function () { r.classList.add("cli-shrink"); }];
+            for (var i = 0; i < pasos.length && r.scrollWidth > r.clientWidth + 1; i++) pasos[i]();
+        });
+    }
+    var hdT = null;
+    window.addEventListener("resize", function () { clearTimeout(hdT); hdT = setTimeout(hdFit, 120); });
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", hdFit); else hdFit();
+    setTimeout(hdFit, 300); setTimeout(hdFit, 1200);
 
     /* ---------------- eventos ---------------- */
     document.addEventListener("click", function (e) {

@@ -17,7 +17,7 @@
        (comando PV_ASIGNAR por VCT_BUFFER).
    El proyecto llega en VCT_BUFFER.IDSELEC02 (grilla Proyectos, Acciones,
    V360 Cliente). Permisos solo con dbo.VCT_MAIN_GET_ACTIONS.
-   Assets: css/vct-proyecto-v360.css?v=19  js/vct-proyecto-v360.js?v=17
+   Assets: css/vct-proyecto-v360.css?v=22  js/vct-proyecto-v360.js?v=18
    No crea vistas, funciones ni tablas. ASCII. Re-ejecutable.
    ======================================================================== */
 USE [MuhlePROD];
@@ -59,7 +59,7 @@ BEGIN
 
     SET @ASSETS = '<link rel="stylesheet" href="../css/vct-datagrid.css?v=30"><script src="../js/vct-export.js?v=1"></script><script src="../js/vct-datagrid.js?v=12"></script>'
                 + '<link rel="stylesheet" href="../css/vct-datepicker.css?v=1"><script src="../js/vct-datepicker.js?v=2"></script>'
-                + '<link rel="stylesheet" href="../css/vct-proyecto-v360.css?v=19"><script src="../js/vct-proyecto-v360.js?v=17"></script>';
+                + '<link rel="stylesheet" href="../css/vct-proyecto-v360.css?v=22"><script src="../js/vct-proyecto-v360.js?v=18"></script>';
 
     /* ---------- buffer: proyecto + comando ---------- */
     DECLARE @B_PROY VARCHAR(100), @B_FLAG VARCHAR(10), @B_CMD VARCHAR(100), @B_SEL3 VARCHAR(100),
@@ -124,6 +124,113 @@ BEGIN
         END;
     END;
 
+    /* comando PV_PROY_GUARDAR (PV_PROY_EDIT_V1): edita los datos del paso 1 (alta) sin servicios, normas, horas ni rentabilidad.
+       TEXTO11 nombre, TEXTO12 referencia, TEXTO13 tipo, TEXTO14 riesgo, TEXTO15 inicio, TEXTO16 fin (aaaa-mm-dd),
+       TEXTO17 contacto del cliente, TEXTO18 analista (VCT_EMPLEADOS.ID), TEXTO19 fecha limite de lanzamiento.
+       Permiso: EDIT de PROYECTOS (VCT_MAIN_GET_ACTIONS). Si cambia el analista, pasa al nuevo su fila del equipo y
+       las acciones abiertas del proyecto que estaban a cargo del anterior. La fecha limite es el vencimiento de la
+       accion abierta "Asignacion de consultor". Vuelve a la pestania Resumen. */
+    DECLARE @PE_VOLVER BIT = 0;
+    IF @B_FLAG = '1' AND @B_CMD = 'PV_PROY_GUARDAR'
+    BEGIN
+        DECLARE @PE_T14 VARCHAR(4000) = '', @PE_T15 VARCHAR(4000) = '', @PE_T16 VARCHAR(4000) = '', @PE_T17 VARCHAR(4000) = '',
+                @PE_T18 VARCHAR(4000) = '', @PE_T19 VARCHAR(4000) = '';
+        SELECT TOP 1 @PE_T14 = LTRIM(RTRIM(ISNULL(TEXTO14,''))), @PE_T15 = LTRIM(RTRIM(ISNULL(TEXTO15,''))), @PE_T16 = LTRIM(RTRIM(ISNULL(TEXTO16,''))),
+                     @PE_T17 = LTRIM(RTRIM(ISNULL(TEXTO17,''))), @PE_T18 = LTRIM(RTRIM(ISNULL(TEXTO18,''))), @PE_T19 = LTRIM(RTRIM(ISNULL(TEXTO19,'')))
+        FROM dbo.VCT_BUFFER WITH(NOLOCK) WHERE PAR_KEY = @IPKEYJOB;
+        UPDATE dbo.VCT_BUFFER SET FLAG01 = '0', TEXTO30 = NULL, IDSELEC03 = NULL, TEXTO11 = NULL, TEXTO12 = NULL, TEXTO13 = NULL, TEXTO14 = NULL,
+               TEXTO15 = NULL, TEXTO16 = NULL, TEXTO17 = NULL, TEXTO18 = NULL, TEXTO19 = NULL
+        WHERE PAR_KEY = @IPKEYJOB;
+        SET @PE_VOLVER = 1;
+
+        DECLARE @PE_CLI INT, @PE_INI DATETIME, @PE_FIN DATETIME, @PE_CON INT, @PE_ANA INT, @PE_LIM DATETIME, @PE_ANA_OLD INT,
+                @PE_ACC_ASIG INT, @PE_ACC_INI DATETIME, @PE_SRV VARCHAR(400), @PE_N INT = 0;
+        SELECT @PE_CLI = IDCLIENTE FROM dbo.VCT_PROYECTOS WITH(NOLOCK) WHERE ID = @ID_PROYECTO;
+        SELECT TOP 1 @PE_ANA_OLD = EQ.ID_EMPLEADO FROM dbo.VCT_PROYECTOS_EQUIPO EQ WITH(NOLOCK)
+        INNER JOIN dbo.VCT_PRM_PROYECTOS_ROLES R WITH(NOLOCK) ON R.ID = EQ.ID_ROL AND R.CODIGO = 'ANALISTA'
+        WHERE EQ.ID_PROYECTO = @ID_PROYECTO AND EQ.ESTADO = 'ACTIVO' AND EQ.TIPO_MIEMBRO = 'EMPLEADO' ORDER BY EQ.PRINCIPAL DESC, EQ.ID;
+        SELECT TOP 1 @PE_ACC_ASIG = A.ID, @PE_ACC_INI = A.FECHA_INICIO FROM dbo.VCT_ACCIONES A WITH(NOLOCK)
+        INNER JOIN dbo.VCT_PRM_ACCIONES_SUBTIPOS ST WITH(NOLOCK) ON ST.ID = A.ID_SUBTIPO AND ST.CODIGO = 'ASIGNACION_CONSULTOR'
+        INNER JOIN dbo.VCT_PRM_ACCIONES_ESTADOS E WITH(NOLOCK) ON E.ID = A.ID_ESTADO AND E.ES_FINAL = 0
+        WHERE A.ID_PROYECTO = @ID_PROYECTO ORDER BY A.ID;
+
+        IF @B_T13 IN ('IMPLEMENTACION','MANTENIMIENTO') SET @B_T13 = @B_T13; ELSE SET @B_T13 = '';
+        IF @PE_T15 LIKE '[12][0-9][0-9][0-9]-[01][0-9]-[0-3][0-9]' AND ISDATE(REPLACE(@PE_T15,'-','')) = 1 SET @PE_INI = CONVERT(DATETIME, REPLACE(@PE_T15,'-',''), 112);
+        IF @PE_T16 LIKE '[12][0-9][0-9][0-9]-[01][0-9]-[0-3][0-9]' AND ISDATE(REPLACE(@PE_T16,'-','')) = 1 SET @PE_FIN = CONVERT(DATETIME, REPLACE(@PE_T16,'-',''), 112);
+        IF @PE_T17 <> '' AND PATINDEX('%[^0-9]%', @PE_T17) = 0 AND LEN(@PE_T17) <= 9 SET @PE_CON = CONVERT(INT, @PE_T17);
+        IF @PE_T18 <> '' AND PATINDEX('%[^0-9]%', @PE_T18) = 0 AND LEN(@PE_T18) <= 9 SET @PE_ANA = CONVERT(INT, @PE_T18);
+        IF @PE_T19 LIKE '[12][0-9][0-9][0-9]-[01][0-9]-[0-3][0-9]' AND ISDATE(REPLACE(@PE_T19,'-','')) = 1 SET @PE_LIM = CONVERT(DATETIME, REPLACE(@PE_T19,'-',''), 112);
+        IF @PE_INI IS NOT NULL AND @PE_FIN IS NOT NULL
+            SELECT TOP 1 @PE_SRV = ISNULL(PS.DESCRIPCION, 'Un servicio') + ' (' + ISNULL(CONVERT(VARCHAR(10), S.FECHA_INICIO, 103), '-') + ' - ' + ISNULL(CONVERT(VARCHAR(10), S.FECHA_FIN, 103), '-') + ')'
+            FROM dbo.VCT_PROYECTOS_SERVICIOS S WITH(NOLOCK) LEFT JOIN dbo.VCT_PRM_SERVICIOS PS WITH(NOLOCK) ON PS.ID = S.ID_SERVICIO
+            WHERE S.ID_PROYECTO = @ID_PROYECTO AND (S.FECHA_INICIO < @PE_INI OR S.FECHA_FIN > @PE_FIN) ORDER BY S.ORDEN, S.ID;
+
+        IF @ID_PROYECTO IS NULL OR @PE_CLI IS NULL SET @ERR = 'No hay proyecto seleccionado.';
+        ELSE IF NOT EXISTS (SELECT 1 FROM dbo.VCT_MAIN_GET_ACTIONS(@IUNIDAD, 'PROYECTOS') A WHERE UPPER(ISNULL(A.ACTION_TYPE,'')) = 'EDIT')
+            SET @ERR = 'No tiene permiso para editar los datos del proyecto.';
+        ELSE IF @B_T11 = '' SET @ERR = 'Nombre del proyecto es obligatorio.';
+        ELSE IF LEN(@B_T11) > 300 SET @ERR = 'Nombre del proyecto no puede superar 300 caracteres.';
+        ELSE IF LEN(@B_T12) > 300 SET @ERR = 'Referencia no puede superar 300 caracteres.';
+        ELSE IF @B_T13 = '' SET @ERR = 'Tipo de proyecto es obligatorio.';
+        ELSE IF @PE_T14 NOT IN ('Bajo','Medio','Alto') SET @ERR = 'Nivel de riesgo es obligatorio.';
+        ELSE IF @PE_INI IS NULL SET @ERR = 'Fecha inicio es obligatoria.';
+        ELSE IF @PE_FIN IS NULL SET @ERR = 'Fecha fin es obligatoria.';
+        ELSE IF @PE_FIN < @PE_INI SET @ERR = 'La fecha fin del proyecto es anterior a la fecha inicio.';
+        ELSE IF @PE_SRV IS NOT NULL SET @ERR = @PE_SRV + ' queda fuera del nuevo plazo del proyecto. Ajust' + CHAR(225) + ' primero las fechas del servicio.';
+        ELSE IF @PE_T17 <> '' AND (@PE_CON IS NULL OR NOT EXISTS (SELECT 1 FROM dbo.VCT_CONTACTOS WITH(NOLOCK) WHERE ID = @PE_CON AND IDCLIENTE = @PE_CLI))
+            SET @ERR = 'El contacto elegido no pertenece al cliente.';
+        ELSE IF @PE_ANA IS NULL SET @ERR = 'Analista a cargo es obligatorio.';
+        ELSE IF NOT EXISTS (SELECT 1 FROM dbo.VCT_EMPLEADOS WITH(NOLOCK) WHERE ID = @PE_ANA AND ISNULL(ESTADO,'ACTIVO') = 'ACTIVO')
+            SET @ERR = 'El analista elegido no existe o no est' + CHAR(225) + ' activo.';
+        ELSE IF @PE_ACC_ASIG IS NOT NULL AND @PE_LIM IS NULL SET @ERR = 'Fecha l' + CHAR(237) + 'mite de lanzamiento es obligatoria.';
+        ELSE IF @PE_ACC_ASIG IS NOT NULL AND @PE_ACC_INI IS NOT NULL AND @PE_LIM < CONVERT(DATE, @PE_ACC_INI)
+            SET @ERR = 'La fecha l' + CHAR(237) + 'mite no puede ser anterior al ' + CONVERT(VARCHAR(10), @PE_ACC_INI, 103) + '.';
+
+        IF @ERR = ''
+        BEGIN
+            BEGIN TRY
+                BEGIN TRAN;
+                UPDATE dbo.VCT_PROYECTOS
+                   SET NOMBRE = @B_T11, REFERENCIA = NULLIF(@B_T12, ''), TIPO_PROYECTO = @B_T13, NIVEL_RIESGO = @PE_T14,
+                       FECHA_INICIO = @PE_INI, FECHA_FIN = @PE_FIN, IDCONTACTO = @PE_CON, FECHA_UPD = GETDATE(), USUARIO_UPD = @IAGENTE
+                 WHERE ID = @ID_PROYECTO;
+                IF ISNULL(@PE_ANA_OLD, -1) <> @PE_ANA
+                BEGIN
+                    UPDATE EQ SET EQ.ID_EMPLEADO = @PE_ANA
+                    FROM dbo.VCT_PROYECTOS_EQUIPO EQ
+                    INNER JOIN dbo.VCT_PRM_PROYECTOS_ROLES R WITH(NOLOCK) ON R.ID = EQ.ID_ROL AND R.CODIGO = 'ANALISTA'
+                    WHERE EQ.ID_PROYECTO = @ID_PROYECTO AND EQ.ESTADO = 'ACTIVO' AND EQ.TIPO_MIEMBRO = 'EMPLEADO' AND EQ.ID_EMPLEADO = @PE_ANA_OLD;
+                    IF @PE_ANA_OLD IS NOT NULL
+                    BEGIN
+                        INSERT INTO dbo.VCT_ACCIONES_HISTORIAL (ID_ACCION, ID_ESTADO_ANTERIOR, ID_ESTADO_NUEVO, ACCION, DESCRIPCION, TIPO_ACTOR, FECHA, USUARIO)
+                        SELECT A.ID, A.ID_ESTADO, A.ID_ESTADO, 'REASIGNADA', 'Cambio de analista del proyecto.', 'USUARIO', GETDATE(), @IAGENTE
+                        FROM dbo.VCT_ACCIONES A
+                        INNER JOIN dbo.VCT_PRM_ACCIONES_ESTADOS E WITH(NOLOCK) ON E.ID = A.ID_ESTADO AND E.ES_FINAL = 0
+                        WHERE A.ID_PROYECTO = @ID_PROYECTO
+                          AND EXISTS (SELECT 1 FROM dbo.VCT_ACCIONES_PARTICIPANTES AP WHERE AP.ID_ACCION = A.ID AND AP.ROL_PARTICIPANTE = 'RESPONSABLE'
+                                      AND AP.ESTADO = 'ACTIVO' AND AP.TIPO_ENTIDAD = 'EMPLEADO' AND AP.ID_ENTIDAD = @PE_ANA_OLD);
+                        UPDATE AP SET AP.ID_ENTIDAD = @PE_ANA
+                        FROM dbo.VCT_ACCIONES_PARTICIPANTES AP
+                        INNER JOIN dbo.VCT_ACCIONES A ON A.ID = AP.ID_ACCION AND A.ID_PROYECTO = @ID_PROYECTO
+                        INNER JOIN dbo.VCT_PRM_ACCIONES_ESTADOS E WITH(NOLOCK) ON E.ID = A.ID_ESTADO AND E.ES_FINAL = 0
+                        WHERE AP.ROL_PARTICIPANTE = 'RESPONSABLE' AND AP.ESTADO = 'ACTIVO' AND AP.TIPO_ENTIDAD = 'EMPLEADO' AND AP.ID_ENTIDAD = @PE_ANA_OLD;
+                        SET @PE_N = @@ROWCOUNT;
+                    END;
+                END;
+                IF @PE_ACC_ASIG IS NOT NULL
+                    UPDATE dbo.VCT_ACCIONES SET FECHA_VENCIMIENTO = @PE_LIM, FECHA_UPD = GETDATE(), USUARIO_UPD = @IAGENTE
+                    WHERE ID = @PE_ACC_ASIG AND ISNULL(FECHA_VENCIMIENTO, '19000101') <> @PE_LIM;
+                COMMIT;
+                SET @MSG = 'Datos del proyecto actualizados.'
+                         + CASE WHEN @PE_N > 0 THEN ' ' + CONVERT(VARCHAR(10), @PE_N) + ' acci' + CHAR(243) + 'n(es) abierta(s) pasaron al nuevo analista.' ELSE '' END;
+            END TRY
+            BEGIN CATCH
+                IF @@TRANCOUNT > 0 ROLLBACK;
+                SET @ERR = 'No se pudo guardar: ' + LEFT(ERROR_MESSAGE(), 800);
+            END CATCH;
+        END;
+    END;
+
     BEGIN TRY
         EXEC dbo.VCT_GET_SHELL @IUNIDAD = @IUNIDAD, @IAGENTE = @IAGENTE, @FORM_ID = @FORM_ID,
              @TITLE = 'Vista 360 de Proyecto', @SUBTITLE = 'Ficha del proyecto: datos, equipo, lanzamiento y acciones.',
@@ -137,12 +244,12 @@ BEGIN
     DECLARE @COD VARCHAR(100), @NOM VARCHAR(300), @REF VARCHAR(300), @CLI INT, @CLI_NOM VARCHAR(300),
             @EST_COD VARCHAR(30), @EST_DES VARCHAR(100), @F_INI DATETIME, @F_FIN DATETIME,
             @H_PROY NUMERIC(18,2), @RIESGO VARCHAR(50), @TIPO_P VARCHAR(20), @ID_CONTACTO INT,
-            @F_ALTA DATETIME, @U_ALTA VARCHAR(100), @CONTACTO VARCHAR(400) = '';
+            @F_ALTA DATETIME, @U_ALTA VARCHAR(100), @CONTACTO VARCHAR(400) = '', @F_INI_REAL DATETIME;
     IF @ID_PROYECTO IS NOT NULL
         SELECT @COD = P.CODIGO, @NOM = P.NOMBRE, @REF = P.REFERENCIA, @CLI = P.IDCLIENTE, @CLI_NOM = C.RAZON_SOCIAL,
                @EST_COD = E.CODIGO, @EST_DES = E.DESCRIPCION, @F_INI = P.FECHA_INICIO, @F_FIN = P.FECHA_FIN,
                @H_PROY = ISNULL(P.TOTAL_HORAS_PROYECTADAS, 0), @RIESGO = P.NIVEL_RIESGO, @TIPO_P = P.TIPO_PROYECTO,
-               @ID_CONTACTO = P.IDCONTACTO, @F_ALTA = P.FECHA_ALTA, @U_ALTA = P.USUARIO_ALTA
+               @ID_CONTACTO = P.IDCONTACTO, @F_ALTA = P.FECHA_ALTA, @U_ALTA = P.USUARIO_ALTA, @F_INI_REAL = P.FECHA_INICIO_REAL
         FROM dbo.VCT_PROYECTOS P WITH(NOLOCK)
         LEFT JOIN dbo.VCT_CLIENTES C WITH(NOLOCK) ON C.ID = P.IDCLIENTE
         LEFT JOIN dbo.VCT_PRM_PROYECTOS_ESTADOS E WITH(NOLOCK) ON E.ID = P.ID_ESTADO
@@ -172,6 +279,46 @@ BEGIN
                            + CASE WHEN ISNULL(CT.CARGO,'') <> '' THEN ' - ' + CT.CARGO ELSE '' END
     FROM dbo.VCT_CONTACTOS CT WITH(NOLOCK) WHERE CT.ID = @ID_CONTACTO;
     SET @CONTACTO = REPLACE(REPLACE(REPLACE(ISNULL(NULLIF(@CONTACTO,''),'-'),'&','&amp;'),'<','&lt;'),'>','&gt;');
+
+    /* ---------- fila 3 del encabezado (PV_HEADER_V2): contacto principal y domicilio del cliente ----------
+       Contacto: el elegido en el alta (VCT_PROYECTOS.IDCONTACTO); si no hay, el primer contacto del cliente
+       con telefono o email (misma regla que la Vista 360 del cliente). Telefono / email: los del contacto;
+       si no tiene, los principales del cliente. Domicilio: el principal del cliente (VCT_DOMICILIOS). */
+    DECLARE @HC_ID INT = @ID_CONTACTO, @HC_NOM VARCHAR(300) = '', @HC_CARGO VARCHAR(150) = '', @HC_TEL VARCHAR(100) = '', @HC_MAIL VARCHAR(200) = '',
+            @HC_DOM VARCHAR(600) = '', @HC_MAPS VARCHAR(1500) = '';
+    IF @HC_ID IS NULL
+        SELECT TOP 1 @HC_ID = C.ID FROM dbo.VCT_CONTACTOS C WITH(NOLOCK)
+        WHERE C.IDCLIENTE = @CLI AND LTRIM(RTRIM(ISNULL(C.NOMBRES,'') + ISNULL(C.APELLIDO,''))) <> ''
+        ORDER BY CASE WHEN C.ID_TELEFONO IS NOT NULL OR C.ID_EMAIL IS NOT NULL THEN 0 ELSE 1 END, C.ID;
+    SELECT TOP 1 @HC_NOM = LTRIM(RTRIM(ISNULL(C.NOMBRES,'') + ' ' + ISNULL(C.APELLIDO,''))), @HC_CARGO = ISNULL(C.CARGO,''),
+           @HC_TEL = ISNULL(CASE WHEN T.ID IS NULL THEN NULL
+                                 WHEN T.CODAREA IS NULL THEN CONVERT(VARCHAR(50), T.NRO)
+                                 ELSE '(' + CONVERT(VARCHAR(20), T.CODAREA) + ') ' + CONVERT(VARCHAR(50), T.NRO) END, ''),
+           @HC_MAIL = ISNULL(M.EMAIL, '')
+    FROM dbo.VCT_CONTACTOS C WITH(NOLOCK)
+    LEFT JOIN dbo.VCT_TELEFONOS T WITH(NOLOCK) ON T.ID = C.ID_TELEFONO
+    LEFT JOIN dbo.VCT_EMAILS M WITH(NOLOCK) ON M.ID = C.ID_EMAIL
+    WHERE C.ID = @HC_ID;
+    IF @HC_TEL = ''
+        SELECT TOP 1 @HC_TEL = CASE WHEN T.CODAREA IS NULL THEN CONVERT(VARCHAR(50), T.NRO) ELSE '(' + CONVERT(VARCHAR(20), T.CODAREA) + ') ' + CONVERT(VARCHAR(50), T.NRO) END
+        FROM dbo.VCT_TELEFONOS T WITH(NOLOCK) WHERE T.TIPO_ENTIDAD = 'CLIENTE' AND T.ID_ENTIDAD = @CLI
+        ORDER BY CASE WHEN UPPER(ISNULL(T.PRINCIPAL,'')) = 'SI' THEN 0 ELSE 1 END, T.ID;
+    IF @HC_MAIL = ''
+        SELECT TOP 1 @HC_MAIL = ISNULL(E.EMAIL,'') FROM dbo.VCT_EMAILS E WITH(NOLOCK) WHERE E.TIPO_ENTIDAD = 'CLIENTE' AND E.ID_ENTIDAD = @CLI
+        ORDER BY CASE WHEN UPPER(ISNULL(E.PRINCIPAL,'')) = 'SI' THEN 0 ELSE 1 END, E.ID;
+    SELECT TOP 1 @HC_DOM = LTRIM(RTRIM(
+               ISNULL(D.CALLE,'') + CASE WHEN D.NRO IS NULL THEN '' ELSE ' ' + CONVERT(VARCHAR(20), D.NRO) END
+             + CASE WHEN NULLIF(LTRIM(RTRIM(ISNULL(D.PISO,''))), '') IS NULL THEN '' ELSE ' - Piso ' + D.PISO END
+             + CASE WHEN NULLIF(LTRIM(RTRIM(ISNULL(D.DEPTO,''))), '') IS NULL THEN '' ELSE ' ' + D.DEPTO END
+             + CASE WHEN NULLIF(LTRIM(RTRIM(ISNULL(D.LOCALIDAD,''))), '') IS NULL THEN '' ELSE ', ' + D.LOCALIDAD END
+             + CASE WHEN NULLIF(LTRIM(RTRIM(ISNULL(D.PROVINCIA,''))), '') IS NULL THEN '' ELSE ', ' + D.PROVINCIA END))
+    FROM dbo.VCT_DOMICILIOS D WITH(NOLOCK) WHERE D.TIPO_ENTIDAD = 'CLIENTE' AND D.ID_ENTIDAD = @CLI
+    ORDER BY CASE WHEN UPPER(ISNULL(D.PRINCIPAL,'')) = 'SI' THEN 0 ELSE 1 END, D.ID;
+    SET @HC_DOM = LTRIM(RTRIM(ISNULL(@HC_DOM,'')));
+    IF LEFT(@HC_DOM, 1) = ',' SET @HC_DOM = LTRIM(SUBSTRING(@HC_DOM, 2, 600));
+    IF @HC_DOM <> ''
+        SET @HC_MAPS = 'https://www.google.com/maps/search/?api=1&amp;query='
+                     + REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@HC_DOM,'%','%25'),' ','+'),'#','%23'),'&','%26'),'/','%2F'),'"','%22');
 
     /* ---------- usuario y permisos ---------- */
     DECLARE @EMP_U INT, @CONS_U INT, @PUEDE_EDIT BIT = 0, @GUID_V360 VARCHAR(100) = '';
@@ -256,7 +403,7 @@ BEGIN
          TIPO 'INICIO' inicio del proyecto: FECHA_DOCUMENTO = fecha de inicio real, OBSERVACIONES.
        Buffer: TEXTO30 = comando, IDSELEC03 = ID de la fila (editar / borrar), TEXTO11..16 = campos.
        Permiso: analista del proyecto (equipo, rol ANALISTA) o EDIT de PROYECTOS. */
-    DECLARE @VOLVER VARCHAR(50) = 'equipo', @PUEDE_LANZ BIT = @PUEDE_EDIT;
+    DECLARE @VOLVER VARCHAR(50) = CASE WHEN @PE_VOLVER = 1 THEN 'resumen' ELSE 'equipo' END, @PUEDE_LANZ BIT = @PUEDE_EDIT;
     IF @PUEDE_LANZ = 0 AND EXISTS (
         SELECT 1 FROM dbo.VCT_PROYECTOS_EQUIPO EQ WITH(NOLOCK)
         INNER JOIN dbo.VCT_PRM_PROYECTOS_ROLES R WITH(NOLOCK) ON R.ID = EQ.ID_ROL AND R.CODIGO = 'ANALISTA'
@@ -1305,20 +1452,61 @@ BEGIN
         WHERE ISNULL(PS.ESTADO,'ACTIVO') = 'ACTIVO' OR EXISTS (SELECT 1 FROM #SV S WHERE S.ID_SERVICIO = PS.ID)
         ORDER BY PS.ID
         FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), '');
+    /* encabezado: servicios del proyecto, hasta 3 normas (+N), escapes de la fila 3 (PV_HEADER_V2) */
+    DECLARE @HD_SRV VARCHAR(MAX) = '', @HD_NOR VARCHAR(MAX) = '', @HD_NOR_MAS VARCHAR(2000) = '', @HD_N_NOR INT = 0;
+    SELECT @HD_SRV = ISNULL((
+        SELECT '<span class="vctdg-svc is-' + LOWER(LEFT(CASE WHEN COD = '' THEN 'xx' ELSE COD END, 2)) + ' is-on" title="'
+             + REPLACE(REPLACE(REPLACE(DES,'&','&amp;'),'"',''),'<','') + ' &middot; ' + CONVERT(VARCHAR(20), CONVERT(INT, PROY)) + ' h">'
+             + '<span data-vct-icon="' + CASE LEFT(COD, 2) WHEN 'AU' THEN 'clipboard-check' WHEN 'CA' THEN 'users' ELSE 'briefcase' END + '"></span></span>'
+        FROM #SV ORDER BY IDX FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), '');
+    SELECT @HD_N_NOR = COUNT(*) FROM #NO;
+    SELECT @HD_NOR = ISNULL((
+        SELECT TOP 3 '<span class="vct-pv-hd-nor" title="' + REPLACE(REPLACE(REPLACE(DES,'&','&amp;'),'"',''),'<','') + '">' + REPLACE(REPLACE(REPLACE(DES,'&','&amp;'),'<','&lt;'),'>','&gt;') + '</span>'
+        FROM #NO ORDER BY PRINCIPAL DESC, DES FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), '');
+    IF @HD_N_NOR > 3
+    BEGIN
+        SELECT @HD_NOR_MAS = @HD_NOR_MAS + CASE WHEN @HD_NOR_MAS = '' THEN '' ELSE ', ' END + REPLACE(REPLACE(REPLACE(DES,'&','&amp;'),'"',''),'<','')
+        FROM (SELECT DES, ROW_NUMBER() OVER (ORDER BY PRINCIPAL DESC, DES) AS RN FROM #NO) X WHERE X.RN > 3 ORDER BY X.RN;
+        SET @HD_NOR = @HD_NOR + '<span class="vct-pv-hd-nor is-more" title="' + @HD_NOR_MAS + '">+' + CONVERT(VARCHAR(10), @HD_N_NOR - 3) + '</span>';
+    END;
+    DECLARE @E_HC_NOM VARCHAR(400) = REPLACE(REPLACE(REPLACE(REPLACE(@HC_NOM,'&','&amp;'),'<','&lt;'),'>','&gt;'),'"','&quot;'),
+            @E_HC_CARGO VARCHAR(300) = REPLACE(REPLACE(REPLACE(REPLACE(@HC_CARGO,'&','&amp;'),'<','&lt;'),'>','&gt;'),'"','&quot;'),
+            @E_HC_TEL VARCHAR(200) = REPLACE(REPLACE(REPLACE(REPLACE(@HC_TEL,'&','&amp;'),'<','&lt;'),'>','&gt;'),'"','&quot;'),
+            @E_HC_MAIL VARCHAR(300) = REPLACE(REPLACE(REPLACE(REPLACE(@HC_MAIL,'&','&amp;'),'<','&lt;'),'>','&gt;'),'"','&quot;'),
+            @E_HC_DOM VARCHAR(800) = REPLACE(REPLACE(REPLACE(REPLACE(@HC_DOM,'&','&amp;'),'<','&lt;'),'>','&gt;'),'"','&quot;');
     SET @H = CONVERT(VARCHAR(MAX), '') + '<div class="vct-360-breadcrumb-row"><nav class="vct-breadcrumb-simple" aria-label="Breadcrumb">'
         + '<button type="button" class="vct-breadcrumb-link" data-vct-v360-back data-vct-sidebar-mod="3">Proyectos</button>'
         + '<span class="vct-breadcrumb-sep">&rsaquo;</span><span class="vct-breadcrumb-item">' + @E_CLI + '</span>'
         + '<span class="vct-breadcrumb-sep">&rsaquo;</span><span class="vct-breadcrumb-item">Vista 360</span>'
         + '<span class="vct-breadcrumb-sep">&rsaquo;</span><span class="vct-breadcrumb-current">(' + @E_COD + ') ' + LEFT(@E_NOM, 60) + '</span></nav></div>'
-        + '<div class="vct-360-client-strip"><div class="vct-360-card-left">'
-        + '<div class="vct-360-avatar">' + REPLACE(REPLACE(@INI_P,'<',''),'>','') + '</div>'
-        + '<div class="vct-360-identity"><div class="vct-360-identity-title"><h1>(' + @E_COD + ') ' + @E_NOM + '</h1>'
-        + '<span class="vct-360-badge ' + CASE @EST_COD WHEN 'ENCURSO' THEN 'is-active' WHEN 'CONFIRMADO' THEN 'is-planned' WHEN 'CANCELADO' THEN 'is-cancel' ELSE 'is-neutral' END + '">' + @E_EST + '</span>'
-        + CASE WHEN ISNULL(@RIESGO,'') = '' THEN ''
-               ELSE '<span class="vct-360-badge vct-pv-riesgo ' + CASE UPPER(LTRIM(RTRIM(@RIESGO))) WHEN 'ALTO' THEN 'is-alto' WHEN 'MEDIO' THEN 'is-medio' WHEN 'BAJO' THEN 'is-bajo' ELSE 'is-neutral' END + '">Riesgo ' + LOWER(@E_RIESGO) + '</span>' END
+        /* encabezado en 3 filas fijas (PV_HEADER_V2): 1 nombre | 2 servicios, normas (max 3), estado, riesgo | 3 cliente y contacto */
+        + '<div class="vct-360-client-strip vct-pv-hd"><div class="vct-360-card-left">'
+        + '<div class="vct-360-avatar vct-pv-hd-ic"><span data-vct-icon="folder"></span></div>'
+        + '<div class="vct-pv-hd-rows">'
+        + '<div class="vct-pv-hd-r1"><h1 title="(' + @E_COD + ') ' + REPLACE(@E_NOM,'"','&quot;') + '">(' + @E_COD + ') ' + @E_NOM + '</h1></div>'
+        + '<div class="vct-pv-hd-r2">'
+        +   CASE WHEN @HD_SRV = '' THEN '' ELSE '<span class="vctdg-svc-set">' + @HD_SRV + '</span><span class="vct-pv-hd-sep"></span>' END
+        +   CASE WHEN @HD_NOR = '' THEN '' ELSE @HD_NOR + '<span class="vct-pv-hd-sep"></span>' END
+        +   '<span class="vct-360-badge vct-pv-hd-bd ' + CASE @EST_COD WHEN 'ENCURSO' THEN 'is-active' WHEN 'CONFIRMADO' THEN 'is-planned' WHEN 'CANCELADO' THEN 'is-cancel' ELSE 'is-neutral' END + '">' + @E_EST + '</span>'
+        +   CASE WHEN ISNULL(@RIESGO,'') = '' THEN ''
+                 ELSE '<span class="vct-360-badge vct-pv-hd-bd vct-pv-riesgo ' + CASE UPPER(LTRIM(RTRIM(@RIESGO))) WHEN 'ALTO' THEN 'is-alto' WHEN 'MEDIO' THEN 'is-medio' WHEN 'BAJO' THEN 'is-bajo' ELSE 'is-neutral' END + '">Riesgo ' + LOWER(@E_RIESGO) + '</span>' END
         + '</div>'
-        + '<div class="vct-pv-subtitle"><span class="vct-pv-cli">' + @E_CLI + '</span>'
-        + CASE WHEN @SRV_ICONS = '' THEN '' ELSE '<span class="vctdg-svc-set">' + @SRV_ICONS + '</span>' END + '</div>'
+        + '<div class="vct-pv-hd-r3" data-vct-pv-fit>'
+        +   '<span class="vct-pv-hd-cli" title="' + REPLACE(@E_CLI,'"','&quot;') + '"><span data-vct-icon="id-card"></span><span class="vct-pv-hd-t">' + @E_CLI + '</span></span>'
+        +   CASE WHEN @HC_NOM = '' THEN ''
+                 ELSE '<span class="vct-pv-hd-con" data-vct-pv-fit-item title="Contacto principal: ' + @E_HC_NOM + CASE WHEN @E_HC_CARGO <> '' THEN ' &middot; ' + @E_HC_CARGO ELSE '' END + '">'
+                    + '<span data-vct-icon="contact"></span><span class="vct-pv-hd-t">' + @E_HC_NOM + '</span>'
+                    + CASE WHEN @E_HC_CARGO <> '' THEN '<span class="vct-pv-hd-cg">&middot; ' + @E_HC_CARGO + '</span>' ELSE '' END + '</span>' END
+        +   CASE WHEN @HC_TEL = '' THEN ''
+                 ELSE '<a class="vct-pv-hd-tel" data-vct-pv-fit-item href="tel:' + REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@HC_TEL,' ',''),'(',''),')',''),'-',''),'"','') + '" title="Llamar: ' + @E_HC_TEL + '">'
+                    + '<span data-vct-icon="phone"></span><span class="vct-pv-hd-t">' + @E_HC_TEL + '</span></a>' END
+        +   CASE WHEN @HC_MAIL = '' THEN ''
+                 ELSE '<a class="vct-pv-hd-mail" data-vct-pv-fit-item href="mailto:' + REPLACE(@E_HC_MAIL,'"','') + '" title="Enviar mail: ' + @E_HC_MAIL + '">'
+                    + '<span data-vct-icon="mail"></span><span class="vct-pv-hd-t">' + @E_HC_MAIL + '</span></a>' END
+        +   CASE WHEN @HC_DOM = '' THEN ''
+                 ELSE '<a class="vct-pv-hd-dom" data-vct-pv-fit-item href="' + @HC_MAPS + '" target="_blank" rel="noopener noreferrer" title="Ver ubicaci&oacute;n en Google Maps: ' + @E_HC_DOM + '">'
+                    + '<span class="vct-pv-hd-pin"><span data-vct-icon="map-pin"></span></span><span class="vct-pv-hd-t">' + @E_HC_DOM + '</span></a>' END
+        + '</div>'
         + '</div></div>'
         + '<div class="vct-360-card-right">'
         + @BELL
@@ -1379,60 +1567,155 @@ BEGIN
         FROM #A ORDER BY ISNULL(CIERRE, CREA) DESC, ID DESC
         FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), '');
 
-    /* datos del proyecto (lo que no esta en la card de arriba), en 2 columnas */
-    DECLARE @R_SRV_TXT VARCHAR(MAX) = '', @R_NOR_CHIPS VARCHAR(MAX) = '', @F_LIM DATETIME;
-    SELECT @R_SRV_TXT = ISNULL((
-        SELECT '<span class="vct-pv-srv-line"><span class="vctdg-svc is-' + LOWER(LEFT(CASE WHEN COD = '' THEN 'xx' ELSE COD END, 2)) + ' is-on">'
-             + '<span data-vct-icon="' + CASE LEFT(COD, 2) WHEN 'AU' THEN 'clipboard-check' WHEN 'CA' THEN 'users' ELSE 'briefcase' END + '"></span></span>'
-             + REPLACE(REPLACE(REPLACE(DES,'&','&amp;'),'<','&lt;'),'>','&gt;') + ' &middot; ' + CONVERT(VARCHAR(20), CONVERT(INT, PROY)) + ' h</span>'
-        FROM #SV ORDER BY IDX FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), '');
-    SELECT @R_NOR_CHIPS = ISNULL((SELECT '<span class="vct-pv-chip is-b">' + REPLACE(REPLACE(REPLACE(DES,'&','&amp;'),'<','&lt;'),'>','&gt;') + '</span>'
-                                  FROM #NO ORDER BY PRINCIPAL DESC, DES FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), '');
+    /* ======== RESUMEN v2 (PV_RESUMEN_V2): etapas sobre la linea de tiempo + 3 cards del mismo alto ======== */
+    DECLARE @F_LIM DATETIME;
     SELECT TOP 1 @F_LIM = VENCE FROM #A WHERE SUB_COD = 'ASIGNACION_CONSULTOR' ORDER BY ID;
-    DECLARE @R_DATOS VARCHAR(MAX) = CONVERT(VARCHAR(MAX), '')
-        + '<div class="vct-360-box"><div class="vct-360-box-head"><h3><span class="vct-360-title-icon"><span data-vct-icon="folder"></span></span>Datos del proyecto</h3>'
-        +   CASE WHEN @PUEDE_EDIT = 1 THEN '<div class="vct-360-box-actions"><button type="button" class="vct-btn vct-btn-secondary vct-btn-sm" data-vct-pv-pronto="Editar proyecto"><span data-vct-icon="edit"></span><span>Editar</span></button></div>' ELSE '' END
-        + '</div>'
-        + '<div class="vct-pv-kv is-2">'
-        + '<div class="is-full vct-pv-kv-sec">General</div>'
-        + '<div class="is-full"><small>Referencia</small><b class="vct-pv-oneline" title="' + REPLACE(@E_REF,'"','') + '">' + CASE WHEN @E_REF = '' THEN '-' ELSE @E_REF END + '</b></div>'
-        + '<div class="is-full vct-pv-kv-sec">Plazo</div>'
-        + '<div><small>Fecha de inicio</small><b>' + ISNULL(CONVERT(VARCHAR(10), @F_INI, 103),'-') + '</b></div>'
-        + '<div><small>Fecha de fin</small><b>' + ISNULL(CONVERT(VARCHAR(10), @F_FIN, 103),'-') + '</b></div>'
-        + '<div class="is-full vct-pv-kv-sec">Gesti&oacute;n</div>'
-        + '<div><small>Tipo de proyecto</small><b>' + @E_TIPO + '</b></div>'
-        + '<div><small>Analista</small>' + CASE WHEN @ANALISTA_NOM = '' THEN '<b>-</b>'
-               ELSE '<span class="vct-pv-person"><span class="vctdg-avatar is-a">' + ISNULL((SELECT TOP 1 INI FROM #EQ WHERE ROL_COD = 'ANALISTA' ORDER BY ID), '') + '</span><b>'
-                  + REPLACE(REPLACE(REPLACE(@ANALISTA_NOM,'&','&amp;'),'<','&lt;'),'>','&gt;') + '</b></span>' END + '</div>'
-        + '<div class="is-full vct-pv-kv-sec">Situaci&oacute;n</div>'
-        + '<div><small>Estado</small><span class="vct-360-badge ' + CASE @EST_COD WHEN 'ENCURSO' THEN 'is-active' WHEN 'CONFIRMADO' THEN 'is-planned' WHEN 'CANCELADO' THEN 'is-cancel' ELSE 'is-neutral' END + '">' + @E_EST + '</span></div>'
-        + '<div><small>Nivel de riesgo</small>' + CASE WHEN ISNULL(@RIESGO,'') = '' THEN '<b>-</b>'
-               ELSE '<span class="vct-360-badge vct-pv-riesgo ' + CASE UPPER(LTRIM(RTRIM(@RIESGO))) WHEN 'ALTO' THEN 'is-alto' WHEN 'MEDIO' THEN 'is-medio' WHEN 'BAJO' THEN 'is-bajo' ELSE 'is-neutral' END + '">' + @E_RIESGO + '</span>' END + '</div>'
-        + '<div class="is-full vct-pv-kv-sec">Lanzamiento y alta</div>'
-        + '<div><small>Fecha l&iacute;mite de lanzamiento</small><b>' + ISNULL(CONVERT(VARCHAR(10), @F_LIM, 103),'-') + '</b></div>'
-        + '<div><small>Fecha de alta</small><b>' + ISNULL(CONVERT(VARCHAR(10), @F_ALTA, 103),'-') + ISNULL(' &middot; ' + REPLACE(REPLACE(@U_ALTA,'<',''),'>',''), '') + '</b></div>'
-        + '</div></div>';
 
-    /* Resumen en dos mitades: izquierda datos; derecha servicios y normas, horas por servicio y atraso
-       (las 3 cards de la derecha suman el alto de la de datos) */
-    SET @H = @H + '<div class="vct-360-panel is-active" data-vct-panel="resumen"><div class="vct-pv-half">'
-        + '<div class="vct-pv-col is-left">' + @R_DATOS + '</div>'
-        + '<div class="vct-pv-col is-right">'
-        + '<div class="vct-360-box vct-pv-mini"><div class="vct-360-box-head"><h3><span class="vct-360-title-icon"><span data-vct-icon="clipboard-check"></span></span>Servicios y normas</h3></div>'
-        +   '<div class="vct-pv-kv is-2">'
-        +   '<div><small>Servicios</small><span class="vct-pv-srv-list">' + CASE WHEN @R_SRV_TXT = '' THEN '<b>-</b>' ELSE @R_SRV_TXT END + '</span></div>'
-        +   '<div><small>Normas</small><span class="vct-pv-chips">' + CASE WHEN @R_NOR_CHIPS = '' THEN '<b>-</b>' ELSE @R_NOR_CHIPS END + '</span></div>'
-        +   '</div></div>'
-        + '<div class="vct-360-box vct-pv-mini"><div class="vct-360-box-head"><h3><span class="vct-360-title-icon"><span data-vct-icon="briefcase"></span></span>Horas por servicio</h3></div>'
-        +   CASE WHEN @R_SRV = '' THEN '<div class="vct-360-empty">Sin servicios.</div>' ELSE @R_SRV
-             + '<div class="vct-pv-legend"><span><i class="is-ejec"></i>Ejecutadas</span><span><i class="is-prog"></i>Programadas</span><span><i></i>Disponibles ' + CONVERT(VARCHAR(20), CONVERT(INT, @H_DISP)) + ' h</span></div>' END
+    /* etapas del flujo: estado D (cumplida) / A (actual) / V (actual atrasada) / P (proxima) */
+    DECLARE @ET TABLE (ORD INT, NOM VARCHAR(100), EST CHAR(1), TXT VARCHAR(300));
+    DECLARE @ET_ANA_OK BIT = 0, @ET_CONS_OK BIT = 0, @ET_LANZ_OK BIT = 0, @ET_PLAN_OK BIT = 0, @ET_FIN_OK BIT = 0,
+            @ET_ANA_F DATETIME, @ET_CONS_F DATETIME, @ET_PLAN_F DATETIME, @ET_V_CONS BIT = 0, @ET_V_LANZ BIT = 0, @ET_V_PLAN BIT = 0,
+            @ET_LANZ_LIM DATETIME, @ET_ACT VARCHAR(100) = '', @ET_ACT_V BIT = 0;
+    IF EXISTS (SELECT 1 FROM #A WHERE SUB_COD = 'ASIGNACION_ANALISTA' AND SIT = 'C') OR (NOT EXISTS (SELECT 1 FROM #A WHERE SUB_COD = 'ASIGNACION_ANALISTA') AND @ANALISTA_NOM <> '')
+        SET @ET_ANA_OK = 1;
+    SELECT TOP 1 @ET_ANA_F = ISNULL(CIERRE, CREA) FROM #A WHERE SUB_COD = 'ASIGNACION_ANALISTA' AND SIT = 'C' ORDER BY ID;
+    IF EXISTS (SELECT 1 FROM #A WHERE SUB_COD = 'ASIGNACION_CONSULTOR' AND SIT = 'C') OR (NOT EXISTS (SELECT 1 FROM #A WHERE SUB_COD = 'ASIGNACION_CONSULTOR' AND SIT <> 'C') AND @N_CONS > 0)
+        SET @ET_CONS_OK = 1;
+    SELECT TOP 1 @ET_CONS_F = CIERRE FROM #A WHERE SUB_COD = 'ASIGNACION_CONSULTOR' AND SIT = 'C' ORDER BY ID;
+    IF EXISTS (SELECT 1 FROM #A WHERE SUB_COD = 'ASIGNACION_CONSULTOR' AND SIT = 'V') SET @ET_V_CONS = 1;
+    IF @F_INI_REAL IS NOT NULL OR @EST_COD IN ('ENCURSO','TERMINADO') SET @ET_LANZ_OK = 1;
+    SELECT @ET_LANZ_LIM = MIN(VENCE) FROM #A WHERE SUB_COD IN ('CARGA_DATOS_ENTRADA','LANZAMIENTO') AND SIT <> 'C';
+    IF EXISTS (SELECT 1 FROM #A WHERE SUB_COD IN ('CARGA_DATOS_ENTRADA','LANZAMIENTO') AND SIT = 'V') SET @ET_V_LANZ = 1;
+    IF EXISTS (SELECT 1 FROM #A WHERE SUB_COD = 'CARGA_PLAN' AND SIT = 'C') SET @ET_PLAN_OK = 1;
+    SELECT TOP 1 @ET_PLAN_F = CIERRE FROM #A WHERE SUB_COD = 'CARGA_PLAN' AND SIT = 'C' ORDER BY ID DESC;
+    IF EXISTS (SELECT 1 FROM #A WHERE SUB_COD = 'CARGA_PLAN' AND SIT = 'V') SET @ET_V_PLAN = 1;
+    IF @EST_COD = 'TERMINADO' SET @ET_FIN_OK = 1;
+
+    INSERT INTO @ET VALUES
+     (1, 'Alta', 'D', ISNULL(CONVERT(VARCHAR(5), @F_ALTA, 103), '-') + ISNULL(' &middot; ' + REPLACE(REPLACE(@U_ALTA,'<',''),'>',''), '')),
+     (2, 'Analista asignado', CASE WHEN @ET_ANA_OK = 1 THEN 'D' ELSE 'P' END,
+         CASE WHEN @ANALISTA_NOM = '' THEN 'sin analista' ELSE ISNULL(CONVERT(VARCHAR(5), @ET_ANA_F, 103) + ' &middot; ', '') + REPLACE(REPLACE(REPLACE(LEFT(@ANALISTA_NOM, CHARINDEX(',', @ANALISTA_NOM + ',') - 1),'&','&amp;'),'<',''),'>','') END),
+     (3, 'Consultores', CASE WHEN @ET_CONS_OK = 1 THEN 'D' WHEN @ET_V_CONS = 1 THEN 'V' ELSE 'P' END,
+         CASE WHEN @ET_CONS_OK = 1 THEN ISNULL(CONVERT(VARCHAR(5), @ET_CONS_F, 103) + ' &middot; ', '') + CONVERT(VARCHAR(10), @N_CONS) + ' asignado(s)'
+              WHEN @F_LIM IS NOT NULL THEN 'l&iacute;mite ' + CONVERT(VARCHAR(5), @F_LIM, 103) ELSE 'pendiente' END),
+     (4, 'Lanzamiento', CASE WHEN @ET_LANZ_OK = 1 THEN 'D' WHEN @ET_V_LANZ = 1 THEN 'V' ELSE 'P' END,
+         CASE WHEN @ET_LANZ_OK = 1 THEN 'inicio ' + ISNULL(CONVERT(VARCHAR(5), @F_INI_REAL, 103), '-')
+              WHEN @ET_LANZ_LIM IS NOT NULL THEN 'l&iacute;mite ' + CONVERT(VARCHAR(5), @ET_LANZ_LIM, 103) ELSE 'pendiente' END),
+     (5, 'Plan estrat&eacute;gico', CASE WHEN @ET_PLAN_OK = 1 THEN 'D' WHEN @ET_V_PLAN = 1 THEN 'V' ELSE 'P' END,
+         CASE WHEN @PLN IS NULL THEN 'sin generar'
+              ELSE CONVERT(VARCHAR(10), @PL_NI) + ' &iacute;tems &middot; ' + CONVERT(VARCHAR(10), @PL_PCT) + '%' + CASE WHEN @PL_V > 0 THEN ' &middot; ' + CONVERT(VARCHAR(10), @PL_V) + ' vencido(s)' ELSE '' END END),
+     (6, 'Cierre', CASE WHEN @ET_FIN_OK = 1 THEN 'D' ELSE 'P' END, ISNULL(CONVERT(VARCHAR(10), @F_FIN, 103), '-'));
+    /* la primera no cumplida es la actual (en rojo si su accion esta vencida) */
+    UPDATE @ET SET EST = CASE WHEN EST = 'V' THEN 'V' ELSE 'A' END
+    WHERE ORD = (SELECT MIN(ORD) FROM @ET WHERE EST <> 'D') AND @EST_COD <> 'CANCELADO';
+    UPDATE @ET SET EST = 'P' WHERE EST = 'V' AND ORD > (SELECT MIN(ORD) FROM @ET WHERE EST <> 'D');
+    SELECT TOP 1 @ET_ACT = NOM, @ET_ACT_V = CASE WHEN EST = 'V' THEN 1 ELSE 0 END FROM @ET WHERE EST IN ('A','V') ORDER BY ORD;
+    DECLARE @ET_POS INT = ISNULL((SELECT MAX(ORD) FROM @ET WHERE EST = 'D'), 1);
+    IF EXISTS (SELECT 1 FROM @ET WHERE EST IN ('A','V')) SET @ET_POS = (SELECT MIN(ORD) FROM @ET WHERE EST IN ('A','V'));
+    /* linea: relleno y marca "Hoy" entre la ultima etapa cumplida y la actual (PV_RESUMEN_V3) */
+    DECLARE @ET_HOY_X DECIMAL(6,2) = CASE WHEN NOT EXISTS (SELECT 1 FROM @ET WHERE EST IN ('A','V')) THEN 100
+                                          WHEN @ET_POS <= 1 THEN 0 ELSE (@ET_POS - 1.5) * 20 END;
+    DECLARE @R_ET VARCHAR(MAX) = CONVERT(VARCHAR(MAX), '')
+        + '<div class="vct-360-box vct-pv-et"><div class="vct-360-box-head"><h3><span class="vct-360-title-icon"><span class="vct-pv-ic-pulse"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg></span></span>Etapas del proyecto</h3>'
+        + CASE WHEN @EST_COD = 'CANCELADO' THEN '<span class="vct-360-badge is-cancel">Proyecto cancelado</span>'
+               WHEN @ET_ACT = '' THEN '<span class="vct-360-badge is-active">Proyecto terminado</span>'
+               ELSE '<span class="vct-360-badge ' + CASE WHEN @ET_ACT_V = 1 THEN 'is-cancel' ELSE 'is-progress' END + '">Etapa actual: ' + @ET_ACT + '</span>' END
+        + '</div><div class="vct-pv-et-tl">'
+        + '<span class="vct-pv-et-ini">' + ISNULL(CONVERT(VARCHAR(5), @F_INI, 103), '') + '</span><span class="vct-pv-et-fin">' + ISNULL(CONVERT(VARCHAR(5), @F_FIN, 103), '') + '</span>'
+        + '<span class="vct-pv-et-rail"></span><span class="vct-pv-et-done" style="width:' + CONVERT(VARCHAR(20), @ET_HOY_X) + '%"></span>'
+        + CASE WHEN @EST_COD <> 'CANCELADO' THEN '<span class="vct-pv-et-hoy" style="left:' + CONVERT(VARCHAR(20), @ET_HOY_X) + '%"><em>Hoy ' + CONVERT(VARCHAR(5), @HOY, 103) + '</em></span>' ELSE '' END
+        + ISNULL((SELECT '<div class="vct-pv-et-st is-' + LOWER(EST) + '" style="left:' + CONVERT(VARCHAR(10), (ORD - 1) * 20) + '%">'
+                       + '<i class="vct-pv-et-dia"></i><b>' + NOM + '</b><small>' + TXT + '</small>'
+                       + CASE EST WHEN 'A' THEN '<em>Actual</em>' WHEN 'V' THEN '<em>Atrasada</em>' ELSE '' END + '</div>'
+                  FROM @ET ORDER BY ORD FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), '')
+        + '</div><div class="vct-pv-et-foot"><span><i class="is-d"></i>Cumplida</span><span><i class="is-a"></i>Actual</span><span><i class="is-v"></i>Atrasada</span><span><i class="is-p"></i>Pr&oacute;xima</span>'
+        + '<span class="vct-pv-et-sp"></span><span class="vct-pv-et-plazo">' + ISNULL(CONVERT(VARCHAR(10), @F_INI, 103), '-') + ' &rarr; ' + ISNULL(CONVERT(VARCHAR(10), @F_FIN, 103), '-')
+        + ' &middot; hoy ' + CONVERT(VARCHAR(5), @HOY, 103) + '<span class="vct-pv-et-bar"><i style="width:' + CONVERT(VARCHAR(5), @PCT_T) + '%"></i></span>' + CONVERT(VARCHAR(5), @PCT_T) + '% del plazo</span></div></div>';
+
+    /* card 1: datos del proyecto + equipo (hasta 4; el resto en la pestania Equipo) */
+    DECLARE @R_EQ VARCHAR(MAX) = '', @R_N_EQ INT = (SELECT COUNT(*) FROM #EQ);
+    SELECT @R_EQ = ISNULL((
+        SELECT TOP 4 '<div class="vct-pv-rs-person"><span class="vctdg-avatar ' + CASE WHEN TIPO = 'EMPLEADO' THEN 'is-a' ELSE 'is-c' END + '">' + INI + '</span>'
+             + '<span><b>' + REPLACE(REPLACE(REPLACE(NOMBRE,'&','&amp;'),'<','&lt;'),'>','&gt;') + '</b><small>' + REPLACE(REPLACE(REPLACE(ISNULL(ROL_DES,''),'&','&amp;'),'<','&lt;'),'>','&gt;') + '</small></span></div>'
+        FROM #EQ ORDER BY ROL_ORD, ID FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), '');
+    DECLARE @R_C1 VARCHAR(MAX) = CONVERT(VARCHAR(MAX), '')
+        + '<div class="vct-360-box vct-pv-rs-card"><div class="vct-360-box-head"><h3><span class="vct-360-title-icon"><span data-vct-icon="folder"></span></span>Datos del proyecto</h3>'
+        +   CASE WHEN @PUEDE_EDIT = 1 THEN '<div class="vct-360-box-actions"><button type="button" class="vct-btn vct-btn-new vct-btn-sm" data-vct-pv-edit="pe" data-id="' + CONVERT(VARCHAR(20), @ID_PROYECTO) + '"'
+                 + ' data-f-nom="' + REPLACE(@E_NOM,'"','&quot;') + '" data-f-ref="' + REPLACE(@E_REF,'"','&quot;') + '" data-f-tipo="' + UPPER(ISNULL(@TIPO_P,'')) + '"'
+                 + ' data-f-riesgo="' + REPLACE(ISNULL(@RIESGO,''),'"','') + '" data-f-ini="' + ISNULL(CONVERT(VARCHAR(10), @F_INI, 120),'') + '" data-f-fin="' + ISNULL(CONVERT(VARCHAR(10), @F_FIN, 120),'') + '"'
+                 + ' data-f-con="' + ISNULL(CONVERT(VARCHAR(20), @ID_CONTACTO),'') + '" data-f-ana="' + ISNULL((SELECT TOP 1 CONVERT(VARCHAR(20), ID_ENT) FROM #EQ WHERE ROL_COD = 'ANALISTA' ORDER BY ID),'') + '"'
+                 + ' data-f-lim="' + ISNULL(CONVERT(VARCHAR(10), (SELECT TOP 1 VENCE FROM #A WHERE SUB_COD = 'ASIGNACION_CONSULTOR' AND SIT <> 'C' ORDER BY ID), 120),'') + '">'
+                 + '<span data-vct-icon="edit"></span><span>Editar</span></button></div>' ELSE '' END
         + '</div>'
-        + '<div class="vct-360-box vct-pv-mini"><div class="vct-360-box-head"><h3><span class="vct-360-title-icon"><span data-vct-icon="clock-3"></span></span>&iquest;Vamos atrasados?</h3></div>'
-        +   '<div class="vct-pv-meter"><div class="vct-pv-meter-top"><span>Tiempo transcurrido</span><b>' + CONVERT(VARCHAR(5), @PCT_T) + '%</b></div><div class="vct-pv-bar"><span class="is-time" style="width:' + CONVERT(VARCHAR(5), @PCT_T) + '%"></span></div></div>'
-        +   '<div class="vct-pv-meter"><div class="vct-pv-meter-top"><span>Horas ejecutadas</span><b>' + CONVERT(VARCHAR(5), @PCT_H) + '%</b></div><div class="vct-pv-bar"><span class="is-ejec" style="width:' + CONVERT(VARCHAR(5), @PCT_H) + '%"></span></div></div>'
-        +   '<div class="vct-pv-meter"><div class="vct-pv-meter-top"><span>Plan cumplido</span><b>&ndash;</b></div><div class="vct-pv-bar"><span class="is-plan" style="width:0%"></span></div></div>'
+        + '<div class="vct-pv-rs-kv">'
+        + '<div><small>Referencia</small><b title="' + REPLACE(@E_REF,'"','&quot;') + '">' + CASE WHEN @E_REF = '' THEN '-' ELSE @E_REF END + '</b></div>'
+        + '<div><small>Tipo</small><b>' + @E_TIPO + '</b></div>'
+        + '<div><small>Inicio</small><b>' + ISNULL(CONVERT(VARCHAR(10), @F_INI, 103),'-') + '</b></div>'
+        + '<div><small>Fin</small><b>' + ISNULL(CONVERT(VARCHAR(10), @F_FIN, 103),'-') + '</b></div>'
+        + '<div><small>Inicio real</small><b>' + ISNULL(CONVERT(VARCHAR(10), @F_INI_REAL, 103),'-') + '</b></div>'
+        + '<div><small>L&iacute;mite de lanzamiento</small><b>' + ISNULL(CONVERT(VARCHAR(10), @F_LIM, 103),'-') + '</b></div>'
+        + '<div><small>Contacto</small><b title="' + REPLACE(@CONTACTO,'"','&quot;') + '">' + @CONTACTO + '</b></div>'
+        + '<div><small>Alta</small><b>' + ISNULL(CONVERT(VARCHAR(10), @F_ALTA, 103),'-') + ISNULL(' <span class="vct-pv-rs-mut">&middot; ' + REPLACE(REPLACE(@U_ALTA,'<',''),'>','') + '</span>', '') + '</b></div>'
         + '</div>'
-        + '</div></div></div>';
+        + '<div class="vct-pv-rs-sec">Equipo (' + CONVERT(VARCHAR(10), @R_N_EQ) + ')</div>'
+        + '<div class="vct-pv-rs-team">' + CASE WHEN @R_EQ = '' THEN '<span class="vct-pv-rs-mut">Sin integrantes.</span>' ELSE @R_EQ END + '</div>'
+        + CASE WHEN @R_N_EQ > 4 THEN '<button type="button" class="vct-pv-rs-link" data-vct-pv-goto="equipo">+' + CONVERT(VARCHAR(10), @R_N_EQ - 4) + ' m&aacute;s &middot; Ver equipo completo</button>' ELSE '' END
+        + '</div>';
+
+    /* card 2: horas por servicio (mensaje de horas) + como vamos (mensaje de conclusion) */
+    DECLARE @R_HS VARCHAR(MAX) = '';
+    SELECT @R_HS = ISNULL((
+        SELECT '<div class="vct-pv-rs-hs"><span class="vctdg-svc is-' + LOWER(LEFT(CASE WHEN COD = '' THEN 'xx' ELSE COD END, 2)) + ' is-on"><span data-vct-icon="' + CASE LEFT(COD, 2) WHEN 'AU' THEN 'clipboard-check' WHEN 'CA' THEN 'users' ELSE 'briefcase' END + '"></span></span>'
+             + '<b>' + REPLACE(REPLACE(REPLACE(DES,'&','&amp;'),'<','&lt;'),'>','&gt;') + '</b>'
+             + '<span>' + CONVERT(VARCHAR(20), CONVERT(INT, EJEC)) + ' + ' + CONVERT(VARCHAR(20), CONVERT(INT, PROG)) + ' / ' + CONVERT(VARCHAR(20), CONVERT(INT, PROY)) + ' h</span>'
+             + '<span class="vct-pv-bar"><span class="is-ejec" style="width:' + CONVERT(VARCHAR(10), CASE WHEN PROY > 0 THEN CONVERT(INT, CASE WHEN EJEC * 100.0 / PROY > 100 THEN 100 ELSE EJEC * 100.0 / PROY END) ELSE 0 END) + '%"></span>'
+             + '<span class="is-prog" style="width:' + CONVERT(VARCHAR(10), CASE WHEN PROY > 0 THEN CONVERT(INT, CASE WHEN PROG * 100.0 / PROY > 100 THEN 100 ELSE PROG * 100.0 / PROY END) ELSE 0 END) + '%"></span></span></div>'
+        FROM #SV ORDER BY IDX FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), '');
+    DECLARE @R_MSG_A VARCHAR(500), @R_MSG_A_CLS VARCHAR(20);
+    IF @PLN IS NULL
+        SELECT @R_MSG_A = 'El plan todav&iacute;a no est&aacute; generado: el avance se mide por tiempo y horas.', @R_MSG_A_CLS = 'is-info';
+    ELSE IF @PL_PCT >= @PCT_T AND @PCT_H = 0
+        SELECT @R_MSG_A = 'El plan va al d&iacute;a (' + CONVERT(VARCHAR(5), @PL_PCT) + '%), pero todav&iacute;a no hay horas ejecutadas.', @R_MSG_A_CLS = 'is-warn';
+    ELSE IF @PL_PCT >= @PCT_T
+        SELECT @R_MSG_A = 'Vamos al d&iacute;a: el plan (' + CONVERT(VARCHAR(5), @PL_PCT) + '%) acompa&ntilde;a el tiempo transcurrido (' + CONVERT(VARCHAR(5), @PCT_T) + '%).', @R_MSG_A_CLS = 'is-ok';
+    ELSE
+        SELECT @R_MSG_A = 'Vamos atrasados: el plan (' + CONVERT(VARCHAR(5), @PL_PCT) + '%) va detr&aacute;s del tiempo transcurrido (' + CONVERT(VARCHAR(5), @PCT_T) + '%).', @R_MSG_A_CLS = 'is-late';
+    DECLARE @R_C2 VARCHAR(MAX) = CONVERT(VARCHAR(MAX), '')
+        + '<div class="vct-360-box vct-pv-rs-card"><div class="vct-360-box-head"><h3><span class="vct-360-title-icon"><span data-vct-icon="briefcase"></span></span>Horas por servicio</h3></div>'
+        + '<div class="vct-pv-rs-hslist">' + CASE WHEN @R_HS = '' THEN '<span class="vct-pv-rs-mut">Sin servicios.</span>' ELSE @R_HS END + '</div>'
+        + '<div class="vct-pv-legend"><span><i class="is-ejec"></i>Ejecutadas</span><span><i class="is-prog"></i>Programadas</span><span><i></i>Disponibles ' + CONVERT(VARCHAR(20), CONVERT(INT, @H_DISP)) + ' h</span></div>'
+        + '<div class="vct-pv-rs-msg is-info"><span data-vct-icon="clock-3"></span><span>' + CONVERT(VARCHAR(5), @PCT_T) + '% del tiempo usado y ' + CONVERT(VARCHAR(5), @PCT_H) + '% de horas ejecutadas.</span></div>'
+        + '<div class="vct-pv-rs-sec">&iquest;C&oacute;mo vamos?</div>'
+        + '<div class="vct-pv-rs-gauge">'
+        +   '<div><span>Tiempo transcurrido</span><b>' + CONVERT(VARCHAR(5), @PCT_T) + '%</b><span class="vct-pv-bar"><span class="is-time" style="width:' + CONVERT(VARCHAR(5), @PCT_T) + '%"></span></span></div>'
+        +   '<div><span>Plan cumplido (acciones)</span><b>' + CASE WHEN @PLN IS NULL THEN '&ndash;' ELSE CONVERT(VARCHAR(5), @PL_PCT) + '%' END + '</b><span class="vct-pv-bar"><span class="is-plan" style="width:' + CASE WHEN @PLN IS NULL THEN '0' ELSE CONVERT(VARCHAR(5), @PL_PCT) END + '%"></span></span></div>'
+        +   '<div><span>Horas ejecutadas</span><b>' + CONVERT(VARCHAR(5), @PCT_H) + '%</b><span class="vct-pv-bar"><span class="is-ejec" style="width:' + CONVERT(VARCHAR(5), @PCT_H) + '%"></span></span></div>'
+        + '</div>'
+        + '<div class="vct-pv-rs-msg ' + @R_MSG_A_CLS + '"><span data-vct-icon="alert-triangle"></span><span>' + @R_MSG_A + '</span></div>'
+        + '</div>';
+
+    /* card 3: pendientes del proyecto (acciones abiertas, la mas proxima arriba) */
+    DECLARE @R_PEND VARCHAR(MAX) = '', @R_N_PEND INT = (SELECT COUNT(*) FROM #A WHERE SIT <> 'C');
+    SELECT @R_PEND = ISNULL((
+        SELECT '<div class="vct-pv-rs-pend">'
+             + CASE WHEN SIT = 'V' THEN '<span class="vct-360-badge is-cancel">Vencida</span>'
+                    WHEN VENCE IS NULL THEN '<span class="vct-360-badge is-neutral">Sin fecha</span>'
+                    WHEN CONVERT(DATE, VENCE) = CONVERT(DATE, @HOY) THEN '<span class="vct-360-badge is-planned">Hoy</span>'
+                    ELSE '<span class="vct-360-badge is-planned">En ' + CONVERT(VARCHAR(10), DATEDIFF(DAY, @HOY, VENCE)) + ' d</span>' END
+             + '<span><b>' + REPLACE(REPLACE(REPLACE(CASE WHEN SUB_DES <> '' THEN SUB_DES ELSE TITULO END,'&','&amp;'),'<','&lt;'),'>','&gt;') + '</b>'
+             + '<small>' + REPLACE(REPLACE(REPLACE(CASE WHEN RESP <> '' THEN RESP ELSE '-' END,'&','&amp;'),'<','&lt;'),'>','&gt;') + '</small></span>'
+             + '<span class="vct-pv-rs-pd' + CASE WHEN SIT = 'V' THEN ' is-late' ELSE '' END + '">' + ISNULL(CONVERT(VARCHAR(5), VENCE, 103), '-') + '</span></div>'
+        FROM #A WHERE SIT <> 'C'
+        ORDER BY CASE WHEN VENCE IS NULL THEN 1 ELSE 0 END, VENCE, ID
+        FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), '');
+    DECLARE @R_C3 VARCHAR(MAX) = CONVERT(VARCHAR(MAX), '')
+        + '<div class="vct-360-box vct-pv-rs-card"><div class="vct-360-box-head"><h3><span class="vct-360-title-icon"><span data-vct-icon="bell"></span></span>Pendientes del proyecto (' + CONVERT(VARCHAR(10), @R_N_PEND) + ')</h3>'
+        + '<div class="vct-360-box-actions"><button type="button" class="vct-pv-rs-link" data-vct-pv-goto="acciones">Acciones &rsaquo;</button></div></div>'
+        + '<div class="vct-pv-rs-pendlist">' + CASE WHEN @R_PEND = '' THEN '<div class="vct-360-empty">No hay acciones pendientes en el proyecto.</div>' ELSE @R_PEND END + '</div>'
+        + '</div>';
+
+    SET @H = @H + '<div class="vct-360-panel is-active" data-vct-panel="resumen">' + @R_ET
+        + '<div class="vct-pv-rs-cards">' + @R_C1 + @R_C2 + @R_C3 + '</div></div>';
 
     /* ======================= PROYECTO ======================= */
     DECLARE @P_SRV VARCHAR(MAX) = '', @P_REP VARCHAR(MAX) = '', @P_REP_LEG VARCHAR(MAX) = '', @P_NOR VARCHAR(MAX) = '', @P_EQ VARCHAR(MAX) = '';
@@ -1716,7 +1999,8 @@ BEGIN
                    THEN '<button type="button" class="vct-pl-ck" data-vct-pv-confirm="PV_PL_ACC_ESTADO" data-t11="CUMPLIDA" data-id="' + CONVERT(VARCHAR(20), A.ID) + '" data-msg="&iquest;Marcar la acci&oacute;n como cumplida?" title="Marcar cumplida"></button>'
                    ELSE '<span class="vct-pl-ck' + CASE WHEN A.CUMPLIDA = 1 THEN ' is-on' ELSE '' END + '">' + CASE WHEN A.CUMPLIDA = 1 THEN '<span data-vct-icon="check"></span>' ELSE '' END + '</span>' END
             + '<span class="vct-pl-acc-t"><b>' + REPLACE(REPLACE(REPLACE(CASE WHEN A.DET <> '' THEN A.DET ELSE A.SUB END,'&','&amp;'),'<','&lt;'),'>','&gt;') + '</b>'
-            + '<small>' + REPLACE(REPLACE(REPLACE(A.SUB,'&','&amp;'),'<','&lt;'),'>','&gt;') + CASE WHEN A.RESP_NOM <> '' THEN ' &middot; ' + REPLACE(REPLACE(REPLACE(A.RESP_NOM,'&','&amp;'),'<','&lt;'),'>','&gt;') ELSE '' END + '</small></span>'
+            + '<small>' + CASE WHEN A.DET <> '' THEN REPLACE(REPLACE(REPLACE(A.SUB,'&','&amp;'),'<','&lt;'),'>','&gt;') + CASE WHEN A.RESP_NOM <> '' THEN ' &middot; ' ELSE '' END ELSE '' END
+            + REPLACE(REPLACE(REPLACE(A.RESP_NOM,'&','&amp;'),'<','&lt;'),'>','&gt;') + '</small></span>'
             + '<span class="vct-pl-acc-d">' + CASE WHEN A.CUMPLIDA = 1 THEN 'cumplida' WHEN A.VENCE IS NULL THEN '-' ELSE CONVERT(VARCHAR(5), A.VENCE, 103) END + '</span>'
             + '</div>'
         FROM #PA A;
@@ -2231,6 +2515,56 @@ BEGIN
     END;
 
     /* ======================= MODALES DEL PARTE LOGISTICO ======================= */
+    /* modal "Editar datos del proyecto" (PV_PROY_EDIT_V1): datos del paso 1 sin servicios, normas, horas ni rentabilidad */
+    DECLARE @PE_MODAL VARCHAR(MAX) = '', @PE_OCON VARCHAR(MAX) = '', @PE_OANA VARCHAR(MAX) = '', @PE_HAY_LIM BIT = 0;
+    IF @PUEDE_EDIT = 1
+    BEGIN
+        IF EXISTS (SELECT 1 FROM #A WHERE SUB_COD = 'ASIGNACION_CONSULTOR' AND SIT <> 'C') SET @PE_HAY_LIM = 1;
+        SELECT @PE_OCON = ISNULL((
+            SELECT '<option value="' + CONVERT(VARCHAR(20), C.ID) + '">'
+                 + REPLACE(REPLACE(REPLACE(LTRIM(RTRIM(ISNULL(C.NOMBRES,'') + ' ' + ISNULL(C.APELLIDO,''))) + CASE WHEN ISNULL(C.CARGO,'') <> '' THEN ' - ' + C.CARGO ELSE '' END,'&','&amp;'),'<','&lt;'),'>','&gt;') + '</option>'
+            FROM dbo.VCT_CONTACTOS C WITH(NOLOCK)
+            WHERE C.IDCLIENTE = @CLI AND LTRIM(RTRIM(ISNULL(C.NOMBRES,'') + ISNULL(C.APELLIDO,''))) <> ''
+            ORDER BY C.APELLIDO, C.NOMBRES, C.ID FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), '');
+        SELECT @PE_OANA = ISNULL((
+            SELECT '<option value="' + CONVERT(VARCHAR(20), E.ID) + '">' + REPLACE(REPLACE(REPLACE(LTRIM(RTRIM(ISNULL(E.APELLIDOS,'') + ', ' + ISNULL(E.NOMBRES,''))),'&','&amp;'),'<','&lt;'),'>','&gt;') + '</option>'
+            FROM dbo.VCT_EMPLEADOS E WITH(NOLOCK) WHERE ISNULL(E.ESTADO,'ACTIVO') = 'ACTIVO'
+            ORDER BY E.APELLIDOS, E.NOMBRES FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), '');
+        SET @PE_MODAL = CONVERT(VARCHAR(MAX), '')
+            + '<div class="vct-modal vct-form-shell vct-pv-modal vct-pv-w-md" data-vct-component="modal" data-vct-pv-modal="pe" data-vct-pv-cmd="PV_PROY_GUARDAR" data-vct-pv-tnew="Editar datos del proyecto" data-vct-pv-tedit="Editar datos del proyecto">'
+            + '<div class="vct-modal-backdrop" data-vct-pv-close></div><div class="vct-modal-dialog">'
+            + '<div class="vct-modal-header vct-form-header"><div class="vct-form-header-accent"></div><div class="vct-form-header-icon"><span data-vct-icon="folder"></span></div>'
+            + '<div class="vct-form-header-copy"><h3 class="vct-modal-title" data-vct-pv-mtitle>Editar datos del proyecto</h3><p class="vct-modal-subtitle">Proyecto (' + @E_COD + ') &middot; ' + @E_CLI + '</p></div>'
+            + '<button type="button" class="vct-form-close" data-vct-pv-close aria-label="Cerrar">&times;</button></div>'
+            + '<div class="vct-modal-body vct-form-body"><div class="vct-validation-box" data-vct-pv-error style="display:none;"></div><div class="vct-form-grid">'
+            + '<div class="vct-field vct-col-12"><label class="vct-label">Cliente</label><input type="text" class="vct-input" value="' + REPLACE(@E_CLI,'"','&quot;') + '" readonly></div>'
+            + '<div class="vct-field vct-col-8"><label class="vct-label">Nombre del proyecto <span class="vct-req">*</span></label>'
+            +   '<input type="text" class="vct-input" maxlength="300" data-vct-pv-f="nom" data-vct-pv-buf="TEXTO11" data-req="Nombre del proyecto"></div>'
+            + '<div class="vct-field vct-col-4"><label class="vct-label">Referencia</label>'
+            +   '<input type="text" class="vct-input" maxlength="300" placeholder="Ej.: propuesta 2026-118" data-vct-pv-f="ref" data-vct-pv-buf="TEXTO12"></div>'
+            + '<div class="vct-field vct-col-6"><label class="vct-label">Tipo de proyecto <span class="vct-req">*</span></label>'
+            +   '<select data-vct-pv-f="tipo" data-vct-pv-buf="TEXTO13" data-req="Tipo de proyecto"><option value="">Seleccione</option><option value="IMPLEMENTACION">Implementaci&oacute;n</option><option value="MANTENIMIENTO">Mantenimiento</option></select></div>'
+            + '<div class="vct-field vct-col-6"><label class="vct-label">Nivel de riesgo <span class="vct-req">*</span></label>'
+            +   '<select data-vct-pv-f="riesgo" data-vct-pv-buf="TEXTO14" data-req="Nivel de riesgo"><option value="">Seleccione</option><option value="Bajo">Bajo</option><option value="Medio">Medio</option><option value="Alto">Alto</option></select></div>'
+            + '<div class="vct-field vct-col-6"><label class="vct-label">Fecha inicio proyecto <span class="vct-req">*</span></label>'
+            +   '<input type="date" class="vct-input" data-vct-datepicker data-vct-pv-f="ini" data-vct-pv-buf="TEXTO15" data-req="Fecha inicio proyecto"></div>'
+            + '<div class="vct-field vct-col-6"><label class="vct-label">Fecha fin proyecto <span class="vct-req">*</span></label>'
+            +   '<input type="date" class="vct-input" data-vct-datepicker data-vct-pv-f="fin" data-vct-pv-buf="TEXTO16" data-req="Fecha fin proyecto"></div>'
+            + '<div class="vct-field vct-col-12"><label class="vct-label">Contacto del cliente</label>'
+            +   '<select data-vct-pv-f="con" data-vct-pv-buf="TEXTO17" data-vct-pv-def=""><option value="">' + CASE WHEN @PE_OCON = '' THEN 'El cliente no tiene contactos cargados' ELSE 'Sin contacto' END + '</option>' + @PE_OCON + '</select></div>'
+            + '<div class="vct-field vct-col-6"><label class="vct-label">Analista a cargo <span class="vct-req">*</span></label>'
+            +   '<select data-vct-pv-f="ana" data-vct-pv-buf="TEXTO18" data-req="Analista a cargo"><option value="">Seleccione</option>' + @PE_OANA + '</select></div>'
+            + CASE WHEN @PE_HAY_LIM = 1
+                   THEN '<div class="vct-field vct-col-6"><label class="vct-label">Fecha l&iacute;mite de lanzamiento <span class="vct-req">*</span></label>'
+                      + '<input type="date" class="vct-input" data-vct-datepicker data-vct-pv-f="lim" data-vct-pv-buf="TEXTO19" data-req="Fecha l&iacute;mite de lanzamiento"></div>'
+                   ELSE '<div class="vct-field vct-col-6"><label class="vct-label">Fecha l&iacute;mite de lanzamiento</label>'
+                      + '<input type="text" class="vct-input" value="' + ISNULL(CONVERT(VARCHAR(10), @F_LIM, 103), '-') + ' (consultores ya asignados)" readonly></div>' END
+            + '<div class="vct-field vct-col-12"><div class="vct-help">Los servicios, las normas y las horas se editan en sus pesta&ntilde;as. Si cambi&aacute;s el analista, sus acciones abiertas en este proyecto pasan al nuevo.</div></div>'
+            + '</div></div>'
+            + '<div class="vct-modal-footer vct-form-footer"><button type="button" class="vct-btn vct-btn-secondary" data-vct-pv-close><span>Cancelar</span></button>'
+            + '<button type="button" class="vct-btn vct-btn-primary" data-vct-pv-save><span data-vct-icon="save"></span><span>Guardar</span></button></div></div></div>';
+    END;
+
     DECLARE @PL_MODALS VARCHAR(MAX) = '', @PMH VARCHAR(MAX), @PMF VARCHAR(MAX);
     /* tipificacion de la accion del plan (parametria de acciones, solo activos) PL_ACC_TIPIF_V1 */
     DECLARE @PA_OTIPO VARCHAR(MAX) = '', @PA_OSUB VARCHAR(MAX) = '', @PA_OPRIO VARCHAR(MAX) = '', @PA_OEST VARCHAR(MAX) = '', @PA_ORES VARCHAR(MAX) = '',
@@ -2315,7 +2649,7 @@ BEGIN
         + ' data-vct-tabs data-vct-tabs-active="resumen" data-vct-tabs-reset="0" data-vct-pv-proyecto="' + CONVERT(VARCHAR(20), @ID_PROYECTO) + '"'
         + ' data-vct-pv-guid="' + REPLACE(@GUID_V360,'"','') + '"' + CASE WHEN @MSG <> '' OR @ERR <> '' THEN ' data-vct-pv-volver="' + @VOLVER + '"' ELSE '' END + '>'
         + @H + @MODAL
-        + @LZ_MODALS + @PL_MODALS /* SP_IDSELEC02_V1 */
+        + @LZ_MODALS + @PL_MODALS + @PE_MODAL /* SP_IDSELEC02_V1 */
         + '<input type="hidden" name="SP.IDSELEC02" data-vct-field="IDSELEC02" value="' + CONVERT(VARCHAR(20), @ID_PROYECTO) + '">'
         + '<input type="hidden" name="SP.TEXTO30" data-vct-field="TEXTO30" value=""><input type="hidden" name="SP.IDSELEC03" data-vct-field="IDSELEC03" value="">'
         + '<input type="hidden" name="SP.TEXTO11" data-vct-field="TEXTO11" value=""><input type="hidden" name="SP.TEXTO12" data-vct-field="TEXTO12" value="">'

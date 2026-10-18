@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vista 360 de proyecto · header y resumen</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --b:#66062D; --b2:#8C1D47; --b3:#CF6F92; --bs:#F6EAEF; --bs2:#FBF7F9; --bs3:#FCF7F9; --bb:#E5C9D4;
+  --g:#4A4849; --tx:#1f2937; --tx2:#334155; --tx3:#475569; --mu:#64748b; --mu2:#94a3b8;
+  --ln:#e2e8f0; --ln2:#eef2f6; --bg:#f8fafc;
+  --font:"Gotham","Montserrat","Segoe UI",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#eceff3;font-family:var(--font);color:var(--tx);font-size:12px}
+.page{max-width:1440px;margin:0 auto;padding:18px 16px 60px}
+.note{background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:10px 14px;color:#713f12;font-size:12px;line-height:1.5;margin-bottom:12px}
+.note b{color:#5b2c06}
+.crumb{text-align:right;font-size:10.5px;color:var(--mu);margin:0 0 8px}
+.crumb b{color:var(--b)}
+svg{display:block}
+.i{width:14px;height:14px}
+/* ===== header del proyecto ===== */
+.hd{position:relative;background:#fff;border:1px solid #EBD3DD;border-radius:14px;padding:16px 18px 14px 22px;display:flex;gap:16px;align-items:flex-start;box-shadow:0 2px 10px rgba(102,6,45,.05)}
+.hd:before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:4px;border-radius:0 4px 4px 0;background:var(--b)}
+.av{flex:0 0 56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--b),#8d0b43);color:#fff;font-weight:700;font-size:17px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px rgba(102,6,45,.25)}
+.hd-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:9px}
+.hd-l1{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hd-l1 h1{margin:0;font-size:17px;font-weight:700;color:var(--tx)}
+.sep{width:1px;height:18px;background:var(--ln)}
+.svcs{display:inline-flex;gap:4px}
+.svc{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff}
+.svc svg{width:12px;height:12px}
+.svc.co{background:var(--b)}.svc.au{background:var(--g)}.svc.ca{background:var(--b3)}
+.nrm{display:inline-flex;align-items:center;height:21px;padding:0 8px;border-radius:6px;background:var(--bs);border:1px solid var(--bb);color:var(--b);font-size:10px;font-weight:600}
+.bd{display:inline-flex;align-items:center;gap:5px;height:21px;padding:0 9px;border-radius:999px;font-size:10px;font-weight:600;border:1px solid}
+.bd i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.bd.ok{color:#166534;background:#ECFDF3;border-color:#BBF7D0}
+.bd.run{color:#1e40af;background:#EFF6FF;border-color:#BFDBFE}
+.bd.warn{color:#92400e;background:#FFFBEB;border-color:#FDE68A}
+.bd.late{color:#b91c1c;background:#FEF2F2;border-color:#FECACA}
+.bd.neu{color:var(--tx3);background:var(--bg);border-color:var(--ln)}
+.hd-l2{display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--tx3)}
+.hd-l2 > span,.hd-l2 > a{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.hd-l2 .cli{font-weight:700;color:var(--tx);font-size:12px}
+.hd-l2 svg{width:13px;height:13px;color:var(--mu2)}
+.hd-l2 a{color:var(--tx3);text-decoration:none}
+.hd-l2 a:hover{color:var(--b)}
+.map{display:inline-flex;align-items:center;gap:6px}
+.map .pin{width:22px;height:22px;border-radius:6px;background:var(--bs);color:var(--b);display:inline-flex;align-items:center;justify-content:center}
+.map .pin svg{color:var(--b);width:12px;height:12px}
+.hd-r{flex:0 0 auto;display:flex;align-items:center;gap:12px}
+.bell{position:relative;width:40px;height:40px;border:1px solid var(--ln);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--tx3)}
+.bell b{position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;background:#b91c1c;color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center}
+.next{display:flex;align-items:center;gap:10px;padding-left:12px;border-left:1px solid var(--ln)}
+.next .ic{width:34px;height:34px;border-radius:9px;background:var(--bs);color:var(--b);display:flex;align-items:center;justify-content:center}
+.next small{display:block;font-size:9px;font-weight:600;letter-spacing:.05em;color:var(--mu2);text-transform:uppercase}
+.next b{font-size:13px}
+.callout{position:absolute;font-size:10px;font-weight:600;color:#fff;background:#0f766e;border-radius:6px;padding:3px 7px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+/* kpis */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
+.kpi{background:#fff;border:1px solid var(--ln);border-top:3px solid var(--b);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px}
+.kpi:nth-child(2){border-top-color:var(--g)}.kpi:nth-child(3){border-top-color:var(--b3)}.kpi:nth-child(4){border-top-color:#9ca3af}
+.kpi .ic{width:38px;height:38px;border-radius:9px;background:var(--b);color:#fff;display:flex;align-items:center;justify-content:center}
+.kpi:nth-child(2) .ic{background:var(--g)}.kpi:nth-child(3) .ic{background:var(--b3)}.kpi:nth-child(4) .ic{background:#9ca3af}
+.kpi small{display:block;font-size:9.5px;font-weight:600;color:var(--tx3);letter-spacing:.04em;text-transform:uppercase}
+.kpi b{font-size:19px}
+.kpi span{display:block;font-size:10px;color:var(--mu)}
+/* tabs */
+.tabs{margin-top:12px;background:#E3E6EA;border-radius:11px;padding:4px;display:flex;gap:2px;flex-wrap:wrap}
+.tabs span{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:8px;font-size:10.5px;font-weight:600;color:var(--tx3)}
+.tabs span.on{background:#fff;color:var(--b);box-shadow:0 2px 6px rgba(15,23,42,.08)}
+.tabs em{font-style:normal;background:#fff;border-radius:999px;padding:1px 6px;font-size:9.5px}
+.tabs svg{width:13px;height:13px}
+/* switch opciones */
+.switch{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0 10px}
+.switch button{font-family:inherit;font-size:11.5px;font-weight:600;height:32px;padding:0 13px;border-radius:8px;border:1px solid var(--ln);background:#fff;color:var(--tx3);cursor:pointer}
+.switch button.on{background:var(--b);border-color:var(--b);color:#fff}
+.opt{display:none}.opt.on{display:block}
+/* cajas */
+.box{background:#fff;border:1px solid var(--ln);border-radius:14px;padding:14px 16px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+.bh{display:flex;align-items:center;gap:9px;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid var(--ln2)}
+.bh h3{margin:0;font-size:12px;font-weight:700;flex:1}
+.bh .ti{width:28px;height:28px;border-radius:8px;background:var(--bs);color:var(--b);display:inline-flex;align-items:center;justify-content:center}
+.bh .ti svg{width:14px;height:14px}
+.btn{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:1px solid #D7E0E9;border-radius:7px;background:#fff;font-family:inherit;font-size:10.5px;font-weight:600;color:#25344C}
+.btn svg{width:12px;height:12px;color:var(--b)}
+.lnk{color:var(--b);font-weight:600;font-size:10.5px}
+.grid2{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:12px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.col{display:flex;flex-direction:column;gap:12px}
+.kv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 16px}
+.kv.c2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.kv small{display:block;font-size:9.5px;font-weight:600;color:var(--mu2);letter-spacing:.04em;text-transform:uppercase;margin-bottom:3px}
+.kv b{font-size:11.5px;font-weight:600;color:var(--tx2)}
+.kv .muted{color:var(--mu2);font-weight:500}
+.person{display:flex;align-items:center;gap:8px}
+.pav{width:28px;height:28px;border-radius:50%;background:var(--bs);color:var(--b);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:0 0 28px}
+.pav.g{background:#efefef;color:var(--g)}
+.person b{display:block;font-size:11.5px}
+.person small{display:block;font-size:10px;color:var(--mu)}
+/* horas por servicio */
+.hs{display:flex;flex-direction:column;gap:10px}
+.hs-r{display:grid;grid-template-columns:24px 1fr auto;gap:9px;align-items:center}
+.hs-r b{font-size:11.5px}
+.hs-r span.v{font-size:10.5px;color:var(--mu)}
+.bar{grid-column:2/4;height:7px;border-radius:999px;background:var(--ln2);display:flex;overflow:hidden}
+.bar i{display:block;height:100%}
+.bar .e{background:#16a34a}.bar .p{background:#2563eb}
+.leg{display:flex;gap:12px;font-size:10px;color:var(--mu);margin-top:4px}
+.leg span{display:inline-flex;align-items:center;gap:5px}
+.leg i{width:9px;height:9px;border-radius:3px;display:inline-block}
+/* atraso */
+.gauge{display:flex;flex-direction:column;gap:11px}
+.gauge div{display:grid;grid-template-columns:1fr 44px;gap:4px 10px;align-items:center;font-size:11px;color:var(--tx3)}
+.gauge .t{height:7px;border-radius:999px;background:var(--ln2);overflow:hidden;grid-column:1}
+.gauge .t i{display:block;height:100%;border-radius:999px}
+.gauge b{text-align:right;color:var(--tx)}
+.verdict{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;background:#FFFBEB;border:1px solid #FDE68A;color:#92400e;font-size:11px;font-weight:600;margin-top:4px}
+.verdict svg{width:16px;height:16px}
+/* stepper workflow */
+.steps{display:grid;grid-template-columns:repeat(6,1fr);gap:0;position:relative}
+.st{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:5px;padding:0 4px}
+.st:before{content:"";position:absolute;top:14px;left:-50%;right:50%;height:2px;background:var(--ln)}
+.st:first-child:before{display:none}
+.st.done:before,.st.now:before{background:var(--b)}
+.st .dot{position:relative;z-index:1;width:30px;height:30px;border-radius:50%;border:2px solid var(--ln);background:#fff;color:var(--mu2);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700}
+.st.done .dot{background:var(--b);border-color:var(--b);color:#fff}
+.st.now .dot{border-color:var(--b);color:var(--b);box-shadow:0 0 0 4px var(--bs)}
+.st .dot svg{width:13px;height:13px}
+.st b{font-size:10.5px;color:var(--tx2)}
+.st small{font-size:9.5px;color:var(--mu)}
+.st.now b{color:var(--b)}
+.st.late small{color:#b91c1c;font-weight:600}
+/* lista acciones */
+.al{display:flex;flex-direction:column}
+.al div{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:11px}
+.al div:last-child{border-bottom:0}
+.al b{display:block;font-weight:600;color:var(--tx2)}
+.al small{display:block;color:var(--mu);font-size:10px}
+.al .d{font-size:10px;color:var(--mu);text-align:right}
+.al .d.late{color:#b91c1c;font-weight:600}
+/* linea de tiempo del proyecto */
+.tl{position:relative;height:74px;margin:8px 4px 0}
+.tl .rail{position:absolute;top:30px;left:0;right:0;height:10px;border-radius:999px;background:var(--ln2)}
+.tl .done{position:absolute;top:30px;left:0;height:10px;border-radius:999px;background:linear-gradient(90deg,var(--b),var(--b3))}
+.tl .today{position:absolute;top:18px;width:2px;height:34px;background:var(--b)}
+.tl .today em{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-style:normal;font-size:9.5px;font-weight:700;color:var(--b);white-space:nowrap}
+.tl .mk{position:absolute;top:24px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:3px}
+.tl .mk i{width:12px;height:12px;background:#fff;border:2px solid var(--b);transform:rotate(45deg);border-radius:2px;margin-top:5px}
+.tl .mk.ok i{background:var(--b)}
+.tl .mk span{margin-top:12px;font-size:9.5px;font-weight:600;color:var(--tx3);white-space:nowrap}
+.tl .mk small{font-size:9px;color:var(--mu2)}
+.tl .ends{position:absolute;top:52px;left:0;right:0;display:flex;justify-content:space-between;font-size:10px;color:var(--mu);font-weight:600}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.tile{border:1px solid var(--ln);border-radius:10px;padding:10px 12px;background:var(--bg)}
+.tile small{display:block;font-size:9.5px;font-weight:600;color:var(--mu2);text-transform:uppercase;letter-spacing:.04em}
+.tile b{font-size:16px}
+.tile span{display:block;font-size:10px;color:var(--mu)}
+.tile.warn{background:#FFFBEB;border-color:#FDE68A}.tile.warn b{color:#92400e}
+.hint{font-size:10.5px;color:var(--mu);background:#fff;border:1px dashed #cbd5e1;border-radius:8px;padding:8px 10px;line-height:1.5}
+.pros{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.pros div{border:1px solid var(--ln);border-radius:10px;padding:10px 12px;font-size:11px;line-height:1.5;color:var(--tx3);background:#fff}
+.pros b{display:block;color:var(--b);margin-bottom:3px}
+.pros ul{margin:0;padding-left:16px}
+@media (max-width:980px){.kpis,.grid3,.tiles{grid-template-columns:1fr 1fr}.grid2,.pros{grid-template-columns:1fr}.kv{grid-template-columns:1fr 1fr}.steps{grid-template-columns:repeat(3,1fr);row-gap:14px}}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="note"><b>Boceto · Vista 360 de proyecto (1348).</b> Arriba, el header nuevo del proyecto (igual para todas las pestañas). Abajo, tres opciones para la pestaña Resumen, todas <b>sin</b> la card "Servicios y normas" (los servicios y normas pasan al header). Datos del proyecto reales; contacto y domicilio son de ejemplo.</div>
+
+<div class="crumb">Proyectos › CEVEN SA › Vista 360 › <b>(1348) Implementacion ISO 9001:2026</b></div>
+
+<!-- ======================= HEADER ======================= -->
+<div class="hd">
+  <div class="av">II</div>
+  <div class="hd-main">
+    <div class="hd-l1">
+      <h1>(1348) Implementacion ISO 9001:2026</h1>
+      <span class="sep"></span>
+      <span class="svcs" title="Servicios">
+        <span class="svc co" title="Consultoría · 100 h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span>
+        <span class="svc au" title="Auditoría · 50 h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 12l2 2 4-4"/></svg></span>
+        <span class="svc ca" title="Capacitación · 50 h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16 4a3 3 0 0 1 0 6M21 20a5 5 0 0 0-4-5"/></svg></span>
+      </span>
+      <span class="sep"></span>
+      <span class="nrm">ISO 9001:2015</span><span class="nrm">ISO 14001:2015</span><span class="nrm">ISO 45001:2018</span>
+      <span class="sep"></span>
+      <span class="bd ok"><i></i>En curso</span>
+      <span class="bd ok"><i></i>Riesgo bajo</span>
+    </div>
+    <div class="hd-l2">
+      <span class="cli"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1M14 9h1M9 13h1M14 13h1M9 17h6"/></svg>CEVEN SA</span>
+      <span title="Contacto principal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>María López · Gerente de Calidad</span>
+      <a href="#" title="Llamar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>+54 11 4567-8900</a>
+      <a href="#" title="Enviar mail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>mlopez@ceven.com.ar</a>
+      <a href="#" class="map" title="Ver ubicación en Google Maps"><span class="pin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg></span>Av. Corrientes 1234, CABA, Buenos Aires</a>
+    </div>
+  </div>
+  <div class="hd-r">
+    <div class="bell"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg><b>3</b></div>
+    <div class="next"><span class="ic"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></span><div><small>Próxima acción</small><b>19/10/2026</b></div></div>
+  </div>
+</div>
+
+<div class="kpis">
+  <div class="kpi"><span class="ic"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><div><small>Horas proyectadas</small><b>200</b><span>0 ejecutadas · 0 programadas</span></div></div>
+  <div class="kpi"><span class="ic"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg></span><div><small>Avance horas</small><b>0%</b><span>200 h disponibles</span></div></div>
+  <div class="kpi"><span class="ic"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 5h8M13 12h8M13 19h8M3 17l2 2 4-4M3 7l2 2 4-4"/></svg></span><div><small>Avance plan</small><b>67%</b><span>2 de 3 acciones cumplidas</span></div></div>
+  <div class="kpi"><span class="ic"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/></svg></span><div><small>Acciones vencidas</small><b>0</b><span>44 días para el fin</span></div></div>
+</div>
+
+<div class="tabs">
+  <span class="on">Resumen</span><span>Servicios</span><span>Normas</span><span>Equipo</span><span>Lanzamiento</span><span>Parte logístico <em>45</em></span><span>Acciones <em>2</em></span><span>Agenda</span><span>Administración</span><span>Documentos</span>
+</div>
+
+<div class="switch">
+  <button class="on" data-o="a">Opción A · Ficha + seguimiento</button>
+  <button data-o="b">Opción B · Etapas del proyecto</button>
+  <button data-o="c">Opción C · Tablero de control</button>
+</div>
+
+<!-- ======================= OPCION A ======================= -->
+<section class="opt on" id="o-a">
+  <div class="grid2">
+    <div class="col">
+      <div class="box">
+        <div class="bh"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span><h3>Datos del proyecto</h3><span class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>Editar</span></div>
+        <div class="kv">
+          <div><small>Referencia</small><b>Normas Iso 9001</b></div>
+          <div><small>Tipo de proyecto</small><b>Implementación</b></div>
+          <div><small>Nivel de riesgo</small><b>Bajo</b></div>
+          <div><small>Fecha de inicio</small><b>01/10/2026</b></div>
+          <div><small>Fecha de fin</small><b>30/11/2026</b></div>
+          <div><small>Inicio real</small><b>16/10/2026</b></div>
+          <div><small>Límite de lanzamiento</small><b>20/10/2026</b></div>
+          <div><small>Fecha de alta</small><b>16/10/2026 <span class="muted">· svocaturo</span></b></div>
+          <div><small>Duración</small><b>61 días <span class="muted">· 44 restantes</span></b></div>
+        </div>
+      </div>
+      <div class="box">
+        <div class="bh"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16 4a3 3 0 0 1 0 6M21 20a5 5 0 0 0-4-5"/></svg></span><h3>Equipo</h3><span class="lnk">Ver equipo ›</span></div>
+        <div class="kv c2">
+          <div class="person"><span class="pav">AA</span><div><b>Alfonso, Ana Julia</b><small>Analista de proyecto</small></div></div>
+          <div class="person"><span class="pav g">JB</span><div><b>Bracamonte, Jorge</b><small>Consultor líder</small></div></div>
+          <div class="person"><span class="pav g">MC</span><div><b>Castro, Marina</b><small>Consultor</small></div></div>
+          <div class="person"><span class="pav g">JP</span><div><b>Pérez, Juan</b><small>Auditor</small></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="box">
+        <div class="bh"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><h3>¿Vamos atrasados?</h3></div>
+        <div class="gauge">
+          <div><span>Tiempo transcurrido</span><b>27%</b><span class="t"><i style="width:27%;background:#94a3b8"></i></span></div>
+          <div><span>Plan cumplido (acciones)</span><b>67%</b><span class="t"><i style="width:67%;background:var(--b)"></i></span></div>
+          <div><span>Horas ejecutadas</span><b>0%</b><span class="t"><i style="width:0;background:var(--b3)"></i></span></div>
+        </div>
+        <div class="verdict"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>El plan va adelantado, pero todavía no hay horas cargadas.</div>
+      </div>
+      <div class="box">
+        <div class="bh"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span><h3>Horas por servicio</h3></div>
+        <div class="hs">
+          <div class="hs-r"><span class="svc co"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="7" width="18" height="13" rx="2"/></svg></span><b>Consultoría</b><span class="v">0 + 0 / 100 h</span><span class="bar"></span></div>
+          <div class="hs-r"><span class="svc au"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="5" y="4" width="14" height="17" rx="2"/></svg></span><b>Auditoría</b><span class="v">0 + 0 / 50 h</span><span class="bar"></span></div>
+          <div class="hs-r"><span class="svc ca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="3"/></svg></span><b>Capacitación</b><span class="v">0 + 0 / 50 h</span><span class="bar"></span></div>
+        </div>
+        <div class="leg"><span><i style="background:#16a34a"></i>Ejecutadas</span><span><i style="background:#2563eb"></i>Programadas</span><span><i style="background:var(--ln2);border:1px solid var(--ln)"></i>Disponibles 200 h</span></div>
+      </div>
+      <div class="box">
+        <div class="bh"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 12l2 2 4-4"/></svg></span><h3>Próximas acciones</h3><span class="lnk">Ver todas ›</span></div>
+        <div class="al">
+          <div><span class="pav g">JB</span><span><b>Carga del plan estratégico</b><small>Tarea · Consultor líder</small></span><span class="d">19/10</span></div>
+          <div><span class="pav">AA</span><span><b>Reunión de lanzamiento</b><small>Tarea · Analista</small></span><span class="d">20/10</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pros">
+    <div><b>Qué cambia</b><ul><li>Datos del proyecto en 3 columnas, más compacto (sin las secciones General / Plazo / Gestión / Situación / Lanzamiento).</li><li>Se suma Inicio real y Duración (días totales y restantes).</li><li>Card Equipo con analista, consultor líder y resto del equipo.</li><li>¿Vamos atrasados? compara tiempo, plan y horas, con una frase de conclusión.</li><li>Horas por servicio con el ícono de cada servicio; Próximas acciones del proyecto.</li></ul></div>
+    <div><b>Para tener en cuenta</b><ul><li>Es la evolución más directa del Resumen actual: misma disposición de dos columnas.</li><li>Todo sale de datos que ya existen (proyecto, equipo, horas, acciones).</li></ul></div>
+  </div>
+</section>
+
+<!-- ======================= OPCION B ======================= -->
+<section class="opt" id="o-b">
+  <div class="box">
+    <div class="bh"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg></span><h3>Etapas del proyecto</h3><span class="bd run"><i></i>Etapa actual: Lanzamiento</span></div>
+    <div class="steps">
+      <div class="st done"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span><b>Alta</b><small>16/10 · svocaturo</small></div>
+      <div class="st done"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span><b>Analista asignado</b><small>16/10 · Alfonso</small></div>
+      <div class="st done"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span><b>Consultores</b><small>16/10 · 3 asignados</small></div>
+      <div class="st now"><span class="dot">4</span><b>Lanzamiento</b><small>límite 20/10</small></div>
+      <div class="st"><span class="dot">5</span><b>Plan estratégico</b><small>45 ítems · 67%</small></div>
+      <div class="st"><span class="dot">6</span><b>Cierre</b><small>30/11/2026</small></div>
+    </div>
+  </div>
+  <div class="grid3" style="margin-top:12px">
+    <div class="box">
+      <div class="bh"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span><h3>Datos del proyecto</h3><span class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>Editar</span></div>
+      <div class="kv c2">
+        <div><small>Referencia</small><b>Normas Iso 9001</b></div>
+        <div><small>Tipo</small><b>Implementación</b></div>
+        <div><small>Inicio</small><b>01/10/2026</b></div>
+        <div><small>Fin</small><b>30/11/2026</b></div>
+        <div><small>Inicio real</small><b>16/10/2026</b></div>
+        <div><small>Alta</small><b>16/10 <span class="muted">· svocaturo</span></b></div>
+      </div>
+      <div style="border-top:1px solid var(--ln2);margin-top:12px;padding-top:12px" class="kv c2">
+        <div class="person"><span class="pav">AA</span><div><b>Alfonso, Ana Julia</b><small>Analista</small></div></div>
+        <div class="person"><span class="pav g">JB</span><div><b>Bracamonte, Jorge</b><small>Consultor líder</small></div></div>
+      </div>
+    </div>
+    <div class="box">
+      <div class="bh"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span><h3>Horas por servicio</h3></div>
+      <div class="hs">
+        <div class="hs-r"><span class="svc co"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="7" width="18" height="13" rx="2"/></svg></span><b>Consultoría</b><span class="v">0 / 100 h</span><span class="bar"></span></div>
+        <div class="hs-r"><span class="svc au"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="5" y="4" width="14" height="17" rx="2"/></svg></span><b>Auditoría</b><span class="v">0 / 50 h</span><span class="bar"></span></div>
+        <div class="hs-r"><span class="svc ca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="3"/></svg></span><b>Capacitación</b><span class="v">0 / 50 h</span><span class="bar"></span></div>
+      </div>
+      <div class="leg"><span><i style="background:#16a34a"></i>Ejecutadas</span><span><i style="background:#2563eb"></i>Programadas</span></div>
+      <div class="gauge" style="border-top:1px solid var(--ln2);margin-top:12px;padding-top:12px">
+        <div><span>Tiempo transcurrido</span><b>27%</b><span class="t"><i style="width:27%;background:#94a3b8"></i></span></div>
+        <div><span>Plan cumplido</span><b>67%</b><span class="t"><i style="width:67%;background:var(--b)"></i></span></div>
+      </div>
+    </div>
+    <div class="box">
+      <div class="bh"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/></svg></span><h3>Pendientes del proyecto</h3><span class="lnk">Acciones ›</span></div>
+      <div class="al">
+        <div><span class="bd warn" style="height:19px">Hoy+2</span><span><b>Carga del plan estratégico</b><small>Bracamonte, Jorge</small></span><span class="d">19/10</span></div>
+        <div><span class="bd warn" style="height:19px">Hoy+3</span><span><b>Reunión de lanzamiento</b><small>Alfonso, Ana Julia</small></span><span class="d">20/10</span></div>
+        <div><span class="bd neu" style="height:19px">Plan</span><span><b>4.3 Alcance del sistema</b><small>sin fechas</small></span><span class="d">-</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="pros">
+    <div><b>Qué cambia</b><ul><li>Arriba, las etapas del flujo del proyecto (Alta → Analista → Consultores → Lanzamiento → Plan → Cierre) con fecha y quién, y la etapa actual marcada.</li><li>Tres columnas: datos + responsables, horas y avance, pendientes.</li></ul></div>
+    <div><b>Para tener en cuenta</b><ul><li>Las etapas salen de las acciones del flujo que ya se generan (asignación de analista, de consultor, lanzamiento, carga del plan).</li><li>Es la que mejor explica en qué paso está el proyecto a quien entra por primera vez.</li></ul></div>
+  </div>
+</section>
+
+<!-- ======================= OPCION C ======================= -->
+<section class="opt" id="o-c">
+  <div class="box">
+    <div class="bh"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></span><h3>Línea de tiempo</h3><span class="bd warn"><i></i>Lanzamiento vence en 3 días</span></div>
+    <div class="tiles">
+      <div class="tile"><small>Plazo</small><b>61 días</b><span>01/10 → 30/11/2026</span></div>
+      <div class="tile"><small>Restan</small><b>44 días</b><span>27% del tiempo usado</span></div>
+      <div class="tile warn"><small>Lanzamiento</small><b>20/10</b><span>pendiente · en 3 días</span></div>
+      <div class="tile"><small>Próximo hito</small><b>01/12</b><span>Auditoría interna</span></div>
+    </div>
+    <div class="tl">
+      <div class="rail"></div><div class="done" style="width:27%"></div>
+      <div class="today" style="left:27%"><em>Hoy 17/10</em></div>
+      <div class="mk ok" style="left:25%"><i></i><span>Alta</span></div>
+      <div class="mk" style="left:31.5%"><i></i><span>Lanzamiento</span></div>
+      <div class="mk" style="left:60%"><i></i><span>Visita 2</span></div>
+      <div class="mk" style="left:98%"><i></i><span>Fin</span></div>
+      <div class="ends"><span>01/10</span><span>30/11</span></div>
+    </div>
+  </div>
+  <div class="grid2" style="margin-top:12px">
+    <div class="box">
+      <div class="bh"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span><h3>Datos y equipo</h3><span class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>Editar</span></div>
+      <div class="kv">
+        <div><small>Referencia</small><b>Normas Iso 9001</b></div>
+        <div><small>Tipo</small><b>Implementación</b></div>
+        <div><small>Alta</small><b>16/10 <span class="muted">· svocaturo</span></b></div>
+      </div>
+      <div class="kv c2" style="border-top:1px solid var(--ln2);margin-top:12px;padding-top:12px">
+        <div class="person"><span class="pav">AA</span><div><b>Alfonso, Ana Julia</b><small>Analista de proyecto</small></div></div>
+        <div class="person"><span class="pav g">JB</span><div><b>Bracamonte, Jorge</b><small>Consultor líder</small></div></div>
+        <div class="person"><span class="pav g">MC</span><div><b>Castro, Marina</b><small>Consultor</small></div></div>
+        <div class="person"><span class="pav g">JP</span><div><b>Pérez, Juan</b><small>Auditor</small></div></div>
+      </div>
+    </div>
+    <div class="box">
+      <div class="bh"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg></span><h3>Horas y avance por servicio</h3></div>
+      <div class="hs">
+        <div class="hs-r"><span class="svc co"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="7" width="18" height="13" rx="2"/></svg></span><b>Consultoría <span class="muted" style="font-weight:500;color:var(--mu)">· plan 67%</span></b><span class="v">0 / 100 h</span><span class="bar"></span></div>
+        <div class="hs-r"><span class="svc au"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="5" y="4" width="14" height="17" rx="2"/></svg></span><b>Auditoría</b><span class="v">0 / 50 h</span><span class="bar"></span></div>
+        <div class="hs-r"><span class="svc ca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="3"/></svg></span><b>Capacitación</b><span class="v">0 / 50 h</span><span class="bar"></span></div>
+      </div>
+      <div class="leg"><span><i style="background:#16a34a"></i>Ejecutadas</span><span><i style="background:#2563eb"></i>Programadas</span><span><i style="background:var(--ln2);border:1px solid var(--ln)"></i>Disponibles</span></div>
+      <div class="verdict" style="margin-top:12px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>27% del tiempo usado y 0% de horas ejecutadas.</div>
+    </div>
+  </div>
+  <div class="pros">
+    <div><b>Qué cambia</b><ul><li>Línea de tiempo del proyecto con hoy, lanzamiento, visitas/hitos y fin, más 4 indicadores de plazo.</li><li>Datos y equipo en una sola card; horas y avance por servicio con conclusión.</li></ul></div>
+    <div><b>Para tener en cuenta</b><ul><li>Pone el foco en plazos y fechas clave; las visitas aparecen cuando se arme la Agenda.</li><li>Es la más "gerencial": se lee de un vistazo.</li></ul></div>
+  </div>
+</section>
+
+<div class="pros" style="margin-top:16px">
+  <div><b>Header del proyecto (todas las opciones)</b><ul>
+    <li>Línea 1: (código) nombre · íconos de servicios (con horas en el tooltip) · normas · estado · riesgo.</li>
+    <li>Línea 2: cliente · contacto principal (nombre y cargo) · teléfono (clic para llamar) · email (clic para escribir) · domicilio con el pin de Google Maps, igual que en la Vista 360 de cliente.</li>
+    <li>Si el cliente no tiene contacto principal o domicilio, ese dato no se muestra.</li>
+  </ul></div>
+  <div><b>Pestaña Resumen</b><ul>
+    <li>Sale la card "Servicios y normas" (queda en el header y en las pestañas Servicios y Normas).</li>
+    <li>Los KPIs, la barra de pestañas, la campanita y la próxima acción quedan como están.</li>
+  </ul></div>
+</div>
+
+</div>
+<script>
+document.querySelectorAll(".switch button").forEach(function(b){
+  b.addEventListener("click",function(){
+    document.querySelectorAll(".switch button").forEach(function(x){x.classList.toggle("on",x===b)});
+    document.querySelectorAll(".opt").forEach(function(o){o.classList.toggle("on",o.id==="o-"+b.getAttribute("data-o"))});
+  });
+});
+</script>
+</body>
+</html>

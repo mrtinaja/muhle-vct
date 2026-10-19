@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>V360 proyecto · servicios (opciones)</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--b:#66062D;--b3:#CF6F92;--bs:#F6EAEF;--bs2:#FBF7F9;--bb:#E5C9D4;--g:#4A4849;--tx:#1f2937;--tx2:#334155;--tx3:#475569;--mu:#64748b;--mu2:#94a3b8;--ln:#e2e8f0;--ln2:#eef2f6;--bg:#f8fafc;--font:"Gotham","Montserrat","Segoe UI",Arial,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:#eceff3;font-family:var(--font);color:var(--tx);font-size:12px}
+svg{display:block}
+.page{max-width:1440px;margin:0 auto;padding:18px 16px 60px}
+.note{background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:10px 14px;color:#713f12;line-height:1.5;margin-bottom:12px}
+.note b{color:#5b2c06}
+.switch{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
+.switch button{font-family:inherit;font-size:11.5px;font-weight:600;height:32px;padding:0 13px;border-radius:8px;border:1px solid var(--ln);background:#fff;color:var(--tx3);cursor:pointer}
+.switch button.on{background:var(--b);border-color:var(--b);color:#fff}
+/* tabs */
+.tabs{background:#E3E6EA;border-radius:11px;padding:4px;display:flex;gap:2px;flex-wrap:wrap;margin-bottom:12px}
+.tab{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:8px;font-size:10.5px;font-weight:600;color:var(--tx3);cursor:pointer;position:relative}
+.tab.on{background:#fff;color:var(--b);box-shadow:0 2px 6px rgba(15,23,42,.08)}
+.tab em{font-style:normal;background:#fff;border-radius:999px;padding:1px 6px;font-size:9.5px}
+.tab.off{color:#b8c0cc;cursor:not-allowed}
+.tab.off svg{opacity:.6}
+.tab svg{width:13px;height:13px}
+.tab .tip{display:none;position:absolute;top:36px;left:0;z-index:5;width:240px;background:#1f2937;color:#fff;font-weight:500;font-size:10.5px;line-height:1.4;padding:7px 9px;border-radius:7px}
+.tab.off:hover .tip{display:block}
+/* comunes */
+.box{background:#fff;border:1px solid var(--ln);border-radius:14px;padding:14px 16px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+.box+.box{margin-top:12px}
+.bh{display:flex;align-items:center;gap:9px;padding-bottom:10px;margin-bottom:12px;border-bottom:1px solid var(--ln2)}
+.bh h3{margin:0;font-size:12.5px;font-weight:700;flex:1}
+.ti{width:28px;height:28px;border-radius:8px;background:var(--bs);color:var(--b);display:inline-flex;align-items:center;justify-content:center}
+.ti svg,.ic svg{width:14px;height:14px}
+.btn{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 11px;border:1px solid #D7E0E9;border-radius:7px;background:#fff;font-family:inherit;font-size:11px;font-weight:600;color:#25344C;cursor:pointer}
+.btn .bi{width:18px;height:18px;border-radius:5px;background:var(--bs);color:var(--b);display:inline-flex;align-items:center;justify-content:center;font-size:13px}
+.srch{position:relative;width:260px}
+.srch input{width:100%;height:30px;border:1px solid #cbd5e1;border-radius:7px;padding:0 10px 0 30px;font-family:inherit;font-size:11px}
+.srch svg{position:absolute;left:9px;top:8px;width:14px;height:14px;color:var(--mu2)}
+.tb{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.sp{flex:1}
+.svc{flex:0 0 26px;width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff}
+.svc svg{width:12px;height:12px}
+.svc.co{background:var(--b)}.svc.au{background:var(--g)}.svc.ca{background:var(--b3)}
+.bd{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:999px;font-size:9.5px;font-weight:600;border:1px solid;white-space:nowrap}
+.bd i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.bd.ok{color:#166534;background:#ECFDF3;border-color:#BBF7D0}.bd.pl{color:#92400e;background:#FFFBEB;border-color:#FDE68A}.bd.done{color:var(--tx3);background:var(--bg);border-color:var(--ln)}
+.av{width:22px;height:22px;border-radius:50%;background:#efefef;color:var(--g);font-size:9px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-right:2px}
+.av.a{background:var(--bs);color:var(--b)}
+.nr{display:inline-flex;height:19px;align-items:center;padding:0 6px;border-radius:5px;background:var(--bs);border:1px solid var(--bb);color:var(--b);font-size:9px;font-weight:600;margin:1px 2px 1px 0;white-space:nowrap}
+.bar{height:6px;border-radius:999px;background:var(--ln2);overflow:hidden;display:flex}
+.bar i{display:block;height:100%}.bar .e{background:#16a34a}.bar .p{background:#3b82f6}
+.pl{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--tx3)}
+.pl .bar{flex:1;min-width:50px}
+.pl .bar i{background:var(--b)}
+.pl.none{color:var(--mu2)}
+.dots{position:relative;width:28px;height:28px;border:1px solid var(--ln);border-radius:7px;background:#fff;display:inline-flex;align-items:center;justify-content:center;color:var(--tx3);font-size:15px;cursor:pointer}
+.menu{position:absolute;right:0;top:32px;z-index:10;background:#fff;border:1px solid var(--ln);border-radius:9px;box-shadow:0 10px 24px rgba(15,23,42,.14);padding:5px;min-width:190px;display:none;text-align:left}
+.dots.open .menu{display:block}
+.menu div{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;font-size:11px;color:var(--tx2);font-weight:500;white-space:nowrap}
+.menu div:hover{background:var(--bs2);color:var(--b)}
+.menu svg{width:13px;height:13px;color:var(--b)}
+.muted{color:var(--mu2)}
+.opt{display:none}.opt.on{display:block}
+table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
+th{background:var(--bg);font-size:10.5px;font-weight:600;color:var(--tx3);text-align:left;padding:8px 10px;border-bottom:1px solid var(--ln)}
+td{padding:8px 10px;border-bottom:1px solid #f1f5f9;font-size:11px;color:var(--tx2);vertical-align:middle}
+.tw{border:1px solid var(--ln);border-radius:12px;overflow:visible}
+th:first-child{border-top-left-radius:12px}th:last-child{border-top-right-radius:12px}
+.c{text-align:center}.r{text-align:right}
+.nm b{display:block;font-weight:600;color:var(--tx)}
+.nm small{display:block;color:var(--mu);font-size:10px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* A: grilla unica agrupada */
+tr.grp td{background:var(--bs2);border-bottom:1px solid #F1E4EA;padding:9px 10px;cursor:pointer}
+tr.grp .gh{display:flex;align-items:center;gap:10px}
+tr.grp .gh b{font-size:12px;color:var(--b)}
+tr.grp .gh small{color:var(--mu);font-size:10.5px}
+tr.grp .gh .car{width:16px;height:16px;color:var(--b);transition:transform .15s}
+tr.grp.closed .car{transform:rotate(-90deg)}
+tr.inst td:first-child{padding-left:44px}
+tr.grp .ghbar{width:160px}
+/* B: maestro-detalle */
+.md{display:grid;grid-template-columns:360px minmax(0,1fr);gap:12px;align-items:start}
+.lst{border:1px solid var(--ln);border-radius:12px;overflow:hidden;background:#fff}
+.lst h4{margin:0;padding:9px 12px;background:var(--bs2);font-size:11px;color:var(--b);display:flex;align-items:center;gap:8px;border-bottom:1px solid #F1E4EA}
+.lst h4 span{margin-left:auto;font-size:10px;color:var(--mu);font-weight:600}
+.li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 8px;padding:9px 12px;border-bottom:1px solid #f1f5f9;cursor:pointer}
+.li:hover{background:#fcfcfd}
+.li.sel{background:var(--bs2);box-shadow:inset 3px 0 0 var(--b)}
+.li b{font-size:11.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li small{grid-column:1;font-size:10px;color:var(--mu)}
+.li .bd{grid-row:1/3;grid-column:2;align-self:center}
+.det .kv{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 16px;margin-bottom:12px}
+.kv small{display:block;font-size:9.5px;font-weight:600;color:var(--mu2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+.kv b{font-size:12px;font-weight:600}
+.sec{font-size:9.5px;font-weight:700;color:var(--b);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 8px;padding-top:12px;border-top:1px solid var(--ln2)}
+.det-head{display:flex;align-items:center;gap:10px}
+.det-head h3{margin:0;font-size:13.5px;flex:1}
+.mini{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.mini div{border:1px solid var(--ln);border-radius:10px;padding:9px 11px;background:var(--bg)}
+.mini small{display:block;font-size:9.5px;color:var(--mu2);font-weight:600;text-transform:uppercase}
+.mini b{font-size:15px}
+/* C: chips por tipo */
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 12px 0 6px;border-radius:999px;border:1px solid var(--ln);background:#fff;font-size:11px;font-weight:600;color:var(--tx3);cursor:pointer}
+.chip .svc{width:22px;height:22px;flex-basis:22px}
+.chip em{font-style:normal;background:var(--bg);border-radius:999px;padding:1px 7px;font-size:10px}
+.chip.on{border-color:var(--b);background:var(--bs2);color:var(--b)}
+.chip.on em{background:#fff}
+.chip small{font-weight:500;color:var(--mu);font-size:10px}
+.pros{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.pros div{border:1px solid var(--ln);border-radius:10px;padding:10px 12px;font-size:11px;line-height:1.5;color:var(--tx3);background:#fff}
+.pros b{display:block;color:var(--b);margin-bottom:3px}
+.pros ul{margin:0;padding-left:16px}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1f2937;color:#fff;padding:9px 14px;border-radius:9px;font-size:11.5px;display:none;z-index:20}
+@media (max-width:980px){.md{grid-template-columns:1fr}.pros{grid-template-columns:1fr}.det .kv{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="page">
+<div class="note"><b>Boceto · pestaña Servicios (3 opciones).</b> Proyecto de ejemplo con 1 consultoría, 5 auditorías y 2 capacitaciones. En todas: <b>un solo botón "Agregar servicio"</b> (el desplegable del modal ofrece Auditoría o Capacitación) y la pestaña del plan <b>deshabilitada</b> hasta elegir <b>⋮ → Ver plan</b> en un servicio. Al hacerlo, la pestaña se habilita con el nombre que corresponde: "Plan estratégico", "Plan de auditoría · …" o "Plan de capacitación · …". Probalo con los ⋮. Desde "Gestionar" en la campanita o en Acciones, la pestaña se abre directa en el plan de esa acción.</div>
+
+<div class="switch">
+  <button class="on" data-o="a">Opción A · Grilla única agrupada por tipo</button>
+  <button data-o="b">Opción B · Lista + detalle del servicio</button>
+  <button data-o="c">Opción C · Filtro por tipo (chips) + grilla</button>
+</div>
+
+<div class="tabs" id="tabs">
+  <span class="tab">Resumen</span><span class="tab on">Servicios</span><span class="tab">Normas</span><span class="tab">Equipo</span><span class="tab">Lanzamiento</span>
+  <span class="tab off" id="plantab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 5h8M13 12h8M13 19h8M3 17l2 2 4-4M3 7l2 2 4-4"/></svg><span id="plantxt">Plan</span><span class="tip">Se habilita desde un servicio: ⋮ → Ver plan, o con "Gestionar" en una acción del plan.</span></span>
+  <span class="tab">Acciones <em>2</em></span><span class="tab">Agenda</span><span class="tab">Administración</span><span class="tab">Documentos</span>
+</div>
+
+<div id="app"></div>
+
+<div class="pros">
+  <div><b>En las tres opciones</b><ul>
+    <li>Un solo botón "Agregar servicio": el modal ofrece Auditoría o Capacitación (la consultoría solo se carga en el alta).</li>
+    <li>⋮ de cada servicio: Editar y Ver plan (Plan estratégico para consultoría; Plan de auditoría / de capacitación para cada instancia).</li>
+    <li>La pestaña del plan arranca deshabilitada (gris, con la ayuda al pasar el mouse) y toma el nombre del plan elegido.</li>
+    <li>"Gestionar" desde la campanita o la pestaña Acciones abre directamente la pestaña con el plan de esa acción.</li>
+  </ul></div>
+  <div><b>Datos por instancia (ya existen en el modelo)</b><ul>
+    <li>Nombre, lugar, fechas, horas proyectadas / ejecutadas, estado.</li>
+    <li>Equipo de la instancia (auditor, capacitador) y sus normas.</li>
+    <li>Avance del plan de la instancia (sin plan hasta que se definan los planes de auditoría y capacitación).</li>
+  </ul></div>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var I={co:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+au:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 12l2 2 4-4"/></svg>',
+ca:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16 4a3 3 0 0 1 0 6"/></svg>',
+br:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+ed:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+pl:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 5h8M13 12h8M13 19h8M3 17l2 2 4-4M3 7l2 2 4-4"/></svg>',
+se:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>',
+car:'<svg class="car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>'};
+var TIPOS=[{t:'co',nom:'Consultoría',plan:'Plan estratégico'},{t:'au',nom:'Auditorías',plan:'Plan de auditoría'},{t:'ca',nom:'Capacitaciones',plan:'Plan de capacitación'}];
+var S=[
+ {t:'co',n:'Consultoría',l:'Sede central · Munro',f:'01/10 al 30/11',eq:[['JB',0],['MC',0]],nr:['ISO 9001:2015','ISO 14001:2015'],hp:120,he:16,pa:67,st:['ok','En curso']},
+ {t:'au',n:'Polo Bahía Blanca',l:'Av. San Martín 2597, Ingeniero White',f:'06/10',eq:[['JP',0]],nr:['ISO 9001:2015'],hp:8,he:8,pa:null,st:['done','Realizada']},
+ {t:'au',n:'ACINDAR 9001 y 22000',l:'Ruta Provincial 21 km 273, Villa Constitución',f:'18/10 al 19/10',eq:[['JP',0],['RS',0]],nr:['ISO 9001:2015','ISO 22000:2018'],hp:16,he:0,pa:null,st:['pl','Programada']},
+ {t:'au',n:'Campana · ISO 9001 y 22000',l:'Av. Larrabure 115, Campana',f:'03/11 al 04/11',eq:[['RS',0]],nr:['ISO 9001:2015','ISO 22000:2018'],hp:16,he:0,pa:null,st:['pl','Programada']},
+ {t:'au',n:'Sede San Justo',l:'Monseñor Bufano 4550, La Tablada',f:'12/11',eq:[['JP',0]],nr:['ISO 9001:2015','ISO 14001:2015'],hp:8,he:0,pa:null,st:['pl','Programada']},
+ {t:'au',n:'Farmacovigilancia Munro',l:'Julián S. Agüero 2830, Munro',f:'24/11',eq:[],nr:['ANMAT'],hp:8,he:0,pa:null,st:['pl','Programada']},
+ {t:'ca',n:'Auditores internos ISO 9001',l:'Virtual',f:'15/10',eq:[['TV',0]],nr:['ISO 9001:2015'],hp:16,he:16,pa:null,st:['done','Realizada']},
+ {t:'ca',n:'Sensibilización 22000',l:'Planta Campana',f:'20/11',eq:[['TV',0]],nr:['ISO 22000:2018'],hp:8,he:0,pa:null,st:['pl','Programada']}];
+S.forEach(function(s,i){s.id=i});
+function tipo(t){return TIPOS.filter(function(x){return x.t===t})[0]}
+function sum(t,k){return S.filter(function(s){return s.t===t}).reduce(function(a,s){return a+s[k]},0)}
+function cnt(t){return S.filter(function(s){return s.t===t}).length}
+function menu(s){return '<span class="dots" data-dots>⋮<span class="menu"><div>'+I.ed+'Editar</div><div data-ver="'+s.id+'">'+I.pl+'Ver '+(s.t==='co'?'plan estratégico':(s.t==='au'?'plan de auditoría':'plan de capacitación'))+'</div></span></span>'}
+function eq(s){return s.eq.length?s.eq.map(function(e){return '<span class="av">'+e[0]+'</span>'}).join(''):'<span class="muted">-</span>'}
+function nr(s){return s.nr.map(function(n){return '<span class="nr">'+n+'</span>'}).join('')}
+function hbar(s){return '<div class="bar"><i class="e" style="width:'+(s.hp?s.he*100/s.hp:0)+'%"></i></div>'}
+function plan(s){return s.pa==null?'<span class="pl none">Sin plan</span>':'<span class="pl"><span class="bar"><i style="width:'+s.pa+'%"></i></span>'+s.pa+'%</span>'}
+function toolbar(ph){return '<div class="tb"><div class="srch">'+I.se+'<input placeholder="'+ph+'"></div><span class="sp"></span><button class="btn"><span class="bi">+</span>Agregar servicio</button></div>'}
+
+function optA(){
+  var h='<div class="box"><div class="bh"><span class="ti">'+I.br+'</span><h3>Servicios del proyecto ('+S.length+')</h3></div>'+toolbar('Buscar servicio, lugar, norma...')
+   +'<div class="tw"><table><colgroup><col><col style="width:110px"><col style="width:90px"><col style="width:20%"><col style="width:96px"><col style="width:120px"><col style="width:104px"><col style="width:46px"></colgroup>'
+   +'<thead><tr><th>Servicio</th><th class="c">Fecha</th><th class="c">Equipo</th><th>Normas</th><th class="r">Horas</th><th>Plan</th><th class="c">Estado</th><th></th></tr></thead><tbody>';
+  TIPOS.forEach(function(T){
+    if(!cnt(T.t))return;
+    var hp=sum(T.t,'hp'),he=sum(T.t,'he');
+    h+='<tr class="grp" data-g="'+T.t+'"><td colspan="8"><div class="gh">'+I.car+'<span class="svc '+T.t+'">'+I[T.t]+'</span><b>'+T.nom+' ('+cnt(T.t)+')</b><small>'+he+' / '+hp+' h ejecutadas</small><span class="sp"></span><div class="bar ghbar"><i class="e" style="width:'+(hp?he*100/hp:0)+'%"></i></div></div></td></tr>';
+    S.filter(function(s){return s.t===T.t}).forEach(function(s){
+      h+='<tr class="inst" data-p="'+T.t+'"><td class="nm"><b>'+s.n+'</b><small>'+s.l+'</small></td><td class="c">'+s.f+'</td><td class="c">'+eq(s)+'</td><td>'+nr(s)+'</td><td class="r">'+s.he+' / '+s.hp+' h</td><td>'+plan(s)+'</td><td class="c"><span class="bd '+s.st[0]+'"><i></i>'+s.st[1]+'</span></td><td class="c">'+menu(s)+'</td></tr>';
+    });
+  });
+  h+='</tbody></table></div></div>';
+  return h;
+}
+function optB(){
+  var h='<div class="box"><div class="bh"><span class="ti">'+I.br+'</span><h3>Servicios del proyecto ('+S.length+')</h3><button class="btn"><span class="bi">+</span>Agregar servicio</button></div><div class="md"><div class="lst">';
+  TIPOS.forEach(function(T){
+    if(!cnt(T.t))return;
+    h+='<h4><span class="svc '+T.t+'" style="width:20px;height:20px;flex-basis:20px">'+I[T.t]+'</span>'+T.nom+' ('+cnt(T.t)+')<span>'+sum(T.t,'he')+' / '+sum(T.t,'hp')+' h</span></h4>';
+    S.filter(function(s){return s.t===T.t}).forEach(function(s){
+      h+='<div class="li'+(s.id===2?' sel':'')+'" data-li="'+s.id+'"><b>'+s.n+'</b><span class="bd '+s.st[0]+'"><i></i>'+s.st[1]+'</span><small>'+s.f+' · '+s.hp+' h</small></div>';
+    });
+  });
+  h+='</div><div class="box det" id="det" style="margin:0"></div></div></div>';
+  return h;
+}
+function det(id){
+  var s=S[id],T=tipo(s.t);
+  return '<div class="det-head"><span class="svc '+s.t+'">'+I[s.t]+'</span><h3>'+s.n+'</h3><span class="bd '+s.st[0]+'"><i></i>'+s.st[1]+'</span>'+menu(s)+'</div>'
+   +'<div class="sec" style="border-top:0;padding-top:0;margin-top:12px">'+(s.t==='co'?'Consultoría':s.t==='au'?'Auditoría':'Capacitación')+'</div>'
+   +'<div class="kv"><div><small>Fecha</small><b>'+s.f+'</b></div><div><small>Lugar</small><b>'+s.l+'</b></div><div><small>Horas</small><b>'+s.he+' / '+s.hp+' h</b></div><div><small>Estado</small><b>'+s.st[1]+'</b></div></div>'
+   +'<div class="sec">Equipo y normas</div><div class="kv"><div style="grid-column:span 2"><small>Equipo</small>'+eq(s)+'</div><div style="grid-column:span 2"><small>Normas</small>'+nr(s)+'</div></div>'
+   +'<div class="sec">'+T.plan+'</div><div class="mini"><div><small>Avance del plan</small><b>'+(s.pa==null?'—':s.pa+'%')+'</b></div><div><small>Horas ejecutadas</small><b>'+(s.hp?Math.round(s.he*100/s.hp):0)+'%</b></div><div><small>Visitas</small><b>'+(s.he?1:0)+' / 1</b></div></div>'
+   +'<div style="margin-top:12px;display:flex;gap:8px"><button class="btn" data-ver="'+s.id+'"><span class="bi">'+I.pl+'</span>Ver '+T.plan.toLowerCase()+'</button><button class="btn"><span class="bi">'+I.ed+'</span>Editar</button></div>';
+}
+var cf='all';
+function optC(){
+  var h='<div class="box"><div class="bh"><span class="ti">'+I.br+'</span><h3>Servicios del proyecto</h3></div><div class="tb"><div class="chips">'
+   +'<span class="chip'+(cf==='all'?' on':'')+'" data-cf="all" style="padding-left:12px">Todos <em>'+S.length+'</em></span>';
+  TIPOS.forEach(function(T){ if(!cnt(T.t))return; h+='<span class="chip'+(cf===T.t?' on':'')+'" data-cf="'+T.t+'"><span class="svc '+T.t+'">'+I[T.t]+'</span>'+T.nom+' <em>'+cnt(T.t)+'</em><small>'+sum(T.t,'he')+'/'+sum(T.t,'hp')+' h</small></span>'; });
+  h+='</div><span class="sp"></span><div class="srch">'+I.se+'<input placeholder="Buscar..."></div><button class="btn"><span class="bi">+</span>Agregar servicio</button></div>'
+   +'<div class="tw"><table><colgroup><col style="width:44px"><col><col style="width:110px"><col style="width:90px"><col style="width:20%"><col style="width:96px"><col style="width:12%"><col style="width:120px"><col style="width:104px"><col style="width:46px"></colgroup>'
+   +'<thead><tr><th></th><th>Servicio</th><th class="c">Fecha</th><th class="c">Equipo</th><th>Normas</th><th class="r">Horas</th><th>Avance horas</th><th>Plan</th><th class="c">Estado</th><th></th></tr></thead><tbody>';
+  S.filter(function(s){return cf==='all'||s.t===cf}).forEach(function(s){
+    h+='<tr><td class="c"><span class="svc '+s.t+'" style="width:22px;height:22px">'+I[s.t]+'</span></td><td class="nm"><b>'+s.n+'</b><small>'+s.l+'</small></td><td class="c">'+s.f+'</td><td class="c">'+eq(s)+'</td><td>'+nr(s)+'</td><td class="r">'+s.he+' / '+s.hp+' h</td><td>'+hbar(s)+'</td><td>'+plan(s)+'</td><td class="c"><span class="bd '+s.st[0]+'"><i></i>'+s.st[1]+'</span></td><td class="c">'+menu(s)+'</td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+  return h;
+}
+var cur='a';
+function render(){ document.getElementById('app').innerHTML = cur==='a'?optA():cur==='b'?optB():optC(); if(cur==='b') document.getElementById('det').innerHTML=det(2); }
+render();
+document.addEventListener('click',function(e){
+  var t=e.target;
+  var sw=t.closest('.switch button'); if(sw){cur=sw.getAttribute('data-o');document.querySelectorAll('.switch button').forEach(function(x){x.classList.toggle('on',x===sw)});render();return;}
+  var ver=t.closest('[data-ver]'); if(ver){var s=S[+ver.getAttribute('data-ver')];var T=tipo(s.t);var tab=document.getElementById('plantab');tab.classList.remove('off');document.getElementById('plantxt').textContent=s.t==='co'?'Plan estratégico':T.plan+' · '+s.n;var tt=document.getElementById('toast');tt.textContent='Se abre la pestaña "'+document.getElementById('plantxt').textContent+'"';tt.style.display='block';setTimeout(function(){tt.style.display='none'},2200);document.querySelectorAll('[data-dots]').forEach(function(d){d.classList.remove('open')});return;}
+  var d=t.closest('[data-dots]'); document.querySelectorAll('[data-dots]').forEach(function(x){if(x!==d)x.classList.remove('open')}); if(d){d.classList.toggle('open');return;}
+  var g=t.closest('tr.grp'); if(g){var k=g.getAttribute('data-g');g.classList.toggle('closed');document.querySelectorAll('tr[data-p="'+k+'"]').forEach(function(r){r.style.display=g.classList.contains('closed')?'none':''});return;}
+  var li=t.closest('[data-li]'); if(li){document.querySelectorAll('.li').forEach(function(x){x.classList.toggle('sel',x===li)});document.getElementById('det').innerHTML=det(+li.getAttribute('data-li'));return;}
+  var ch=t.closest('[data-cf]'); if(ch){cf=ch.getAttribute('data-cf');render();return;}
+});
+</script>
+</body>
+</html>

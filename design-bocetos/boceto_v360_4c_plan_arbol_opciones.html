@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>V360 proyecto · plan estratégico en árbol (opciones)</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--b:#66062D;--b3:#CF6F92;--bs:#F6EAEF;--bs2:#FBF7F9;--bb:#E5C9D4;--g:#4A4849;--tx:#1f2937;--tx2:#334155;--tx3:#475569;--mu:#64748b;--mu2:#94a3b8;--ln:#e2e8f0;--ln2:#eef2f6;--bg:#f8fafc;--font:"Gotham","Montserrat","Segoe UI",Arial,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:#eceff3;font-family:var(--font);color:var(--tx);font-size:12px}
+svg{display:block}
+.page{max-width:1440px;margin:0 auto;padding:18px 16px 60px}
+.note{background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:10px 14px;color:#713f12;line-height:1.5;margin-bottom:12px}
+.note b{color:#5b2c06}
+.switch{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
+.switch button{font-family:inherit;font-size:11.5px;font-weight:600;height:32px;padding:0 13px;border-radius:8px;border:1px solid var(--ln);background:#fff;color:var(--tx3);cursor:pointer}
+.switch button.on{background:var(--b);border-color:var(--b);color:#fff}
+.box{background:#fff;border:1px solid var(--ln);border-radius:14px;padding:14px 16px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+.box+.box{margin-top:12px}
+.bh{display:flex;align-items:center;gap:9px;padding-bottom:10px;margin-bottom:12px;border-bottom:1px solid var(--ln2)}
+.bh h3{margin:0;font-size:12.5px;font-weight:700;flex:1}
+.ti{width:28px;height:28px;border-radius:8px;background:var(--bs);color:var(--b);display:inline-flex;align-items:center;justify-content:center}
+.ti svg{width:14px;height:14px}
+.btn{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 11px;border:1px solid #D7E0E9;border-radius:7px;background:#fff;font-family:inherit;font-size:11px;font-weight:600;color:#25344C;cursor:pointer;white-space:nowrap}
+.btn .bi{width:18px;height:18px;border-radius:5px;background:var(--bs);color:var(--b);display:inline-flex;align-items:center;justify-content:center;font-size:13px}
+.btn.sm{height:26px;padding:0 8px;font-size:10.5px}
+.seg{display:inline-flex;border:1px solid var(--ln);border-radius:8px;overflow:hidden}
+.seg span{padding:0 11px;height:28px;display:inline-flex;align-items:center;font-size:10.5px;font-weight:600;color:var(--tx3)}
+.seg span.on{background:var(--b);color:#fff}
+.srch{position:relative;width:260px}
+.srch input{width:100%;height:30px;border:1px solid #cbd5e1;border-radius:7px;padding:0 10px 0 30px;font-family:inherit;font-size:11px}
+.srch svg{position:absolute;left:9px;top:8px;width:14px;height:14px;color:var(--mu2)}
+.tb{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.sp{flex:1}
+.bd{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:999px;font-size:9.5px;font-weight:600;border:1px solid;white-space:nowrap}
+.bd i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.bd.ok{color:#166534;background:#ECFDF3;border-color:#BBF7D0}.bd.pl{color:#92400e;background:#FFFBEB;border-color:#FDE68A}.bd.late{color:#991B1B;background:#FEF2F2;border-color:#FECACA}.bd.nt{color:var(--tx3);background:var(--bg);border-color:var(--ln)}
+.av{width:22px;height:22px;border-radius:50%;background:#efefef;color:var(--g);font-size:9px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex:0 0 22px}
+.av.c{background:#eef2f6;color:var(--g)}.av.a{background:var(--bs);color:var(--b)}.av.cl{background:#E0F2FE;color:#0369A1}.av.x{background:#FEF3C7;color:#92400E}
+.bar{height:6px;border-radius:999px;background:var(--ln2);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--b)}
+.mut{color:var(--mu2)}
+.opt{display:none}.opt.on{display:block}
+.dots{position:relative;width:26px;height:26px;border:1px solid var(--ln);border-radius:7px;background:#fff;display:inline-flex;align-items:center;justify-content:center;color:var(--tx3);font-size:14px;cursor:pointer;flex:0 0 26px}
+.menu{position:absolute;right:0;top:30px;z-index:10;background:#fff;border:1px solid var(--ln);border-radius:9px;box-shadow:0 10px 24px rgba(15,23,42,.14);padding:5px;min-width:170px;display:none;text-align:left}
+.dots.open .menu{display:block}
+.menu div{padding:7px 9px;border-radius:6px;font-size:11px;color:var(--tx2);font-weight:500;white-space:nowrap}
+.menu div:hover{background:var(--bs2);color:var(--b)}
+.menu div.del{color:#b91c1c}
+/* anillo del capitulo (imagen 1) */
+.ring{--p:0;flex:0 0 42px;width:42px;height:42px;border-radius:50%;background:conic-gradient(var(--b) calc(var(--p)*1%), #f1e4ea 0);display:inline-flex;align-items:center;justify-content:center}
+.ring b{width:32px;height:32px;border-radius:50%;background:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:700;color:var(--tx2)}
+.chev{width:16px;color:var(--mu);transition:transform .15s;flex:0 0 16px}
+.open>.row .chev,.open>.ch-h .chev{transform:rotate(90deg)}
+.ck{width:16px;height:16px;border:1.5px solid #cbd5e1;border-radius:4px;flex:0 0 16px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;background:#fff}
+.ck.on{background:#16a34a;border-color:#16a34a;color:#fff}
+.ck.on::after{content:"✓";font-size:10px;font-weight:700}
+.done .at{text-decoration:line-through;color:var(--mu2)}
+.cd{font-size:10px;font-weight:700;color:var(--b);background:var(--bs);border:1px solid var(--bb);border-radius:5px;padding:1px 5px;margin-right:6px;white-space:nowrap}
+.cnt{font-size:10px;color:var(--mu);white-space:nowrap}
+.cnt b{color:#b91c1c;font-weight:600}
+/* ===== opcion A: grilla arbol ===== */
+.tree{border:1px solid var(--ln);border-radius:12px;overflow:visible}
+.th{display:grid;grid-template-columns:minmax(0,1fr) 120px 96px 96px 130px 104px 34px;gap:8px;padding:8px 12px;background:var(--bg);border-bottom:1px solid var(--ln);font-size:10.5px;font-weight:600;color:var(--tx3);border-radius:12px 12px 0 0}
+.row{display:grid;grid-template-columns:minmax(0,1fr) 120px 96px 96px 130px 104px 34px;gap:8px;align-items:center;padding:8px 12px;border-bottom:1px solid #f1f5f9;font-size:11px;color:var(--tx2)}
+.row .n{display:flex;align-items:center;gap:8px;min-width:0}
+.row .n span.t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ch>.row{background:#faf5f7;cursor:pointer;border-bottom-color:#f1e4ea}
+.ch>.row .t{font-weight:700;color:var(--b);font-size:12px}
+.ch>.row small{display:block;font-size:10px;color:var(--mu);font-weight:500;margin-top:2px}
+.it>.row{cursor:pointer}
+.it>.row .t{font-weight:600;color:var(--tx)}
+.lv2>.row .n{padding-left:28px}
+.lv3>.row .n{padding-left:56px}
+.ac .n{padding-left:var(--pad,56px)}
+.ac{background:#fff}
+.ac .at{font-size:10.8px}
+.kids{display:none}.open>.kids{display:block}
+.av-cell{display:flex;align-items:center;gap:6px;min-width:0}
+.av-cell span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10.5px}
+.pg{display:flex;align-items:center;gap:6px}.pg .bar{flex:1}.pg b{font-size:10px;font-weight:600;min-width:28px;text-align:right}
+.add{display:flex;gap:8px;padding:6px 12px 8px;border-bottom:1px solid #f1f5f9}
+.add .lnk{font-size:10.5px;font-weight:600;color:var(--b);cursor:pointer;display:inline-flex;gap:4px;align-items:center}
+.lv2 .add{padding-left:40px}.lv3 .add{padding-left:68px}
+.b2{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;transition:all .2s}
+.b2.sel{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.b2 .tr{border:1px solid var(--ln);border-radius:12px;overflow:visible;align-self:start}
+.b2 .hd,.b2 .r{display:grid;grid-template-columns:minmax(0,1fr) 150px 70px 120px 96px 96px 30px;gap:8px;align-items:center;padding:8px 12px}
+.b2.sel .hd,.b2.sel .r{grid-template-columns:minmax(0,1fr) 96px 30px}
+.b2.sel .hide{display:none}
+.b2 .hd{background:var(--bg);border-bottom:1px solid var(--ln);font-size:10.5px;font-weight:600;color:var(--tx3);border-radius:12px 12px 0 0}
+.b2 .r{border-bottom:1px solid #f1f5f9;font-size:11px;color:var(--tx2)}
+.b2 .r.c{background:#faf5f7;border-bottom-color:#f1e4ea}
+.b2 .r.c .t{font-weight:700;color:var(--b);font-size:12px}
+.b2 .r.c small{display:block;font-size:10px;color:var(--mu);margin-top:2px}
+.b2 .r .n{display:flex;align-items:center;gap:8px;min-width:0}
+.b2 .r.i .n{padding-left:26px}.b2 .r.s .n{padding-left:52px}
+.b2 .r.i .t,.b2 .r.s .t{cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.b2 .r.i .t{font-weight:600;color:var(--tx)}
+.b2 .r .t:hover{color:var(--b);text-decoration:underline}
+.b2 .r.on{background:var(--bs);box-shadow:inset 3px 0 0 var(--b)}
+.b2 .tg{cursor:pointer;display:inline-flex}
+.b2 .tg.op .chev{transform:rotate(90deg)}
+.b2 .ph{width:16px;flex:0 0 16px}
+.b2 .det{position:relative;align-self:start}
+.b2 .xcl{position:absolute;top:10px;right:10px;width:26px;height:26px;border:1px solid var(--ln);border-radius:7px;background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--tx3)}
+/* ===== opcion B: arbol + panel ===== */
+.split{display:grid;grid-template-columns:420px minmax(0,1fr);gap:12px}
+.nav{border:1px solid var(--ln);border-radius:12px;overflow:hidden;max-height:620px;overflow-y:auto}
+.nv-ch{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#faf5f7;border-bottom:1px solid #f1e4ea;cursor:pointer}
+.nv-ch .ring{flex-basis:34px;width:34px;height:34px}.nv-ch .ring b{width:26px;height:26px;font-size:8.5px}
+.nv-ch .t{font-weight:700;color:var(--b);font-size:11.5px}
+.nv-ch small{display:block;font-size:9.8px;color:var(--mu)}
+.nv-it{display:flex;align-items:center;gap:8px;padding:8px 12px 8px 30px;border-bottom:1px solid #f1f5f9;cursor:pointer;font-size:11px}
+.nv-it.sub{padding-left:52px;font-size:10.6px;color:var(--tx3)}
+.nv-it.sel{background:var(--bs);box-shadow:inset 3px 0 0 var(--b)}
+.nv-it .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.det{border:1px solid var(--ln);border-radius:12px;padding:14px 16px}
+.det h4{margin:0 0 2px;font-size:13px}
+.det .meta{display:flex;gap:18px;flex-wrap:wrap;margin:12px 0;padding:10px 12px;background:var(--bg);border-radius:9px}
+.det .meta div small{display:block;font-size:9.5px;color:var(--mu);text-transform:uppercase;letter-spacing:.03em;margin-bottom:2px}
+.det .meta div b{font-size:11.5px}
+.alist{border:1px solid var(--ln);border-radius:10px;overflow:visible}
+.arow{display:grid;grid-template-columns:18px minmax(0,1fr) 120px 90px 96px 30px;gap:8px;align-items:center;padding:9px 10px;border-bottom:1px solid #f1f5f9;font-size:11px}
+.arow:last-child{border-bottom:0}
+.arow small{display:block;color:var(--mu);font-size:9.8px;margin-top:2px}
+.sec{font-size:10px;font-weight:700;color:var(--b);text-transform:uppercase;letter-spacing:.04em;margin:14px 0 8px}
+/* ===== opcion C: arbol compacto, acciones como sub-tabla ===== */
+.c-ch{border:1px solid var(--ln);border-radius:12px;margin-bottom:10px;overflow:visible;background:#fff}
+.c-ch>.c-h{display:flex;align-items:center;gap:12px;padding:10px 14px;background:#faf5f7;border-radius:12px;cursor:pointer}
+.c-ch.open>.c-h{border-radius:12px 12px 0 0;border-bottom:1px solid #f1e4ea}
+.c-h .t{font-weight:700;color:var(--b);font-size:12.5px}
+.c-h small{display:block;font-size:10px;color:var(--mu);margin-top:2px}
+.c-h .sum{margin-left:auto;display:flex;align-items:center;gap:10px}
+.c-body{display:none}.c-ch.open>.c-body{display:block}
+.c-it{display:grid;grid-template-columns:minmax(0,1fr) 140px 110px 150px 34px;gap:10px;align-items:center;padding:9px 14px;border-bottom:1px solid #f1f5f9;font-size:11px}
+.c-it.sub{padding-left:40px;background:#fdfbfc}
+.c-it .t{font-weight:600}
+.c-acc{display:none;padding:4px 14px 10px 40px;background:#fdfbfc;border-bottom:1px solid #f1f5f9}
+.c-acc.on{display:block}
+.c-acc.sub{padding-left:66px}
+.chip{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:999px;border:1px solid var(--ln);font-size:10px;font-weight:600;color:var(--tx3);cursor:pointer;background:#fff}
+.chip.on{border-color:var(--b);color:var(--b);background:var(--bs2)}
+/* modal accion */
+.mod{max-width:640px;margin:0 auto;background:#fff;border-radius:16px;box-shadow:0 20px 50px rgba(15,23,42,.18);overflow:hidden}
+.mh{display:flex;gap:12px;align-items:center;padding:16px 18px;background:linear-gradient(90deg,#fbf3f6,#fff)}
+.mh .ti{width:40px;height:40px;border-radius:11px}
+.mh h4{margin:0;font-size:15px}.mh p{margin:2px 0 0;font-size:10.5px;color:var(--mu)}
+.mb{padding:16px 18px;display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+.f{grid-column:span 6}.f.w{grid-column:span 12}.f.t{grid-column:span 4}
+.f label{display:block;font-size:10.5px;font-weight:600;color:var(--tx3);margin-bottom:5px}
+.f label em{color:#dc2626;font-style:normal}
+.inp{height:34px;border:1px solid #cbd5e1;border-radius:8px;padding:0 10px;display:flex;align-items:center;font-size:11.5px;color:var(--tx2);background:#fff;gap:8px}
+.inp.ta{height:60px;align-items:flex-start;padding-top:8px}
+.dd{border:1px solid var(--ln);border-radius:9px;box-shadow:0 10px 24px rgba(15,23,42,.12);margin-top:4px;padding:5px;background:#fff}
+.dd .g{font-size:9.5px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.04em;padding:6px 8px 3px}
+.dd .o{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;font-size:11px}
+.dd .o.sel{background:var(--b);color:#fff}
+.dd .o.sel .av{background:#fff;color:var(--b)}
+.mf{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--ln2);background:#fafbfc}
+.btn.pri{background:var(--b);border-color:var(--b);color:#fff}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:10.5px;color:var(--tx3);margin-top:10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.foot{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.foot .box{font-size:11px;line-height:1.55;color:var(--tx2)}
+.foot h5{margin:0 0 6px;font-size:11.5px;color:var(--b)}
+.foot ul{margin:0;padding-left:17px}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="note"><b>Boceto · Plan estratégico en árbol (3 opciones).</b> Capítulo → ítem → subítem → acciones. El capítulo muestra su <b>título como descripción</b> ("Capítulo 4 · Contexto de la organización") con el anillo de avance de la imagen 1. Las acciones tienen el check de cumplida y <b>⋮ con Editar / Eliminar</b>. El responsable puede ser consultor, analista, cliente o un texto libre (el badge toma las iniciales). La vista <b>Cronograma no cambia</b>: sigue el mismo selector Árbol / Cronograma. Datos de ejemplo.</div>
+
+  <div class="switch" id="sw">
+    <button class="on" data-o="B2">Opción B ajustada · Árbol completo, detalle 50/50 al elegir</button>
+    <button data-o="A">Opción A · Grilla árbol (como Servicios)</button>
+    <button data-o="B">Opción B · Árbol + detalle del ítem</button>
+    <button data-o="C">Opción C · Árbol compacto, acciones desplegables</button>
+    <button data-o="M">Modal de acción · responsable</button>
+  </div>
+
+  <div class="box">
+    <div class="bh"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h.01M3 12h.01M3 19h.01M8 5h13M8 12h13M8 19h13"/></svg></span><h3>Plan estratégico · RE-PP-007 · ISO 9001:2015</h3><span class="cnt">4 capítulos · 12 ítems · 7 de 19 acciones cumplidas · <b>2 vencidas</b></span></div>
+    <div class="tb">
+      <div class="srch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input placeholder="Buscar ítem, subítem o acción..."></div>
+      <span class="chip on">Todas</span><span class="chip">Pendientes</span><span class="chip">Vencidas</span><span class="chip">Cumplidas</span>
+      <span class="sp"></span>
+      <span class="seg"><span class="on">Árbol</span><span>Cronograma</span></span>
+      <button class="btn sm">Expandir todo</button>
+      <button class="btn"><span class="bi">+</span>Ítem</button>
+    </div>
+    <div class="opt on" id="oB2"></div>
+    <div class="opt" id="oA"></div>
+    <div class="opt" id="oB"></div>
+    <div class="opt" id="oC"></div>
+    <div class="opt" id="oM"></div>
+  </div>
+
+  <div class="foot">
+    <div class="box"><h5>Común a las tres opciones</h5><ul>
+      <li>Capítulo: anillo de avance, "Capítulo N · título", ítems, rango de fechas, acciones cumplidas / total y vencidas.</li>
+      <li>Ítem y subítem: ⋮ con Editar, Nueva acción, Subítem (solo en ítems) y Eliminar.</li>
+      <li>Acción: check de cumplida, responsable (iniciales), vence, estado y ⋮ con Editar / Eliminar.</li>
+      <li>Las filas tienen todas la misma altura: crece la lista, no el tamaño de las cajas.</li>
+    </ul></div>
+    <div class="box"><h5>Responsable de la acción</h5><ul>
+      <li>Desplegable agrupado: Consultores del equipo, Analista y Cliente (luego, contactos del cliente).</li>
+      <li>Opción "Otro (texto)": se escribe el nombre y el badge muestra sus iniciales (ej. "Juan Pérez" → JP).</li>
+      <li>Colores del badge: consultor gris, analista bordó, cliente celeste, texto libre ámbar.</li>
+    </ul></div>
+  </div>
+</div>
+
+<script>
+/* ----- datos de ejemplo ----- */
+var D=[
+ {n:4,t:"Contexto de la organización",pct:22,ni:4,fi:"16/10",ff:"13/11",ok:2,tot:9,v:1,items:[
+   {c:"4.1",t:"Comprensión de la organización y de su contexto",r:["MN","c","Nowak, Martín"],fi:"16/10",ff:"30/10",pct:50,e:"cur",acc:[
+      {t:"Relevar cuestiones internas y externas (FODA)",r:["MN","c","Nowak, Martín"],v:"20/10",e:"ok",d:1},
+      {t:"Enviar plantilla FODA al cliente",r:["JF","cl","Juan P Fiorini (cliente)"],v:"22/10",e:"pl"}],
+    subs:[{c:"4.1.1",t:"Matriz de cuestiones internas",r:["JP","x","Juan Pérez"],fi:"20/10",ff:"25/10",pct:0,e:"pend",acc:[
+      {t:"Validar matriz con gerencia",r:["JP","x","Juan Pérez"],v:"25/10",e:"pl"}]}]},
+   {c:"4.2",t:"Necesidades y expectativas de las partes interesadas",r:["MN","c","Nowak, Martín"],fi:"21/10",ff:"05/11",pct:0,e:"late",acc:[
+      {t:"Listar partes interesadas pertinentes",r:["AV","a","Vocaturo, Ana (analista)"],v:"18/10",e:"late"},
+      {t:"Definir requisitos por parte interesada",r:["MN","c","Nowak, Martín"],v:"05/11",e:"pl"}]},
+   {c:"4.3",t:"Determinación del alcance del sistema de gestión",r:["MN","c","Nowak, Martín"],fi:"01/11",ff:"10/11",pct:100,e:"ok",acc:[
+      {t:"Redactar alcance y exclusiones",r:["MN","c","Nowak, Martín"],v:"03/11",e:"ok",d:1}]},
+   {c:"4.4",t:"Sistema de gestión de la calidad y sus procesos",r:["RS","c","Suárez, Romina"],fi:"05/11",ff:"13/11",pct:0,e:"pend",acc:[]}]},
+ {n:5,t:"Liderazgo",pct:40,ni:3,fi:"20/10",ff:"20/11",ok:2,tot:5,v:0,items:[
+   {c:"5.1",t:"Liderazgo y compromiso",r:["RS","c","Suárez, Romina"],fi:"20/10",ff:"31/10",pct:100,e:"ok",acc:[{t:"Reunión con la dirección",r:["RS","c","Suárez, Romina"],v:"24/10",e:"ok",d:1}]},
+   {c:"5.2",t:"Política de la calidad",r:["RS","c","Suárez, Romina"],fi:"01/11",ff:"15/11",pct:50,e:"cur",acc:[{t:"Borrador de política",r:["RS","c","Suárez, Romina"],v:"05/11",e:"ok",d:1},{t:"Aprobación de la política",r:["JF","cl","Juan P Fiorini (cliente)"],v:"15/11",e:"pl"}]},
+   {c:"5.3",t:"Roles, responsabilidades y autoridades",r:["MN","c","Nowak, Martín"],fi:"10/11",ff:"20/11",pct:0,e:"pend",acc:[{t:"Organigrama y matriz de responsabilidades",r:["MN","c","Nowak, Martín"],v:"20/11",e:"pl"}]}]},
+ {n:6,t:"Planificación",pct:0,ni:2,fi:"15/11",ff:"10/12",ok:0,tot:2,v:1,items:[
+   {c:"6.1",t:"Acciones para abordar riesgos y oportunidades",r:["MN","c","Nowak, Martín"],fi:"15/11",ff:"30/11",pct:0,e:"late",acc:[{t:"Matriz de riesgos y oportunidades",r:["MN","c","Nowak, Martín"],v:"19/10",e:"late"}]},
+   {c:"6.2",t:"Objetivos de la calidad y planificación para lograrlos",r:["MN","c","Nowak, Martín"],fi:"25/11",ff:"10/12",pct:0,e:"pend",acc:[{t:"Definir objetivos e indicadores",r:["MN","c","Nowak, Martín"],v:"10/12",e:"pl"}]}]},
+ {n:0,t:"Hitos",hito:1,pct:0,ni:3,fi:"-",ff:"-",ok:0,tot:0,v:0,items:[
+   {c:"",t:"Realización de Auditoría Interna",r:["","",""],fi:"",ff:"",pct:0,e:"pend",acc:[]},
+   {c:"",t:"Realización de Auditoría Legal",r:["","",""],fi:"",ff:"",pct:0,e:"pend",acc:[]},
+   {c:"",t:"Realización de la Auditoría principal por el Organismo de Certificación",r:["","",""],fi:"",ff:"",pct:0,e:"pend",acc:[]}]}
+];
+var EST={ok:'<span class="bd ok"><i></i>Cumplido</span>',cur:'<span class="bd pl"><i></i>En curso</span>',pend:'<span class="bd nt"><i></i>Pendiente</span>',late:'<span class="bd late"><i></i>Vencido</span>',pl:'<span class="bd nt"><i></i>Pendiente</span>'};
+var AEST={ok:'<span class="bd ok"><i></i>Cumplida</span>',pl:'<span class="bd nt"><i></i>Pendiente</span>',late:'<span class="bd late"><i></i>Vencida</span>'};
+var CHEV='<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>';
+function av(r){return r[0]?'<span class="av-cell"><span class="av '+r[1]+'">'+r[0]+'</span><span>'+r[2]+'</span></span>':'<span class="mut">Sin asignar</span>'}
+function pg(p){return '<span class="pg"><span class="bar"><i style="width:'+p+'%"></i></span><b>'+p+'%</b></span>'}
+function dots(kind){var m=kind==='acc'?'<div>Editar acción</div><div class="del">Eliminar</div>':(kind==='sub'?'<div>Editar subítem</div><div>Nueva acción</div><div class="del">Eliminar</div>':'<div>Editar ítem</div><div>Nueva acción</div><div>Subítem</div><div class="del">Eliminar</div>');return '<span class="dots" data-dots>⋮<span class="menu">'+m+'</span></span>'}
+function ring(p){return '<span class="ring" style="--p:'+p+'"><b>'+p+'%</b></span>'}
+function chTit(c){return c.hito?'Hitos':'Capítulo '+c.n+' · '+c.t}
+function chMeta(c){return c.ni+' ítems'+(c.fi!=='-'?' · '+c.fi+' → '+c.ff:' · sin fechas')+' · '+c.ok+' de '+c.tot+' acciones cumplidas'+(c.v?' · <b style="color:#b91c1c">'+c.v+' vencida(s)</b>':'')}
+
+/* ----- opcion A ----- */
+function aAcc(a,pad){return '<div class="row ac'+(a.d?' done':'')+'" style="--pad:'+pad+'px"><span class="n"><span class="ck'+(a.d?' on':'')+'" data-ck></span><span class="t at">'+a.t+'</span></span><span>'+av(a.r)+'</span><span></span><span>'+a.v+'</span><span></span><span>'+AEST[a.e]+'</span>'+dots('acc')+'</div>'}
+function aItem(it,lv){
+  var pad=lv===2?56:84,h='<div class="it lv'+lv+'"><div class="row" data-tg><span class="n">'+CHEV+(it.c?'<span class="cd">'+it.c+'</span>':'')+'<span class="t">'+it.t+'</span><span class="cnt">'+it.acc.length+' acc.</span></span><span>'+av(it.r)+'</span><span>'+(it.fi||'-')+'</span><span>'+(it.ff||'-')+'</span><span>'+pg(it.pct)+'</span><span>'+EST[it.e]+'</span>'+dots(lv===3?'sub':'it')+'</div><div class="kids">';
+  it.acc.forEach(function(a){h+=aAcc(a,pad)});
+  (it.subs||[]).forEach(function(s){h+=aItem(s,3)});
+  h+='<div class="add"><span class="lnk">+ Nueva acción</span>'+(lv===2?'<span class="lnk">+ Subítem</span>':'')+'</div></div></div>';return h}
+function renderA(){
+  var h='<div class="tree"><div class="th"><span>Capítulo / ítem / acción</span><span>Responsable</span><span>Inicio</span><span>Vence</span><span>Avance</span><span>Estado</span><span></span></div>';
+  D.forEach(function(c,i){h+='<div class="ch'+(i===0?' open':'')+'"><div class="row" data-tg><span class="n">'+CHEV+ring(c.pct)+'<span><span class="t">'+chTit(c)+'</span><small>'+chMeta(c)+'</small></span></span><span></span><span>'+c.fi+'</span><span>'+c.ff+'</span><span>'+pg(c.pct)+'</span><span></span><span></span></div><div class="kids">';
+    c.items.forEach(function(it,j){h+=aItem(it,2).replace('<div class="it lv2">',(i===0&&j<2)?'<div class="it lv2 open">':'<div class="it lv2">')});
+    h+='</div></div>'});
+  document.getElementById('oA').innerHTML=h+'</div><div class="legend"><span>Fila bordó: capítulo</span><span>▸ ítem / subítem (se despliega)</span><span><span class="ck"></span> acción: tildar = cumplida</span></div>';
+}
+/* ----- opcion B ----- */
+var SEL={c:0,i:1};
+function renderB(){
+  var nav='';D.forEach(function(c,ci){nav+='<div class="nv-ch">'+ring(c.pct)+'<span><span class="t">'+chTit(c)+'</span><small>'+chMeta(c)+'</small></span></div>';
+    c.items.forEach(function(it,ii){nav+='<div class="nv-it'+(ci===SEL.c&&ii===SEL.i?' sel':'')+'" data-sel="'+ci+','+ii+'">'+(it.c?'<span class="cd">'+it.c+'</span>':'')+'<span class="t">'+it.t+'</span>'+EST[it.e]+'</div>';
+      (it.subs||[]).forEach(function(s){nav+='<div class="nv-it sub"><span class="cd">'+s.c+'</span><span class="t">'+s.t+'</span></div>'})})});
+  var c=D[SEL.c],it=c.items[SEL.i];
+  var det='<div class="det"><div style="display:flex;align-items:flex-start;gap:10px"><div style="flex:1"><small class="mut">'+chTit(c)+'</small><h4>'+(it.c?it.c+' · ':'')+it.t+'</h4></div>'+EST[it.e]+dots('it')+'</div>'
+   +'<div class="meta"><div><small>Responsable</small><b>'+(it.r[2]||'Sin asignar')+'</b></div><div><small>Inicio</small><b>'+(it.fi||'-')+'</b></div><div><small>Vence</small><b>'+(it.ff||'-')+'</b></div><div style="min-width:160px"><small>Avance</small>'+pg(it.pct)+'</div></div>'
+   +'<div class="sec">Acciones ('+it.acc.length+')</div><div class="alist">'+(it.acc.length?it.acc.map(function(a){return '<div class="arow'+(a.d?' done':'')+'"><span class="ck'+(a.d?' on':'')+'" data-ck></span><span class="at">'+a.t+'<small>Trabajo sobre ítem del plan · Normal</small></span><span>'+av(a.r)+'</span><span>'+a.v+'</span><span>'+AEST[a.e]+'</span>'+dots('acc')+'</div>'}).join(''):'<div class="arow"><span></span><span class="mut">Sin acciones.</span></div>')+'</div>'
+   +'<div style="display:flex;gap:8px;margin-top:10px"><button class="btn"><span class="bi">+</span>Nueva acción</button><button class="btn"><span class="bi">+</span>Subítem</button></div>'
+   +((it.subs||[]).length?'<div class="sec">Subítems</div>'+it.subs.map(function(s){return '<div class="alist" style="margin-bottom:8px"><div class="arow"><span class="cd" style="margin:0">'+s.c+'</span><span><b>'+s.t+'</b><small>'+s.acc.length+' acción(es) · vence '+s.ff+'</small></span><span>'+av(s.r)+'</span><span>'+s.ff+'</span><span>'+EST[s.e]+'</span>'+dots('sub')+'</div></div>'}).join(''):'')+'</div>';
+  document.getElementById('oB').innerHTML='<div class="split"><div class="nav">'+nav+'</div>'+det+'</div><div class="legend"><span>Izquierda: árbol de capítulos e ítems (filas de igual altura)</span><span>Derecha: el ítem elegido con sus acciones y subítems</span></div>';
+}
+/* ----- opcion C ----- */
+function cAccs(it,sub){return '<div class="c-acc'+(sub?' sub':'')+'"><div class="alist">'+(it.acc.length?it.acc.map(function(a){return '<div class="arow'+(a.d?' done':'')+'"><span class="ck'+(a.d?' on':'')+'" data-ck></span><span class="at">'+a.t+'</span><span>'+av(a.r)+'</span><span>'+a.v+'</span><span>'+AEST[a.e]+'</span>'+dots('acc')+'</div>'}).join(''):'<div class="arow"><span></span><span class="mut">Sin acciones.</span></div>')+'</div><div style="margin-top:6px"><span class="lnk" style="font-size:10.5px;font-weight:600;color:var(--b);cursor:pointer">+ Nueva acción</span></div></div>'}
+function cItem(it,sub){var late=it.acc.filter(function(a){return a.e==='late'}).length,ok=it.acc.filter(function(a){return a.d}).length;
+  return '<div class="c-it'+(sub?' sub':'')+'"><span style="display:flex;align-items:center;gap:6px;min-width:0">'+(it.c?'<span class="cd">'+it.c+'</span>':'')+'<span class="t" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+it.t+'</span></span><span>'+av(it.r)+'</span><span>'+(it.ff?'vence '+it.ff:'<span class="mut">sin fechas</span>')+'</span><span><span class="chip" data-acc>'+ok+'/'+it.acc.length+' acciones'+(late?' · <b style="color:#b91c1c">'+late+' venc.</b>':'')+' ▾</span></span>'+dots(sub?'sub':'it')+'</div>'+cAccs(it,sub)}
+function renderC(){var h='';D.forEach(function(c,i){h+='<div class="c-ch'+(i===0?' open':'')+'"><div class="c-h" data-tg>'+CHEV+ring(c.pct)+'<span><span class="t">'+chTit(c)+'</span><small>'+chMeta(c)+'</small></span><span class="sum"><button class="btn sm">+ Ítem</button></span></div><div class="c-body">';
+  c.items.forEach(function(it){h+=cItem(it,0);(it.subs||[]).forEach(function(s){h+=cItem(s,1)})});h+='</div></div>'});
+  document.getElementById('oC').innerHTML=h+'<div class="legend"><span>Cada ítem en una fila; el chip "x/y acciones" despliega sus acciones debajo</span></div>';
+  var f=document.querySelector('#oC [data-acc]');if(f){f.classList.add('on');f.closest('.c-it').nextElementSibling.classList.add('on')}}
+/* ----- modal ----- */
+function renderM(){document.getElementById('oM').innerHTML='<div class="mod"><div class="mh"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><div><h4>Nueva acción</h4><p>4.1 · Comprensión de la organización y de su contexto</p></div></div>'
+ +'<div class="mb"><div class="f w"><label>Acción <em>*</em></label><div class="inp">Enviar plantilla FODA al cliente</div></div>'
+ +'<div class="f"><label>Responsable <em>*</em></label><div class="inp"><span class="av x">JP</span>Otro: Juan Pérez<span style="margin-left:auto">▾</span></div>'
+ +'<div class="dd"><div class="g">Consultores del equipo</div><div class="o"><span class="av c">MN</span>Nowak, Martín (líder)</div><div class="o"><span class="av c">RS</span>Suárez, Romina</div>'
+ +'<div class="g">Analista</div><div class="o"><span class="av a">AV</span>Vocaturo, Ana</div><div class="g">Cliente</div><div class="o"><span class="av cl">CE</span>CEVEN SA · Juan P Fiorini</div>'
+ +'<div class="g">Otro</div><div class="o sel"><span class="av">JP</span>Escribir nombre…</div></div></div>'
+ +'<div class="f"><label>Nombre (si es "Otro") <em>*</em></label><div class="inp">Juan Pérez</div><div style="font-size:10px;color:var(--mu);margin-top:5px">El badge toma las iniciales: <span class="av x" style="display:inline-flex;vertical-align:middle">JP</span></div></div>'
+ +'<div class="f t"><label>Inicio</label><div class="inp">20/10/2026</div></div><div class="f t"><label>Vence <em>*</em></label><div class="inp">22/10/2026</div></div><div class="f t"><label>Prioridad</label><div class="inp">Normal ▾</div></div>'
+ +'<div class="f w"><label>Detalle</label><div class="inp ta">Mandar la plantilla y acordar fecha de devolución.</div></div></div>'
+ +'<div class="mf"><button class="btn">Cancelar</button><button class="btn pri">Guardar</button></div></div><p class="mut" style="text-align:center;margin:10px 0 0">Los campos de la carga de la acción se definen aparte; acá solo se muestra el responsable.</p>'}
+
+
+/* ----- opcion B ajustada: arbol completo; al elegir un item / subitem se abre el detalle 50/50 ----- */
+var B2={oc:{0:1},oi:{'0,0':1},sel:null};
+function b2Item(c,ci,it,ii,si){var key=ci+','+ii+(si!=null?','+si:''),sub=si!=null,kids=!sub&&(it.subs||[]).length,op=B2.oi[key];
+  var on=B2.sel===key,late=it.acc.filter(function(a){return a.e==='late'}).length,ok=it.acc.filter(function(a){return a.d}).length;
+  return '<div class="r '+(sub?'s':'i')+(on?' on':'')+'"><span class="n">'+(kids?'<span class="tg'+(op?' op':'')+'" data-b2i="'+key+'">'+CHEV+'</span>':'<span class="ph"></span>')+(it.c?'<span class="cd">'+it.c+'</span>':'')+'<span class="t" data-b2s="'+key+'" title="Ver detalle">'+it.t+'</span></span>'
+   +'<span class="hide">'+av(it.r)+'</span><span class="hide">'+(it.ff||'-')+'</span><span class="hide">'+pg(it.pct)+'</span><span class="hide cnt">'+ok+'/'+it.acc.length+' acc.'+(late?' · <b>'+late+' venc.</b>':'')+'</span><span>'+EST[it.e]+'</span>'
+   +'<span class="dots" data-dots>⋮<span class="menu"><div data-b2s="'+key+'">Ver detalle</div><div>Editar</div><div>Nueva acción</div>'+(sub?'':'<div>Subítem</div>')+'<div class="del">Eliminar</div></span></span></div>'}
+function b2Det(){var p=B2.sel.split(',').map(Number),c=D[p[0]],it=c.items[p[1]],sub=p.length>2;if(sub)it=it.subs[p[2]];
+  return '<div class="det"><span class="xcl" data-b2x title="Cerrar detalle">×</span><div style="padding-right:34px"><small class="mut">'+chTit(c)+(sub?' · '+c.items[p[1]].c:'')+'</small><h4>'+(it.c?it.c+' · ':'')+it.t+'</h4><div style="margin-top:6px">'+EST[it.e]+'</div></div>'
+   +'<div class="meta"><div><small>Responsable</small><b>'+(it.r[2]||'Sin asignar')+'</b></div><div><small>Inicio</small><b>'+(it.fi||'-')+'</b></div><div><small>Vence</small><b>'+(it.ff||'-')+'</b></div><div style="min-width:140px"><small>Avance</small>'+pg(it.pct)+'</div></div>'
+   +'<div class="sec">Acciones ('+it.acc.length+')</div><div class="alist">'+(it.acc.length?it.acc.map(function(a){return '<div class="arow'+(a.d?' done':'')+'"><span class="ck'+(a.d?' on':'')+'" data-ck></span><span class="at">'+a.t+'<small>Trabajo sobre ítem del plan · Normal</small></span><span>'+av(a.r)+'</span><span>'+a.v+'</span><span>'+AEST[a.e]+'</span>'+dots('acc')+'</div>'}).join(''):'<div class="arow"><span></span><span class="mut">Sin acciones.</span></div>')+'</div>'
+   +'<div style="display:flex;gap:8px;margin-top:10px"><button class="btn"><span class="bi">+</span>Nueva acción</button>'+(sub?'':'<button class="btn"><span class="bi">+</span>Subítem</button>')+'<button class="btn">Editar '+(sub?'subítem':'ítem')+'</button></div></div>'}
+function renderB2(){var h='<div class="b2'+(B2.sel?' sel':'')+'"><div class="tr"><div class="hd"><span>Capítulo / ítem / subítem</span><span class="hide">Responsable</span><span class="hide">Vence</span><span class="hide">Avance</span><span class="hide">Acciones</span><span>Estado</span><span></span></div>';
+  D.forEach(function(c,ci){var op=B2.oc[ci];h+='<div class="r c"><span class="n"><span class="tg'+(op?' op':'')+'" data-b2c="'+ci+'">'+CHEV+'</span>'+ring(c.pct)+'<span style="min-width:0"><span class="t">'+chTit(c)+'</span><small>'+chMeta(c)+'</small></span></span><span class="hide"></span><span class="hide">'+c.ff+'</span><span class="hide">'+pg(c.pct)+'</span><span class="hide cnt">'+c.ok+'/'+c.tot+' acc.</span><span></span><span></span></div>';
+    if(op)c.items.forEach(function(it,ii){h+=b2Item(c,ci,it,ii,null);if(B2.oi[ci+','+ii])(it.subs||[]).forEach(function(s2,si){h+=b2Item(c,ci,s2,ii,si)})})});
+  h+='</div>'+(B2.sel?b2Det():'')+'</div><div class="legend"><span>▸ despliega el árbol (sin abrir el detalle)</span><span>Clic en el nombre del ítem o subítem, o ⋮ → Ver detalle: abre el detalle 50/50</span><span>× cierra el detalle y el árbol vuelve a ancho completo</span></div>';
+  document.getElementById('oB2').innerHTML=h}
+
+renderB2();renderA();renderB();renderC();renderM();
+document.getElementById('sw').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;document.querySelectorAll('#sw button').forEach(function(x){x.classList.toggle('on',x===b)});document.querySelectorAll('.opt').forEach(function(o){o.classList.toggle('on',o.id==='o'+b.dataset.o)})});
+document.addEventListener('click',function(e){
+  var d=e.target.closest('[data-dots]');document.querySelectorAll('.dots.open').forEach(function(x){if(x!==d)x.classList.remove('open')});if(d){d.classList.toggle('open');return}
+  var b2c=e.target.closest('[data-b2c]');if(b2c){B2.oc[b2c.dataset.b2c]=!B2.oc[b2c.dataset.b2c];renderB2();return}
+  var b2i=e.target.closest('[data-b2i]');if(b2i){B2.oi[b2i.dataset.b2i]=!B2.oi[b2i.dataset.b2i];renderB2();return}
+  var b2s=e.target.closest('[data-b2s]');if(b2s){B2.sel=b2s.dataset.b2s;renderB2();return}
+  if(e.target.closest('[data-b2x]')){B2.sel=null;renderB2();return}
+  var ck=e.target.closest('[data-ck]');if(ck){ck.classList.toggle('on');ck.closest('.row,.arow').classList.toggle('done');return}
+  var s=e.target.closest('[data-sel]');if(s){var p=s.dataset.sel.split(',');SEL={c:+p[0],i:+p[1]};renderB();return}
+  var ac=e.target.closest('[data-acc]');if(ac){ac.classList.toggle('on');ac.closest('.c-it').nextElementSibling.classList.toggle('on');return}
+  var tg=e.target.closest('[data-tg]');if(tg){tg.parentNode.classList.toggle('open')}
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Acciones por origen</title>
+<style>
+:root{--b:#66062D;--b2:#CF6F92;--bg:#eef0f4;--tx:#1e293b;--mu:#64748b;--li:#e2e8f0}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:13px/1.4 system-ui,Segoe UI,Arial,sans-serif;color:var(--tx);padding:18px}
+h1{font-size:17px;margin:0 0 4px}h2{font-size:14px;margin:26px 0 8px;color:var(--b)}p.n{color:var(--mu);margin:0 0 12px;max-width:980px}
+.box{background:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 1px 2px rgba(0,0,0,.05);margin-bottom:14px}
+.hd{display:flex;align-items:center;gap:10px;margin-bottom:12px}.hd b{font-size:13px}.ic{width:26px;height:26px;border-radius:8px;background:#fbeef3;color:var(--b);display:inline-flex;align-items:center;justify-content:center;font-size:13px}
+.tb{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}.in{border:1px solid var(--li);border-radius:8px;padding:6px 10px;color:#94a3b8;min-width:220px;font-size:12px}.sel{border:1px solid var(--li);border-radius:8px;padding:6px 10px;color:var(--mu);font-size:12px;min-width:120px}
+.sp{flex:1}.btn{border:1px solid var(--li);background:#fff;border-radius:8px;padding:6px 11px;font-size:12px;font-weight:600;color:var(--tx);display:inline-flex;gap:6px;align-items:center}.btn.p{background:var(--b);border-color:var(--b);color:#fff}
+table{width:100%;border-collapse:collapse;font-size:12px}th{background:#f8fafc;color:#475569;font-weight:600;text-align:left;padding:8px 10px;border-bottom:1px solid var(--li)}td{padding:8px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+.t b{display:block;font-weight:600}.t small{color:#94a3b8;font-size:11px}
+.g td{background:#faf5f7;font-weight:700;color:var(--b);cursor:pointer}.g td small{color:var(--mu);font-weight:400;margin-left:8px}.g .cv{display:inline-block;width:14px}
+.av{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;background:#fbeef3;color:var(--b)}.av.c{background:#e0edff;color:#1d4ed8}.av.m{background:#eef2f6;color:#475569}
+.bd{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10.5px;font-weight:600;border:1px solid}.ok{background:#ecfdf3;color:#15803d;border-color:#bbf7d0}.pe{background:#fff7ed;color:#c2410c;border-color:#fed7aa}.ve{background:#fef2f2;color:#dc2626;border-color:#fecaca}.ca{background:#f1f5f9;color:#64748b;border-color:#e2e8f0}
+.lock{color:#94a3b8;font-size:11px}.mn{width:26px;height:26px;border:1px solid var(--li);border-radius:7px;display:inline-flex;align-items:center;justify-content:center;color:var(--mu)}
+.chips{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}.ch{border:1px solid var(--li);border-radius:999px;padding:5px 12px;font-size:12px;font-weight:600;color:#475569;background:#fff}.ch i{font-style:normal;background:#eef2f6;border-radius:999px;padding:0 7px;margin-left:6px;font-size:11px}.ch.on{background:var(--b);color:#fff;border-color:var(--b)}.ch.on i{background:rgba(255,255,255,.25)}
+.mod{max-width:560px;border:1px solid var(--li);border-radius:14px;overflow:hidden;background:#fff}.mh{display:flex;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--li)}.mb{padding:14px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px}.f label{display:block;font-size:11px;color:var(--mu);margin-bottom:3px}.f div{border:1px solid var(--li);border-radius:8px;padding:7px 10px;font-size:12px}.f.w{grid-column:1/-1}.ctx{grid-column:1/-1;background:#f8fafc;border-radius:8px;padding:8px 10px;font-size:12px;color:#475569}
+.tp th,.tp td{font-size:11.5px}.tp td:first-child{font-weight:700;color:var(--b)}.tag{display:inline-block;background:#f1f5f9;border-radius:6px;padding:1px 6px;margin:1px;font-size:11px}.tag.a{background:#fef3c7;color:#92400e}
+.cols{display:grid;grid-template-columns:1.25fr 1fr;gap:14px}@media(max-width:900px){.cols{grid-template-columns:1fr}}
+</style></head><body>
+<h1>Pestaña Acciones · separada por origen</h1>
+<p class="n">El origen se deduce del modelo, sin columnas nuevas: <b>Plan</b> = la acción tiene ítem del plan; <b>Workflow</b> = la generó una regla (subtipo de VCT_PRM_ACCIONES_REGLAS); <b>Pendientes del cliente</b> = responsable Cliente fuera del plan; <b>Proyecto</b> = el resto (cargadas a mano). Se confirma con el DIAG.</p>
+
+<h2>Opción A · Grilla única agrupada (igual que Servicios)</h2>
+<div class="box">
+<div class="hd"><span class="ic">▤</span><b>Acciones (11)</b></div>
+<div class="tb"><span class="in">Buscar acción, responsable...</span><span class="sel">Estado ▾</span><span class="sel">Origen ▾</span><span class="sel">Tipo ▾</span><span class="sp"></span><span class="btn">Excel</span><span class="btn">PDF</span><span class="btn p">+ Agregar acción</span></div>
+<table><thead><tr><th>Acción</th><th style="width:150px">Área</th><th style="width:60px">Resp.</th><th style="width:110px">Estado</th><th style="width:110px">Fecha</th><th style="width:40px"></th></tr></thead><tbody>
+<tr class="g"><td colspan="6"><span class="cv">▾</span>Proyecto <small>2 acciones · 1 pendiente</small></td></tr>
+<tr><td class="t"><b>Reunión con el cliente · Revisión de alcance</b><small>Coordinar con gerencia la revisión</small></td><td>Analista de proyecto</td><td><span class="av">AA</span></td><td><span class="bd pe">Pendiente</span></td><td>vence 28/10</td><td><span class="mn">⋮</span></td></tr>
+<tr><td class="t"><b>Documentación · Documento enviado</b><small>Manual de calidad v1</small></td><td>Consultor líder</td><td><span class="av m">MN</span></td><td><span class="bd ok">Cumplida</span></td><td>20/10/2026</td><td><span class="mn">⋮</span></td></tr>
+<tr class="g"><td colspan="6"><span class="cv">▾</span>Plan estratégico <small>4 acciones · 2 cumplidas · Gestionar en el plan</small></td></tr>
+<tr><td class="t"><b>Gestión de ítem · Relevar FODA</b><small>4.1 Comprensión de la organización y de su contexto</small></td><td>Consultor líder</td><td><span class="av m">MN</span></td><td><span class="bd ok">Cumplida</span></td><td>16/10/2026</td><td><span class="mn">⋮</span></td></tr>
+<tr><td class="t"><b>Gestión de ítem · Enviar plantilla FODA</b><small>4.1 Comprensión de la organización y de su contexto</small></td><td>Cliente</td><td><span class="av c">CE</span></td><td><span class="bd pe">Pendiente</span></td><td>vence 22/10</td><td><span class="mn">⋮</span></td></tr>
+<tr class="g"><td colspan="6"><span class="cv">▾</span>Pendientes del cliente <small>1 acción</small></td></tr>
+<tr><td class="t"><b>Pendiente del cliente · Aprobar política de calidad</b><small>Reiterado 2 veces</small></td><td>Cliente</td><td><span class="av c">CP</span></td><td><span class="bd ve">Vencida</span></td><td>venció 18/10</td><td><span class="mn">⋮</span></td></tr>
+<tr class="g"><td colspan="6"><span class="cv">▸</span>Workflow del proyecto <small>5 acciones · automáticas · 1 vencida</small></td></tr>
+</tbody></table>
+<p class="n" style="margin-top:8px">Workflow arranca contraído (alta, asignación, datos de entrada, lanzamiento, carga del plan): se ven, se gestionan con «Gestionar», pero no se crean ni se editan desde el modal. Plan: el ⋮ lleva al ítem en el plan.</p>
+</div>
+
+<h2>Opción B · Chips de origen con contador</h2>
+<div class="box">
+<div class="hd"><span class="ic">▤</span><b>Acciones</b></div>
+<div class="chips"><span class="ch on">Todas<i>11</i></span><span class="ch">Proyecto<i>2</i></span><span class="ch">Plan estratégico<i>4</i></span><span class="ch">Pendientes del cliente<i>1</i></span><span class="ch">Workflow<i>5</i></span></div>
+<div class="tb"><span class="in">Buscar acción, responsable...</span><span class="sel">Estado ▾</span><span class="sel">Tipo ▾</span><span class="sp"></span><span class="btn">Excel</span><span class="btn">PDF</span><span class="btn p">+ Agregar acción</span></div>
+<p class="n">Misma grilla actual, filtrada por el chip elegido (se recuerda). Más compacta, pero no se ve todo separado a la vez.</p>
+</div>
+
+<div class="cols">
+<div>
+<h2>Set de tipificación propuesto (para el modal)</h2>
+<div class="box">
+<table class="tp"><thead><tr><th>Tipo</th><th>Subtipo (obligatorio)</th><th>Resultados</th></tr></thead><tbody>
+<tr><td>Proyecto</td><td>Reunión con el cliente</td><td><span class="tag">Realizada</span><span class="tag">Reprogramada</span><span class="tag">Suspendida</span></td></tr>
+<tr><td></td><td>Seguimiento</td><td><span class="tag">Realizado</span><span class="tag">Reprogramado</span></td></tr>
+<tr><td></td><td>Coordinación interna</td><td><span class="tag">Realizada</span><span class="tag">Reprogramada</span></td></tr>
+<tr><td>Documentación</td><td>Documento a elaborar</td><td><span class="tag">Enviado</span><span class="tag">Aprobado</span><span class="tag">Observado</span></td></tr>
+<tr><td></td><td>Documento a revisar</td><td><span class="tag">Aprobado</span><span class="tag">Observado</span></td></tr>
+<tr><td>Plan</td><td>Gestión de ítem</td><td><span class="tag">Cumplida</span><span class="tag">Pendiente del cliente</span><span class="tag">Reprogramada</span></td></tr>
+<tr><td>Cliente</td><td>Pendiente del cliente</td><td><span class="tag">Cumplido</span><span class="tag">Reiterado</span><span class="tag">Cancelado</span></td></tr>
+<tr><td>Consultor</td><td>Visita al cliente</td><td><span class="tag">Realizada</span><span class="tag">Suspendida</span><span class="tag">Reprogramada</span></td></tr>
+<tr><td>Administración</td><td>Honorarios · Viáticos · Facturación</td><td><span class="tag">Aprobado</span><span class="tag">Rechazado</span><span class="tag">Pagado</span></td></tr>
+<tr><td>Workflow</td><td colspan="2"><span class="tag a">Alta</span><span class="tag a">Asignar analista</span><span class="tag a">Asignar consultor</span><span class="tag a">Datos de entrada</span><span class="tag a">Lanzamiento</span><span class="tag a">Carga del plan</span><span class="tag a">Aviso de vencimiento</span> → solo sistema, no aparecen en el modal</td></tr>
+</tbody></table>
+<p class="n" style="margin-top:8px">Base: sección 6 del documento funcional + minuta (gestiones tipificadas, pendientes del cliente separados, visita como acción del consultor). Lo que hoy existe y no entra en este set se desactiva (ACTIVO = 0), no se borra, para no perder las acciones ya cargadas.</p>
+</div>
+</div>
+<div>
+<h2>Modal «Agregar acción» (desde la pestaña)</h2>
+<div class="mod"><div class="mh"><span class="ic">＋</span><b>Nueva acción del proyecto</b></div>
+<div class="mb"><div class="ctx">CEVEN SA · (1348) Implementación ISO 9001:2026</div>
+<div class="f"><label>Tipo *</label><div>Proyecto ▾</div></div><div class="f"><label>Subtipo *</label><div>Reunión con el cliente ▾</div></div>
+<div class="f"><label>Responsable *</label><div>Equipo / Cliente / Otro ▾</div></div><div class="f"><label>Prioridad *</label><div>Media ▾</div></div>
+<div class="f"><label>Estado *</label><div>Pendiente ▾</div></div><div class="f"><label>Vence *</label><div>28/10/2026</div></div>
+<div class="f w"><label>Resultado (al cerrar)</label><div>— ▾</div></div>
+<div class="f w"><label>Observaciones</label><div style="height:46px"></div></div></div></div>
+<p class="n" style="margin-top:8px">Mismo modal y campos que la acción del plan, sin ítem. Tipo «Plan» no se ofrece acá (se carga desde el ítem); subtipos de workflow excluidos.</p>
+</div></div>
+</body></html>

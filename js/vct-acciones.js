@@ -35,7 +35,11 @@
         var box = root.querySelector(".vct-acc-caldata");
         if (box) {
             box.querySelectorAll("i[data-d]").forEach(function (i) {
-                list.push({ d: i.getAttribute("data-d"), s: i.getAttribute("data-s") || "L", t: i.getAttribute("data-t") || "" });
+                list.push({
+                    d: i.getAttribute("data-d"), s: i.getAttribute("data-s") || "L", t: i.getAttribute("data-t") || "",
+                    cli: i.getAttribute("data-cli") || "", proy: i.getAttribute("data-proy") || "", srv: i.getAttribute("data-srv") || "",
+                    r: i.getAttribute("data-r") || "", ri: i.getAttribute("data-ri") || ""
+                });
             });
         }
         root._accData = list;
@@ -53,7 +57,7 @@
        En vez de dibujar su propio mes, Acciones monta el engine view-only de
        vct-calendario (el mismo de Feriados y de las fichas 360). Las acciones
        viajan como eventos {f,x,c} y el color sale del estado (V/H/P/L). */
-    var CAL_VER = "21";   /* version de vct-calendario.css/js a inyectar */
+    var CAL_VER = "33";   /* version de vct-calendario.css/js a inyectar */
 
     function ensureCalendario(cb) {
         /* CSS */
@@ -81,7 +85,8 @@
     function buildEvents(root, sit) {
         return itemsFor(root, sit).map(function (x) {
             var f = x.d.substr(0, 4) + "-" + x.d.substr(4, 2) + "-" + x.d.substr(6, 2);
-            return { f: f, x: x.t, c: x.s };   /* c = V|H|P|L -> color en vct-calendario */
+            /* cli/proy/srv + consultor (r/ri) -> tooltip Cliente > Proyecto > Servicio(chips) > Consultor(avatar) > Descripcion */
+            return { f: f, x: x.t, c: x.s, cli: x.cli, proy: x.proy, srv: x.srv, r: x.r, ri: x.ri };
         });
     }
 

@@ -315,19 +315,29 @@
    Se atenua todo el contenido (incluido el color de un feriado existente,
    que sigue siendo informativo pero ya no es interactivo). */
 .vct-agenda-cell-past{
-    background:#E7E4DE;
+    background:#FBEFF4;   /* dia transcurrido = rosa clarito */
     cursor:default;
 }
 .vct-agenda-cell-past .vct-agenda-daynum{
-    color:#9B948A;
+    color:#B58CA0;
 }
 .vct-agenda-cell-past:hover{
     box-shadow:none !important;
     transform:none !important;
 }
+/* dia pasado con feriado: el color del feriado se conserva LEGIBLE (sin apagar
+   la celda con opacidad; el fondo pasado no tapa el contenido). */
 .vct-agenda-cell-past.vct-agenda-cell-holiday,
 .vct-agenda-cell-past.vct-agenda-cell-holiday-puente{
-    opacity:.55;
+    opacity:1;
+}
+/* FIN DE SEMANA SIEMPRE CELESTE: la condicion de finde gana a la de vencido
+   (dos clases => mayor especificidad, sin depender del orden). */
+.vct-agenda-cell-weekend.vct-agenda-cell-past{
+    background:#DCE7F9;
+}
+.vct-agenda-cell-weekend.vct-agenda-cell-past .vct-agenda-daynum{
+    color:#5B7AA8;
 }
 
 .vct-agenda-cell-today{
@@ -414,15 +424,20 @@
     cursor:default;
 }
 .vct-agenda-cell-past .vct-agenda-weekrow-date{
-    background:#E7E4DE;
+    background:#FBEFF4;   /* habil vencido = rosa suave (unificado) */
+}
+/* finde vencido: sigue celeste (gana a vencido) */
+.vct-agenda-cell-weekend.vct-agenda-cell-past .vct-agenda-weekrow-date{
+    background:#DCE7F9;
 }
 .vct-agenda-cell-past .vct-agenda-weekrow-daynum,
 .vct-agenda-cell-past .vct-agenda-weekrow-dayname,
 .vct-agenda-cell-past .vct-agenda-weekrow-month{
     color:#9B948A;
 }
+/* contenido de un dia vencido: legible (sin apagar la tarjeta con opacidad) */
 .vct-agenda-cell-past .vct-agenda-weekrow-card{
-    opacity:.6;
+    opacity:1;
 }
 .vct-agenda-weekrow-dayname{
     font-size:10px;
@@ -513,8 +528,11 @@
     background:#DCE7F9;
 }
 .vct-agenda-day.vct-agenda-cell-past{
-    background:#E7E4DE;
+    background:#FBEFF4;   /* habil vencido = rosa suave (unificado) */
     cursor:default;
+}
+.vct-agenda-day.vct-agenda-cell-weekend.vct-agenda-cell-past{
+    background:#DCE7F9;   /* finde vencido: sigue celeste */
 }
 .vct-agenda-day.vct-agenda-cell-past .vct-agenda-day-num{
     color:#9B948A;
@@ -584,8 +602,8 @@
 }
 /* Calendarios: una sola toolbar y geometria, sin cambiar sus callbacks. */
 .vct-agenda-toolbar > .vct-agc-pick{grid-area:pick;justify-self:start;width:168px;min-width:0;max-width:100%;}
-.vct-agenda-toolbar .vct-agenda-jump > :is(select,.vct-custom-select-wrapper){width:112px !important;min-width:0;flex:0 1 112px;}
-.vct-agenda-toolbar .vct-agenda-jump > :is(select,.vct-custom-select-wrapper):last-child{width:82px !important;flex-basis:82px;}
+.vct-agenda-toolbar .vct-agenda-jump > :is(select,.vct-custom-select-wrapper){width:128px !important;min-width:0;flex:0 1 128px;}  /* mes: ancho para nombres completos (Septiembre/Diciembre) */
+.vct-agenda-toolbar .vct-agenda-jump > :is(select,.vct-custom-select-wrapper):last-child{width:82px !important;flex-basis:82px;}        /* año */
 .vct-agenda-toolbar .vct-agenda-jump :is(select,.vct-custom-select-trigger){height:30px !important;min-height:30px !important;font-size:12px !important;}
 .vct-agenda-toolbar .vct-agenda-nav-btn svg{width:16px;height:16px;}
 .vct-agenda-toolbar :is(button,select):focus-visible{outline:2px solid var(--vct-primary,#66062D);outline-offset:2px;}
@@ -1577,8 +1595,8 @@ html body .vct-form-select-menu.vct-agc-select-menu { box-sizing: border-box !im
 [data-vct-acc] .vct-acc-cal-unified .vct-agenda-table thead th {padding-top:3px;padding-bottom:5px;}
 [data-vct-acc] .vct-acc-cal-unified .vct-agenda-cell {height:56px !important;min-height:56px !important;padding:4px !important;vertical-align:top;}
 [data-vct-acc] .vct-acc-cal-unified .vct-agenda-daynum {height:20px;min-width:20px;font-size:12px;}
-[data-vct-acc] .vct-acc-cal-unified .vct-agenda-jump > .vct-pv-cal-select {display:inline-flex;position:relative;width:112px;min-width:0;flex:0 1 112px;margin:0;padding:0;border:0;background:transparent;box-shadow:none;}
-[data-vct-acc] .vct-acc-cal-unified .vct-agenda-jump > .vct-pv-cal-select:last-child {width:82px;flex-basis:82px;}
+[data-vct-acc] .vct-acc-cal-unified .vct-agenda-jump > .vct-pv-cal-select {display:inline-flex;position:relative;width:128px;min-width:0;flex:0 1 128px;margin:0;padding:0;border:0;background:transparent;box-shadow:none;}  /* mes: ancho para nombres completos */
+[data-vct-acc] .vct-acc-cal-unified .vct-agenda-jump > .vct-pv-cal-select:last-child {width:82px;flex-basis:82px;}  /* año */
 [data-vct-acc] .vct-pv-cal-select > select {display:none !important;}
 [data-vct-acc] .vct-pv-cal-select > .vct-form-select {width:100%;min-width:0;}
 [data-vct-acc] .vct-pv-cal-select .vct-form-select-trigger {display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;height:32px;min-height:32px;padding:0 10px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;color:#1f2937;font:inherit;font-size:12px;cursor:pointer;}
@@ -1593,3 +1611,119 @@ html body .vct-form-select-menu.vct-agc-select-menu { box-sizing: border-box !im
  [data-vct-acc] .vct-acc-cal-unified .vct-agenda-title {font-size:14px;}
  [data-vct-acc] .vct-acc-cal-unified .vct-agenda-view-btn {padding:7px 9px;}
 }
+
+/* ============================================================================
+   Tanda E + B + fondos de Mes (Agenda Consultor)
+   ============================================================================ */
+/* E — "No disponible" = gris (igual que Ocupado) */
+.vct-agenda-cell.vct-agc-no_disponible .vct-agc-cell-note{color:#475569}
+.vct-agc-allday-chip.vct-agc-no_disponible{background:#EEF1F5;color:#51607A}
+.vct-agc-fullday.vct-agc-no_disponible{background:rgba(100,116,139,.14)}
+
+/* Mes: un día con algo cargado NO puede ser blanco (blanco = no cargado).
+   Se tinta suave por estado; el día vacío sigue blanco. */
+.vct-agenda-cell.vct-agc-disponible    { background:rgba(37,99,235,.09); }
+.vct-agenda-cell.vct-agc-asignado      { background:rgba(14,159,110,.09); }
+.vct-agenda-cell.vct-agc-licencia      { background:rgba(236,72,153,.10); }
+.vct-agenda-cell.vct-agc-ocupado       { background:rgba(100,116,139,.10); }
+.vct-agenda-cell.vct-agc-no_disponible { background:rgba(100,116,139,.10); }
+.vct-agenda-cell.vct-agc-potencial     { background:rgba(245,158,11,.10); }
+.vct-agenda-cell.vct-agc-organismo     { background:rgba(13,148,136,.09); }
+.vct-agenda-cell.vct-agc-observacion   { background:rgba(255,122,89,.10); }
+.vct-agenda-cell.vct-agc-feriado-fijo  { background:rgba(224,48,77,.09); }
+.vct-agenda-cell.vct-agc-feriado-mov   { background:rgba(139,92,246,.09); }
+
+/* B — días transcurridos VACÍOS = rosa clarito (los que tienen estado conservan su tinte) */
+.vct-agenda-cell.vct-agc-no_cargado.is-past { background:#FBEFF4; }                 /* habil vencido sin carga = rosa */
+.vct-agenda-cell.vct-agc-no_cargado.is-wknd { background:#DCE7F9; }                 /* finde sin carga = celeste */
+.vct-agenda-cell.vct-agc-no_cargado.is-wknd.is-past { background:#DCE7F9; }         /* finde vencido: sigue celeste (gana a vencido) */
+
+/* ============================================================================
+   A — Vista SEMANA del consultor: weeklist HORIZONTAL (como Agenda General)
+   ============================================================================ */
+.vct-agc-wl{display:flex;flex-direction:column;gap:8px;max-width:1000px;margin:0 auto}
+.vct-agc-wl-row{display:flex;align-items:stretch;gap:12px;border:1px solid #ece8e5;border-radius:12px;background:#fff;overflow:hidden;min-height:56px}
+.vct-agc-wl-row.is-editable{cursor:pointer;transition:box-shadow .12s,border-color .12s}
+.vct-agc-wl-row.is-editable:hover{border-color:rgba(102,6,45,.35);box-shadow:0 2px 10px rgba(20,20,20,.07)}
+.vct-agc-wl-row.is-past{background:#FBEFF4;border-color:#f1dde5}          /* habil vencido = rosa suave */
+.vct-agc-wl-row.is-wknd{background:#DCE7F9;border-color:#cdddf4}         /* finde = celeste pastel (unificado) */
+.vct-agc-wl-row.is-wknd.is-past{background:#DCE7F9;border-color:#cdddf4} /* finde vencido: sigue celeste (gana a vencido) */
+.vct-agc-wl-row.is-today{border-color:#66062D;box-shadow:inset 3px 0 0 #66062D}
+.vct-agc-wl-date{flex:0 0 86px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;border-right:1px solid #ece8e5;background:rgba(0,0,0,.015)}
+.vct-agc-wl-dname{font-size:10.5px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.02em}
+.vct-agc-wl-dnum{font-size:22px;font-weight:800;color:#1f2937;line-height:1.05}
+.vct-agc-wl-row.is-today .vct-agc-wl-dnum{color:#66062D}
+.vct-agc-wl-dmonth{font-size:10px;color:#94a3b8}
+.vct-agc-wl-bars{flex:1 1 auto;min-width:0;display:flex;flex-wrap:wrap;align-content:center;gap:6px;padding:8px 10px}
+.vct-agc-wl-empty{font-size:12px;color:#b9a9b1;font-style:italic;align-self:center}
+.vct-agc-wl-bar{display:inline-flex;align-items:center;max-width:100%;border-left:4px solid #cbd5e1;border-radius:7px;padding:5px 10px;font-size:12px;font-weight:600;color:#1f2937;background:#f2f4f7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vct-agc-wl-bar b{font-weight:700;margin-right:2px}
+/* barras por estado (mismos colores del consultor) */
+.vct-agc-wl-bar.vct-agc-disponible    { border-left-color:#2563EB; background:rgba(37,99,235,.12); }
+.vct-agc-wl-bar.vct-agc-asignado      { border-left-color:#0E9F6E; background:rgba(14,159,110,.12); }
+.vct-agc-wl-bar.vct-agc-licencia      { border-left-color:#EC4899; background:rgba(236,72,153,.13); }
+.vct-agc-wl-bar.vct-agc-ocupado       { border-left-color:#64748B; background:rgba(100,116,139,.13); }
+.vct-agc-wl-bar.vct-agc-no_disponible { border-left-color:#64748B; background:rgba(100,116,139,.13); }
+.vct-agc-wl-bar.vct-agc-potencial     { border-left-color:#F59E0B; background:rgba(245,158,11,.13); }
+.vct-agc-wl-bar.vct-agc-organismo     { border-left-color:#0D9488; background:rgba(13,148,136,.12); }
+.vct-agc-wl-bar.vct-agc-observacion   { border-left-color:#FF7A59; background:rgba(255,122,89,.14); }
+.vct-agc-wl-bar.vct-agc-feriado-fijo  { border-left-color:#E0304D; background:rgba(224,48,77,.12); }
+.vct-agc-wl-bar.vct-agc-feriado-mov   { border-left-color:#8B5CF6; background:rgba(139,92,246,.12); }
+@media (max-width:600px){ .vct-agc-wl-date{flex-basis:64px} .vct-agc-wl-dnum{font-size:18px} }
+
+/* ============================================================================
+   Boceto A — Semana: mini-calendario + referencias (izq) + weeklist (der)
+   ============================================================================ */
+.vct-agc-wk{display:flex;gap:18px;align-items:flex-start}
+.vct-agc-wk-side{flex:0 0 206px;display:flex;flex-direction:column;gap:16px}
+.vct-agc-wk-main{flex:1 1 auto;min-width:0}
+.vct-agc-ref{display:flex;flex-direction:column;gap:7px}
+.vct-agc-ref-h{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+.vct-agc-ref-row{display:flex;align-items:center;gap:8px;font-size:12px;color:#475569}
+.vct-agc-ref-dot{width:11px;height:11px;border-radius:4px;flex:none;background:#cbd5e1}
+.vct-agc-ref-dot.vct-agc-disponible{background:#2563EB}
+.vct-agc-ref-dot.vct-agc-asignado{background:#0E9F6E}
+.vct-agc-ref-dot.vct-agc-licencia{background:#EC4899}
+.vct-agc-ref-dot.vct-agc-ocupado{background:#64748B}
+.vct-agc-ref-dot.vct-agc-no_disponible{background:#64748B}
+.vct-agc-ref-dot.vct-agc-potencial{background:#F59E0B}
+.vct-agc-ref-dot.vct-agc-organismo{background:#0D9488}
+.vct-agc-ref-dot.vct-agc-observacion{background:#FF7A59}
+.vct-agc-ref-dot.vct-agc-feriado-fijo{background:#E0304D}
+.vct-agc-ref-dot.vct-agc-feriado-mov{background:#8B5CF6}
+/* boceto A "fino": barras de la weeklist mas livianas */
+.vct-agc-wl-bar{background:#f6f7f9;border-left-width:3px;box-shadow:none}
+@media (max-width:820px){
+  .vct-agc-wk{flex-direction:column}
+  .vct-agc-wk-side{flex-direction:row;flex-wrap:wrap;gap:20px;width:100%}
+  .vct-agc-wk-side .vct-agc-mini{flex:1;min-width:190px}
+  .vct-agc-ref{flex:1;min-width:180px}
+}
+
+/* F — badge de iniciales del responsable en cada accion del calendario */
+.vct-agenda-event-resp{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:#66062D;color:#fff;font-size:7.5px;font-weight:800;margin-right:4px;flex:none;vertical-align:middle;letter-spacing:-.02em}
+/* F: evento con responsable -> fila flex (badge fijo + titulo con su propio ellipsis) */
+.vct-agenda-event.has-resp{display:flex;align-items:center}
+.vct-agenda-event.has-resp .vct-agenda-event-txt{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vct-agenda-event[data-tt]{cursor:default}
+/* F: tooltip-tarjeta propio de las acciones del calendario */
+.vct-cal-tip{position:fixed;z-index:9999;max-width:270px;background:#fff;border:1px solid #E3DED7;border-left:3px solid #66062D;border-radius:9px;box-shadow:0 8px 28px rgba(74,72,73,.20);padding:10px 12px;font-size:12px;color:#2A2A2A;pointer-events:none}
+.vct-cal-tip-t{font-weight:700;line-height:1.3;color:#3A3A3A}
+.vct-cal-tip-m{margin-top:7px;display:flex;flex-direction:column;gap:5px}
+.vct-cal-tip-row{display:flex;align-items:center;gap:7px;font-size:11.5px;color:#4A4849}
+.vct-cal-tip-row em{font-style:normal;color:#8E8C8D}
+.vct-cal-tip-k{flex:none;min-width:58px;color:#8E8C8D;font-size:10.5px;text-transform:uppercase;letter-spacing:.03em;font-weight:700}
+.vct-cal-tip-chips{display:inline-flex;align-items:center;gap:0}
+/* servicio = circulo con icono (maletin/clipboard/personas), color por tipo,
+   superpuestos para ocupar poco. Nombre del servicio en el title (hover). */
+.vct-cal-tip-svc{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#8E8C8D;color:#fff;margin-left:-5px;border:1.5px solid #fff;flex:none}
+.vct-cal-tip-svc:first-child{margin-left:0}
+.vct-cal-tip-svc svg{width:11px;height:11px}
+.vct-cal-tip-svc.is-co{background:#8C1D47}   /* Consultoria - maletin */
+.vct-cal-tip-svc.is-au{background:#4A4849}   /* Auditoria - clipboard */
+.vct-cal-tip-svc.is-ca{background:#CF6F92}   /* Capacitacion - personas */
+.vct-cal-tip-chips .vct-cal-tip-ic{margin-left:7px}   /* separar el avatar del consultor de los iconos de servicio */
+.vct-cal-tip-proy{color:#4A4849}
+.vct-cal-tip-desc{color:#4A4849;padding-top:3px;border-top:1px solid #EFECE7;margin-top:1px}
+.vct-cal-tip-ic{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;background:#66062D;color:#fff;font-size:8px;font-weight:800;flex:none;letter-spacing:-.02em}
+.vct-cal-tip-date{color:#8E8C8D;font-size:11px}

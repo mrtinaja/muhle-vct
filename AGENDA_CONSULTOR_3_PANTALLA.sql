@@ -156,9 +156,9 @@ BEGIN
                     SELECT 1 FROM dbo.VCT_PRM_AGENDA_CONSULTOR
                     WHERE ID_CONSULTOR=@CONS_ID AND FECHA=@B_D AND TIPO='LICENCIA')
                     SET @MSG = 'Elimin&aacute; primero la licencia o vacaciones.';
-                ELSE IF @B_TIPO NOT IN ('DISPONIBLE','LICENCIA','OCUPADO','POTENCIAL','ORGANISMO','OBSERVACION')
+                ELSE IF @B_TIPO NOT IN ('DISPONIBLE','LICENCIA','OCUPADO','NO_DISPONIBLE','POTENCIAL','ORGANISMO','OBSERVACION')
                     SET @MSG = 'Eleg&iacute; un tipo v&aacute;lido.';
-                ELSE IF @B_TIPO NOT IN ('DISPONIBLE','LICENCIA') AND @B_DESC = ''
+                ELSE IF @B_TIPO IN ('POTENCIAL','ORGANISMO','OBSERVACION') AND @B_DESC = ''
                     SET @MSG = 'Complet&aacute; la descripci&oacute;n de la fecha.';
                 ELSE IF @B_TIPO = 'LICENCIA' AND @B_MOT = ''
                     SET @MSG = 'Eleg&iacute; el motivo de la licencia.';
@@ -209,7 +209,7 @@ BEGIN
                 BEGIN
                     SET @B_DISP = CASE WHEN @B_TIPO='DISPONIBLE' THEN 1 ELSE 0 END;
                     IF @B_TIPO <> 'LICENCIA' SET @B_MOT = '';
-                    IF @B_TIPO IN ('DISPONIBLE','LICENCIA') SET @B_DESC = '';
+                    IF @B_TIPO NOT IN ('POTENCIAL','ORGANISMO','OBSERVACION') SET @B_DESC = '';
                     /* Horas cero para LICENCIA, OCUPADO y OBSERVACION. */
                     IF EXISTS (SELECT 1 FROM dbo.VCT_PRM_AGENDA_CONSULTOR WHERE ID_CONSULTOR=@CONS_ID AND FECHA=@B_D)
                         UPDATE dbo.VCT_PRM_AGENDA_CONSULTOR
@@ -280,9 +280,24 @@ BEGIN
                  + ',"t":"'  + ISNULL(R.TIPO,'')
                  + '","n":"' + REPLACE(REPLACE(REPLACE(ISNULL(R.NOTA,''),'\','/'),'"',''''),CHAR(10),' ')
                  + '","mo":"'+ REPLACE(REPLACE(REPLACE(ISNULL(R.MOTIVO,''),'\','/'),'"',''''),CHAR(10),' ')
-                 + '","de":"'+ REPLACE(REPLACE(REPLACE(ISNULL(R.DESCRIPCION,''),'\','/'),'"',''''),CHAR(10),' ') + '"}'
+                 + '","de":"'+ REPLACE(REPLACE(REPLACE(ISNULL(R.DESCRIPCION,''),'\','/'),'"',''''),CHAR(10),' ')
+                 /* TOOLTIP_V1: asignado por visita -> cliente / proyecto / servicio(s) */
+                 + '","cli":"'+ REPLACE(REPLACE(REPLACE(REPLACE(ISNULL(C2.RAZON_SOCIAL,''),'\','/'),'"',''''),CHAR(10),' '),CHAR(13),' ')
+                 + '","proy":"'+ REPLACE(REPLACE(REPLACE(REPLACE(CASE WHEN P2.ID IS NOT NULL THEN ISNULL('('+NULLIF(LTRIM(RTRIM(P2.CODIGO)),'')+') ','')+ISNULL(P2.NOMBRE,'') ELSE '' END,'\','/'),'"',''''),CHAR(10),' '),CHAR(13),' ')
+                 + '","srv":"'+ REPLACE(REPLACE(REPLACE(REPLACE(ISNULL(STUFF((SELECT ', '+UPPER(LEFT(ISNULL(S.CODIGO,''),2))+'|'+CONVERT(VARCHAR(200),S.DESCRIPCION) FROM dbo.VCT_PROYECTOS_SERVICIOS PS WITH(NOLOCK) INNER JOIN dbo.VCT_PRM_SERVICIOS S WITH(NOLOCK) ON S.ID=PS.ID_SERVICIO WHERE PS.ID_PROYECTO=VX.ID_PROYECTO ORDER BY S.ID FOR XML PATH(''),TYPE).value('.','VARCHAR(MAX)'),1,2,''),''),'\','/'),'"',''''),CHAR(10),' '),CHAR(13),' ')
+                 + '"}'
             FROM dbo.VCT_FN_AGENDA_CONSULTOR_RANGO(@CONS_ID, @DESDE, @HASTA) R
             LEFT JOIN dbo.VCT_PRM_AGENDA_CONSULTOR AG ON AG.ID_CONSULTOR=@CONS_ID AND AG.FECHA=R.FECHA
+            OUTER APPLY (
+                SELECT TOP 1 PV.ID_PROYECTO
+                FROM dbo.VCT_PROYECTOS_VISITAS PV WITH(NOLOCK)
+                INNER JOIN dbo.VCT_PROYECTOS_VISITAS_CONSULTORES PVC WITH(NOLOCK) ON PVC.ID_VISITA=PV.ID
+                WHERE PVC.ID_CONSULTOR=@CONS_ID
+                  AND R.FECHA BETWEEN CONVERT(DATE,PV.FECHA_DESDE) AND CONVERT(DATE,ISNULL(PV.FECHA_HASTA,PV.FECHA_DESDE))
+                ORDER BY PV.ID DESC
+            ) VX
+            LEFT JOIN dbo.VCT_PROYECTOS P2 WITH(NOLOCK) ON P2.ID = VX.ID_PROYECTO
+            LEFT JOIN dbo.VCT_CLIENTES  C2 WITH(NOLOCK) ON C2.ID = P2.IDCLIENTE
             ORDER BY R.FECHA
             FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), 1, 1, ''), '') + ']';
     END
@@ -303,22 +318,12 @@ BEGIN
     END;
 
     /* ---------- datos (JSON de ACTIVIDADES con horario, estilo Google Calendar) ---------- */
+    /* TOOLTIP_V1: actividades con cliente/proyecto/servicio (mismo tooltip que Acciones).
+       La armadura del JSON vive en dbo.VCT_FN_AGENDA_ACTS_JSON (una sola fuente,
+       compartida con la V360 del consultor). */
     DECLARE @ACTS_JSON VARCHAR(MAX) = '[]';
     IF @CONS_ID IS NOT NULL
-    BEGIN
-        SET @ACTS_JSON = '[' + ISNULL(STUFF((
-            SELECT ',{"id":' + CONVERT(VARCHAR(12), A.ID)
-                 + ',"f":"'  + CONVERT(VARCHAR(10), A.FECHA, 120)
-                 + '","hd":"'+ A.HD
-                 + '","hh":"'+ A.HH
-                 + '","t":"' + A.TIPO
-                 + '","ti":"'+ REPLACE(REPLACE(REPLACE(REPLACE(ISNULL(A.TITULO,''),'\','/'),'"',''''),CHAR(10),' '),CHAR(13),' ')
-                 + '","su":"'+ REPLACE(REPLACE(REPLACE(REPLACE(ISNULL(A.SUBTITULO,''),'\','/'),'"',''''),CHAR(10),' '),CHAR(13),' ')
-                 + '","c":"' + ISNULL(A.COLOR,'') + '"}'
-            FROM dbo.VCT_FN_AGENDA_ACTIVIDADES_RANGO(@CONS_ID, @DESDE, @HASTA) A
-            ORDER BY A.FECHA, A.HD
-            FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), 1, 1, ''), '') + ']';
-    END;
+        SET @ACTS_JSON = dbo.VCT_FN_AGENDA_ACTS_JSON(@CONS_ID, @DESDE, @HASTA);
 
     /* escape para atributo HTML (igual que el calendario de feriados) */
     SET @DIAS_JSON = REPLACE(REPLACE(@DIAS_JSON, '&', '&amp;'), '"', '&quot;');
@@ -329,8 +334,8 @@ BEGIN
 
     SET @HTML =
         '<link rel="stylesheet" href="../css/vct-inicio.css?v=5">'
-      + '<link rel="stylesheet" href="../css/vct-calendario.css?v=21">'
-      + '<script src="../js/vct-calendario.js?v=21"></script>'
+      + '<link rel="stylesheet" href="../css/vct-calendario.css?v=34">'
+      + '<script src="../js/vct-calendario.js?v=34"></script>'
       + '<div class="vct-page vct-page-main vct-agc-page" data-vct-page'
       + ' data-vct-sidebar-id="' + CONVERT(VARCHAR(20),@SIDEBAR_ID) + '"'
       + ' data-vct-form-id="' + ISNULL(@FORM_ID,'') + '"'
@@ -350,8 +355,8 @@ BEGIN
       + '<div class="vct-agenda-toolbar vct-agc-toolbar">'
       +   ISNULL(@SELECT_CONS,'')
       +   '<div class="vct-agenda-view-toggle" data-vct-agc-view-toggle>'
-      +     '<button type="button" class="vct-agenda-view-btn" data-vct-agc-view="month">Mes</button>'
-      +     '<button type="button" class="vct-agenda-view-btn is-active" data-vct-agc-view="week">Semana</button>'
+      +     '<button type="button" class="vct-agenda-view-btn is-active" data-vct-agc-view="month">Mes</button>'
+      +     '<button type="button" class="vct-agenda-view-btn" data-vct-agc-view="week">Semana</button>'
       +     '<button type="button" class="vct-agenda-view-btn" data-vct-agc-view="day">D' + CHAR(237) + 'a</button>'
       +   '</div>'
       +   '<div class="vct-agenda-nav">'

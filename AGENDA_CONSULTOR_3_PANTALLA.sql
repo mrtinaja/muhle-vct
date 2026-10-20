@@ -152,9 +152,13 @@ BEGIN
             ELSE
             BEGIN
                 SET @B_HORN = 0;
-                IF @B_TIPO NOT IN ('DISPONIBLE','LICENCIA','OCUPADO','POTENCIAL','ORGANISMO','OBSERVACION')
+                IF @B_TIPO <> 'LICENCIA' AND EXISTS (
+                    SELECT 1 FROM dbo.VCT_PRM_AGENDA_CONSULTOR
+                    WHERE ID_CONSULTOR=@CONS_ID AND FECHA=@B_D AND TIPO='LICENCIA')
+                    SET @MSG = 'Elimin&aacute; primero la licencia o vacaciones.';
+                ELSE IF @B_TIPO NOT IN ('DISPONIBLE','LICENCIA','OCUPADO','NO_DISPONIBLE','POTENCIAL','ORGANISMO','OBSERVACION')
                     SET @MSG = 'Eleg&iacute; un tipo v&aacute;lido.';
-                ELSE IF @B_TIPO NOT IN ('DISPONIBLE','LICENCIA') AND @B_DESC = ''
+                ELSE IF @B_TIPO IN ('POTENCIAL','ORGANISMO','OBSERVACION') AND @B_DESC = ''
                     SET @MSG = 'Complet&aacute; la descripci&oacute;n de la fecha.';
                 ELSE IF @B_TIPO = 'LICENCIA' AND @B_MOT = ''
                     SET @MSG = 'Eleg&iacute; el motivo de la licencia.';
@@ -178,11 +182,34 @@ BEGIN
                     END CATCH;
                 END;
 
+                /* CAL13_VALIDACION: rechazos esperados se muestran dentro de Agenda. */
+                IF @MSG='' AND @B_TIPO='LICENCIA'
+                BEGIN
+                    IF EXISTS(SELECT 1 FROM dbo.VCT_AGENDA_CONSULTOR_ACTIVIDAD
+                      WHERE ID_CONSULTOR=@CONS_ID AND FECHA=@B_D AND ACTIVO=1)
+                        SET @MSG='El dia tiene actividades. Reprograme las actividades antes de cargar la licencia.';
+                    ELSE IF EXISTS(SELECT 1 FROM dbo.VCT_PROYECTOS_VISITAS_CONSULTORES C
+                      JOIN dbo.VCT_PROYECTOS_VISITAS V ON V.ID=C.ID_VISITA
+                      WHERE C.ID_CONSULTOR=@CONS_ID
+                        AND @B_D BETWEEN CONVERT(DATE,V.FECHA_DESDE) AND CONVERT(DATE,ISNULL(V.FECHA_HASTA,V.FECHA_DESDE))
+                        AND ISNULL(V.ESTADO,'') NOT IN ('CANCELADO','CANCELADA','ANULADO','ANULADA'))
+                        SET @MSG='El dia tiene una visita asignada. Reprograme la visita antes de cargar la licencia.';
+                    ELSE IF EXISTS(SELECT 1 FROM dbo.VCT_PROYECTOS_VISITAS_REGISTRO
+                      WHERE ID_CONSULTOR=@CONS_ID AND FECHA=@B_D)
+                        SET @MSG='El dia tiene horas registradas. Revise el registro antes de cargar la licencia.';
+                END;
+                DECLARE @CAL13_OWNTRAN BIT=0;
+                BEGIN TRY
+                    IF @MSG='' AND @@TRANCOUNT=0
+                    BEGIN
+                        BEGIN TRANSACTION;
+                        SET @CAL13_OWNTRAN=1;
+                    END;
                 IF @MSG = ''
                 BEGIN
                     SET @B_DISP = CASE WHEN @B_TIPO='DISPONIBLE' THEN 1 ELSE 0 END;
                     IF @B_TIPO <> 'LICENCIA' SET @B_MOT = '';
-                    IF @B_TIPO IN ('DISPONIBLE','LICENCIA') SET @B_DESC = '';
+                    IF @B_TIPO NOT IN ('POTENCIAL','ORGANISMO','OBSERVACION') SET @B_DESC = '';
                     /* Horas cero para LICENCIA, OCUPADO y OBSERVACION. */
                     IF EXISTS (SELECT 1 FROM dbo.VCT_PRM_AGENDA_CONSULTOR WHERE ID_CONSULTOR=@CONS_ID AND FECHA=@B_D)
                         UPDATE dbo.VCT_PRM_AGENDA_CONSULTOR
@@ -194,6 +221,13 @@ BEGIN
                         INSERT INTO dbo.VCT_PRM_AGENDA_CONSULTOR (ID_CONSULTOR,FECHA,TIPO,HORAS_CAPACIDAD,DISPONIBLE,MOTIVO,DESCRIPCION,FECHA_ALTA,USUARIO_ALTA)
                         VALUES (@CONS_ID,@B_D,@B_TIPO,@B_HORN,@B_DISP,NULLIF(@B_MOT,''),NULLIF(@B_DESC,''),GETDATE(),@U);
                 END;
+                    IF @CAL13_OWNTRAN=1 COMMIT TRANSACTION;
+                END TRY
+                BEGIN CATCH
+                    IF @CAL13_OWNTRAN=1 AND @@TRANCOUNT>0 ROLLBACK TRANSACTION;
+                    IF ERROR_NUMBER()<>51012 OR XACT_STATE()=-1 THROW;
+                    SET @MSG=LEFT(ERROR_MESSAGE(),1000);
+                END CATCH;
             END;
 
             UPDATE dbo.VCT_BUFFER SET TEXTO01=NULL, TEXTO02=NULL, TEXTO03=NULL, TEXTO04=NULL, TEXTO05=NULL, FLAG01='0', FLAG02='0' WHERE PAR_KEY=@IPKEYJOB;
@@ -246,24 +280,62 @@ BEGIN
                  + ',"t":"'  + ISNULL(R.TIPO,'')
                  + '","n":"' + REPLACE(REPLACE(REPLACE(ISNULL(R.NOTA,''),'\','/'),'"',''''),CHAR(10),' ')
                  + '","mo":"'+ REPLACE(REPLACE(REPLACE(ISNULL(R.MOTIVO,''),'\','/'),'"',''''),CHAR(10),' ')
-                 + '","de":"'+ REPLACE(REPLACE(REPLACE(ISNULL(R.DESCRIPCION,''),'\','/'),'"',''''),CHAR(10),' ') + '"}'
+                 + '","de":"'+ REPLACE(REPLACE(REPLACE(ISNULL(R.DESCRIPCION,''),'\','/'),'"',''''),CHAR(10),' ')
+                 /* TOOLTIP_V1: asignado por visita -> cliente / proyecto / servicio(s) */
+                 + '","cli":"'+ REPLACE(REPLACE(REPLACE(REPLACE(ISNULL(C2.RAZON_SOCIAL,''),'\','/'),'"',''''),CHAR(10),' '),CHAR(13),' ')
+                 + '","proy":"'+ REPLACE(REPLACE(REPLACE(REPLACE(CASE WHEN P2.ID IS NOT NULL THEN ISNULL('('+NULLIF(LTRIM(RTRIM(P2.CODIGO)),'')+') ','')+ISNULL(P2.NOMBRE,'') ELSE '' END,'\','/'),'"',''''),CHAR(10),' '),CHAR(13),' ')
+                 + '","srv":"'+ REPLACE(REPLACE(REPLACE(REPLACE(ISNULL(STUFF((SELECT ', '+UPPER(LEFT(ISNULL(S.CODIGO,''),2))+'|'+CONVERT(VARCHAR(200),S.DESCRIPCION) FROM dbo.VCT_PROYECTOS_SERVICIOS PS WITH(NOLOCK) INNER JOIN dbo.VCT_PRM_SERVICIOS S WITH(NOLOCK) ON S.ID=PS.ID_SERVICIO WHERE PS.ID_PROYECTO=VX.ID_PROYECTO ORDER BY S.ID FOR XML PATH(''),TYPE).value('.','VARCHAR(MAX)'),1,2,''),''),'\','/'),'"',''''),CHAR(10),' '),CHAR(13),' ')
+                 + '"}'
             FROM dbo.VCT_FN_AGENDA_CONSULTOR_RANGO(@CONS_ID, @DESDE, @HASTA) R
             LEFT JOIN dbo.VCT_PRM_AGENDA_CONSULTOR AG ON AG.ID_CONSULTOR=@CONS_ID AND AG.FECHA=R.FECHA
+            OUTER APPLY (
+                SELECT TOP 1 PV.ID_PROYECTO
+                FROM dbo.VCT_PROYECTOS_VISITAS PV WITH(NOLOCK)
+                INNER JOIN dbo.VCT_PROYECTOS_VISITAS_CONSULTORES PVC WITH(NOLOCK) ON PVC.ID_VISITA=PV.ID
+                WHERE PVC.ID_CONSULTOR=@CONS_ID
+                  AND R.FECHA BETWEEN CONVERT(DATE,PV.FECHA_DESDE) AND CONVERT(DATE,ISNULL(PV.FECHA_HASTA,PV.FECHA_DESDE))
+                ORDER BY PV.ID DESC
+            ) VX
+            LEFT JOIN dbo.VCT_PROYECTOS P2 WITH(NOLOCK) ON P2.ID = VX.ID_PROYECTO
+            LEFT JOIN dbo.VCT_CLIENTES  C2 WITH(NOLOCK) ON C2.ID = P2.IDCLIENTE
             ORDER BY R.FECHA
+            FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), 1, 1, ''), '') + ']';
+    END
+    ELSE
+    BEGIN
+        /* sin consultor elegido: igual mostramos los FERIADOS (fijo/movible)
+           de dbo.Calendar, para que el calendario no quede totalmente vacio. */
+        SET @DIAS_JSON = '[' + ISNULL(STUFF((
+            SELECT ',{"f":"' + CONVERT(VARCHAR(10), cal.Fecha, 120)
+                 + '","e":"' + CASE WHEN CONVERT(INT, ISNULL(cal.Feriado,0)) = 2 THEN 'FERIADO_MOV' ELSE 'FERIADO_FIJO' END
+                 + '","h":0,"hc":0,"t":"'
+                 + '","n":"' + REPLACE(REPLACE(REPLACE(ISNULL(cal.HolidayText,''),'\','/'),'"',''''),CHAR(10),' ')
+                 + '","mo":"","de":""}'
+            FROM dbo.Calendar cal
+            WHERE cal.Fecha BETWEEN @DESDE AND @HASTA AND cal.IsHoliday = 1
+            ORDER BY cal.Fecha
             FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), 1, 1, ''), '') + ']';
     END;
 
+    /* ---------- datos (JSON de ACTIVIDADES con horario, estilo Google Calendar) ---------- */
+    /* TOOLTIP_V1: actividades con cliente/proyecto/servicio (mismo tooltip que Acciones).
+       La armadura del JSON vive en dbo.VCT_FN_AGENDA_ACTS_JSON (una sola fuente,
+       compartida con la V360 del consultor). */
+    DECLARE @ACTS_JSON VARCHAR(MAX) = '[]';
+    IF @CONS_ID IS NOT NULL
+        SET @ACTS_JSON = dbo.VCT_FN_AGENDA_ACTS_JSON(@CONS_ID, @DESDE, @HASTA);
+
     /* escape para atributo HTML (igual que el calendario de feriados) */
     SET @DIAS_JSON = REPLACE(REPLACE(@DIAS_JSON, '&', '&amp;'), '"', '&quot;');
+    SET @ACTS_JSON = REPLACE(REPLACE(@ACTS_JSON, '&', '&amp;'), '"', '&quot;');
 
     /* ---------- cuerpo ---------- */
     DECLARE @NEED_PICK BIT = CASE WHEN @CONS_ID IS NULL THEN 1 ELSE 0 END;
 
     SET @HTML =
         '<link rel="stylesheet" href="../css/vct-inicio.css?v=5">'
-      + '<link rel="stylesheet" href="../css/vct-agenda.css?v=3">'
-      + '<link rel="stylesheet" href="../css/vct-agenda-consultor.css?v=19">'
-      + '<script src="../js/vct-agenda-consultor.js?v=16"></script>'
+      + '<link rel="stylesheet" href="../css/vct-calendario.css?v=34">'
+      + '<script src="../js/vct-calendario.js?v=34"></script>'
       + '<div class="vct-page vct-page-main vct-agc-page" data-vct-page'
       + ' data-vct-sidebar-id="' + CONVERT(VARCHAR(20),@SIDEBAR_ID) + '"'
       + ' data-vct-form-id="' + ISNULL(@FORM_ID,'') + '"'
@@ -272,7 +344,8 @@ BEGIN
       + ' data-vct-agc-ve-todo="' + CASE WHEN @VE_TODO=1 THEN '1' ELSE '0' END + '"'
       + ' data-vct-agc-can-edit="' + CASE WHEN @CAN_EDIT=1 THEN '1' ELSE '0' END + '"'
       + ' data-vct-agc-cons="' + ISNULL(CONVERT(VARCHAR(10),@CONS_ID),'') + '"'
-      + ' data-vct-agc-dias="' + @DIAS_JSON + '">'
+      + ' data-vct-agc-dias="' + @DIAS_JSON + '"'
+      + ' data-vct-agc-acts="' + @ACTS_JSON + '">'
 
       + '<section class="vct-card vct-agc-card">'
       + CASE WHEN @MSG <> '' THEN '<p class="vct-agc-modal-err" role="alert">' + @MSG + '</p>' ELSE '' END

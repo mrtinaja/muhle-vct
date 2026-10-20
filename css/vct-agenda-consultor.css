@@ -1,4 +1,4 @@
-/* vct-agenda-consultor.css - v19
+/* vct-agenda-consultor.css - v21 (calendario compartido)
    ============================================================================
    Agenda del consultor. Hereda la estructura del calendario (vct-agenda.css)
    y pinta el color por ESTADO. Paleta aprobada:
@@ -16,15 +16,6 @@
    ============================================================================ */
 
 /* ---- layout: full-width + celdas bajas para que el mes entre sin scroll ---- */
-.vct-agc-card { padding: 14px 18px 18px; }
-.vct-agc-table td.vct-agenda-cell { height: 72px; }
-.vct-agc-table .vct-agenda-daynum { font-size: 12px; }
-
-/* ---- toolbar: orden general ----
-   [Consultor] [Mes/Semana/Día]  ····  ‹ Título ›  [Mes][Año]
-   El nav central crece y empuja mes/año al extremo derecho; consultor y toggle
-   quedan compactos a la izquierda. */
-.vct-agc-toolbar { flex-wrap: wrap; align-items: center; gap: 10px 14px; }
 
 /* selector de consultor: compacto (200px, con ellipsis para nombres largos) */
 .vct-agc-pick { display: flex; flex-direction: column; gap: 2px; width: 200px; min-width: 200px; max-width: 200px; flex: 0 0 auto; }
@@ -35,31 +26,11 @@
 .vct-agc-pick .vct-custom-select-trigger { overflow: hidden; }
 .vct-agc-pick .vct-custom-select-trigger > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* toggle Mes/Semana/Día: compacto, sin crecer */
-.vct-agc-toolbar .vct-agenda-view-toggle { flex: 0 0 auto; }
-.vct-agc-toolbar .vct-agenda-view-btn { padding: 7px 13px; font-size: 12.5px; }
-
-/* nav central: ocupa el sobrante y centra el título */
-.vct-agc-toolbar .vct-agenda-nav { flex: 1 1 auto; justify-content: center; min-width: 200px; }
-
 /* mes + año: SIEMPRE visibles (no colapsar) */
-.vct-agc-toolbar .vct-agenda-toolbar-right { flex: 0 0 auto; }
-.vct-agc-jump { flex: 0 0 auto; display: flex; gap: 8px; align-items: center; }
 
-/* mes/año usan el VCT Select (enhancer de la plataforma). El widget custom se
-   inserta como hermano del <select> nativo (oculto): lo dimensionamos por
-   sibling adyacente para que mes sea mas ancho que año y queden alineados. */
-.vct-agc-jump .vct-custom-select,
-.vct-agc-jump .vct-custom-select-wrapper { min-width: 0; flex: 0 0 auto; }
-.vct-agc-jump [data-vct-agc-month] + .vct-custom-select,
-.vct-agc-jump [data-vct-agc-month] + .vct-custom-select-wrapper { width: 150px; }
-.vct-agc-jump [data-vct-agc-year] + .vct-custom-select,
-.vct-agc-jump [data-vct-agc-year] + .vct-custom-select-wrapper { width: 110px; }
+
 /* el menú desplegable NO debe heredar el ancho del trigger: que entre el nombre
    completo del mes ("Septiembre", "Diciembre") sin cortar */
-.vct-agc-jump .vct-custom-select-menu,
-.vct-agc-jump .vct-custom-select-options { min-width: 180px; width: auto; }
-.vct-agc-jump .vct-custom-select-option { white-space: nowrap; }
 
 /* ---- estado vacío (sin consultor): bloque centrado tipo hero ---- */
 .vct-agc-hero {
@@ -91,34 +62,30 @@
 .vct-agc-dot-feriado    { background: linear-gradient(135deg, #E0304D 0 50%, #8B5CF6 50% 100%); }
 
 /* ---- celdas del mes ---- */
-.vct-agc-table .vct-agenda-cell { position: relative; vertical-align: top; }
-.vct-agc-table .vct-agenda-cell[data-vct-agc-day] { cursor: pointer; border-left: 3px solid transparent; transition: background .12s ease, filter .12s ease; }
-.vct-agc-table .vct-agenda-cell[data-vct-agc-day]:hover { filter: brightness(.97); }
 .vct-agc-cell-note { display: block; margin-top: 2px; font-size: 10.5px; line-height: 1.25; font-weight: 600; opacity: .95; }
 
 /* estados (celda mes): bg + barra izq + color de nota */
-.vct-agenda-cell.vct-agc-no_cargado  { background: #fff; }
-.vct-agenda-cell.vct-agc-disponible  { background: #EFF4FF; border-left-color: #2563EB; }
+.vct-agenda-cell.vct-agc-no_cargado  { background:#fff; }
+.vct-agenda-cell.vct-agc-disponible  { background:#fff; border-left-color: #2563EB; }
 .vct-agenda-cell.vct-agc-disponible  .vct-agc-cell-note { color: #1D4ED8; }
-.vct-agenda-cell.vct-agc-asignado    { background: #ECFBF4; border-left-color: #0E9F6E; }
+.vct-agenda-cell.vct-agc-asignado    { background:#fff; border-left-color: #0E9F6E; }
 .vct-agenda-cell.vct-agc-asignado    .vct-agc-cell-note { color: #0E7D57; }
-.vct-agenda-cell.vct-agc-licencia    { background: #FCE7F3; border-left-color: #EC4899; }
+.vct-agenda-cell.vct-agc-licencia    { background:#fff; border-left-color: #EC4899; }
 .vct-agenda-cell.vct-agc-licencia    .vct-agc-cell-note { color: #BE2063; }
-.vct-agenda-cell.vct-agc-ocupado     { background: #EEF1F5; border-left-color: #64748B; }
+.vct-agenda-cell.vct-agc-ocupado     { background:#fff; border-left-color: #64748B; }
 .vct-agenda-cell.vct-agc-ocupado     .vct-agc-cell-note { color: #475569; }
-.vct-agenda-cell.vct-agc-potencial   { background: #FEF3E2; border-left-color: #F59E0B; }
+.vct-agenda-cell.vct-agc-potencial   { background:#fff; border-left-color: #F59E0B; }
 .vct-agenda-cell.vct-agc-potencial   .vct-agc-cell-note { color: #B5760A; }
-.vct-agenda-cell.vct-agc-organismo   { background: #E6FBF8; border-left-color: #0D9488; }
+.vct-agenda-cell.vct-agc-organismo   { background:#fff; border-left-color: #0D9488; }
 .vct-agenda-cell.vct-agc-organismo   .vct-agc-cell-note { color: #0B7268; }
-.vct-agenda-cell.vct-agc-observacion { background: #FFF1EC; border-left-color: #FF7A59; }
+.vct-agenda-cell.vct-agc-observacion { background:#fff; border-left-color: #FF7A59; }
 .vct-agenda-cell.vct-agc-observacion .vct-agc-cell-note { color: #C2410C; }
-.vct-agenda-cell.vct-agc-feriado-fijo{ background: #FDECEE; border-left-color: #E0304D; }
+.vct-agenda-cell.vct-agc-feriado-fijo{ background:#fff; border-left-color: #E0304D; }
 .vct-agenda-cell.vct-agc-feriado-fijo .vct-agc-cell-note { color: #B01030; }
-.vct-agenda-cell.vct-agc-feriado-mov { background: #F3EBFB; border-left-color: #8B5CF6; }
+.vct-agenda-cell.vct-agc-feriado-mov { background:#fff; border-left-color: #8B5CF6; }
 .vct-agenda-cell.vct-agc-feriado-mov .vct-agc-cell-note { color: #6D28D9; }
 
 /* hoy: aro por encima del color de estado */
-.vct-agc-table .vct-agenda-cell.vct-agenda-cell-today { outline: 2px solid #66062D; outline-offset: -2px; }
 
 /* ---- badges (semana / dia) ---- */
 .vct-agc-badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 700; line-height: 1.5; }
@@ -303,41 +270,6 @@
     .vct-agc-stats .vct-soft-kpi { padding: 12px 16px !important; }
 }
 
-/* Alineacion de la toolbar de Agenda del consultor, v15. */
-.vct-agc-page .vct-agc-toolbar {
-    flex-direction: row;
-    align-items: flex-end;
-    justify-content: flex-start;
-}
-.vct-agc-toolbar .vct-agenda-nav { min-height: 38px; }
-.vct-agc-toolbar .vct-agenda-title { min-width: 0; }
-.vct-agc-toolbar .vct-agenda-toolbar-right {
-    margin-left: auto;
-    align-self: flex-end;
-    justify-content: flex-end;
-    flex-wrap: nowrap;
-    min-height: 38px;
-}
-.vct-agc-toolbar .vct-agc-jump {
-    flex-wrap: nowrap;
-    justify-content: flex-end;
-    align-items: center;
-}
-.vct-agc-jump .vct-select:not(.vct-custom-select-native) {
-    height: 38px;
-    min-width: 0;
-    box-sizing: border-box;
-    flex: 0 0 auto;
-}
-.vct-agc-jump [data-vct-agc-month]:not(.vct-custom-select-native) { width: 150px; }
-.vct-agc-jump [data-vct-agc-year]:not(.vct-custom-select-native) { width: 110px; }
-@media (max-width: 1100px) {
-    .vct-agc-toolbar .vct-agc-pick { order: 1; }
-    .vct-agc-toolbar .vct-agenda-view-toggle { order: 2; }
-    .vct-agc-toolbar .vct-agenda-toolbar-right { order: 3; }
-    .vct-agc-toolbar .vct-agenda-nav { order: 4; flex: 1 1 100%; }
-}
-
 /* KPIs publicados: vct-360-stat. Paleta Vocaturo; hover del Dashboard al final. */
 .vct-agc-page .vct-agc-stats .vct-360-stat {
     --agc-kpi-accent: #8f184b;
@@ -487,36 +419,42 @@ html body .vct-form-select-menu.vct-agc-select-menu { box-sizing: border-box !im
     .vct-agc-modal-ov.vct-form-shell .vct-agc-modal { max-height: calc(100dvh - 16px) !important; }
 }
 
-/* ============================================================================
-   Mobile (<=600px): toolbar sin desborde, v19.
-   En celular mes+año (2 x ~182px) no entran en el ancho de la card y el mes
-   quedaba cortado contra el borde izquierdo. Fix: la fila mes/año ocupa el 100%
-   y los dos selects comparten el ancho (50% c/u), sin topes fijos.
-   ============================================================================ */
+
 @media (max-width: 600px) {
-    .vct-agc-page .vct-agc-toolbar .vct-agenda-toolbar-right {
-        margin-left: 0 !important;
-        width: 100% !important;
-        flex: 1 1 100% !important;
-        justify-content: flex-start !important;
-    }
-    .vct-agc-page .vct-agc-jump {
-        width: 100% !important;
-        display: flex !important;
-        flex-wrap: nowrap !important;
-        gap: 10px !important;
-    }
     /* cada select (y su widget custom del enhancer) comparte la fila */
-    .vct-agc-page .vct-agc-jump > .vct-select,
-    .vct-agc-page .vct-agc-jump > .vct-custom-select,
-    .vct-agc-page .vct-agc-jump > .vct-custom-select-wrapper,
-    .vct-agc-page .vct-agc-jump [data-vct-agc-month] + .vct-custom-select,
-    .vct-agc-page .vct-agc-jump [data-vct-agc-month] + .vct-custom-select-wrapper,
-    .vct-agc-page .vct-agc-jump [data-vct-agc-year] + .vct-custom-select,
-    .vct-agc-page .vct-agc-jump [data-vct-agc-year] + .vct-custom-select-wrapper {
-        flex: 1 1 0 !important;
-        width: auto !important;
-        min-width: 0 !important;
-        max-width: none !important;
-    }
 }
+
+
+.vct-agc-page .vct-agc-pick-label { display: none !important; }
+.vct-agc-page .vct-agc-pick { flex-direction: row !important; align-items: center !important; }
+.vct-agc-page .vct-agc-select-cons,
+.vct-agc-page .vct-agc-pick .vct-custom-select-trigger { height: 30px !important; min-height: 30px !important; font-size: 12px !important; }
+
+/* KPIs: 55px de alto */
+.vct-agc-page .vct-agc-stats .vct-soft-kpi,
+.vct-agc-page .vct-agc-stats .vct-360-stat { min-height: 55px !important; padding: 7px 16px !important; }
+.vct-agc-page .vct-agc-stats .vct-soft-kpi .vct-soft-kpi-icon,
+.vct-agc-page .vct-agc-stats .vct-360-stat-icon { width: 38px !important; height: 38px !important; min-width: 38px !important; max-width: 38px !important; border-radius: 11px !important; }
+.vct-agc-page .vct-agc-stats .vct-soft-kpi-icon svg,
+.vct-agc-page .vct-agc-stats .vct-360-stat-icon > [data-vct-icon],
+.vct-agc-page .vct-agc-stats .vct-360-stat-icon > [data-vct-icon] svg { width: 18px !important; height: 18px !important; }
+.vct-agc-page .vct-agc-stats .vct-soft-kpi-value,
+.vct-agc-page .vct-agc-stats .vct-360-stat b { font-size: 24px !important; }
+
+/* layout desktop (>=1101px): titulo arriba centrado + Mes/Semana/Dia centrado debajo */
+@media (min-width: 1101px) {
+    .vct-agc-page .vct-agc-pick { width: 168px !important; min-width: 168px !important; max-width: 168px !important; align-self: center !important; }
+}
+
+/* Las notas mensuales usan el mismo badge que las actividades de las vistas 360. */
+.vct-agc-cell-note{display:-webkit-box;margin-top:3px;padding:2px 5px;border-radius:8px;font-size:10.5px;line-height:1.3;overflow:hidden;overflow-wrap:anywhere;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.vct-agenda-cell.vct-agc-disponible .vct-agc-cell-note{background:#EFF4FF;color:#1D4ED8;}
+.vct-agenda-cell.vct-agc-asignado .vct-agc-cell-note{background:#ECFBF4;color:#0E7D57;}
+.vct-agenda-cell.vct-agc-licencia .vct-agc-cell-note{background:#FCE7F3;color:#BE2063;}
+.vct-agenda-cell.vct-agc-ocupado .vct-agc-cell-note{background:#EEF1F5;color:#475569;}
+.vct-agenda-cell.vct-agc-potencial .vct-agc-cell-note{background:#FEF3E2;color:#B5760A;}
+.vct-agenda-cell.vct-agc-organismo .vct-agc-cell-note{background:#E6FBF8;color:#0B7268;}
+.vct-agenda-cell.vct-agc-observacion .vct-agc-cell-note{background:#FFF1EC;color:#C2410C;}
+.vct-agenda-cell.vct-agc-feriado-fijo .vct-agc-cell-note{background:#FDECEE;color:#B01030;}
+.vct-agenda-cell.vct-agc-feriado-mov .vct-agc-cell-note{background:#F3EBFB;color:#6D28D9;}
+@media(max-width:600px){.vct-agc-cell-note{font-size:9px;padding:2px 3px;}}

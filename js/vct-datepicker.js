@@ -30,7 +30,7 @@
    ============================================================================ */
 (function (window, document) {
     "use strict";
-    if (window.__vctDatePickerLoaded) return; /* puede venir del tag de la pantalla Y del motor */
+    if (window.__vctDatePickerLoaded && window.VCT && window.VCT.Datepicker && window.VCT.Datepicker.version>=20) return; /* puede venir del tag de la pantalla Y del motor */
     window.__vctDatePickerLoaded = true;
 
     var MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
@@ -136,16 +136,21 @@
         var valueEl = wrap.querySelector(".vct-datepicker-value");
         var d = parseIso(native.value);
         if (d) {
-            valueEl.textContent = dmyOf(d);
-            valueEl.classList.remove("is-placeholder");
+            if(valueEl.textContent!==dmyOf(d)) valueEl.textContent = dmyOf(d);
+            if(valueEl.classList.contains("is-placeholder")) valueEl.classList.remove("is-placeholder");
         } else {
-            valueEl.textContent = native.getAttribute("placeholder") || native.getAttribute("aria-label") || "Seleccionar fecha";
-            valueEl.classList.add("is-placeholder");
+            var placeholder=native.getAttribute("placeholder") || native.getAttribute("aria-label") || "Seleccionar fecha";
+            if(valueEl.textContent!==placeholder) valueEl.textContent=placeholder;
+            if(!valueEl.classList.contains("is-placeholder")) valueEl.classList.add("is-placeholder");
         }
     }
 
     function upgrade(input) {
-        if (input.dataset.vctDatepickerReady === "1") return;
+        if (input.dataset.vctDatepickerReady === "1") {
+            var existing=input.closest(".vct-datepicker");
+            if(existing) updateTriggerLabel(existing);
+            return;
+        }
         input.dataset.vctDatepickerReady = "1";
 
         var wrap = document.createElement("span");
@@ -183,6 +188,8 @@
         wrap.appendChild(menu);
 
         updateTriggerLabel(wrap);
+        input.addEventListener("input",function(){updateTriggerLabel(wrap);});
+        input.addEventListener("change",function(){updateTriggerLabel(wrap);});
 
         trigger.addEventListener("click", function (event) {
             event.preventDefault();
@@ -221,6 +228,10 @@
         if (event.key === "Escape") closeAll(null);
     });
 
+    window.VCT=window.VCT||{};
+    window.VCT.Datepicker=window.VCT.Datepicker||{};
+    window.VCT.Datepicker.version=20;
+    window.VCT.Datepicker.init=scan;
     scan(document);
 
     if (window.MutationObserver) {

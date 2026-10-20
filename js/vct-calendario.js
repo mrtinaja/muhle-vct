@@ -215,6 +215,8 @@
             var key=dateKey(dateObj);
             var fer=feriados[key];
             var isWeekendDay=(dateObj.getDay()===0 || dateObj.getDay()===6);
+            /* CAL_C_V1: sabado y domingo no se editan (ni alta ni baja), como los dias pasados */
+            if(isWeekendDay && !root.closest("[data-vct-pv]")) return;
 
             if(fer){
                 // Un feriado fijo puede caer en fin de semana (ej. Belgrano
@@ -849,6 +851,38 @@
             if (r) { if(!r.f) r.f=k; return r; }
             return { f:k, e:"NO_CARGADO", h:0, n:"", t:"", mo:"", de:"" };
         }
+        /* CAL_C_V1: sabado / domingo (por la fecha aaaa-mm-dd del registro) */
+        function isWkndKey(f){
+            var p = String(f||"").split("-"); if(p.length<3) return false;
+            var wd = new Date(+p[0], +p[1]-1, +p[2]).getDay();
+            return wd===0 || wd===6;
+        }
+        /* CAL_C_V1: reparto de horas del dia asignado
+           conf = asignado confirmado (visita CONFIRMADO o con horas registradas), pend = asignado pendiente,
+           disp = lo que sigue disponible de la capacidad cargada (TIPO DISPONIBLE). Sin hcf/hpe (version vieja
+           del SP) todo lo asignado cuenta como confirmado. */
+        function splitOf(r){
+            var e = String((r&&r.e)||"").toUpperCase(), h = +r.h||0;
+            if (e!=="ASIGNADO") return null;
+            var hasS = (r.hcf!=null || r.hpe!=null);
+            var conf = hasS ? (+r.hcf||0) : h, pend = hasS ? (+r.hpe||0) : 0;
+            if (hasS && conf+pend<=0 && h>0) conf = h;
+            var disp = (String(r.t||"").toUpperCase()==="DISPONIBLE" && +r.hc>0) ? Math.max((+r.hc) - (conf+pend), 0) : 0;
+            return { conf:conf, pend:pend, disp:disp };
+        }
+        /* franja superior de la celda (opcion C): un segmento por estado, proporcional a las horas */
+        function stripHtml(r){
+            var e = String((r&&r.e)||"NO_CARGADO").toUpperCase();
+            if (e==="NO_CARGADO") return "";
+            var sp = splitOf(r), seg = "";
+            if (sp){
+                if (sp.conf>0) seg += '<i class="is-asc" style="flex:'+sp.conf+'"></i>';
+                if (sp.pend>0) seg += '<i class="is-asp" style="flex:'+sp.pend+'"></i>';
+                if (sp.disp>0) seg += '<i class="is-disp" style="flex:'+sp.disp+'"></i>';
+                if (!seg) seg = '<i class="is-asc" style="flex:1"></i>';
+            } else seg = '<i class="'+clsOf(e)+'" style="flex:1"></i>';
+            return '<span class="vct-cal-strip" aria-hidden="true">'+seg+'</span>';
+        }
         /* dia ya transcurrido: no se puede crear ni editar (solo ver) */
         function isPastDay(r){
             var f = r && r.f; if(!f) return false;
@@ -868,6 +902,7 @@
         function canEditDay(r){
             if (!(canEdit && consId)) return false;
             if (isPastDay(r)) return false;                /* dias transcurridos: solo lectura */
+            if (isWkndKey(r && r.f)) return false;         /* CAL_C_V1: sabado y domingo: solo lectura */
             var e = String((r&&r.e)||"NO_CARGADO").toUpperCase();
             if (isFeriado(e)) return false;
             if (e==="ASIGNADO") return false;              /* asignado por admin/comercial */
@@ -920,12 +955,12 @@
         function renderStats(){
             if (!statsEl) return;
             var y=state.cursor.getFullYear(), m=state.cursor.getMonth();
-            var dispD=0, dispH=0, asigD=0, noDispD=0, ferD=0;
+            var dispD=0, dispH=0, asigD=0, noDispD=0, ferD=0, confD=0, pendD=0;
             var dim=new Date(y, m+1, 0).getDate();
             for(var i=1;i<=dim;i++){
                 var r=dayInfo(new Date(y,m,i)), e=String(r.e).toUpperCase();
                 if (e==="DISPONIBLE"){ dispD++; dispH += +r.h||0; }
-                else if (e==="ASIGNADO"){ asigD++; }
+                else if (e==="ASIGNADO"){ asigD++; var sq=splitOf(r); if(sq){ if(sq.conf>0) confD++; if(sq.pend>0) pendD++; if(sq.disp>0) dispH+=sq.disp; } }
                 else if (e==="LICENCIA" || e==="OCUPADO") { noDispD++; }
                 else if (isFeriado(e)) { ferD++; }
             }
@@ -943,7 +978,7 @@
             }
             statsEl.innerHTML =
                   tile("is-blue","Disponible", dispD, fmtH(dispH)+"h en el mes", "check")
-                + tile("is-green","Asignado", asigD, "día(s) con visita", "briefcase")
+                + tile("is-green","Asignado", asigD, (pendD ? confD+" confirmado(s) · "+pendD+" pendiente(s)" : "día(s) con visita"), "briefcase")
                 + tile("is-orange","No disponible", noDispD, "licencia / ocupado", "clock-3")
                 + tile("is-purple","Feriados", ferD, "en el mes", "calendar");
             if (window.VCT && VCT.Icon && typeof VCT.Icon.init === "function") VCT.Icon.init(statsEl);
@@ -951,6 +986,21 @@
 
         /* ---- celda contenido ---- */
         function cellBadge(r){
+            var e=String(r.e||"").toUpperCase();
+            if (e==="NO_CARGADO") return "";
+            /* CAL_C_V1: asignado con reparto -> una linea por parte (confirmado / pendiente / disponible) */
+            var sp=splitOf(r);
+            if (sp && (sp.pend>0 || sp.disp>0)){
+                var r1={}; for(var kk in r){ if(Object.prototype.hasOwnProperty.call(r,kk)) r1[kk]=r[kk]; }
+                var out='';
+                if (sp.conf>0){ r1.h=sp.conf; out+=cellBadgeBase(r1).replace('vct-agc-cell-note"','vct-agc-cell-note is-asc"'); }
+                if (sp.pend>0){ r1.h=sp.pend; out+=cellBadgeBase(r1).replace('vct-agc-cell-note"','vct-agc-cell-note is-asp"').replace('</span>',' · pend.</span>'); }
+                if (sp.disp>0) out+='<span class="vct-agc-cell-note is-disp" data-tt="1" data-tt-x="Disponible" data-tt-sub="'+fmtH(sp.disp)+'h libres de '+fmtH(r.hc)+'h cargadas">Disponible · '+fmtH(sp.disp)+'h</span>';
+                return out;
+            }
+            return cellBadgeBase(r);
+        }
+        function cellBadgeBase(r){
             var e=String(r.e||"").toUpperCase();
             if (e==="NO_CARGADO") return "";
             /* preferimos la descripcion (observacion/potencial/organismo), luego la nota, luego el label */
@@ -1027,6 +1077,7 @@
                         var cls="vct-agenda-cell "+clsOf(r.e)+(isToday?" vct-agenda-cell-today":"")+(isWknd?" is-wknd":"")+(isPastCell?" is-past":"");
                         html+='<td class="'+cls+'" data-vct-agc-day="'+k+'"'+(r.n?' title="'+escAttr(r.n)+'"':'')+'>';
                         html+='<span class="vct-agenda-daynum">'+dayNum+'</span>';
+                        html+=stripHtml(r);
                         html+=cellBadge(r);
                         html+=monthActs(k);
                         html+='</td>';
@@ -1116,7 +1167,13 @@
                     var lbl=estadoLabel(r.e);
                     var extra = r.de || ((r.n && r.n.toUpperCase()!==lbl.toUpperCase()) ? r.n : '');
                     var sTxt=lbl+(extra?': '+esc(extra):'')+hrs;
-                    bars+='<span class="vct-agc-wl-bar '+clsOf(r.e)+'">'+sTxt+'</span>';
+                    var spw=splitOf(r);
+                    if (spw && (spw.pend>0 || spw.disp>0)){
+                        var who=esc(r.n||'Asignado');
+                        if (spw.conf>0) bars+='<span class="vct-agc-wl-bar vct-agc-asignado">'+who+' &middot; '+fmtH(spw.conf)+' h</span>';
+                        if (spw.pend>0) bars+='<span class="vct-agc-wl-bar vct-agc-asignado is-pend">'+who+' &middot; '+fmtH(spw.pend)+' h &middot; pendiente</span>';
+                        if (spw.disp>0) bars+='<span class="vct-agc-wl-bar vct-agc-disponible">Disponible &middot; '+fmtH(spw.disp)+' h</span>';
+                    } else bars+='<span class="vct-agc-wl-bar '+clsOf(r.e)+'">'+sTxt+'</span>';
                 }
                 actsOf(k).slice().sort(function(a,b){ return hmToMin(a.hd)-hmToMin(b.hd); }).forEach(function(a){
                     var c=a.c||tipoColor(a.t);
@@ -1149,7 +1206,7 @@
         }
         /* leyenda de REFERENCIAS (colores de estado) para la barra lateral */
         function referenciasHtml(){
-            var items=[["DISPONIBLE","Disponible"],["ASIGNADO","Asignado"],["LICENCIA","Licencia / Vac."],["OCUPADO","Ocupado / No disp."],["POTENCIAL","Potencial"],["ORGANISMO","Organismo"],["OBSERVACION","Observación"],["FERIADO_FIJO","Feriado"]];
+            var items=[["DISPONIBLE","Disponible"],["ASIGNADO","Asignado confirmado"],["ASIGNADO is-pend","Asignado pendiente"],["LICENCIA","Licencia / Vac."],["OCUPADO","Ocupado / No disp."],["POTENCIAL","Potencial"],["ORGANISMO","Organismo"],["OBSERVACION","Observación"],["FERIADO_FIJO","Feriado"]];
             var h='<div class="vct-agc-ref"><div class="vct-agc-ref-h">Referencias</div>';
             items.forEach(function(it){ h+='<div class="vct-agc-ref-row"><span class="vct-agc-ref-dot '+clsOf(it[0])+'"></span>'+it[1]+'</div>'; });
             h+='</div>';
@@ -1177,7 +1234,7 @@
             html+='<div class="vct-agc-dayview-badge"><span class="vct-agc-badge '+clsOf(r.e)+'">'+estadoLabel(r.e)+'</span></div>';
             if (r.n) html+='<div class="vct-agc-dayview-note">'+esc(r.n)+'</div>';
             if ((e==="ASIGNADO"||e==="DISPONIBLE") && +r.h>0)
-                html+='<div class="vct-agc-dayview-hours">'+fmtH(r.h)+'h</div>';
+                html+='<div class="vct-agc-dayview-hours">'+fmtH(r.h)+'h'+(function(){ var q=splitOf(r); if(!q||(!q.pend&&!q.disp)) return ''; return ' &middot; '+[q.conf?fmtH(q.conf)+'h confirmadas':'',q.pend?fmtH(q.pend)+'h pendientes':'',q.disp?fmtH(q.disp)+'h disponibles':''].filter(Boolean).join(' &middot; '); })()+'</div>';
 
             html+=dayActs(key);
             html+='</div>';
@@ -1420,4 +1477,122 @@
             setTimeout(function(){ pend=false; boot(); }, 40);
         }).observe(document.documentElement, { childList:true, subtree:true });
     }
+})(window, document);
+
+/* ===================== [CAL_C_V1] diseno comun de calendarios (opcion C) =====================
+   Aplica a Acciones, Agenda general (feriados), Agenda del consultor y su calendario en la V360
+   del consultor (NO al de la V360 de proyecto, que queda como estaba).
+     - Navegacion:  [ ‹ Mes › ]  [ Mes | Semana | Dia ]  [ ‹ Anio › ]  (sin desplegables de mes / anio;
+       los <select> quedan ocultos y siguen siendo la fuente del cambio de anio).
+     - Dias pasados, sabados y domingos: no editables ni clickeables (solo se ven, atenuados).
+     - Leyenda: asignado confirmado / pendiente y "No editable".
+   No cambia los datos que muestra cada calendario. */
+(function (window, document) {
+    "use strict";
+    if (window.__vctCalCLoaded) return;
+    window.__vctCalCLoaded = true;
+
+    var RO_SEL = ".vct-agenda-cell-past,.vct-agenda-cell-weekend,.vct-agenda-cell.is-past,.vct-agenda-cell.is-wknd,"
+               + ".vct-agc-wl-row.is-past,.vct-agc-wl-row.is-wknd";
+
+    function q(root, a, b){ return root.querySelector(root.hasAttribute("data-vct-agc-root") ? b : a); }
+
+    function setup(root){
+        if (!root || root.getAttribute("data-vct-cal-c") === "1") return;
+        if (root.closest("[data-vct-pv]")) return;                       /* V360 de proyecto: sin cambios por ahora */
+        var title = q(root, "[data-vct-agenda-title]", "[data-vct-agc-title]");
+        var selY  = q(root, "[data-vct-agenda-select-year]", "[data-vct-agc-year]");
+        var selM  = q(root, "[data-vct-agenda-select-month]", "[data-vct-agc-month]");
+        var nav   = title ? title.parentNode : null;
+        if (!nav || !selY) return;                                         /* el motor todavia no dibujo la barra */
+        root.setAttribute("data-vct-cal-c", "1");
+        root.classList.add("vct-cal-c");
+
+        var viewBtn = q(root, "[data-vct-agenda-view]", "[data-vct-agc-view]");
+        var toggle  = viewBtn ? viewBtn.parentNode : null;
+        var tb      = nav.parentNode;
+
+        /* desplegables de mes y anio: ocultos */
+        [selM, selY].forEach(function(s){
+            if (!s) return;
+            var holder = s.closest(".vct-agenda-jump") || s.parentNode;
+            holder.classList.add("vct-cal-hide");
+        });
+        var right = tb.querySelector(".vct-agenda-toolbar-right");
+        if (right && !right.querySelector(":scope > :not(.vct-cal-hide)")) right.classList.add("vct-cal-hide");
+
+        /* grupo:  ‹ Mes ›  |  Mes Semana Dia  |  ‹ Anio › */
+        var grp = document.createElement("div");
+        grp.className = "vct-cal-navgroup";
+        nav.classList.add("vct-cal-stp");
+        grp.appendChild(nav);
+        if (toggle && toggle !== nav) { toggle.classList.add("vct-cal-seg"); grp.appendChild(toggle); }
+        var ys = document.createElement("div");
+        ys.className = "vct-cal-stp is-year";
+        ys.innerHTML = '<button type="button" class="vct-cal-stp-btn" data-vct-cal-y="-1" aria-label="Año anterior">‹</button>'
+                     + '<span class="vct-cal-stp-lbl" data-vct-cal-ylbl></span>'
+                     + '<button type="button" class="vct-cal-stp-btn" data-vct-cal-y="1" aria-label="Año siguiente">›</button>';
+        grp.appendChild(ys);
+        tb.appendChild(grp);
+        var ylbl = ys.querySelector("[data-vct-cal-ylbl]");
+
+        /* el titulo del motor trae el anio al final: pasa al selector de anio */
+        function syncTitle(){
+            var t = title.textContent || "", m = /\s(\d{4})$/.exec(t);
+            if (m){ ylbl.textContent = m[1]; title.textContent = t.replace(/\s\d{4}$/, ""); }
+            else if (!ylbl.textContent) ylbl.textContent = selY.value || String(new Date().getFullYear());
+        }
+        syncTitle();
+        try { new MutationObserver(syncTitle).observe(title, { childList:true, characterData:true, subtree:true }); } catch(e){}
+
+        ys.addEventListener("click", function(ev){
+            var b = ev.target.closest("[data-vct-cal-y]"); if (!b) return;
+            var y = (parseInt(ylbl.textContent, 10) || new Date().getFullYear()) + parseInt(b.getAttribute("data-vct-cal-y"), 10);
+            var has = false;
+            for (var i = 0; i < selY.options.length; i++) if (selY.options[i].value === String(y)) has = true;
+            if (!has){ var o = document.createElement("option"); o.value = String(y); o.textContent = String(y); selY.appendChild(o); }
+            selY.value = String(y);
+            try { selY.dispatchEvent(new Event("change", { bubbles:true })); } catch(e){}
+        });
+
+        /* leyenda */
+        var leg = root.querySelector(".vct-agc-legend") || root.querySelector(".vct-agenda-legend");
+        if (leg && !leg.querySelector("[data-vct-cal-ro]")){
+            var asg = leg.querySelector(".vct-agc-dot-asignado");
+            if (asg){
+                var it = asg.parentNode;
+                it.lastChild.nodeValue = "Asignado confirmado";
+                var pend = document.createElement("span");
+                pend.className = "vct-agenda-legend-item";
+                pend.innerHTML = '<i class="vct-agc-dot vct-agc-dot-pendiente"></i>Asignado pendiente';
+                it.parentNode.insertBefore(pend, it.nextSibling);
+            }
+            var ro = document.createElement("span");
+            ro.className = "vct-agenda-legend-item";
+            ro.setAttribute("data-vct-cal-ro", "");
+            ro.innerHTML = '<i class="vct-cal-dot-ro"></i>No editable (pasado, sábado y domingo)';
+            leg.appendChild(ro);
+        }
+    }
+
+    /* dias no editables: no se puede hacer clic (el tooltip sigue andando con el mouse) */
+    document.addEventListener("click", function(ev){
+        var t = ev.target && ev.target.closest ? ev.target : null;
+        if (!t || !t.closest(".vct-cal-c")) return;
+        if (t.closest(".vct-cal-navgroup,.vct-agenda-toolbar,.vct-agc-mini,.vct-agc-modal-ov")) return;
+        if (t.closest(RO_SEL)){ ev.preventDefault(); ev.stopPropagation(); }
+    }, true);
+
+    function scan(){
+        document.querySelectorAll("[data-vct-agenda-root],[data-vct-agc-root]").forEach(setup);
+    }
+    function later(){ scan(); setTimeout(scan, 120); setTimeout(scan, 600); }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", later); else later();
+    document.addEventListener("vct:content-loaded", later);
+    /* CAL_C_V2: las pantallas se cargan por ajax y el motor dibuja la barra despues; se re-escanea
+       cada vez que aparece un calendario nuevo o su barra (agenda general, agenda consultor, V360 consultor) */
+    var pend = 0;
+    function onMut(){ if (pend) return; pend = setTimeout(function(){ pend = 0; scan(); }, 60); }
+    function watch(){ try { new MutationObserver(onMut).observe(document.body, { childList:true, subtree:true }); } catch(e){} }
+    if (document.body) watch(); else document.addEventListener("DOMContentLoaded", watch);
 })(window, document);

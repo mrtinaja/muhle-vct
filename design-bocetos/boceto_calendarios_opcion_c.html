@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Calendarios opción C</title>
+<style>
+:root{
+  --b:#66062D; --b-100:#F3E3EA; --tx:#1e293b; --tx2:#475569; --mu:#64748b; --li:#e2e8f0; --li2:#eef2f6;
+  --disp:#2563EB; --asc:#16A34A; --asp:#CA8A04; --pot:#EA580C; --org:#0891B2; --lic:#DB2777; --ocu:#64748B; --fer-f:#E0304D; --fer-m:#8B5CF6;
+  --a-ven:#DC2626; --a-ven-bg:#FEECEC; --a-hoy:#D97706; --a-hoy-bg:#FFF4E0; --a-prx:#66062D; --a-prx-bg:#F6ECF0;
+  --ctl-h:32px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#eef0f4;font:13px/1.4 Gotham,"Montserrat","Segoe UI",system-ui,sans-serif;color:var(--tx);padding:22px}
+h1{font-size:18px;margin:0 0 4px;color:var(--b)} h2{font-size:15px;margin:28px 0 10px;color:var(--b)}
+p.n{color:var(--mu);margin:0 0 12px;max-width:1150px}
+.box{background:#fff;border-radius:16px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:16px}
+table.t{border-collapse:collapse;width:100%;font-size:12px}table.t th{background:#f8fafc;text-align:left;padding:7px 9px;border-bottom:1px solid var(--li);color:var(--tx2)}table.t td{padding:7px 9px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+
+/* ===== componente comun ===== */
+.cal{background:#fff;border:1px solid var(--li);border-radius:16px;padding:14px 16px 16px;margin-bottom:16px}
+.cal-hd{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-bottom:12px;border-bottom:1px solid var(--li2);margin-bottom:12px}
+.cal-ttl{display:flex;align-items:center;gap:10px;min-width:0;margin-right:auto}
+.cal-ic{width:30px;height:30px;border-radius:9px;background:var(--b-100);color:var(--b);display:inline-flex;align-items:center;justify-content:center;font-weight:700}
+.cal-ttl b{font-size:14px}.cal-ttl small{display:block;font-size:11px;color:var(--mu)}
+/* navegacion: ‹ Mes › | Mes Semana Dia | ‹ Anio › -- mismo alto, borde y radio */
+.cal-nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.stp{display:inline-flex;align-items:center;height:var(--ctl-h);border:1px solid var(--li);border-radius:999px;background:#fff;overflow:hidden}
+.stp button{all:unset;cursor:pointer;width:30px;height:100%;display:inline-flex;align-items:center;justify-content:center;color:var(--tx2);font-size:15px}
+.stp button:hover{background:var(--b-100);color:var(--b)}
+.stp span{min-width:96px;text-align:center;font-size:12.5px;font-weight:700;color:var(--tx)}
+.stp.yr span{min-width:52px}
+.seg{display:inline-flex;align-items:center;height:var(--ctl-h);border:1px solid var(--li);border-radius:999px;background:#fff;padding:2px}
+.seg span{height:100%;display:inline-flex;align-items:center;padding:0 13px;border-radius:999px;font-size:12px;color:var(--mu);font-weight:600;cursor:pointer}
+.seg span.on{background:var(--b);color:#fff}
+.btn{height:var(--ctl-h);border:1px solid var(--li);background:#fff;border-radius:999px;padding:0 13px;font-size:12px;font-weight:600;color:var(--tx);display:inline-flex;gap:6px;align-items:center}
+.sel{height:var(--ctl-h);border:1px solid var(--li);border-radius:999px;padding:0 14px;font-size:12px;color:var(--tx);min-width:210px;background:#fff;display:inline-flex;align-items:center;justify-content:space-between;font-weight:600}
+.cal-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.leg{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11px;color:var(--tx2);margin-left:auto}.leg i{display:inline-block;width:10px;height:4px;border-radius:2px;margin-right:5px;vertical-align:2px}
+.leg i.dash{height:9px;width:9px;border:1px dashed #cbc6bd;background:#fff;vertical-align:-1px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.kpi{border:1px solid var(--li);border-radius:12px;padding:9px 12px;display:flex;align-items:center;gap:10px}.kpi .ki{width:28px;height:28px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700}
+.kpi b{font-size:12px;display:block}.kpi small{font-size:10.5px;color:var(--mu)}.kpi em{font-style:normal;margin-left:auto;font-size:18px;font-weight:700}
+
+.dow{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-bottom:6px}.dow span{font-size:10.5px;font-weight:700;letter-spacing:.06em;color:var(--mu);text-align:center;text-transform:uppercase}
+.mgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.d{min-width:0;min-height:84px;border-radius:10px;border:1px solid var(--li);background:#fff;padding:6px 7px;position:relative;display:flex;flex-direction:column;gap:3px;cursor:pointer;transition:box-shadow .12s}
+.d:hover{box-shadow:0 4px 14px rgba(20,20,20,.08)}
+.d.out{visibility:hidden}
+.dn{font-size:12px;font-weight:700;color:var(--tx)}
+/* opcion C: franja superior de color + texto del estado */
+.d[data-s]{border-top-width:5px}
+.d[data-s=disp]{border-top-color:var(--disp)}.d[data-s=asc]{border-top-color:var(--asc)}.d[data-s=asp]{border-top-color:var(--asp)}
+.d[data-s=pot]{border-top-color:var(--pot)}.d[data-s=org]{border-top-color:var(--org)}.d[data-s=lic]{border-top-color:var(--lic)}
+.d[data-s=ocu]{border-top-color:var(--ocu)}.d[data-s=ferf]{border-top-color:var(--fer-f)}.d[data-s=ferm]{border-top-color:var(--fer-m)}
+.lbl{font-size:10.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev{font-size:10.5px;font-weight:600;border-radius:6px;padding:2px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px}
+.ev .ini{flex:none;width:15px;height:15px;border-radius:50%;background:currentColor;font-size:7px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;position:relative}
+.ev .ini b{color:#fff;position:absolute}
+.more{font-size:10px;color:var(--mu);font-weight:600}
+.note{position:absolute;right:6px;top:6px;width:16px;height:16px;border-radius:50%;background:#FFF1EC;color:#C2410C;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+/* hoy */
+.d.today{border-color:var(--b);box-shadow:0 0 0 1px var(--b) inset}.d.today .dn span{background:var(--b);color:#fff;border-radius:999px;padding:1px 6px}
+/* NO EDITABLE (2C): dia pasado, sabado y domingo -- blanco, borde punteado, 60%, sin clic */
+.d.ro{background:#fff;border-style:dashed;border-color:#d9d6cf;opacity:.62;cursor:not-allowed}
+.d.ro:hover{box-shadow:none}
+.d.ro .dn{color:#a8a29e}.d.ro .lbl,.d.ro .ev{filter:grayscale(.75)}
+.d.ro[data-s]{border-top-style:solid}
+
+/* tooltip-tarjeta (el de Martin: vct-cal-tip) */
+.vct-cal-tip{position:fixed;z-index:9999;max-width:270px;background:#fff;border:1px solid #E3DED7;border-left:3px solid #66062D;border-radius:9px;box-shadow:0 8px 28px rgba(74,72,73,.20);padding:10px 12px;font-size:12px;color:#2A2A2A;pointer-events:none;display:none}
+.vct-cal-tip.st{position:static;display:block;box-shadow:0 4px 14px rgba(74,72,73,.14)}
+.vct-cal-tip-t{font-weight:700;line-height:1.3;color:#3A3A3A}
+.vct-cal-tip-m{margin-top:7px;display:flex;flex-direction:column;gap:5px}
+.vct-cal-tip-row{display:flex;align-items:center;gap:7px;font-size:11.5px;color:#4A4849}
+.vct-cal-tip-chips{display:inline-flex;align-items:center}
+.vct-cal-tip-svc{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;color:#fff;margin-left:-5px;border:1.5px solid #fff;font-size:9px;font-weight:800}
+.vct-cal-tip-svc:first-child{margin-left:0}.vct-cal-tip-svc.is-co{background:#8C1D47}.vct-cal-tip-svc.is-au{background:#4A4849}.vct-cal-tip-svc.is-ca{background:#CF6F92}
+.vct-cal-tip-ic{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;background:#66062D;color:#fff;font-size:8px;font-weight:800;margin-left:7px}
+.vct-cal-tip-desc{padding-top:3px;border-top:1px solid #EFECE7}
+.vct-cal-tip-date{color:#8E8C8D;font-size:11px}
+.tips{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}.tips>div{flex:0 1 270px}.tips small{display:block;color:var(--mu);margin-bottom:6px;font-size:11px}
+.spec{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px;border:1px dashed var(--li);border-radius:12px;margin-bottom:10px}
+.spec em{font-style:normal;font-size:11px;color:var(--mu)}
+</style></head><body>
+<h1>Calendarios · cómo quedaría (opción C)</h1>
+<p class="n">Un solo componente para Acciones, Agenda general (feriados) y Agenda del consultor (menú y V360 del consultor, idénticos). Celda blanca con franja superior de color; los días no editables (pasados, sábados y domingos) blancos con borde punteado y atenuados. Sin desplegables de mes y año: todo se navega con flechas. El único filtro es el consultor en su agenda. El tooltip es el de Martín (rama calendario-unificado-base). Pasá el mouse por los eventos.</p>
+
+<h2>1. Barra de navegación (igual en los tres)</h2>
+<div class="box">
+  <div class="spec">
+    <span class="stp"><button>‹</button><span>Octubre</span><button>›</button></span>
+    <span class="seg"><span class="on">Mes</span><span>Semana</span><span>Día</span></span>
+    <span class="stp yr"><button>‹</button><span>2026</span><button>›</button></span>
+    <em>Todos de 32 px de alto, borde gris claro, bordes redondeados, texto 12–12,5 px. Las flechas del mes avanzan / retroceden un mes (en Semana y Día, una semana / un día); las del año, un año.</em>
+  </div>
+  <table class="t"><tr><th>Se va</th><th>Queda</th></tr>
+  <tr><td>Desplegables de mes y año</td><td>‹ Mes › · Mes / Semana / Día · ‹ Año ›</td></tr>
+  <tr><td>Chips de filtro dentro del calendario de Acciones</td><td>Las pestañas de la pantalla Acciones (Vencidas, Hoy, Próximas, Sin fecha, Todas) siguen arriba como hoy; no son parte del calendario</td></tr>
+  <tr><td>Celdas teñidas de fin de semana (celeste) y de pasado (rosa)</td><td>Un único estilo «no editable»: blanco, borde punteado, 60%, sin clic</td></tr>
+  <tr><td>—</td><td>Único filtro: Consultor (solo en la Agenda del consultor; en la V360 del consultor viene fijo)</td></tr></table>
+</div>
+
+<h2>2. Agenda del consultor (menú y V360 del consultor)</h2>
+<div id="cAg"></div>
+<h2>3. Acciones</h2>
+<div id="cAc"></div>
+<h2>4. Agenda general (feriados)</h2>
+<div id="cFe"></div>
+
+<h2>5. Tooltip (rama de Martín, sin cambios)</h2>
+<div class="box"><div class="tips">
+ <div><small>Agenda del consultor · asignado (visita)</small><div class="vct-cal-tip st"><div class="vct-cal-tip-t">CEVEN SA</div><div class="vct-cal-tip-m"><div class="vct-cal-tip-row">(1348) Implementación ISO 9001:2026</div><div class="vct-cal-tip-row"><span class="vct-cal-tip-chips"><span class="vct-cal-tip-svc is-co">CO</span><span class="vct-cal-tip-svc is-au">AU</span></span></div><div class="vct-cal-tip-row">Confirmada · 09:00 a 17:00 · 8 h</div></div></div></div>
+ <div><small>Acciones</small><div class="vct-cal-tip st"><div class="vct-cal-tip-t">CEVEN SA</div><div class="vct-cal-tip-m"><div class="vct-cal-tip-row">(1348) Implementación ISO 9001:2026</div><div class="vct-cal-tip-row"><span class="vct-cal-tip-chips"><span class="vct-cal-tip-svc is-co">CO</span><span class="vct-cal-tip-ic">MN</span></span></div><div class="vct-cal-tip-row vct-cal-tip-desc">Documento pendiente · 4.3 Determinación del alcance</div><div class="vct-cal-tip-row vct-cal-tip-date">Vence 20/10/2026</div></div></div></div>
+ <div><small>Agenda del consultor · estado del día</small><div class="vct-cal-tip st"><div class="vct-cal-tip-t">Disponible</div><div class="vct-cal-tip-m"><div class="vct-cal-tip-row">8 h · día completo</div><div class="vct-cal-tip-row vct-cal-tip-desc">Observación: prefiere visitas en CABA</div></div></div></div>
+</div></div>
+
+<div class="vct-cal-tip" id="tip"></div>
+<script>
+var DOW=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"], HOY=20, FIRST=4, DAYS=31;
+var COL={disp:"--disp",asc:"--asc",asp:"--asp",pot:"--pot",org:"--org",lic:"--lic",ocu:"--ocu",ferf:"--fer-f",ferm:"--fer-m"};
+var CLI={cli:"CEVEN SA",proy:"(1348) Implementación ISO 9001:2026",srv:["co","au"]};
+var AG={1:["lic","Licencia"],2:["lic","Licencia"],5:["lic","Licencia"],6:["lic","Licencia"],7:["lic","Licencia"],9:["lic","Licencia"],
+12:["ferm","Día del Respeto a la Diversidad Cultural"],14:["ocu","Ocupado / personal"],15:["disp","Disponible · 8h"],
+21:["disp","Disponible · 8h"],22:["disp","Disponible · 4h"],23:["asc","CEVEN · 1348 · Confirmada",CLI],26:["asp","CEVEN · 1348 · Pendiente",CLI],
+27:["pot","Potencial · BORG"],28:["org","Organismo · IRAM"],29:["disp","Disponible · 8h"],30:["asc","BORG · 1343 · Confirmada",{cli:"BORG SA",proy:"(1343) Mantenimiento ISO 14001",srv:["co"]}]};
+var NOTE={29:1};
+var ACC={19:[["ven","Iniciar Plan Estratégico · 1348"]],20:[["hoy","Documento pendiente · 4.3"],["hoy","Trabajo sobre ítem · 4.2"]],21:[["prx","Documento pendiente · 4.4"]],
+22:[["prx","Pendiente del cliente · 4.4"]],23:[["prx","Revisión de documento · 5.1.2"]],
+26:[["prx","Trabajo sobre ítem · 5.2"]],27:[["prx","Documento pendiente · 5.3"],["prx","Pendiente del cliente · 6.2"],["prx","Trabajo sobre ítem · 6.1"]],
+28:[["prx","Trabajo sobre ítem · 7.1.1"],["prx","Trabajo sobre ítem · 7.1.2"],["prx","Trabajo sobre ítem · 7.1.3"],["prx","Trabajo sobre ítem · 7.1.4"]],
+29:[["prx","Documento pendiente · 6.3"]],30:[["prx","Reunión con el cliente · 5.1"],["prx","Trabajo sobre ítem · 7.2"],["prx","Revisión de documento · 7.3"]]};
+var FER={12:["ferm","Día del Respeto a la Diversidad Cultural"]};
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;")}
+function tt(o){return ' data-tt="'+esc(JSON.stringify(o))+'"'}
+function grid(kind){
+  var h="";
+  for(var i=0;i<FIRST;i++) h+='<div class="d out"></div>';
+  for(var d=1;d<=DAYS;d++){
+    var w=(FIRST+d-1)%7, ro=(d<HOY)||w===0||w===6, s=null, inner="";
+    if(kind==="ag"&&AG[d]){ s=AG[d][0]; var x=AG[d][2];
+      inner='<div class="lbl" style="color:var('+COL[s]+')"'+tt(x?{cli:x.cli,proy:x.proy,srv:x.srv,est:AG[d][1].split(" · ")[2]+" · 09:00 a 17:00 · 8 h"}:{t:AG[d][1].split(" · ")[0],m:AG[d][1].split(" · ")[1]||""})+'>'+esc(AG[d][1])+'</div>'; }
+    if((kind==="fe"||kind==="ag"||kind==="ac")&&FER[d]&&kind!=="ag"){ s=FER[d][0]; inner+='<div class="lbl" style="color:var('+COL[s]+')"'+tt({t:"Feriado movible",m:FER[d][1]})+'>'+esc(FER[d][1])+'</div>'; }
+    if(kind==="ac"&&ACC[d]){ var L=ACC[d];
+      L.slice(0,2).forEach(function(a){ inner+='<div class="ev" style="background:var(--a-'+a[0]+'-bg);color:var(--a-'+a[0]+')"'+tt({cli:CLI.cli,proy:CLI.proy,srv:["co"],ini:"MN",desc:a[1],vence:d+"/10/2026"})+'><span class="ini"><b>MN</b></span>'+esc(a[1])+'</div>'; });
+      if(L.length>2) inner+='<div class="more">+'+(L.length-2)+' acciones</div>'; if(kind==="ac"&&!FER[d]) s=null; }
+    var cls="d"+(ro?" ro":"")+(d===HOY?" today":"");
+    h+='<div class="'+cls+'"'+(s?' data-s="'+s+'"':"")+(ro?' title="No editable"':"")+'><div class="dn"><span>'+d+'</span></div>'+inner+(kind==="ag"&&NOTE[d]?'<span class="note" title="Observación">!</span>':"")+'</div>';
+  }
+  return '<div class="dow">'+DOW.map(function(x){return "<span>"+x+"</span>"}).join("")+'</div><div class="mgrid">'+h+'</div>';
+}
+var NAV='<div class="cal-nav"><span class="stp"><button>‹</button><span>Octubre</span><button>›</button></span><span class="seg"><span class="on">Mes</span><span>Semana</span><span>Día</span></span><span class="stp yr"><button>‹</button><span>2026</span><button>›</button></span>';
+function head(ic,t,sub,extra){return '<div class="cal-hd"><div class="cal-ttl"><span class="cal-ic">'+ic+'</span><div><b>'+t+'</b><small>'+sub+'</small></div></div>'+NAV+(extra||"")+'</div></div>'}
+var RO='<span><i class="dash"></i>No editable (pasado, sábado y domingo)</span>';
+document.getElementById("cAg").innerHTML='<div class="cal">'+head("▦","Agenda del consultor","Disponibilidad, licencias y visitas asignadas",'<span class="btn">+ Cargar</span>')+
+ '<div class="cal-bar"><span class="sel">Cavana, María Laura <span>▾</span></span><div class="leg"><span><i style="background:#cbd5e1"></i>No cargado</span><span><i style="background:var(--disp)"></i>Disponible</span><span><i style="background:var(--asc)"></i>Asignado confirmado</span><span><i style="background:var(--asp)"></i>Asignado pendiente</span><span><i style="background:var(--pot)"></i>Potencial</span><span><i style="background:var(--org)"></i>Organismo</span><span><i style="background:var(--lic)"></i>Licencia</span><span><i style="background:var(--ocu)"></i>Ocupado</span><span><i style="background:var(--fer-f)"></i>Feriado fijo</span><span><i style="background:var(--fer-m)"></i>Movible</span>'+RO+'</div></div>'+
+ '<div class="kpis"><div class="kpi"><span class="ki" style="background:var(--disp)">✓</span><div><b>Disponible</b><small>36 h en el mes</small></div><em>5</em></div><div class="kpi"><span class="ki" style="background:var(--asc)">◆</span><div><b>Asignado</b><small>2 confirmados · 1 pendiente</small></div><em>3</em></div><div class="kpi"><span class="ki" style="background:var(--lic)">◷</span><div><b>No disponible</b><small>licencia / ocupado</small></div><em>7</em></div><div class="kpi"><span class="ki" style="background:var(--fer-m)">▦</span><div><b>Feriados</b><small>en el mes</small></div><em>1</em></div></div>'+
+ grid("ag")+'</div>';
+document.getElementById("cAc").innerHTML='<div class="cal">'+head("☑","Todas las acciones abiertas (80)","Todo lo abierto a tu cargo, ordenado por vencimiento",'<span class="seg"><span>Lista</span><span class="on">Calendario</span></span>')+
+ '<div class="cal-bar"><div class="leg"><span><i style="background:var(--a-ven)"></i>Vencida</span><span><i style="background:var(--a-hoy)"></i>Vence hoy</span><span><i style="background:var(--a-prx)"></i>Próxima</span><span><i style="background:var(--fer-m)"></i>Feriado</span>'+RO+'</div></div>'+grid("ac")+'</div>';
+document.getElementById("cFe").innerHTML='<div class="cal">'+head("★","Agenda general","Calendario de feriados y días no laborables",'<span class="btn">+ Feriado</span>')+
+ '<div class="cal-bar"><div class="leg"><span><i style="background:var(--fer-f)"></i>Feriado fijo</span><span><i style="background:var(--fer-m)"></i>Feriado movible</span>'+RO+'</div></div>'+grid("fe")+'</div>';
+/* tooltip */
+var tip=document.getElementById("tip");
+document.addEventListener("mouseover",function(e){var el=e.target.closest("[data-tt]");if(!el){tip.style.display="none";return;}
+ var o=JSON.parse(el.getAttribute("data-tt")),h="";
+ if(o.cli){h='<div class="vct-cal-tip-t">'+esc(o.cli)+'</div><div class="vct-cal-tip-m"><div class="vct-cal-tip-row">'+esc(o.proy)+'</div><div class="vct-cal-tip-row"><span class="vct-cal-tip-chips">'+(o.srv||[]).map(function(x){return '<span class="vct-cal-tip-svc is-'+x+'">'+x.toUpperCase()+'</span>'}).join("")+(o.ini?'<span class="vct-cal-tip-ic">'+o.ini+'</span>':'')+'</span></div>'+(o.desc?'<div class="vct-cal-tip-row vct-cal-tip-desc">'+esc(o.desc)+'</div>':'')+(o.est?'<div class="vct-cal-tip-row">'+esc(o.est)+'</div>':'')+(o.vence?'<div class="vct-cal-tip-row vct-cal-tip-date">Vence '+o.vence+'</div>':'')+'</div>';}
+ else h='<div class="vct-cal-tip-t">'+esc(o.t)+'</div>'+(o.m?'<div class="vct-cal-tip-m"><div class="vct-cal-tip-row">'+esc(o.m)+'</div></div>':'');
+ tip.innerHTML=h;tip.style.display="block";var r=el.getBoundingClientRect();tip.style.left=Math.min(r.left,innerWidth-290)+"px";tip.style.top=(r.bottom+6)+"px";});
+</script>
+</body></html>

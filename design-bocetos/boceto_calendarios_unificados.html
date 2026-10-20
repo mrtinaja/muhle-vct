@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Calendarios unificados</title>
+<style>
+:root{
+  --b:#66062D; --b-50:#FBF4F7; --b-100:#F3E3EA; --tx:#1e293b; --tx2:#475569; --mu:#64748b; --li:#e2e8f0; --li2:#eef2f6;
+  /* estados (agenda consultor) */
+  --disp:#2563EB; --disp-bg:#EFF4FF;
+  --asc:#16A34A;  --asc-bg:#E9F8EF;      /* asignado confirmado */
+  --asp:#CA8A04;  --asp-bg:#FEF7D6;      /* asignado pendiente */
+  --pot:#EA580C;  --pot-bg:#FFF0E6;      /* potencial */
+  --org:#0891B2;  --org-bg:#E4F6FB;      /* organismo */
+  --lic:#DB2777;  --lic-bg:#FCE7F3;      /* licencia */
+  --ocu:#64748B;  --ocu-bg:#EEF1F5;      /* ocupado / personal */
+  --fer-f:#E0304D; --fer-f-bg:#FDECEC;   /* feriado fijo */
+  --fer-m:#8B5CF6; --fer-m-bg:#F1E8FD;   /* feriado movible */
+  --wk:#DCE7F9;                          /* sabado y domingo */
+  /* acciones */
+  --a-ven:#DC2626; --a-ven-bg:#FEECEC; --a-hoy:#D97706; --a-hoy-bg:#FFF4E0; --a-prx:#66062D; --a-prx-bg:#F6ECF0;
+  /* pasado (dia anterior a hoy): no editable */
+  --past-a:#F1EEE7;   /* A arena */
+}
+*{box-sizing:border-box}
+body{margin:0;background:#eef0f4;font:13px/1.4 Gotham,"Montserrat","Segoe UI",system-ui,sans-serif;color:var(--tx);padding:22px}
+h1{font-size:18px;margin:0 0 4px;color:var(--b)} h2{font-size:15px;margin:30px 0 10px;color:var(--b)} h3{font-size:13px;margin:16px 0 8px}
+p.n{color:var(--mu);margin:0 0 12px;max-width:1100px}
+.box{background:#fff;border-radius:16px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:16px}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media(max-width:1100px){.grid2,.grid3{grid-template-columns:1fr}}
+table.t{border-collapse:collapse;width:100%;font-size:12px}table.t th{background:#f8fafc;text-align:left;padding:7px 9px;border-bottom:1px solid var(--li);color:var(--tx2)}table.t td{padding:7px 9px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+.sw{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-3px;margin-right:6px;border:1px solid rgba(0,0,0,.06)}
+.tag{display:inline-block;padding:1px 7px;border-radius:999px;font-size:10.5px;font-weight:700;background:var(--b);color:#fff;margin-left:6px}
+
+/* ===== componente comun ===== */
+.cal{background:#fff;border:1px solid var(--li);border-radius:16px;padding:14px 16px 16px}
+.cal-hd{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-bottom:12px;border-bottom:1px solid var(--li2);margin-bottom:12px}
+.cal-ttl{display:flex;align-items:center;gap:10px;min-width:0}
+.cal-ic{width:30px;height:30px;border-radius:9px;background:var(--b-100);color:var(--b);display:inline-flex;align-items:center;justify-content:center;font-weight:700}
+.cal-ttl b{font-size:14px}.cal-ttl small{display:block;font-size:11px;color:var(--mu)}
+.cal-nav{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap}
+.nb{width:30px;height:30px;border:1px solid var(--li);border-radius:999px;background:#fff;display:inline-flex;align-items:center;justify-content:center;color:var(--tx2);font-size:14px}
+.mon{font-size:15px;font-weight:700;min-width:120px;text-align:center}
+.seg{display:inline-flex;background:var(--li2);border-radius:999px;padding:3px}.seg span{padding:4px 12px;border-radius:999px;font-size:12px;color:var(--mu);font-weight:600}.seg span.on{background:#fff;color:var(--b);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.sel{border:1px solid var(--li);border-radius:9px;padding:6px 10px;font-size:12px;color:var(--tx2);min-width:110px;background:#fff}
+.btn{border:1px solid var(--li);background:#fff;border-radius:9px;padding:6px 11px;font-size:12px;font-weight:600;color:var(--tx);display:inline-flex;gap:6px;align-items:center}
+.cal-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.leg{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11px;color:var(--tx2);margin-left:auto}.leg i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:0}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.kpi{border:1px solid var(--li);border-radius:12px;padding:9px 12px;display:flex;align-items:center;gap:10px}.kpi .ki{width:28px;height:28px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700}
+.kpi b{font-size:12px;display:block}.kpi small{font-size:10.5px;color:var(--mu)}.kpi em{font-style:normal;margin-left:auto;font-size:18px;font-weight:700}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{border:1px solid var(--li);border-radius:999px;padding:4px 11px;font-size:12px;font-weight:600;color:var(--tx2);background:#fff}.chip i{font-style:normal;background:var(--li2);border-radius:999px;padding:0 6px;margin-left:5px;font-size:10.5px}.chip.on{background:var(--b);color:#fff;border-color:var(--b)}.chip.on i{background:rgba(255,255,255,.25)}
+
+.dow{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-bottom:6px}.dow span{font-size:10.5px;font-weight:700;letter-spacing:.06em;color:var(--mu);text-align:center;text-transform:uppercase}
+.mgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.d{min-width:0;min-height:78px;border-radius:10px;border:1px solid var(--li);background:#fff;padding:6px 7px;position:relative;display:flex;flex-direction:column;gap:3px;cursor:pointer}
+.d.out{visibility:hidden}
+.dn{font-size:12px;font-weight:700;color:var(--tx);display:flex;align-items:center;gap:6px}
+.d.wk{background:var(--wk);border-color:#cfdcf3}.d.wk .dn{color:#3b5b92}
+.d.today{border:2px solid var(--b)}.d.today .dn span{background:var(--b);color:#fff;border-radius:999px;padding:1px 6px}
+.d .ev{font-size:10.5px;font-weight:600;border-radius:6px;padding:2px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.d .more{font-size:10px;color:var(--mu);font-weight:600}
+.note{position:absolute;right:6px;top:6px;width:16px;height:16px;border-radius:50%;background:#FFF1EC;color:#C2410C;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+
+/* pasado: variantes */
+.d.past{cursor:not-allowed}
+.pastA .d.past{background:var(--past-a)!important;border-color:#e5e0d6!important}
+.pastA .d.past .dn{color:#9a9384!important}.pastA .d.past .ev,.pastA .d.past .bar{opacity:.55;filter:saturate(.45)}
+.pastB .d.past{background:repeating-linear-gradient(135deg,#f6f6f4 0 6px,#ecebe8 6px 7px)!important;border-color:#e2e1dc!important}
+.pastB .d.past .dn{color:#a3a3a3!important}.pastB .d.past .ev,.pastB .d.past .bar{opacity:.55;filter:grayscale(.6)}
+.pastC .d.past{background:#fff!important;border-style:dashed!important;border-color:#d9d6cf!important;opacity:.62}
+.pastC .d.past .dn{color:#a8a29e!important}.pastC .d.past .ev,.pastC .d.past .bar{filter:grayscale(.8)}
+.d.past:hover{box-shadow:none}
+
+/* Opcion A: celda tenida por estado + borde izquierdo */
+.optA .d[data-s]{border-left-width:4px}
+.optA .d[data-s=disp]{background:var(--disp-bg);border-left-color:var(--disp)}
+.optA .d[data-s=asc]{background:var(--asc-bg);border-left-color:var(--asc)}
+.optA .d[data-s=asp]{background:var(--asp-bg);border-left-color:var(--asp)}
+.optA .d[data-s=pot]{background:var(--pot-bg);border-left-color:var(--pot)}
+.optA .d[data-s=org]{background:var(--org-bg);border-left-color:var(--org)}
+.optA .d[data-s=lic]{background:var(--lic-bg);border-left-color:var(--lic)}
+.optA .d[data-s=ocu]{background:var(--ocu-bg);border-left-color:var(--ocu)}
+.optA .d[data-s=ferf]{background:var(--fer-f-bg);border-left-color:var(--fer-f)}
+.optA .d[data-s=ferm]{background:var(--fer-m-bg);border-left-color:var(--fer-m)}
+.optA .d .lbl{font-size:10.5px;font-weight:600}
+/* Opcion B: celda blanca + barra/chip de estado a lo ancho (estilo Google) */
+.optB .bar{font-size:10.5px;font-weight:700;border-radius:6px;padding:3px 7px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Opcion C: celda blanca + franja superior de color + texto */
+.optC .d[data-s]{border-top-width:5px}
+.optC .d[data-s=disp]{border-top-color:var(--disp)}.optC .d[data-s=asc]{border-top-color:var(--asc)}.optC .d[data-s=asp]{border-top-color:var(--asp)}
+.optC .d[data-s=pot]{border-top-color:var(--pot)}.optC .d[data-s=org]{border-top-color:var(--org)}.optC .d[data-s=lic]{border-top-color:var(--lic)}
+.optC .d[data-s=ocu]{border-top-color:var(--ocu)}.optC .d[data-s=ferf]{border-top-color:var(--fer-f)}.optC .d[data-s=ferm]{border-top-color:var(--fer-m)}
+.optC .lbl{font-size:10.5px;font-weight:700}
+.minihd{display:flex;align-items:center;gap:8px;margin:0 0 8px}.minihd b{font-size:12.5px;color:var(--b)}
+</style></head><body>
+<h1>Calendarios unificados · bocetos</h1>
+<p class="n">Un único componente de calendario para los 3 calendarios actuales (Acciones, Feriados, Agenda del consultor, igual en la V360 del consultor) y, más adelante, el de la V360 de proyecto. Misma barra, mismas fuentes y tamaños, mismos filtros y misma regla de días pasados. No cambia qué datos muestra cada uno.</p>
+
+<h2>1. Reglas comunes</h2>
+<div class="grid2">
+<div class="box"><h3>Estructura (igual en todos)</h3>
+<table class="t"><tr><th>Zona</th><th>Contenido</th></tr>
+<tr><td>Barra superior</td><td>Ícono + título + subtítulo · navegación ‹ Mes Año › · Mes / Semana / Día · selector de mes y año · Lista / Calendario (solo Acciones) · botón de acción (+ Feriado, + Disponibilidad)</td></tr>
+<tr><td>Barra de filtros</td><td>Izquierda: filtro de entidad (Consultor, Responsable) y chips · Derecha: leyenda de colores</td></tr>
+<tr><td>Indicadores</td><td>Solo si el calendario los tiene (consultor: Disponible, Asignado, No disponible, Feriados)</td></tr>
+<tr><td>Grilla</td><td>Días DOM a SÁB · celda con número y hasta 2 eventos + «+N» · hoy con borde y número bordó</td></tr></table>
+<h3>Tipografía (Gotham)</h3>
+<table class="t"><tr><th>Elemento</th><th>Tamaño / peso</th></tr><tr><td>Título del calendario</td><td>14 px · Bold</td></tr><tr><td>Mes y año</td><td>15 px · Bold</td></tr><tr><td>Días de la semana</td><td>10,5 px · Bold · mayúsculas · gris</td></tr><tr><td>Número de día</td><td>12 px · Bold</td></tr><tr><td>Evento (chip)</td><td>10,5 px · Medium / Bold</td></tr><tr><td>Leyenda / ayudas</td><td>11 px · Book</td></tr></table>
+</div>
+<div class="box"><h3>Colores</h3>
+<table class="t"><tr><th>Concepto</th><th>Color</th><th>Dónde</th></tr>
+<tr><td>Sábado y domingo</td><td><span class="sw" style="background:var(--wk)"></span>Celeste</td><td>Todos</td></tr>
+<tr><td>Hoy</td><td><span class="sw" style="background:var(--b)"></span>Borde bordó</td><td>Todos</td></tr>
+<tr><td>Día pasado (no editable)</td><td><span class="sw" style="background:var(--past-a)"></span>Arena / rayado / atenuado</td><td>Todos (ver 2)</td></tr>
+<tr><td>Feriado fijo · movible</td><td><span class="sw" style="background:var(--fer-f)"></span>Rojo · <span class="sw" style="background:var(--fer-m)"></span>Violeta</td><td>Todos</td></tr>
+<tr><td>Disponible</td><td><span class="sw" style="background:var(--disp)"></span>Azul</td><td>Consultor</td></tr>
+<tr><td>Asignado confirmado</td><td><span class="sw" style="background:var(--asc)"></span>Verde</td><td>Consultor (VCT_PROYECTOS_VISITAS)</td></tr>
+<tr><td>Asignado pendiente</td><td><span class="sw" style="background:var(--asp)"></span>Amarillo</td><td>Consultor (VCT_PROYECTOS_VISITAS)</td></tr>
+<tr><td>Potencial</td><td><span class="sw" style="background:var(--pot)"></span>Naranja <small>(hoy ámbar: choca con pendiente)</small></td><td>Consultor</td></tr>
+<tr><td>Organismo</td><td><span class="sw" style="background:var(--org)"></span>Cian <small>(hoy verde agua: choca con asignado)</small></td><td>Consultor</td></tr>
+<tr><td>Licencia</td><td><span class="sw" style="background:var(--lic)"></span>Rosa</td><td>Consultor</td></tr>
+<tr><td>Ocupado / personal</td><td><span class="sw" style="background:var(--ocu)"></span>Gris</td><td>Consultor</td></tr>
+<tr><td>No cargado (libre)</td><td><span class="sw" style="background:#fff"></span>Blanco</td><td>Consultor</td></tr>
+<tr><td>Observación</td><td><span class="sw" style="background:#FFF1EC"></span>Ícono «!» en la esquina (no es un estado)</td><td>Consultor</td></tr>
+<tr><td>Acción vencida · vence hoy · próxima</td><td><span class="sw" style="background:var(--a-ven)"></span>Rojo · <span class="sw" style="background:var(--a-hoy)"></span>Ámbar · <span class="sw" style="background:var(--a-prx)"></span>Bordó</td><td>Acciones</td></tr>
+</table></div>
+</div>
+
+<h2>2. Día pasado: no editable ni clickeable <span class="tag">elegir 1</span></h2>
+<p class="n">Cualquier día anterior a hoy: sin hover, cursor bloqueado, no abre el alta ni la edición; los eventos se ven atenuados. Es distinto del gris (ocupado), del rosa (licencia) y del celeste (finde). Propuesta: el pasado gana sobre el finde (un sábado pasado se ve como pasado).</p>
+<div class="grid3">
+<div class="box"><div class="minihd"><b>2A · Arena</b><small>fondo cálido opaco</small></div><div class="pastA" id="pA"></div></div>
+<div class="box"><div class="minihd"><b>2B · Rayado</b><small>trama diagonal gris cálido</small></div><div class="pastB" id="pB"></div></div>
+<div class="box"><div class="minihd"><b>2C · Atenuado</b><small>blanco, borde punteado, 60%</small></div><div class="pastC" id="pC"></div></div>
+</div>
+
+<h2>3. Opciones de diseño de la celda <span class="tag">elegir 1</span></h2>
+<p class="n">Las tres opciones con el mismo mes (octubre 2026, hoy 20) en la Agenda del consultor, que es el caso más completo. Abajo de cada una, Acciones y Feriados con el mismo estilo. Pasado con la variante 2A para comparar.</p>
+
+<div class="box"><div class="minihd"><b>Opción A · Celda teñida por estado</b><small>fondo suave + borde izquierdo de color (evolución del actual)</small></div><div id="oA"></div></div>
+<div class="box"><div class="minihd"><b>Opción B · Celda blanca + barra de estado</b><small>estilo Google Calendar: el estado es una barra a lo ancho, igual que una actividad</small></div><div id="oB"></div></div>
+<div class="box"><div class="minihd"><b>Opción C · Celda blanca + franja superior</b><small>franja de 5 px arriba y el texto del estado; la más liviana</small></div><div id="oC"></div></div>
+
+<script>
+var DOW=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+/* octubre 2026: el 1 es jueves; hoy 20 */
+var HOY=20, FIRST=4, DAYS=31;
+var AG={1:["lic","Licencia"],2:["lic","Licencia"],5:["lic","Licencia"],6:["lic","Licencia"],7:["lic","Licencia"],9:["lic","Licencia"],
+12:["ferm","Día del Respeto a la Diversidad"],14:["ocu","Ocupado / personal"],15:["disp","Disponible · 8h"],
+21:["disp","Disponible · 8h"],22:["disp","Disponible · 4h"],23:["asc","CEVEN · 1348 · Confirmada"],26:["asp","CEVEN · 1348 · Pendiente"],
+27:["pot","Potencial · BORG"],28:["org","Organismo · IRAM"],29:["disp","Disponible · 8h"],30:["asc","BORG · 1343 · Confirmada"]};
+var NOTE={29:1};
+var COL={disp:"--disp",asc:"--asc",asp:"--asp",pot:"--pot",org:"--org",lic:"--lic",ocu:"--ocu",ferf:"--fer-f",ferm:"--fer-m"};
+var ACC={19:[["ven","Iniciar Plan Estratégico · 1348"]],20:[["hoy","Documento pendiente · 4.3"],["hoy","Trabajo sobre ítem · 4.2"]],21:[["prx","Documento pendiente · 4.4"]],
+25:[["prx","Trabajo sobre ítem · 5.1"],["prx","Revisión de documento · 5.1.2"],["prx","Trabajo sobre ítem · 7.1.2"],["prx","Trabajo sobre ítem · 7.1.2"]],27:[["prx","Documento pendiente · 5.3"],["prx","Pendiente del cliente · 6.2"],["prx","Trabajo sobre ítem · 7.1.2"]],
+28:[["prx","Trabajo sobre ítem · 7.1.1"],["prx","Trabajo sobre ítem · 7.1.2"],["prx","Trabajo sobre ítem · 7.1.2"],["prx","Trabajo sobre ítem · 7.1.2"]],30:[["prx","Reunión con el cliente · 5.1"],["prx","Trabajo sobre ítem · 7.1.2"],["prx","Trabajo sobre ítem · 7.1.2"]]};
+var FER={12:["ferm","Día del Respeto a la Diversidad Cultural"]};
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;")}
+function cells(kind,opt,from,to){
+  var h="";
+  for(var i=0;i<FIRST;i++) if(from===undefined) h+='<div class="d out"></div>';
+  for(var d=1;d<=DAYS;d++){
+    if(from!==undefined&&(d<from||d>to)) continue;
+    var w=(FIRST+d-1)%7, wk=(w===0||w===6), past=d<HOY, today=d===HOY, s=null, inner="";
+    if(kind==="ag"&&AG[d]){ s=AG[d][0]; var t=AG[d][1];
+      if(opt==="B") inner='<div class="bar" style="background:var('+COL[s]+')">'+esc(t)+'</div>';
+      else inner='<div class="lbl" style="color:var('+COL[s]+')">'+esc(t)+'</div>'; }
+    if(kind==="fe"&&FER[d]){ s=FER[d][0]; inner = opt==="B"?'<div class="bar" style="background:var('+COL[s]+')">'+esc(FER[d][1])+'</div>':'<div class="lbl" style="color:var('+COL[s]+')">'+esc(FER[d][1])+'</div>'; }
+    if(kind==="ac"&&ACC[d]){ var L=ACC[d];
+      L.slice(0,2).forEach(function(a){ inner+='<div class="ev" style="background:var(--a-'+a[0]+'-bg);color:var(--a-'+a[0]+')">'+esc(a[1])+'</div>'; });
+      if(L.length>2) inner+='<div class="more">+'+(L.length-2)+' acciones</div>';
+      s=null; }
+    if(kind==="ac"&&FER[d]) inner='<div class="ev" style="background:var(--fer-m-bg);color:var(--fer-m)">'+esc(FER[d][1])+'</div>'+inner;
+    var cls="d"+(wk?" wk":"")+(past?" past":"")+(today?" today":"");
+    var ds=(s&&opt!=="B")?' data-s="'+s+'"':"";
+    h+='<div class="'+cls+'"'+ds+' title="'+(past?"Día pasado: solo lectura":"")+'"><div class="dn"><span>'+d+'</span></div>'+inner+(kind==="ag"&&NOTE[d]?'<span class="note" title="Observación">!</span>':"")+'</div>';
+  }
+  return h;
+}
+function dow(){return '<div class="dow">'+DOW.map(function(x){return "<span>"+x+"</span>"}).join("")+'</div>'}
+function head(ic,t,sub,extra){return '<div class="cal-hd"><div class="cal-ttl"><span class="cal-ic">'+ic+'</span><div><b>'+t+'</b><small>'+sub+'</small></div></div>'+
+ '<div class="cal-nav"><span class="nb">‹</span><span class="mon">Octubre 2026</span><span class="nb">›</span><span class="seg"><span class="on">Mes</span><span>Semana</span><span>Día</span></span><span class="sel">Octubre ▾</span><span class="sel" style="min-width:76px">2026 ▾</span>'+(extra||"")+'</div></div>'}
+var LEG_AG='<div class="leg"><span><i style="background:#fff;border:1px solid #cbd5e1"></i>No cargado</span><span><i style="background:var(--disp)"></i>Disponible</span><span><i style="background:var(--asc)"></i>Asignado confirmado</span><span><i style="background:var(--asp)"></i>Asignado pendiente</span><span><i style="background:var(--pot)"></i>Potencial</span><span><i style="background:var(--org)"></i>Organismo</span><span><i style="background:var(--lic)"></i>Licencia</span><span><i style="background:var(--ocu)"></i>Ocupado</span><span><i style="background:var(--fer-f)"></i>Feriado fijo</span><span><i style="background:var(--fer-m)"></i>Movible</span><span><i style="background:var(--past-a);border:1px solid #e5e0d6"></i>Pasado</span></div>';
+var KPI='<div class="kpis"><div class="kpi"><span class="ki" style="background:var(--disp)">✓</span><div><b>Disponible</b><small>36 h en el mes</small></div><em>5</em></div><div class="kpi"><span class="ki" style="background:var(--asc)">◆</span><div><b>Asignado</b><small>1 confirmado · 1 pendiente</small></div><em>3</em></div><div class="kpi"><span class="ki" style="background:var(--lic)">◷</span><div><b>No disponible</b><small>licencia / ocupado</small></div><em>7</em></div><div class="kpi"><span class="ki" style="background:var(--fer-m)">▦</span><div><b>Feriados</b><small>en el mes</small></div><em>1</em></div></div>';
+function build(id,opt){
+  var h='<div class="cal opt'+opt+' pastA">'+head("▦","Agenda del consultor","Disponibilidad, licencias y visitas asignadas",'<span class="btn" style="margin-left:6px">+ Cargar</span>')+
+   '<div class="cal-bar"><span class="sel" style="min-width:180px">Cavana, María Laura ▾</span>'+LEG_AG+'</div>'+KPI+dow()+'<div class="mgrid">'+cells("ag",opt)+'</div></div>';
+  h+='<div class="grid2" style="margin-top:14px">';
+  h+='<div class="cal opt'+opt+' pastA">'+head("☑","Acciones","Las acciones a tu cargo",'<span class="seg" style="margin-left:6px"><span>Lista</span><span class="on">Calendario</span></span>')+
+     '<div class="cal-bar"><span class="chips"><span class="chip">Vencidas<i>1</i></span><span class="chip">Hoy<i>2</i></span><span class="chip">Próximas<i>8</i></span><span class="chip on">Todas<i>80</i></span></span><div class="leg"><span><i style="background:var(--a-ven)"></i>Vencida</span><span><i style="background:var(--a-hoy)"></i>Vence hoy</span><span><i style="background:var(--a-prx)"></i>Próxima</span></div></div>'+
+     dow()+'<div class="mgrid">'+cells("ac",opt,18,31)+'</div></div>';
+  h+='<div class="cal opt'+opt+' pastA">'+head("★","Agenda general","Feriados y días no laborables",'<span class="btn" style="margin-left:6px">+ Feriado</span>')+
+     '<div class="cal-bar"><div class="leg"><span><i style="background:var(--fer-f)"></i>Feriado fijo</span><span><i style="background:var(--fer-m)"></i>Feriado movible</span></div></div>'+
+     dow()+'<div class="mgrid">'+cells("fe",opt,4,17)+'</div></div>';
+  h+='</div>';
+  document.getElementById(id).innerHTML=h;
+}
+build("oA","A");build("oB","B");build("oC","C");
+["A","B","C"].forEach(function(k){document.getElementById("p"+k).innerHTML='<div class="optA">'+dow()+'<div class="mgrid">'+cells("ag","A",11,24)+'</div></div>';});
+</script>
+</body></html>

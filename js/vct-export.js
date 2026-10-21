@@ -1,4 +1,4 @@
-/* vct-export.js - v1
+/* vct-export.js - v2 (imagenes full)
    ============================================================================
    Export unificado para MAIN (Excel .xlsx real + PDF real con logo/imagenes).
    Modulo independiente: NO conoce la grilla ni el DOM de la pantalla. Recibe
@@ -505,6 +505,12 @@
         var content = [];
 
         var imgs = (spec.images || []).filter(function (i) { return i && i.dataUrl; });
+        /* v2: imagen "full" (p.ej. cronograma): ancho completo, una por bloque, alto hasta casi la hoja */
+        imgs.filter(function (i) { return i.full; }).forEach(function (im) {
+            if (im.caption) content.push({ text: clean(im.caption), bold: true, fontSize: 9, color: "#" + PRIMARY, margin: [0, 0, 0, 3] });
+            content.push({ image: im.dataUrl, fit: [avail, landscape ? 440 : 640], margin: [0, 0, 0, 10] });
+        });
+        imgs = imgs.filter(function (i) { return !i.full; });
         if (imgs.length) {
             var per = Math.min(imgs.length, 3);
             for (var s = 0; s < imgs.length; s += per) {

@@ -1868,6 +1868,16 @@ html body .vct-form-select-menu.vct-agc-select-menu { box-sizing: border-box !im
     opacity:1 !important;
     background:#fff !important;
 }
-/* HOY: solo aro bordó + fondo blanco (sin la franja de color superior) */
+/* HOY: un solo borde bordó limpio (sin aro interno ni outline), en todos los calendarios.
+   Gana al borde gris de la celda base y saca el box-shadow/outline que daban doble linea. */
+.vct-cal-c .vct-agenda-cell.vct-agenda-cell-today{
+    border:1px solid #66062D !important;
+    box-shadow:none !important;
+    outline:none !important;
+    background:#fff !important;
+}
 .vct-cal-c .vct-agenda-cell-today .vct-cal-strip{display:none !important;}
-.vct-cal-c .vct-agenda-cell-today{background:#fff !important;}
+/* NUMERO DEL DIA: circulo con borde GRIS en todos los dias; el dia de hoy en BORDO.
+   Antes la regla base .vct-agenda-daynum lo ponia bordo en TODOS. */
+.vct-cal-c .vct-agenda-daynum{ border:1px solid #cbd5e1 !important; background:transparent !important; }
+.vct-cal-c .vct-agenda-cell-today .vct-agenda-daynum{ border:1px solid #66062D !important; background:transparent !important; color:#1e293b !important; }

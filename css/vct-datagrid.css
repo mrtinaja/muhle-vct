@@ -1,4 +1,4 @@
-﻿/* vct-datagrid.css - v1
+﻿/* vct-datagrid.css - v2
    ============================================================================
    Estilos del motor de grilla de MAIN (vct-datagrid.js). Autocontenido y
    namespaced .vctdg-*: no depende de las reglas de tablas/paginado de
@@ -464,6 +464,16 @@
     }
     .vctdg-table td:not([data-label])::before{content:none;}
     .vctdg-table td[data-label=""]::before{content:none;}
+    /* en modo card las celdas ordenables NO deben quedar nowrap/recortadas:
+       un valor largo (ej. Razon Social) se cortaba a mitad de palabra contra el
+       borde. Que envuelva a varias lineas en vez de recortarse. */
+    .vctdg-table.is-fixed td[data-vct-sort-value]{
+        white-space:normal;
+        overflow:visible;
+        text-overflow:clip;
+        overflow-wrap:anywhere;
+        min-width:0;
+    }
     /* iconos de accion: juntos en una franja al pie de la tarjeta (Ver, Editar...) */
     .vctdg-table tbody tr[data-vct-row]{display:flex;flex-wrap:wrap;}
     .vctdg-table tbody tr[data-vct-row] > td{flex:0 0 100%;}

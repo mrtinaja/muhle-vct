@@ -31,7 +31,11 @@
    v27/v22 PL_ARBOL_V1: plan estrategico por norma en arbol capitulo > item > subitem, detalle 50/50
      del nodo elegido, acciones con editar / eliminar y responsable equipo / cliente / otro;
      avance del plan sobre el total de items. Requiere PASO4_1 (columnas nuevas).
-   Assets: css/vct-proyecto-v360.css?v=34  js/vct-proyecto-v360.js?v=25
+   v36/v26 PL_ATN_LIST_V1: requiere atencion con las filas de Pendientes del Resumen (3 visibles + scroll).
+   v35/v26 PL_V360_V2: plan - requiere atencion en grilla (item, responsable con iniciales, resaltado si es
+     del usuario, vence), arbol con responsable solo iniciales, Excel / PDF en arbol y cronograma (vct-export v2),
+     referencias del cronograma tambien arriba, titulo: tipo de plan - codigo del proyecto - nombre (- lugar).
+   Assets: css/vct-proyecto-v360.css?v=36  js/vct-proyecto-v360.js?v=26
    No crea vistas, funciones ni tablas. ASCII. Re-ejecutable.
    ======================================================================== */
 USE [MuhlePROD];
@@ -71,9 +75,9 @@ BEGIN
             @ID_PROYECTO INT, @MSG VARCHAR(1000) = '', @ERR VARCHAR(1000) = '',
             @ASSETS VARCHAR(MAX);
 
-    SET @ASSETS = '<link rel="stylesheet" href="../css/vct-datagrid.css?v=30"><script src="../js/vct-export.js?v=1"></script><script src="../js/vct-datagrid.js?v=12"></script>'
+    SET @ASSETS = '<link rel="stylesheet" href="../css/vct-datagrid.css?v=30"><script src="../js/vct-export.js?v=2"></script><script src="../js/vct-datagrid.js?v=12"></script>'
                 + '<link rel="stylesheet" href="../css/vct-datepicker.css?v=1"><script src="../js/vct-datepicker.js?v=2"></script>'
-                + '<link rel="stylesheet" href="../css/vct-proyecto-v360.css?v=34"><script src="../js/vct-proyecto-v360.js?v=25"></script>';
+                + '<link rel="stylesheet" href="../css/vct-proyecto-v360.css?v=36"><script src="../js/vct-proyecto-v360.js?v=26"></script>';
 
     /* ---------- buffer: proyecto + comando ---------- */
     DECLARE @B_PROY VARCHAR(100), @B_FLAG VARCHAR(10), @B_CMD VARCHAR(100), @B_SEL3 VARCHAR(100),
@@ -1752,6 +1756,10 @@ BEGIN
     FROM dbo.VCT_PROYECTOS_PLANES P WITH(NOLOCK) LEFT JOIN dbo.VCT_PRM_DOCUMENTOS D WITH(NOLOCK) ON D.ID = P.ID_DOCUMENTO
     WHERE P.ID_PROYECTO = @ID_PROYECTO ORDER BY P.VERSION DESC, P.ID DESC;
     IF EXISTS (SELECT 1 FROM #SV WHERE UPPER(LEFT(ISNULL(COD,''),2)) = 'CO') SET @PLN_TIENE_CO = 1;
+    /* PL_TITULO_V1: titulo del plan = Plan estrategico - codigo del proyecto - nombre del servicio de consultoria */
+    DECLARE @PL_SVN VARCHAR(400) = '';
+    SELECT TOP 1 @PL_SVN = REPLACE(REPLACE(REPLACE(CASE WHEN NOMBRE <> '' THEN NOMBRE ELSE DES END,'&','&amp;'),'<','&lt;'),'>','&gt;')
+    FROM #SV WHERE UPPER(LEFT(ISNULL(COD,''),2)) = 'CO' ORDER BY ORDEN, ID;
     SELECT @PL_AV_ST = ID FROM dbo.VCT_PRM_ACCIONES_SUBTIPOS WITH(NOLOCK) WHERE CODIGO = 'AVISO_VENCIMIENTO';
     SELECT @PL_CANC_ST = ID FROM dbo.VCT_PRM_ACCIONES_ESTADOS WITH(NOLOCK) WHERE CODIGO = 'CANCELADA';
     SELECT @PL_CUMP_ST = ID FROM dbo.VCT_PRM_ACCIONES_ESTADOS WITH(NOLOCK) WHERE CODIGO = 'CUMPLIDA';
@@ -2574,7 +2582,8 @@ BEGIN
     DECLARE @PL_H VARCHAR(MAX) = '', @PL_ROWS VARCHAR(MAX) = '', @PL_ATN VARCHAR(MAX) = '', @PL_ROPT VARCHAR(MAX) = '',
             @PL_RANGO INT = CASE WHEN @F_INI IS NOT NULL AND @F_FIN IS NOT NULL AND @F_FIN > @F_INI THEN DATEDIFF(DAY, @F_INI, @F_FIN) ELSE 0 END,
             @PL_HOYP INT = 0, @PL_TRIG VARCHAR(300) = '<button type="button" class="vct-row-menu-trigger" data-vctdg-rowmenu aria-label="Acciones" title="Acciones"><span class="vct-row-menu-dots" aria-hidden="true">&#8942;</span></button>',
-            @PL_CARGA_ABIERTA BIT = 0, @PL_IOPT VARCHAR(MAX) = '', @PL_GANTT VARCHAR(MAX) = '';
+            @PL_CARGA_ABIERTA BIT = 0, @PL_IOPT VARCHAR(MAX) = '', @PL_GANTT VARCHAR(MAX) = '', @PL_GLEG VARCHAR(MAX) = '',
+            @PL_ATN_N INT = 0, @PL_ATN_M INT = 0;
     IF @PL_RANGO > 0 SET @PL_HOYP = CASE WHEN @HOY <= @F_INI THEN 0 WHEN @HOY >= @F_FIN THEN 100 ELSE DATEDIFF(DAY, @F_INI, @HOY) * 100 / @PL_RANGO END;
     IF EXISTS (SELECT 1 FROM #A WHERE SUB_COD = 'CARGA_PLAN' AND SIT <> 'C') SET @PL_CARGA_ABIERTA = 1;
 
@@ -2643,7 +2652,14 @@ BEGIN
 
         /* menu y fila del arbol de cada item / subitem */
         UPDATE T SET HTML =
-              '<div class="vct-plt-r is-' + CASE WHEN T.NIV = 3 THEN 'sub' ELSE 'it' END + '" data-pl-row="' + CONVERT(VARCHAR(20), T.ID) + '">'
+              '<div class="vct-plt-r is-' + CASE WHEN T.NIV = 3 THEN 'sub' ELSE 'it' END + '" data-pl-row="' + CONVERT(VARCHAR(20), T.ID) + '"'
+            /* PL_EXPORT_V1: datos de la fila para Excel / PDF */
+            + ' data-x-r="' + REPLACE(REPLACE(REPLACE(REPLACE(ISNULL(T.RESP_NOM,''),'&','&amp;'),'"','&quot;'),'<','&lt;'),'>','&gt;') + '"'
+            + ' data-x-i="' + ISNULL(CONVERT(VARCHAR(10), ISNULL(T.FI, (SELECT X.FI FROM #PI X WHERE X.ID = T.TOPI)), 103), '') + '"'
+            + ' data-x-v="' + ISNULL(CONVERT(VARCHAR(10), ISNULL(T.FF, (SELECT X.FF FROM #PI X WHERE X.ID = T.TOPI)), 103), '') + '"'
+            + ' data-x-f="' + ISNULL(CONVERT(VARCHAR(10), T.FR, 103), '') + '" data-x-a="' + CONVERT(VARCHAR(10), ISNULL(T.AV, 0)) + '"'
+            + ' data-x-n="' + CONVERT(VARCHAR(10), T.CUMP) + '/' + CONVERT(VARCHAR(10), T.TOT) + '" data-x-ve="' + CONVERT(VARCHAR(10), T.VEN) + '"'
+            + ' data-x-e="' + CASE T.EST WHEN 'CUMPLIDO' THEN 'Cumplido' WHEN 'VENCIDO' THEN 'Vencido' WHEN 'EN_CURSO' THEN 'En curso' ELSE 'Pendiente' END + '">'
             + '<span class="vct-plt-n">'
             + CASE WHEN T.HIJOS > 0 THEN '<span class="vct-plt-tg" data-pl-tg role="button" tabindex="0"><span data-vct-icon="chevron-right"></span></span>' ELSE '<span class="vct-plt-ph"></span>' END
             + CASE WHEN T.HITO = 1 THEN '<span class="vct-pl-code is-hito">Hito</span>' WHEN T.CODE <> '' THEN '<span class="vct-pl-code">' + T.CODE + '</span>' ELSE '' END
@@ -2651,7 +2667,8 @@ BEGIN
             + CASE WHEN (T.FI IS NOT NULL OR T.FF IS NOT NULL) AND ISNULL(T.OBS,'') <> ''
                    THEN '<small class="vct-plt-sub" title="' + REPLACE(REPLACE(REPLACE(REPLACE(T.OBS,'&','&amp;'),'"','&quot;'),'<','&lt;'),'>','&gt;') + '">' + REPLACE(REPLACE(REPLACE(T.OBS,'&','&amp;'),'<','&lt;'),'>','&gt;') + '</small>' ELSE '' END
             + '</span></span>'
-            + '<span class="vct-plt-c vct-plt-resp">' + CASE WHEN ISNULL(T.RESP_INI,'') <> '' THEN '<span class="vctdg-avatar is-c">' + T.RESP_INI + '</span><span>' + REPLACE(REPLACE(REPLACE(T.RESP_NOM,'&','&amp;'),'<','&lt;'),'>','&gt;') + '</span>' ELSE '<span class="vctdg-none">-</span>' END + '</span>'
+            /* PL_RESP_INI_V1: responsable solo con iniciales (nombre completo en el tooltip) */
+            + '<span class="vct-plt-c vct-plt-resp is-ini">' + CASE WHEN ISNULL(T.RESP_INI,'') <> '' THEN '<span class="vctdg-avatar is-c" title="' + REPLACE(REPLACE(REPLACE(REPLACE(T.RESP_NOM,'&','&amp;'),'"','&quot;'),'<','&lt;'),'>','&gt;') + '">' + T.RESP_INI + '</span>' ELSE '<span class="vctdg-avatar is-none" title="Sin responsable">-</span>' END + '</span>'
             /* PL_FECHAS_V1: inicio / vence / fin real (el subitem toma las fechas de su item) */
             + '<span class="vct-plt-c vct-plt-f">' + ISNULL(CONVERT(VARCHAR(5), ISNULL(T.FI, (SELECT X.FI FROM #PI X WHERE X.ID = T.TOPI)), 103), '-') + '</span>'
             + '<span class="vct-plt-c vct-plt-f">' + ISNULL(CONVERT(VARCHAR(5), ISNULL(T.FF, (SELECT X.FF FROM #PI X WHERE X.ID = T.TOPI)), 103), '-') + '</span>'
@@ -2847,29 +2864,51 @@ BEGIN
                     FROM #PI S INNER JOIN #PI T ON T.ID = S.TOPI WHERE S.NIV = 3
                 ) R ORDER BY R.O1, R.O2, R.O3, R.O4
                 FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), '');
+            SET @PL_GLEG = '<span><i class="is-en_curso"></i>En curso</span><span><i class="is-pendiente"></i>Pendiente</span><span><i class="is-vencido"></i>Vencido</span><span><i class="is-cumplido"></i>Cumplido</span>'
+                + '<span><i class="is-mil"></i>Hito</span><span><i class="is-dot"></i>Vencimiento de acci&oacute;n</span><span><i class="is-today"></i>Hoy</span>';
             SET @PL_GANTT = '<div class="vct-pl-g" style="--pl-cols:' + CONVERT(VARCHAR(10), @G_N) + '">'
                 + '<div class="vct-pl-g-row is-head"><div class="vct-pl-g-l">&Iacute;tem</div><div class="vct-pl-g-lane"><div class="vct-pl-g-cols">' + @G_COLS + '</div>'
                 + CASE WHEN @G_HOY <> '' THEN '<i class="vct-pl-g-today is-head" style="left:' + @G_HOY + '%"><em>Hoy</em></i>' ELSE '' END + '</div></div>'
                 + '<div class="vct-pl-g-body"' + CASE WHEN @G_HOY <> '' THEN ' style="--pl-hoy:' + @G_HOY + '%"' ELSE '' END + '>' + @PL_GANTT + '</div>'
-                + '<div class="vct-pl-g-legend"><span><i class="is-en_curso"></i>En curso</span><span><i class="is-pendiente"></i>Pendiente</span><span><i class="is-vencido"></i>Vencido</span><span><i class="is-cumplido"></i>Cumplido</span>'
-                + '<span><i class="is-mil"></i>Hito</span><span><i class="is-dot"></i>Vencimiento de acci&oacute;n</span><span><i class="is-today"></i>Hoy</span></div></div>';
+                + '<div class="vct-pl-g-legend">' + @PL_GLEG + '</div></div>';
+            /* PL_GLEG_V1: las referencias tambien arriba, debajo de los filtros */
+            SET @PL_GANTT = '<div class="vct-pl-g-legend is-top">' + @PL_GLEG + '</div>' + @PL_GANTT;
         END
         ELSE SET @PL_GANTT = '<div class="vct-360-empty">Para ver el cronograma, el proyecto o los &iacute;tems tienen que tener fechas.</div>';
 
-        /* requiere atencion */
+        /* requiere atencion (PL_ATN_GRID_V1): grilla con tipo, item, detalle, responsable (iniciales; resaltado si es del
+           usuario logueado, mismo criterio que la grilla de Acciones) y vencimiento. Primero lo propio, despues por fecha. */
+        CREATE TABLE #ATN (O INT, MIA BIT, B VARCHAR(40), C VARCHAR(20), COD VARCHAR(60), T VARCHAR(400), RI VARCHAR(4), RN VARCHAR(300), F DATETIME, IT VARCHAR(500));
+        INSERT INTO #ATN (O, MIA, B, C, COD, T, RI, RN, F, IT)
+        SELECT 1, CASE WHEN (EQ.TIPO_MIEMBRO = 'EMPLEADO' AND EQ.ID_EMPLEADO = @EMP_U) OR (EQ.TIPO_MIEMBRO = 'CONSULTOR' AND EQ.ID_CONSULTOR = @CONS_U) THEN 1 ELSE 0 END,
+               'Vencido', 'is-cancel', CASE WHEN P.HITO = 1 THEN 'Hito' ELSE P.CODE END, P.NAME, ISNULL(P.RESP_INI,''), ISNULL(P.RESP_NOM,''), P.FF,
+               CASE WHEN P.HITO = 1 THEN 'Hito vencido' ELSE '&Iacute;tem vencido' END
+        FROM #PI P LEFT JOIN dbo.VCT_PROYECTOS_EQUIPO EQ WITH(NOLOCK) ON EQ.ID = P.RESP
+        WHERE P.NIV = 2 AND P.EST = 'VENCIDO';
+        INSERT INTO #ATN (O, MIA, B, C, COD, T, RI, RN, F, IT)
+        SELECT 2, ISNULL(X.MIA, 0), 'Fecha', 'is-planned', ISNULL((SELECT P.CODE FROM #PI P WHERE P.ID = X.ITEM), ''), X.TITULO, X.RESP_INI, X.RESP, X.VENCE,
+               ISNULL((SELECT CASE WHEN P.NIV = 3 THEN 'Sub&iacute;tem ' ELSE '&Iacute;tem ' END + REPLACE(REPLACE(REPLACE(P.NAME,'&','&amp;'),'<','&lt;'),'>','&gt;') FROM #PI P WHERE P.ID = X.ITEM), '')
+        FROM #A X WHERE X.SUB_COD = 'AVISO_VENCIMIENTO' AND X.SIT <> 'C' AND X.TITULO LIKE 'Cambio de fecha en el plan%';
+        INSERT INTO #ATN (O, MIA, B, C, COD, T, RI, RN, F, IT)
+        SELECT 3, ISNULL((SELECT TOP 1 X.MIA FROM #A X WHERE X.ID = A.ID), 0), 'Acci&oacute;n', 'is-cancel', ISNULL((SELECT P.CODE FROM #PI P WHERE P.ID = A.ITEM), ''),
+               CASE WHEN A.DET <> '' THEN A.DET ELSE A.TIT END, A.RESP_INI, A.RESP_NOM, A.VENCE,
+               ISNULL((SELECT CASE WHEN P.NIV = 3 THEN 'Sub&iacute;tem ' ELSE '&Iacute;tem ' END + REPLACE(REPLACE(REPLACE(P.NAME,'&','&amp;'),'<','&lt;'),'>','&gt;') FROM #PI P WHERE P.ID = A.ITEM), '')
+        FROM #PA A WHERE A.SIT = 'V';
+        SELECT @PL_ATN_N = COUNT(*), @PL_ATN_M = ISNULL(SUM(CONVERT(INT, MIA)), 0) FROM #ATN;
+        /* PL_ATN_LIST_V1: mismas filas que "Pendientes del proyecto" (Resumen) + item / subitem; 3 visibles y scroll */
         SELECT @PL_ATN = ISNULL((
-            SELECT TOP 6 '<li><span class="vct-360-badge ' + X.C + '">' + X.B + '</span><span>' + X.T + '</span></li>'
-            FROM (
-                SELECT 1 AS O, 'is-cancel' AS C, 'Vencido' AS B,
-                       CASE WHEN CODE <> '' THEN CODE + ' ' ELSE '' END + REPLACE(REPLACE(REPLACE(LEFT(NAME, 70),'&','&amp;'),'<','&lt;'),'>','&gt;') + ' &middot; hace ' + CONVERT(VARCHAR(10), DATEDIFF(DAY, FF, @HOY)) + ' d' AS T, FF AS F
-                FROM #PI WHERE NIV = 2 AND EST = 'VENCIDO'
-                UNION ALL
-                SELECT 2, 'is-planned', 'Fecha', REPLACE(REPLACE(REPLACE(LEFT(TITULO, 90),'&','&amp;'),'<','&lt;'),'>','&gt;'), CREA
-                FROM #A WHERE SUB_COD = 'AVISO_VENCIMIENTO' AND SIT <> 'C' AND TITULO LIKE 'Cambio de fecha en el plan%'
-                UNION ALL
-                SELECT 3, 'is-cancel', 'Acci&oacute;n', REPLACE(REPLACE(REPLACE(LEFT(CASE WHEN DET <> '' THEN DET ELSE TIT END, 70),'&','&amp;'),'<','&lt;'),'>','&gt;') + ' &middot; venci&oacute; ' + CONVERT(VARCHAR(5), VENCE, 103), VENCE
-                FROM #PA WHERE SIT = 'V'
-            ) X ORDER BY X.O, X.F
+            SELECT '<div class="vct-pv-rs-pend' + CASE WHEN X.MIA = 1 THEN ' is-mine' ELSE '' END + '">'
+                 + CASE WHEN X.O = 2 THEN '<span class="vct-360-badge is-planned">Fecha</span>'
+                        WHEN X.F IS NOT NULL AND CONVERT(DATE, X.F) < @HOY THEN '<span class="vct-360-badge is-cancel">Hace ' + CONVERT(VARCHAR(10), DATEDIFF(DAY, X.F, @HOY)) + ' d</span>'
+                        ELSE '<span class="vct-360-badge is-cancel">Vencida</span>' END
+                 + '<span><b title="' + REPLACE(REPLACE(REPLACE(REPLACE(X.T,'&','&amp;'),'"','&quot;'),'<','&lt;'),'>','&gt;') + '">' + REPLACE(REPLACE(REPLACE(X.T,'&','&amp;'),'<','&lt;'),'>','&gt;') + '</b>'
+                 + '<small>' + CASE WHEN X.COD = 'Hito' THEN '<span class="vct-pl-code is-hito">Hito</span>' WHEN X.COD <> '' THEN '<span class="vct-pl-code">' + X.COD + '</span>' ELSE '' END
+                 + '<span title="' + REPLACE(REPLACE(X.IT,'"','&quot;'),'<','&lt;') + '">' + CASE WHEN X.IT <> '' THEN X.IT ELSE 'Sin &iacute;tem' END + '</span></small></span>'
+                 + CASE WHEN ISNULL(X.RI,'') <> '' THEN '<span class="vctdg-avatar ' + CASE WHEN X.MIA = 1 THEN 'is-c' ELSE 'is-a' END + '" title="'
+                        + REPLACE(REPLACE(REPLACE(REPLACE(X.RN,'&','&amp;'),'"','&quot;'),'<','&lt;'),'>','&gt;') + CASE WHEN X.MIA = 1 THEN ' (a su cargo)' ELSE '' END + '">' + X.RI + '</span>'
+                        ELSE '<span class="vctdg-avatar is-none" title="Sin responsable">-</span>' END
+                 + '<span class="vct-pv-rs-pd' + CASE WHEN X.F IS NOT NULL AND CONVERT(DATE, X.F) < @HOY THEN ' is-late' ELSE '' END + '">' + ISNULL(CONVERT(VARCHAR(5), X.F, 103), '-') + '</span></div>'
+            FROM #ATN X ORDER BY X.MIA DESC, X.O, ISNULL(X.F, '29991231')
             FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), '');
     END;
 
@@ -2905,25 +2944,32 @@ BEGIN
             +   '<div><span>Avance del plan (sobre el total de &iacute;tems)</span><div class="vct-pl-tv-bar"><span class="is-plan" style="width:' + CONVERT(VARCHAR(10), @PL_PCT) + '%"></span></div><b>' + CONVERT(VARCHAR(10), @PL_PCT) + '%</b></div>'
             +   '<div><span>Avance de horas (ejecutadas / proyectadas)</span><div class="vct-pl-tv-bar"><span class="is-hours" style="width:' + CONVERT(VARCHAR(10), @PCT_H) + '%"></span></div><b>' + CONVERT(VARCHAR(10), @PCT_H) + '%</b></div>'
             +   '<p class="vct-pl-tv-note">' + ISNULL(CONVERT(VARCHAR(10), @F_INI, 103), '-') + ' &rarr; ' + ISNULL(CONVERT(VARCHAR(10), @F_FIN, 103), '-') + ' &middot; ' + CONVERT(VARCHAR(10), @PL_OK) + ' de ' + CONVERT(VARCHAR(10), @PL_TOT) + ' acciones cumplidas</p></div></div>'
-            + '<div class="vct-360-box vct-pl-card"><div class="vct-360-box-head"><h3><span class="vct-360-title-icon"><span data-vct-icon="bell"></span></span>Requiere atenci&oacute;n</h3></div>'
-            +   CASE WHEN @PL_ATN = '' THEN '<div class="vct-360-empty">Nada vencido ni cambios de fecha pendientes.</div>' ELSE '<ul class="vct-pl-atn">' + @PL_ATN + '</ul>' END + '</div>'
+            + '<div class="vct-360-box vct-pl-card vct-pl-atn-card"><div class="vct-360-box-head"><h3><span class="vct-360-title-icon"><span data-vct-icon="bell"></span></span>Requiere atenci&oacute;n (' + CONVERT(VARCHAR(10), @PL_ATN_N) + ')</h3>'
+            +   CASE WHEN @PL_ATN_N > 0 THEN '<div class="vct-360-box-actions"><button type="button" class="vct-pv-rs-link" data-pl-atn-all>Acciones &rsaquo;</button></div>' ELSE '' END + '</div>'
+            +   CASE WHEN @PL_ATN = '' THEN '<div class="vct-360-empty">Nada vencido ni cambios de fecha pendientes.</div>'
+                     ELSE '<div class="vct-pv-rs-pendlist vct-pl-atn-list">' + @PL_ATN + '</div>'
+                        + CASE WHEN @PL_ATN_M > 0 THEN '<div class="vct-pl-atn-foot">' + CONVERT(VARCHAR(10), @PL_ATN_M) + ' a su cargo</div>' ELSE '' END END + '</div>'
             + '</div>'
             /* arbol (editable) / cronograma (solo lectura) PL_ARBOL_V1 */
             + '<div class="vct-360-box vct-pl-box" data-pl-box><div class="vct-360-box-head vct-pl-head"><h3><span class="vct-360-title-icon"><span data-vct-icon="list-checks"></span></span>Plan estrat&eacute;gico'
-            +   CASE WHEN @PLN_DOC <> '' THEN '<span class="vct-pl-head-doc">' + @PLN_DOC + '</span>' ELSE '' END + '</h3>'
+            +   '<span class="vct-pl-head-doc" data-pl-titdoc>' + CASE WHEN @E_COD <> '' THEN '&middot; ' + @E_COD ELSE '' END + CASE WHEN @PL_SVN <> '' THEN ' &middot; ' + @PL_SVN ELSE '' END + '</span></h3>'
             +   '<div class="vct-pl-view" role="group" aria-label="Vista"><button type="button" class="is-on" data-pl-view="cards"><span data-vct-icon="list-checks"></span><span>&Aacute;rbol</span></button>'
             +   '<button type="button" data-pl-view="gantt"><span data-vct-icon="calendar"></span><span>Cronograma</span></button></div></div>'
             +   '<div class="vctdg vct-pl-tools"><div class="vctdg-toolbar"><div class="vctdg-filters"><div class="vctdg-search"><span data-vct-icon="search"></span><input type="search" placeholder="Buscar &iacute;tem, sub&iacute;tem o acci&oacute;n..." data-pl-buscar autocomplete="off"></div>'
             +   '<select class="vct-select vct-select-sm" data-vct-dg-filter="estado" data-pl-estado><option value="">Todos los estados</option><option value="PENDIENTE">Pendiente</option><option value="EN_CURSO">En curso</option><option value="VENCIDO">Vencido</option><option value="CUMPLIDO">Cumplido</option></select></div>'
-            +   '<div class="vctdg-tools vct-pl-edit-tools">'
+            /* PL_EXPORT_V1: Excel / PDF en arbol y cronograma (mismos botones y export que las grillas) */
+            +   '<div class="vctdg-tools vct-pl-tools-r">'
+            +   '<button type="button" class="vctdg-btn vctdg-btn-excel" data-pl-export="excel" title="Exportar a Excel"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M8 13h2M8 17h2M14 13h2M14 17h2"></path></svg><span>Excel</span></button>'
+            +   '<button type="button" class="vctdg-btn vctdg-btn-pdf" data-pl-export="pdf" title="Exportar a PDF"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M16 13H8M16 17H8M10 9H8"></path></svg><span>PDF</span></button>'
+            +   '<span class="vct-pl-edit-tools">'
             +   '<button type="button" class="vct-btn vct-btn-new vct-btn-sm" data-pl-chap-all><span data-vct-icon="list-checks"></span><span>Expandir todo</span></button>'
             +   CASE WHEN @PUEDE_PLAN = 1 AND @PL_CARGA_ABIERTA = 1 THEN '<button type="button" class="vct-btn vct-btn-new vct-btn-sm" data-vct-pv-confirm="PV_PL_CERRAR" data-id="0" data-msg="&iquest;Finalizar la carga del plan? La acci&oacute;n de carga del plan queda cumplida (todos los &iacute;tems tienen que tener fecha de inicio y fin)."><span data-vct-icon="check"></span><span>Finalizar carga</span></button>' ELSE '' END
             +   CASE WHEN @PUEDE_PLAN = 1 THEN '<button type="button" class="vct-btn vct-btn-new vct-btn-sm" data-vct-pv-new="pi" data-f-padre=""><span data-vct-icon="plus"></span><span>&Iacute;tem</span></button>' ELSE '' END
-            +   '</div></div></div>'
+            +   '</span></div></div></div>'
             +   '<div class="vct-pl-cardsview" data-pl-pane="cards">'
             +   CASE WHEN @PL_ROWS = '' THEN '<div class="vct-360-empty">El plan no tiene &iacute;tems. Us&aacute; &laquo;&Iacute;tem&raquo; para agregarlos.</div>' ELSE
                   '<div class="vct-plt" data-pl-tree><div class="vct-plt-tree">'
-                + '<div class="vct-plt-hd"><span>Cap&iacute;tulo / &iacute;tem / sub&iacute;tem</span><span class="vct-plt-c">Responsable</span><span class="vct-plt-c">Inicio</span><span class="vct-plt-c">Vence</span><span class="vct-plt-c">Fin real</span><span class="vct-plt-c">Avance</span><span class="vct-plt-c">Acciones</span><span>Estado</span><span></span></div>'
+                + '<div class="vct-plt-hd"><span>Cap&iacute;tulo / &iacute;tem / sub&iacute;tem</span><span class="vct-plt-c" title="Responsable">Resp.</span><span class="vct-plt-c">Inicio</span><span class="vct-plt-c">Vence</span><span class="vct-plt-c">Fin real</span><span class="vct-plt-c">Avance</span><span class="vct-plt-c">Acciones</span><span>Estado</span><span></span></div>'
                 + @PL_ROWS + '<div class="vct-360-empty" data-pl-nores hidden>No hay &iacute;tems que coincidan con el filtro.</div></div>'
                 + '<div class="vct-plt-side">' + ISNULL(@PL_DETS, '') + '</div></div>' END
             +   '</div>'
@@ -3456,7 +3502,7 @@ BEGIN
     SET @OUTPARAM1 = ISNULL(@HTML_SHELL,'') + @ASSETS
         + '<div class="vct-page vct-page-main" data-vct-page data-vct-sidebar-id="3" data-vct-form-id="' + REPLACE(ISNULL(@FORM_ID,''),'"','') + '">'
         + '<section class="vct-module vct-360-module vct-cliente360-module vct-360-visual-final vct-pv" data-vct-module data-vct-pv data-vct-entity-theme="cliente"'
-        + ' data-vct-tabs data-vct-tabs-active="resumen" data-vct-tabs-reset="0" data-vct-pv-proyecto="' + CONVERT(VARCHAR(20), @ID_PROYECTO) + '"'
+        + ' data-vct-tabs data-vct-tabs-active="resumen" data-vct-tabs-reset="0" data-vct-pv-proyecto="' + CONVERT(VARCHAR(20), @ID_PROYECTO) + '"' + ' data-vct-pv-cod="' + REPLACE(@E_COD,'"','&quot;') + '"'
         + ' data-vct-pv-guid="' + REPLACE(@GUID_V360,'"','') + '"' + CASE WHEN @MSG <> '' OR @ERR <> '' THEN ' data-vct-pv-volver="' + @VOLVER + '"' ELSE '' END + '>'
         + @H + @MODAL
         + @LZ_MODALS + @PL_MODALS + @AC_MODAL + @PE_MODAL /* SP_IDSELEC02_V1 */

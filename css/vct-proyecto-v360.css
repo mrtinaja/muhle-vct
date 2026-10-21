@@ -748,7 +748,7 @@ html body .vct-pv .vct-pv-hd-r2 .vctdg-svc-set { gap: 12px !important; padding-r
 .vct-pv .vct-plt-side { display: none; }
 .vct-pv .vct-plt.is-sel .vct-plt-side { display: block; position: sticky; top: 12px; }
 .vct-pv .vct-plt-hd,
-.vct-pv .vct-plt-r { display: grid; grid-template-columns: minmax(0, 1fr) 160px 56px 56px 60px 120px 84px 100px 34px; gap: 8px; align-items: center; padding: 8px 12px; }
+.vct-pv .vct-plt-r { display: grid; grid-template-columns: minmax(0, 1fr) 52px 56px 56px 60px 120px 84px 100px 34px; gap: 8px; align-items: center; padding: 8px 12px; }
 .vct-pv .vct-plt.is-sel .vct-plt-hd,
 .vct-pv .vct-plt.is-sel .vct-plt-r { grid-template-columns: minmax(0, 1fr) 96px 34px; }
 .vct-pv .vct-plt.is-sel .vct-plt-c { display: none; }
@@ -890,3 +890,25 @@ html body .vct-pv .vct-pv-hd-r2 .vctdg-svc-set { gap: 12px !important; padding-r
 
 /* v34: filtro Capitulo (chip Plan estrategico) un poco mas ancho */
 .vct-pv [data-pv-acbox] .vctdg-filters > *:has([data-pv-accap]), .vct-pv [data-pv-acbox] .vctdg-filters > [data-pv-accap] { flex-basis: 190px !important; width: 190px !important; max-width: 190px !important; }
+
+/* ===================== PL_V360_V2: requiere atencion en grilla, export, leyenda arriba, titulo ===================== */
+/* requiere atencion: mismas filas que "Pendientes del proyecto" del Resumen + item / subitem; 3 visibles y scroll (PL_ATN_LIST_V1) */
+.vct-pv .vct-pl-atn-card .vct-360-box-head { display: flex; align-items: center; gap: 10px; }
+.vct-pv .vct-pl-atn-card .vct-360-box-head h3 { flex: 1 1 auto; }
+.vct-pv .vct-pl-atn-card .vct-pv-rs-link { margin-top: 0; }
+.vct-pv .vct-pl-atn-list { max-height: 156px; overflow-y: auto; overflow-x: hidden; padding-right: 4px; }
+.vct-pv .vct-pl-atn-list .vct-pv-rs-pend { grid-template-columns: 74px minmax(0, 1fr) 22px auto; }
+.vct-pv .vct-pl-atn-list .vct-pv-rs-pend small { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.vct-pv .vct-pl-atn-list .vct-pv-rs-pend small > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vct-pv .vct-pl-atn-list .vct-pl-code { flex: 0 0 auto; font-size: 10px; padding: 0 5px; line-height: 16px; }
+.vct-pv .vct-pl-atn-list .vctdg-avatar { width: 22px; height: 22px; font-size: 9px; cursor: default; }
+.vct-pv .vct-pl-atn-list .vctdg-avatar.is-none { background: #f1f5f9; color: #94a3b8; border: 1px dashed #cbd5e1; }
+.vct-pv .vct-pl-atn-list .vct-pv-rs-pend.is-mine b { color: #66062D; }
+.vct-pv .vct-pl-atn-foot { margin-top: 6px; padding-top: 6px; border-top: 1px solid #f1f5f9; font-size: 10.5px; font-weight: 600; color: #66062D; }
+/* arbol / cronograma: Excel y PDF siempre; Expandir / Finalizar / Item solo en el arbol */
+.vct-pv .vct-pl-tools-r { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.vct-pv .vct-pl-tools-r .vct-pl-edit-tools { display: contents; }
+/* cronograma: referencias tambien arriba, debajo de los filtros */
+.vct-pv .vct-pl-g-legend.is-top { border: 1px solid #e2e8f0; border-radius: 10px; margin: 0 0 10px; }
+/* arbol: encabezado "Resp." centrado sobre el badge de iniciales */
+.vct-pv .vct-plt-hd > span:nth-child(2) { text-align: center; }

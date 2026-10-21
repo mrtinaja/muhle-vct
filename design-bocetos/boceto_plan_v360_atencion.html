@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Boceto · Plan V360</title>
+<style>
+:root{--b:#66062D;--t:#333233;--m:#64748b;--l:#e8ebf0;--bg:#f4f5f7}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:13px/1.4 "Segoe UI",system-ui,sans-serif;color:var(--t);padding:24px}
+h1{font-size:18px;color:var(--b);margin:0 0 4px}h2{font-size:13px;margin:28px 0 8px;color:var(--b);text-transform:uppercase;letter-spacing:.04em}
+.note{color:var(--m);font-size:12px;margin:0 0 10px}
+.box{background:#fff;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:14px 16px}
+.hd{display:flex;align-items:center;gap:10px;padding-bottom:10px;border-bottom:1px solid var(--l);margin-bottom:10px}
+.ico{width:28px;height:28px;border-radius:8px;background:#fbe9ef;color:var(--b);display:grid;place-items:center;font-size:14px}
+.hd b{font-size:13px}.hd .doc{color:var(--m);font-weight:600;margin-left:6px}
+.av{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#eef0f3;color:#334155;font-size:10px;font-weight:700}
+.av.me{background:var(--b);color:#fff;box-shadow:0 0 0 2px #fbe9ef}
+.bd{display:inline-block;padding:1px 8px;border-radius:999px;font-size:10.5px;font-weight:700;border:1px solid}
+.bd.v{color:#b91c1c;background:#fef2f2;border-color:#fecaca}.bd.f{color:#475569;background:#f1f5f9;border-color:#e2e8f0}
+.code{display:inline-block;background:#fbe9ef;color:var(--b);font-weight:700;font-size:11px;padding:1px 6px;border-radius:5px}
+/* atencion grilla */
+.atn{width:100%;border-collapse:collapse}.atn th{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--m);text-align:left;font-weight:700;padding:4px 6px}
+.atn td{padding:7px 6px;border-top:1px solid var(--l);vertical-align:middle}.atn td.det{max-width:0;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.atn .late{color:#b91c1c;font-weight:700;white-space:nowrap}.atn .late small{display:block;font-weight:500;color:#ef4444;font-size:10.5px}
+.atn tr.mine td{background:#fdf6f8}.foot{margin-top:8px;font-size:11.5px;color:var(--m);display:flex;justify-content:space-between}
+.foot a{color:var(--b);font-weight:600;text-decoration:none}
+.cards{display:grid;grid-template-columns:1fr 1fr 1.25fr;gap:14px}.ph{height:150px;border:1px dashed #d4d8de;border-radius:10px;display:grid;place-items:center;color:#a0a8b4}
+/* arbol */
+.tr{display:grid;grid-template-columns:minmax(0,1fr) 90px 56px 56px 60px 120px 84px 90px;align-items:center;gap:8px;padding:9px 8px;border-top:1px solid var(--l)}
+.tr.h{border:0;font-size:11px;color:var(--m);font-weight:600}.tr .c{text-align:center}.tr .t b{font-weight:600}.tr .t small{display:block;color:#94a3b8}
+.bar{height:6px;background:#eef0f3;border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--b)}
+.st{font-size:10.5px;font-weight:700;padding:1px 8px;border-radius:999px;border:1px solid #bbf7d0;color:#15803d;background:#f0fdf4}
+.st.e{border-color:#bbf7d0}
+.was{opacity:.45;text-decoration:line-through}
+/* cronograma */
+.flt{display:flex;gap:8px}.in{border:1px solid var(--l);border-radius:8px;padding:7px 10px;color:#94a3b8;background:#fff}.in.s{width:280px}
+.leg{display:flex;flex-wrap:wrap;gap:14px;font-size:11.5px;color:#475569;padding:8px 2px}.leg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.leg.top{border:1px solid var(--l);border-radius:8px;padding:7px 10px;margin:10px 0;background:#fafbfc}
+.new{outline:2px dashed #e11d48;outline-offset:3px;border-radius:8px}
+.gh{display:grid;grid-template-columns:300px repeat(6,1fr);border:1px solid var(--l);border-radius:10px;overflow:hidden;font-size:11px;color:var(--m)}
+.gh div{padding:8px;border-left:1px solid var(--l)}.gh div:first-child{border:0}
+.tag{display:inline-block;background:#fff1f2;color:#be123c;font-size:10.5px;font-weight:700;border-radius:5px;padding:1px 6px;margin-left:6px}
+/* titulos */
+.tits{display:grid;gap:8px}.tits .hd{margin:0;border:0;padding:8px 10px;background:#fff;border-radius:10px}
+.tits .hd .doc{font-weight:500}
+</style></head><body>
+<h1>Boceto · Plan estratégico en la V360 de proyecto</h1>
+<p class="note">Datos de ejemplo del proyecto 1348. Nada aplicado todavía: confirmame y lo paso al SP.</p>
+
+<h2>1 · Card «Requiere atención» como grilla</h2>
+<p class="note">Columnas: tipo · ítem · detalle · responsable (iniciales; <b>bordó si la acción es tuya</b> y la fila resaltada) · vencimiento (con días de atraso). Primero lo tuyo, después por fecha. Máximo 6 filas; si hay más, «Ver todas» lleva a Acciones con el chip Plan.</p>
+<div class="cards">
+  <div class="box"><div class="hd"><span class="ico">☰</span><b>Avance del plan</b></div><div class="ph">(sin cambios)</div></div>
+  <div class="box"><div class="hd"><span class="ico">◷</span><b>Tiempo y avance</b></div><div class="ph">(sin cambios)</div></div>
+  <div class="box"><div class="hd"><span class="ico">🔔</span><b>Requiere atención</b><span class="tag">3</span></div>
+    <table class="atn"><thead><tr><th>Tipo</th><th>Ítem</th><th>Detalle</th><th>Resp.</th><th>Vence</th></tr></thead><tbody>
+      <tr class="mine"><td><span class="bd v">Acción</span></td><td><span class="code">4.4</span></td><td class="det" title="Relevar la situación actual: sistema de Gestión de la calidad y sus procesos">Relevar la situación actual: sistema de Gestión de la calidad y sus procesos</td><td><span class="av me" title="Nowak, Martin Adrían (vos)">MN</span></td><td class="late">20/10<small>hace 1 d</small></td></tr>
+      <tr><td><span class="bd v">Acción</span></td><td><span class="code">4.3</span></td><td class="det" title="Elaborar el documento / registro: determinación del alcance del Sistema">Elaborar el documento / registro: determinación del alcance del Sistema</td><td><span class="av" title="Cavana, María Laura">MC</span></td><td class="late">20/10<small>hace 1 d</small></td></tr>
+      <tr><td><span class="bd f">Fecha</span></td><td><span class="code">5.2</span></td><td class="det">Cambio de fecha en el plan: Política de la calidad (25/10 → 30/10)</td><td><span class="av">MN</span></td><td>—</td></tr>
+    </tbody></table>
+    <div class="foot"><span>3 pendientes · 1 tuya</span><a href="#">Ver todas en Acciones ›</a></div>
+  </div>
+</div>
+
+<h2>2 · Árbol completo: responsable solo con iniciales</h2>
+<p class="note">La columna Responsable queda angosta, con el badge de iniciales; el nombre completo aparece al pasar el mouse. El espacio que libera lo toma el título del ítem (se corta menos).</p>
+<div class="box">
+  <div class="tr h"><span>Capítulo / ítem / subítem</span><span class="c">Resp.</span><span class="c">Inicio</span><span class="c">Vence</span><span class="c">Fin real</span><span>Avance</span><span>Acciones</span><span>Estado</span></div>
+  <div class="tr"><span class="t"><span class="code">4.1</span> <b>Comprensión de la organización y de su contexto</b><small>Inicio plan</small></span><span class="c"><span class="av" title="Nowak, Martin Adrían">MN</span></span><span class="c">20/10</span><span class="c">23/10</span><span class="c">-</span><span><div class="bar"><i style="width:100%"></i></div></span><span>3/3 acc.</span><span><span class="st">Cumplido</span></span></div>
+  <div class="tr"><span class="t"><span class="code">4.2</span> <b>Comprensión de las necesidades y expectativas de las partes interesadas</b></span><span class="c"><span class="av" title="Nowak, Martin Adrían">MN</span></span><span class="c">17/10</span><span class="c">21/10</span><span class="c">-</span><span><div class="bar"><i style="width:50%"></i></div></span><span>1/2 acc.</span><span><span class="st" style="color:#047857">En curso</span></span></div>
+  <div class="tr"><span class="t"><span class="code">4.3</span> <b>Determinación del alcance del Sistema de Gestión de la Calidad</b></span><span class="c"><span class="av" title="Nowak, Martin Adrían">MN</span></span><span class="c">18/10</span><span class="c">22/10</span><span class="c">-</span><span><div class="bar"><i style="width:33%"></i></div></span><span>1/3 · <b style="color:#dc2626">1 venc.</b></span><span><span class="st" style="color:#047857">En curso</span></span></div>
+  <p class="note" style="margin:10px 0 0">Antes: <span class="was">MN Nowak, Martin Adrían</span> → ahora: <span class="av">MN</span></p>
+</div>
+
+<h2>3 · Cronograma: referencias también arriba (y quedan abajo)</h2>
+<p class="note">Debajo del buscador y el filtro de estado, la misma tira de colores que está al pie (marcada en rojo punteado lo nuevo).</p>
+<div class="box">
+  <div class="hd"><span class="ico">☰</span><b>Plan estratégico</b><span class="doc">· 1348 · Consultoría ISO 9001</span></div>
+  <div class="flt"><span class="in s">🔍 Buscar ítem, subítem o acción…</span><span class="in">Todos los estados ⌄</span></div>
+  <div class="leg top new"><span><i style="background:#2563eb"></i>En curso</span><span><i style="background:#94a3b8"></i>Pendiente</span><span><i style="background:#dc2626"></i>Vencido</span><span><i style="background:#16a34a"></i>Cumplido</span><span><i style="background:#66062D;transform:rotate(45deg);border-radius:1px"></i>Hito</span><span><i style="background:#d9789a;border-radius:50%"></i>Vencimiento de acción</span><span><i style="background:#66062D;width:2px"></i>Hoy</span></div>
+  <div class="gh"><div>Ítem</div><div>28/09</div><div>05/10</div><div>12/10</div><div>19/10</div><div>26/10</div><div>02/11</div></div>
+  <div class="leg"><span><i style="background:#2563eb"></i>En curso</span><span><i style="background:#94a3b8"></i>Pendiente</span><span><i style="background:#dc2626"></i>Vencido</span><span><i style="background:#16a34a"></i>Cumplido</span><span><i style="background:#66062D;transform:rotate(45deg);border-radius:1px"></i>Hito</span><span><i style="background:#d9789a;border-radius:50%"></i>Vencimiento de acción</span><span><i style="background:#66062D;width:2px"></i>Hoy</span></div>
+</div>
+
+<h2>4 · Título del plan según el servicio</h2>
+<p class="note">Reemplaza el texto del documento («Plan Estratégico ISO 9001:2015»). El nombre y el lugar salen del servicio (instancia) elegido en Servicios → Ver plan.</p>
+<div class="tits">
+  <div class="hd"><span class="ico">☰</span><b>Plan estratégico</b><span class="doc">· 1348 · Consultoría ISO 9001</span></div>
+  <div class="hd"><span class="ico">☰</span><b>Plan de auditoría</b><span class="doc">· 1348 · Auditoría interna ISO 9001 · Planta Pilar</span></div>
+  <div class="hd"><span class="ico">☰</span><b>Plan de capacitación</b><span class="doc">· 1348 · Capacitación en auditor interno · Sede Microcentro</span></div>
+</div>
+</body></html>

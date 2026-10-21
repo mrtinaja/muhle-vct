@@ -59,7 +59,9 @@
         t = t || "co";
         /* pestania: siempre el tipo de plan; titulo del panel: tipo · nombre · lugar */
         var tipo = t === "au" ? "Plan de auditor\u00eda" : t === "ca" ? "Plan de capacitaci\u00f3n" : "Plan estrat\u00e9gico";
-        var lbl = t === "co" ? tipo : tipo + (nom ? " \u00b7 " + nom : "") + (lugar ? " \u00b7 " + lugar : "");
+        /* PL_TITULO_V1: tipo de plan · codigo del proyecto · nombre del servicio · lugar */
+        var cod = r.getAttribute("data-vct-pv-cod") || "";
+        var lbl = t === "co" ? tipo : tipo + (cod ? " \u00b7 " + cod : "") + (nom ? " \u00b7 " + nom : "") + (lugar ? " \u00b7 " + lugar : "");
         tab.classList.remove("is-off");
         tab.removeAttribute("aria-disabled");
         tab.title = lbl;
@@ -679,6 +681,59 @@
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", plInit); else plInit();
     setTimeout(plInit, 400);
 
+    /* ---------------- plan: exportar arbol / cronograma (PL_EXPORT_V1) ----------------
+       Mismo export que las grillas (VCTExport: Excel .xlsx / PDF con logo). Respeta el buscador y el filtro de estado.
+       Desde el cronograma, el PDF suma la imagen del cronograma arriba de la tabla. */
+    function plTxt(el) { return el ? String(el.textContent || "").replace(/\s+/g, " ").trim() : ""; }
+    function plExportSpec(box) {
+        var gantt = box.classList.contains("is-gantt");
+        var h3 = box.querySelector(".vct-pl-head h3");
+        var title = plTxt(h3) || "Plan";
+        var q = ((box.querySelector("[data-pl-buscar]") || {}).value || "").trim();
+        var es = box.querySelector("[data-pl-estado]");
+        var fil = [];
+        if (q) fil.push("Buscar: " + q);
+        if (es && es.value) fil.push("Estado: " + plTxt(es.options[es.selectedIndex]));
+        var rows = [];
+        box.querySelectorAll(".vct-plt-ch").forEach(function (ch) {
+            if (ch.hidden) return;
+            var cap = plTxt(ch.querySelector(".vct-plt-cht > b"));
+            ch.querySelectorAll(".vct-plt-it").forEach(function (it) {
+                if (it.hidden || (it.parentNode && it.parentNode.closest(".vct-plt-it[hidden]"))) return;
+                var r = it.querySelector(":scope > .vct-plt-r");
+                if (!r) return;
+                var c = r.querySelector(".vct-pl-code"), t = r.querySelector(".vct-plt-t");
+                var g = function (k) { return r.getAttribute("data-x-" + k) || ""; };
+                rows.push([cap, plTxt(c), it.classList.contains("is-sub") ? "Sub\u00edtem" : "\u00cdtem", (t && t.getAttribute("title")) || plTxt(t),
+                    g("r"), g("i"), g("v"), g("f"), (+g("a") || 0) + "%", g("n"), +g("ve") || 0, g("e")]);
+            });
+        });
+        return {
+            title: title,
+            subtitle: (gantt ? "Cronograma" : "\u00c1rbol") + (fil.length ? " \u00b7 " + fil.join(" \u00b7 ") : ""),
+            filename: title + (gantt ? " - Cronograma" : ""),
+            orientation: "landscape",
+            columns: [{ title: "Cap\u00edtulo" }, { title: "C\u00f3digo", type: "text" }, { title: "Tipo" }, { title: "\u00cdtem / sub\u00edtem" }, { title: "Responsable" },
+                      { title: "Inicio", align: "center" }, { title: "Vence", align: "center" }, { title: "Fin real", align: "center" }, { title: "Avance", align: "right" },
+                      { title: "Acciones cumplidas", align: "center", type: "text" }, { title: "Acciones vencidas", align: "right" }, { title: "Estado" }],
+            rows: rows
+        };
+    }
+    function plExport(btn, kind) {
+        var box = btn.closest("[data-pl-box]");
+        if (!box || btn.classList.contains("is-busy")) return;
+        if (!window.VCTExport) { if (window.VCT && VCT.Toast) VCT.Toast.show("Falta cargar vct-export.js: no se puede exportar.", "warning"); return; }
+        var spec = plExportSpec(box);
+        btn.classList.add("is-busy");
+        var g = box.classList.contains("is-gantt") ? box.querySelector('[data-pl-pane="gantt"] .vct-pl-g') : null;
+        var job = kind === "pdf"
+            ? (g && window.VCTExport.rasterize ? window.VCTExport.rasterize(g).catch(function () { return null; }) : Promise.resolve(null))
+                .then(function (img) { if (img) spec.images = [{ dataUrl: img, caption: "Cronograma", full: true }]; return window.VCTExport.pdf(spec); })
+            : window.VCTExport.excel(spec);
+        Promise.resolve(job).catch(function (e) { if (window.VCT && VCT.Toast) VCT.Toast.show("No se pudo exportar: " + (e && e.message ? e.message : e), "warning"); })
+            .then(function () { btn.classList.remove("is-busy"); });
+    }
+
     /* accion del plan: responsable "Otro" pide el nombre (el badge toma sus iniciales) */
     function plIni(t) {
         var p = String(t || "").trim().split(/\s+/).filter(Boolean);
@@ -747,6 +802,18 @@
             return;
         }
 
+        var plx = t.closest("[data-pl-export]");
+        if (plx) { e.preventDefault(); plExport(plx, plx.getAttribute("data-pl-export")); return; }
+        /* requiere atencion: ver todas -> Acciones con el chip Plan estrategico */
+        var pat = t.closest("[data-pl-atn-all]");
+        if (pat) {
+            e.preventDefault();
+            var rr = root();
+            activateTab(rr, "acciones");
+            var acb = rr ? rr.querySelector("[data-pv-acbox]") : null;
+            if (acb && acb.querySelector('[data-pv-acchip="plan"]')) acChip(acb, "plan");
+            return;
+        }
         var plv = t.closest("[data-pl-view]");
         if (plv) { e.preventDefault(); plView(plv.closest("[data-pl-box]"), plv.getAttribute("data-pl-view")); return; }
         var pla = t.closest("[data-pl-chap-all]");

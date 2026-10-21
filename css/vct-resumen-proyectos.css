@@ -1,4 +1,5 @@
-/* Resumen 360 - v1. Solo tablas de proyectos recientes normalizadas por JS. */
+/* Resumen 360 - v2. Solo tablas de proyectos recientes normalizadas por JS.
+   v2: etiquetas del card mobile en una sola linea (no se parten "PROY ECTO"). */
 #mainContainer .vct-360-projects-recent[data-vct-recent-wrap] {
     width: 100% !important;
     min-width: 0 !important;
@@ -109,6 +110,12 @@
         font-size: 10px !important;
         font-weight: 700 !important;
         text-transform: uppercase !important;
+        /* la tabla es .vctdg-table: hereda word-break:break-word y partia las
+           etiquetas en celular ("PROY ECTO", "CONS ULTO R"). Que no se corten:
+           entran en una linea dentro de la columna de 80px. */
+        white-space: nowrap !important;
+        word-break: normal !important;
+        overflow-wrap: normal !important;
     }
     #mainContainer table.vct-360-table.vct-360-project-table.vct-360-project-table-recent[data-vct-recent-layout] .vct-recent-cell-content { min-width: 0 !important; }
 }

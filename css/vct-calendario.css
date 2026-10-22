@@ -1868,16 +1868,37 @@ html body .vct-form-select-menu.vct-agc-select-menu { box-sizing: border-box !im
     opacity:1 !important;
     background:#fff !important;
 }
-/* HOY: un solo borde bordó limpio (sin aro interno ni outline), en todos los calendarios.
-   Gana al borde gris de la celda base y saca el box-shadow/outline que daban doble linea. */
+/* HOY (boceto C): borde bordo GRUESO + etiqueta "HOY" + numero bordo sin circulo.
+   El dia de hoy salta a la vista entre los circulos grises del resto. */
 .vct-cal-c .vct-agenda-cell.vct-agenda-cell-today{
-    border:1px solid #66062D !important;
+    border:2px solid #66062D !important;
     box-shadow:none !important;
     outline:none !important;
     background:#fff !important;
+    position:relative;
 }
 .vct-cal-c .vct-agenda-cell-today .vct-cal-strip{display:none !important;}
-/* NUMERO DEL DIA: circulo con borde GRIS en todos los dias; el dia de hoy en BORDO.
-   Antes la regla base .vct-agenda-daynum lo ponia bordo en TODOS. */
+.vct-cal-c .vct-agenda-cell-today::after{
+    content:"HOY";
+    position:absolute; top:5px; right:5px;
+    background:#66062D; color:#fff;
+    font-size:9px; font-weight:700; letter-spacing:.03em;
+    padding:2px 6px; border-radius:999px;
+    pointer-events:none; z-index:3;
+}
+/* NUMERO DEL DIA: circulo con borde GRIS en todos los dias; el dia de hoy va en BORDO SIN circulo
+   (la etiqueta HOY + el borde grueso ya lo marcan). */
 .vct-cal-c .vct-agenda-daynum{ border:1px solid #cbd5e1 !important; background:transparent !important; }
-.vct-cal-c .vct-agenda-cell-today .vct-agenda-daynum{ border:1px solid #66062D !important; background:transparent !important; color:#1e293b !important; }
+.vct-cal-c .vct-agenda-cell-today .vct-agenda-daynum{ border:none !important; background:transparent !important; color:#66062D !important; font-weight:700 !important; }
+/* TT42: contexto visible y consistente en todos los tooltips de calendarios. */
+.vct-cal-tip{max-width:min(360px,calc(100vw - 24px));box-sizing:border-box}
+.vct-cal-tip-row{min-width:0;overflow-wrap:anywhere;line-height:1.4}
+.vct-cal-tip-proy{align-items:flex-start}
+.vct-cal-tip-project-icon{display:inline-flex;flex:none;color:#66062D;margin-top:2px}
+.vct-cal-tip-project-icon svg{width:19px;height:19px}
+.vct-cal-tip-label{display:block;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#64748b}
+.vct-cal-tip-services{flex-wrap:wrap;gap:6px 10px}
+.vct-cal-tip-service{display:inline-flex;align-items:center;gap:5px;max-width:100%;font-weight:600}
+.vct-cal-tip-service .vct-cal-tip-svc{width:23px;height:23px;margin:0;border:0}
+.vct-cal-tip-service .vct-cal-tip-svc svg{width:14px;height:14px}
+.vct-cal-tip-consultant{padding-top:5px;border-top:1px solid #EFECE7}

@@ -57,7 +57,7 @@
        En vez de dibujar su propio mes, Acciones monta el engine view-only de
        vct-calendario (el mismo de Feriados y de las fichas 360). Las acciones
        viajan como eventos {f,x,c} y el color sale del estado (V/H/P/L). */
-    var CAL_VER = "33";   /* version de vct-calendario.css/js a inyectar */
+    var CAL_VER = "42";   /* version de vct-calendario.css/js a inyectar */
 
     function ensureCalendario(cb) {
         /* CSS */

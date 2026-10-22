@@ -63,44 +63,31 @@
             var su=t.getAttribute("data-tt-sub")||"";    /* subtitulo / tipo */
             var f =t.getAttribute("data-tt-f")||"";
             var fTxt=""; if(f){ var p=f.split("-"); if(p.length===3) fTxt=p[2]+"/"+p[1]+"/"+p[0]; }
-            var h, m='';
-            function row(k,v){ return '<div class="vct-cal-tip-row">'+(k?'<span class="vct-cal-tip-k">'+k+'</span>':'')+'<span>'+escapeHtml(v)+'</span></div>'; }
-            if(srv){
+            var h='<div class="vct-cal-tip-t">'+escapeHtml(cli||x||'Actividad')+'</div>', m='';
+            var folder='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>';
+            if(proy) m+='<div class="vct-cal-tip-row vct-cal-tip-proy"><span class="vct-cal-tip-project-icon">'+folder+'</span><span><span class="vct-cal-tip-label">Proyecto</span>'+escapeHtml(proy)+'</span></div>';
                 var SVG={
                     briefcase:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
                     "clipboard-check":'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg>',
                     users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'
                 };
-                var chips='', parts=srv.split(', ');
-                for(var si=0; si<parts.length; si++){
-                    var pr=parts[si].split('|'), code=(pr[0]||'').trim().toUpperCase(), nm=(pr[1]||code).trim();
-                    if(!code) continue;
+            if(srv){
+                var chips='', parts=srv.split(/,\s*(?=[A-Za-z0-9_-]+\|)/);
+                for(var si=0;si<parts.length;si++){
+                    var pr=parts[si].split('|'),code=(pr.shift()||'').trim().toUpperCase(),nm=(pr.join('|')||code).trim();
+                    if(!code)continue;
                     var ico=code==='AU'?'clipboard-check':code==='CA'?'users':'briefcase';
-                    chips+='<span class="vct-cal-tip-svc is-'+escapeAttr(code.toLowerCase())+'" title="'+escapeAttr(nm)+'">'+SVG[ico]+'</span>';
+                    chips+='<span class="vct-cal-tip-service"><span class="vct-cal-tip-svc is-'+escapeAttr(code.toLowerCase())+'" aria-label="'+escapeAttr(nm)+'">'+SVG[ico]+'</span><span>'+escapeHtml(nm)+'</span></span>';
                 }
+                if(chips)m+='<div class="vct-cal-tip-row vct-cal-tip-services">'+chips+'</div>';
             }
-            /* solo iconos, sin labels: servicio(s) + consultor en una fila */
-            var icons=(chips||'')+(ri?'<span class="vct-cal-tip-ic" title="'+escapeAttr(r)+'">'+escapeHtml(ri)+'</span>':'');
-            var iconRow=icons ? '<div class="vct-cal-tip-row vct-cal-tip-icons"><span class="vct-cal-tip-chips">'+icons+'</span></div>' : '';
-            if(cli){
-                /* ACCIONES: Cliente -> Proyecto -> Servicio(chips) -> Consultor(avatar) -> Descripcion.
-                   Servicio y consultor como circulos con iniciales (nombre en el hover). */
-                h='<div class="vct-cal-tip-t">'+escapeHtml(cli)+'</div>';
-                if(proy) m+='<div class="vct-cal-tip-row vct-cal-tip-proy"><span>'+escapeHtml(proy)+'</span></div>';
-                m+=iconRow;
-                if(tm)   m+='<div class="vct-cal-tip-row vct-cal-tip-time"><span>'+escapeHtml(tm)+'</span></div>';   /* horario (visita del consultor) */
-                if(x)    m+='<div class="vct-cal-tip-row vct-cal-tip-desc"><span>'+escapeHtml(x)+'</span></div>';
-                if(fTxt) m+='<div class="vct-cal-tip-row vct-cal-tip-date">Vence '+escapeHtml(fTxt)+'</div>';
-            } else {
-                h='<div class="vct-cal-tip-t">'+escapeHtml(x)+'</div>';
-                if(tm)     m+='<div class="vct-cal-tip-row vct-cal-tip-time"><span>'+escapeHtml(tm)+'</span></div>';
-                if(su)     m+='<div class="vct-cal-tip-row"><span>'+escapeHtml(su)+'</span></div>';
-                if(srv) m+=iconRow;
-                if(r && !srv) m+='<div class="vct-cal-tip-row"><span class="vct-cal-tip-ic">'+escapeHtml(ri)+'</span><span>'+escapeHtml(r)+(ar?' <em>&middot; '+escapeHtml(ar)+'</em>':'')+'</span></div>';
-                else if(ar)m+='<div class="vct-cal-tip-row"><span>'+escapeHtml(ar)+'</span></div>';
-                if(fTxt)   m+='<div class="vct-cal-tip-row vct-cal-tip-date">Vence '+escapeHtml(fTxt)+'</div>';
-            }
-            if(m) h+='<div class="vct-cal-tip-m">'+m+'</div>';
+            if(r||ri)m+='<div class="vct-cal-tip-row vct-cal-tip-consultant"><span class="vct-cal-tip-ic">'+escapeHtml(ri||String(r).trim().charAt(0))+'</span><span>'+escapeHtml(r||ri)+'</span></div>';
+            if(ar)m+='<div class="vct-cal-tip-row">'+escapeHtml(ar)+'</div>';
+            if(tm)m+='<div class="vct-cal-tip-row vct-cal-tip-time">'+escapeHtml(tm)+'</div>';
+            if(cli&&x)m+='<div class="vct-cal-tip-row vct-cal-tip-desc">'+escapeHtml(x)+'</div>';
+            if(su&&su!==x&&su!==proy)m+='<div class="vct-cal-tip-row">'+escapeHtml(su)+'</div>';
+            if(fTxt)m+='<div class="vct-cal-tip-row vct-cal-tip-date">Vence '+escapeHtml(fTxt)+'</div>';
+            if(m)h+='<div class="vct-cal-tip-m">'+m+'</div>';
             return h;
         }
         function place(t){
@@ -314,8 +301,8 @@
                         var fer=feriados[key];
                         var isPastDay=isPast(cellDate);
 
-                        /* en vistas de solo-lectura con eventos (Acciones / 360) no se marca el dia actual */
-                        var cls="vct-agenda-cell"+(isWeekend?" vct-agenda-cell-weekend":"")+((isToday && !hasActivities)?" vct-agenda-cell-today":"")+holidayClass(fer)+((canEdit && !isPastDay)?"":" vct-agenda-cell-nocreate")+(isPastDay?" vct-agenda-cell-past":"");
+                        /* HOY_V41: Acciones marca hoy tambien en lectura; conserva los permisos y la V360 de proyecto. */
+                        var cls="vct-agenda-cell"+(isWeekend?" vct-agenda-cell-weekend":"")+((isToday && (!hasActivities || root.classList.contains("vct-acc-cal-unified")))?" vct-agenda-cell-today":"")+holidayClass(fer)+((canEdit && !isPastDay)?"":" vct-agenda-cell-nocreate")+(isPastDay?" vct-agenda-cell-past":"");
 
                         html+='<td class="'+cls+'" data-vct-agenda-day="'+key+'"'+(fer && fer.texto ? ' title="'+escapeAttr(fer.texto)+'"' : '')+'>';
                         html+='<span class="vct-agenda-daynum">'+dayNum+'</span>';
@@ -687,6 +674,13 @@
              + (e.su ? ' data-tt-sub="' +escAttr(e.su)+'"' : '');
     }
 
+    /* TT42: misma tarjeta para estados diarios en Mes, Semana y Dia. */
+    function dayTip(r){
+        var detail=r.de||r.n||'';
+        if(+r.h>0)detail+=(detail?' · ':'')+fmtH(r.h)+'h';
+        return actTip({ti:estadoLabel(r.e),cli:r.cli,proy:r.proy,srv:r.srv,r:r.r,ri:r.ri,su:detail});
+    }
+
     function clsOf(e){
         e = String(e||"NO_CARGADO").toUpperCase();
         if (e==="FERIADO_FIJO") return "vct-agc-feriado-fijo";
@@ -1007,22 +1001,7 @@
             var note = r.de ? esc(r.de) : (r.n ? esc(r.n) : estadoLabel(e));
             var h = (e==="ASIGNADO"||e==="DISPONIBLE"||e==="POTENCIAL"||e==="ORGANISMO") && (+r.h>0) ? ' · '+fmtH(r.h)+'h' : '';
             var hrs = (+r.h>0) ? fmtH(r.h)+'h' : '';
-            var ttA;
-            if (r.cli || r.proy || r.srv){
-                /* asignado por visita: mismo tooltip que Acciones (cliente -> proyecto -> servicio -> estado) */
-                ttA = ' data-tt="1"'
-                    + (r.cli ? ' data-tt-cli="' +escAttr(r.cli) +'"' : '')
-                    + (r.proy? ' data-tt-proy="'+escAttr(r.proy)+'"' : '')
-                    + (r.srv ? ' data-tt-srv="' +escAttr(r.srv) +'"' : '')
-                    + ' data-tt-time="'+escAttr(estadoLabel(e)+(hrs?' · '+hrs:''))+'"'
-                    + (r.cli?'':' data-tt-x="'+escAttr(estadoLabel(e))+'"');  /* fallback header si no hay cliente */
-            } else {
-                /* tooltip-tarjeta: estado + detalle + horas (en lugar del title nativo) */
-                var det = r.de || r.n || '';
-                var sub = det + (h ? (det?' · ':'')+fmtH(r.h)+'h' : '');
-                ttA = ' data-tt="1" data-tt-x="'+escAttr(estadoLabel(e))+'"'
-                    + (sub ? ' data-tt-sub="'+escAttr(sub)+'"' : '');
-            }
+            var ttA=dayTip(r);
             return '<span class="vct-agc-cell-note"'+ttA+'>'+note+h+'</span>';
         }
         /* chips de ACTIVIDADES para la celda del mes (se ven tambien en Mes) */
@@ -1170,10 +1149,10 @@
                     var spw=splitOf(r);
                     if (spw && (spw.pend>0 || spw.disp>0)){
                         var who=esc(r.n||'Asignado');
-                        if (spw.conf>0) bars+='<span class="vct-agc-wl-bar vct-agc-asignado">'+who+' &middot; '+fmtH(spw.conf)+' h</span>';
-                        if (spw.pend>0) bars+='<span class="vct-agc-wl-bar vct-agc-asignado is-pend">'+who+' &middot; '+fmtH(spw.pend)+' h &middot; pendiente</span>';
+                        if (spw.conf>0) bars+='<span class="vct-agc-wl-bar vct-agc-asignado"'+dayTip(r)+'>'+who+' &middot; '+fmtH(spw.conf)+' h</span>';
+                        if (spw.pend>0) bars+='<span class="vct-agc-wl-bar vct-agc-asignado is-pend"'+dayTip(r)+'>'+who+' &middot; '+fmtH(spw.pend)+' h &middot; pendiente</span>';
                         if (spw.disp>0) bars+='<span class="vct-agc-wl-bar vct-agc-disponible">Disponible &middot; '+fmtH(spw.disp)+' h</span>';
-                    } else bars+='<span class="vct-agc-wl-bar '+clsOf(r.e)+'">'+sTxt+'</span>';
+                    } else bars+='<span class="vct-agc-wl-bar '+clsOf(r.e)+'"'+dayTip(r)+'>'+sTxt+'</span>';
                 }
                 actsOf(k).slice().sort(function(a,b){ return hmToMin(a.hd)-hmToMin(b.hd); }).forEach(function(a){
                     var c=a.c||tipoColor(a.t);
@@ -1231,7 +1210,7 @@
             var html='<div class="vct-agenda-day vct-agc-dayview '+clsOf(r.e)+(editable?' is-editable':'')+'"'+(editable?' data-vct-agc-dayedit':'')+'>';
             html+='<div class="vct-agenda-day-num">'+d.getDate()+'</div>';
             html+='<div class="vct-agenda-day-name">'+DIAS_LARGO[d.getDay()]+'</div>';
-            html+='<div class="vct-agc-dayview-badge"><span class="vct-agc-badge '+clsOf(r.e)+'">'+estadoLabel(r.e)+'</span></div>';
+            html+='<div class="vct-agc-dayview-badge"><span class="vct-agc-badge '+clsOf(r.e)+'"'+dayTip(r)+'>'+estadoLabel(r.e)+'</span></div>';
             if (r.n) html+='<div class="vct-agc-dayview-note">'+esc(r.n)+'</div>';
             if ((e==="ASIGNADO"||e==="DISPONIBLE") && +r.h>0)
                 html+='<div class="vct-agc-dayview-hours">'+fmtH(r.h)+'h'+(function(){ var q=splitOf(r); if(!q||(!q.pend&&!q.disp)) return ''; return ' &middot; '+[q.conf?fmtH(q.conf)+'h confirmadas':'',q.pend?fmtH(q.pend)+'h pendientes':'',q.disp?fmtH(q.disp)+'h disponibles':''].filter(Boolean).join(' &middot; '); })()+'</div>';

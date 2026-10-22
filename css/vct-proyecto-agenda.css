@@ -1,0 +1,144 @@
+/* VCT Proyecto V360: calendario mensual, solo lectura */
+.vct-pva-box { padding: 22px; }
+.vct-pva { width: 100%; color: #28354a; }
+.vct-pva-head { display:flex; align-items:center; justify-content:center; gap:16px; margin:0 0 20px; }
+.vct-pva-head h3 { font-size:19px; font-weight:700; margin:0; min-width:160px; text-align:center; }
+.vct-pva-head button { width:38px; height:38px; border:1px solid #e5e7eb; border-radius:50%; background:#fff; color:#751a3d; cursor:pointer; font-size:27px; line-height:1; }
+.vct-pva-head button:hover { background:#fbedf2; }
+.vct-pva-weekdays,.vct-pva-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); }
+.vct-pva-weekdays span { text-align:center; padding:12px 2px; color:#66758b; font-size:12px; font-weight:700; border-bottom:1px solid #e7e9ed; }
+.vct-pva-day { min-width:0; min-height:122px; padding:8px; border-right:1px solid #eceef2; border-bottom:1px solid #eceef2; background:#fff; }
+.vct-pva-day:nth-child(7n) { border-right:0; }
+.vct-pva-day.is-outside { background:#fafbfc; }
+.vct-pva-daynum { display:inline-flex; width:28px; height:28px; align-items:center; justify-content:center; font-size:13px; font-weight:700; }
+.vct-pva-day.is-today .vct-pva-daynum { background:#751a3d; color:#fff; border-radius:50%; }
+.vct-pva-visit { display:flex; flex-direction:column; align-items:flex-start; width:100%; margin:4px 0; padding:7px 8px; text-align:left; background:#fbedf2; border:1px solid #f0d3df; border-left:3px solid #751a3d; border-radius:7px; color:#4a1830; cursor:pointer; gap:2px; }
+.vct-pva-visit:hover { background:#f7dce7; }
+.vct-pva-visit strong,.vct-pva-visit span,.vct-pva-visit small { display:block; max-width:100%; overflow-wrap:anywhere; font-size:11px; line-height:1.35; }
+.vct-pva-visit strong { font-size:12px; }
+.vct-pva-visit small { color:#745064; }
+.vct-pva-foot { color:#78869b; text-align:center; font-size:12px; padding:16px 0 0; }
+.vct-pva-overlay { position:fixed; inset:0; z-index:100000; background:rgba(20,25,35,.45); display:flex; align-items:center; justify-content:center; padding:16px; }
+.vct-pva-dialog { width:min(520px,100%); max-height:85dvh; overflow:auto; background:white; border-radius:14px; padding:20px; box-shadow:0 20px 60px rgba(0,0,0,.2); }
+.vct-pva-dialog-head { display:flex; align-items:center; justify-content:space-between; gap:12px; border-bottom:1px solid #eee; padding-bottom:12px; margin-bottom:12px; }
+.vct-pva-dialog-head h3 { margin:0; font-size:17px; }
+.vct-pva-close { border:0; background:#f5f5f5; border-radius:50%; width:32px; height:32px; font-size:22px; cursor:pointer; }
+.vct-pva-detail { display:flex; flex-direction:column; gap:5px; padding:12px 4px; border-bottom:1px solid #eee; }
+.vct-pva-detail strong { color:#751a3d; }
+.vct-pva-detail small { color:#64748b; }
+@media(max-width:760px) { .vct-pva-box{padding:10px;} .vct-pva-day{min-height:78px;padding:3px;} .vct-pva-visit{padding:4px;} .vct-pva-visit strong,.vct-pva-visit span,.vct-pva-visit small{font-size:9px;} .vct-pva-weekdays span{font-size:10px;} }
+/* =====================================================
+   VISTA 360 PROYECTO - CALENDARIO COMPACTO
+   ===================================================== */
+
+[data-vct-pva-root] {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* Encabezado del mes */
+[data-vct-pva-root] .vct-pva-toolbar {
+    padding: 8px 12px;
+}
+
+/* Celdas más compactas */
+[data-vct-pva-root] .vct-pva-day {
+    min-height: 85px !important;
+    padding: 6px !important;
+    gap: 4px;
+}
+
+/* Número del día */
+[data-vct-pva-root] .vct-pva-daynum {
+    font-size: 12px;
+}
+
+/* Visitas dentro del calendario */
+[data-vct-pva-root] .vct-pva-visit {
+    padding: 4px 6px;
+    font-size: 11px;
+    line-height: 1.3;
+    border-radius: 5px;
+}
+
+[data-vct-pva-root] .vct-pva-visit strong,
+[data-vct-pva-root] .vct-pva-visit span,
+[data-vct-pva-root] .vct-pva-visit small {
+    font-size: 11px;
+}
+
+/* Adaptación mobile */
+@media (max-width: 768px) {
+    [data-vct-pva-root] {
+        max-width: 100%;
+    }
+
+    [data-vct-pva-root] .vct-pva-day {
+        min-height: 65px !important;
+        padding: 3px !important;
+    }
+
+    [data-vct-pva-root] .vct-pva-visit {
+        padding: 3px;
+        font-size: 10px;
+    }
+}
+
+/* =====================================================
+   V360 PROYECTO - CALENDARIO EXTRA COMPACTO
+   ===================================================== */
+
+[data-vct-pva-root] {
+    width: 100% !important;
+    max-width: 850px !important;
+    margin: 0 auto !important;
+}
+
+/* Encabezado */
+[data-vct-pva-root] .vct-pva-toolbar {
+    padding: 4px 8px !important;
+    margin-bottom: 8px !important;
+}
+
+[data-vct-pva-root] .vct-pva-toolbar h2 {
+    font-size: 17px !important;
+}
+
+/* Días */
+[data-vct-pva-root] .vct-pva-day {
+    min-height: 60px !important;
+    padding: 4px !important;
+    gap: 2px !important;
+}
+
+/* Número del día */
+[data-vct-pva-root] .vct-pva-daynum {
+    font-size: 11px !important;
+}
+
+/* Visitas */
+[data-vct-pva-root] .vct-pva-visit {
+    padding: 3px 5px !important;
+    font-size: 10px !important;
+    line-height: 1.2 !important;
+    margin-top: 2px !important;
+}
+
+[data-vct-pva-root] .vct-pva-visit strong,
+[data-vct-pva-root] .vct-pva-visit span,
+[data-vct-pva-root] .vct-pva-visit small {
+    font-size: 10px !important;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    [data-vct-pva-root] {
+        max-width: 100% !important;
+    }
+
+    [data-vct-pva-root] .vct-pva-day {
+        min-height: 48px !important;
+        padding: 2px !important;
+    }
+}

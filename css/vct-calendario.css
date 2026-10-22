@@ -1852,3 +1852,156 @@ html body .vct-form-select-menu.vct-agc-select-menu { box-sizing: border-box !im
 
 /* CAL_C_V2: aire entre la linea del titulo y la barra  ‹ Mes ›  Mes|Semana|Dia  ‹ Anio › */
 .vct-cal-c .vct-cal-navgroup{margin-top:12px}
+/* FIX_NOEDIT_BG: dia no editable (pasado / sabado / domingo) = fondo BLANCO solido.
+   El opacity:.62 del diseno CAL_C_V1 dejaba ver el fondo crema del contenedor y
+   se veia gris. La celda ya es blanca; aca solo se saca la translucidez. El
+   contenido sigue atenuado por sus reglas (daynum gris + grayscale). */
+.vct-cal-c .vct-agenda-cell-past:not(.vct-agenda-cell-empty),
+.vct-cal-c .vct-agenda-cell-weekend:not(.vct-agenda-cell-empty),
+.vct-cal-c .vct-agenda-cell.is-past,
+.vct-cal-c .vct-agenda-cell.is-wknd,
+.vct-cal-c .vct-agenda-weekrow.vct-agenda-cell-past,
+.vct-cal-c .vct-agenda-weekrow.vct-agenda-cell-weekend,
+.vct-cal-c .vct-agc-wl-row.is-past,
+.vct-cal-c .vct-agc-wl-row.is-wknd,
+.vct-cal-c .vct-agenda-day.vct-agenda-cell-past{
+    opacity:1 !important;
+    background:#fff !important;
+}
+/* HOY (boceto C): borde bordo GRUESO + etiqueta "HOY" + numero bordo sin circulo.
+   El dia de hoy salta a la vista entre los circulos grises del resto. */
+.vct-cal-c .vct-agenda-cell.vct-agenda-cell-today{
+    border:2px solid #66062D !important;
+    box-shadow:none !important;
+    outline:none !important;
+    background:#fff !important;
+    position:relative;
+}
+.vct-cal-c .vct-agenda-cell-today .vct-cal-strip{display:none !important;}
+.vct-cal-c .vct-agenda-cell-today::after{
+    content:"HOY";
+    position:absolute; top:5px; right:5px;
+    background:#66062D; color:#fff;
+    font-size:9px; font-weight:700; letter-spacing:.03em;
+    padding:2px 6px; border-radius:999px;
+    pointer-events:none; z-index:3;
+}
+/* NUMERO DEL DIA: circulo con borde GRIS en todos los dias; el dia de hoy va en BORDO SIN circulo
+   (la etiqueta HOY + el borde grueso ya lo marcan). */
+.vct-cal-c .vct-agenda-daynum{ border:1px solid #cbd5e1 !important; background:transparent !important; }
+.vct-cal-c .vct-agenda-cell-today .vct-agenda-daynum{ border:none !important; background:transparent !important; color:#66062D !important; font-weight:700 !important; }
+/* TT42: contexto visible y consistente en todos los tooltips de calendarios. */
+.vct-cal-tip{max-width:min(360px,calc(100vw - 24px));box-sizing:border-box}
+.vct-cal-tip-row{min-width:0;overflow-wrap:anywhere;line-height:1.4}
+.vct-cal-tip-proy{align-items:flex-start}
+.vct-cal-tip-project-icon{display:inline-flex;flex:none;color:#66062D;margin-top:2px}
+.vct-cal-tip-project-icon svg{width:19px;height:19px}
+.vct-cal-tip-label{display:block;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#64748b}
+.vct-cal-tip-services{flex-wrap:wrap;gap:6px 10px}
+.vct-cal-tip-service{display:inline-flex;align-items:center;gap:5px;max-width:100%;font-weight:600}
+.vct-cal-tip-service .vct-cal-tip-svc{width:23px;height:23px;margin:0;border:0}
+.vct-cal-tip-service .vct-cal-tip-svc svg{width:14px;height:14px}
+.vct-cal-tip-consultant{padding-top:5px;border-top:1px solid #EFECE7}
+
+/* ============================================================================
+   CAL_D_V1 — calendarios unificados: fondo del sistema (glass) + colores opcion 5
+   Acciones, Agenda general, Agenda del consultor (sidebar y V360 del consultor).
+   - la imagen (fondo-vocaturo.jpg, la del sistema) va SOLO en la card del calendario:
+     no toma el titulo con el icono ni los botones del header del form
+   - todo lo que va dentro del dia es un badge horizontal con borde izquierdo del color ya definido
+   - todas las celdas del mes tienen el mismo alto
+   - titulos / textos grafito #333233; activo Mes|Semana|Dia rosa empolvado con texto bordo
+   - tooltips: sin cambios (solo estilos de la celda)
+   - sobre la base de Martin (TT42 / HOY_V41 / FIX_NOEDIT_BG): el no editable vuelve a ser
+     translucido para el efecto glass; hoy queda como lo dejo Martin
+   ============================================================================ */
+.vct-cal-c{--cal-ink:#333233;--cal-mute:#6b7280;--cal-bord:#66062D;--cal-pink:#F3E3EA;--cal-bl:rgba(102,6,45,.16);--cal-cellh:112px}
+
+/* ---- card con imagen (glass) ---- */
+.vct-cal-c .vct-agenda-card,.vct-cal-c .vct-agc-card,.vct-acc-cal-unified.vct-cal-c{
+    position:relative;isolation:isolate;overflow:hidden;
+    border:1px solid rgba(255,255,255,.75) !important;border-radius:16px !important;
+    box-shadow:0 8px 26px rgba(30,30,30,.10) !important;background:transparent !important}
+.vct-acc-cal-unified.vct-cal-c{padding:14px 16px}
+.vct-360-box > .vct-calendar-embedded.vct-cal-c > :is(.vct-agenda-card,.vct-agc-card){padding:14px 16px !important}
+.vct-cal-c .vct-agenda-card::before,.vct-cal-c .vct-agc-card::before,.vct-acc-cal-unified.vct-cal-c::before{
+    content:"";position:absolute;inset:0;z-index:-2;pointer-events:none;
+    background:url("../img/fondo-vocaturo.jpg") center 60% / cover no-repeat;filter:blur(2px);transform:scale(1.03)}
+.vct-cal-c .vct-agenda-card::after,.vct-cal-c .vct-agc-card::after,.vct-acc-cal-unified.vct-cal-c::after{
+    content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+    background:linear-gradient(rgba(255,255,255,.64),rgba(255,255,255,.74))}
+
+/* ---- colores opcion 5 ---- */
+.vct-cal-c .vct-cal-stp,.vct-cal-c .vct-cal-seg{background:rgba(255,255,255,.88) !important;border-color:var(--cal-bl) !important}
+.vct-cal-c .vct-cal-stp .vct-agenda-title,.vct-cal-c .vct-cal-stp-lbl{color:var(--cal-ink)}
+.vct-cal-c .vct-cal-stp .vct-agenda-nav-btn,.vct-cal-c .vct-cal-stp-btn{color:var(--cal-mute)}
+.vct-cal-c .vct-cal-seg .vct-agenda-view-btn{color:var(--cal-mute)}
+.vct-cal-c .vct-cal-seg .vct-agenda-view-btn.is-active{background:var(--cal-pink) !important;color:var(--cal-bord) !important}
+.vct-cal-c .vct-agenda-table thead th{color:var(--cal-mute)}
+.vct-cal-c .vct-agenda-cell:not(.vct-agenda-cell-today) .vct-agenda-daynum{color:var(--cal-ink);background:#fff !important;min-width:20px;height:20px;border-radius:50%;font-size:10.5px}
+/* hoy: se respeta el diseno de Martin (numero bordo sin circulo + etiqueta HOY) */
+.vct-cal-c :is(.vct-agc-kpi,.vct-agc-stat,.vct-360-kpi) :is(b,strong,h3,h4){color:var(--cal-ink)}
+.vct-cal-c .vct-agenda-legend-item{color:var(--cal-ink)}
+
+/* ---- consultor: selector mas ancho y con margen a la izquierda ---- */
+.vct-cal-c .vct-agenda-toolbar > .vct-agc-pick,.vct-cal-c .vct-agc-pick{width:320px !important;min-width:240px !important;max-width:100% !important;margin-left:8px !important}
+
+/* ---- mes: celdas del mismo alto (la tabla pasa a grilla) ---- */
+.vct-cal-c .vct-agenda-table{display:block}
+.vct-cal-c .vct-agenda-table thead,.vct-cal-c .vct-agenda-table tbody{display:block}
+.vct-cal-c .vct-agenda-table tr{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-bottom:6px}
+.vct-cal-c .vct-agenda-table thead th{display:block;padding:2px 0 4px}
+.vct-cal-c .vct-agenda-table td.vct-agenda-cell{display:flex;flex-direction:column;align-items:stretch;gap:3px;height:var(--cal-cellh) !important;min-height:0;overflow:hidden;padding:6px}
+.vct-cal-c .vct-agenda-table td.vct-agenda-cell-empty{visibility:hidden}
+.vct-cal-c .vct-agenda-table td.vct-agenda-cell > .vct-agenda-daynum{align-self:flex-start;flex:0 0 auto}
+.vct-cal-c .vct-agenda-table td.vct-agenda-cell:not(.vct-agenda-cell-empty){background:rgba(255,255,255,.7) !important;border:1px solid rgba(255,255,255,.85) !important;
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.vct-cal-c .vct-agenda-table td.vct-agenda-cell-today{border:2px solid var(--cal-bord) !important;box-shadow:none}
+/* no editables: mas transparentes, borde punteado */
+.vct-cal-c .vct-agenda-table td.vct-agenda-cell:is(.vct-agenda-cell-past,.vct-agenda-cell-weekend,.is-past,.is-wknd):not(.vct-agenda-cell-empty){
+    background:rgba(255,255,255,.36) !important;border:1px dashed rgba(100,116,139,.45) !important;opacity:1}
+.vct-cal-c .vct-agenda-table td.vct-agenda-cell:is(.vct-agenda-cell-past,.vct-agenda-cell-weekend,.is-past,.is-wknd) > *{opacity:.62}
+.vct-cal-c .vct-agenda-table td.vct-agenda-cell-today:is(.vct-agenda-cell-weekend,.is-wknd){border:2px solid var(--cal-bord) !important}
+
+/* ---- un solo badge: horizontal + borde izquierdo del color ---- */
+.vct-cal-strip{display:none !important}
+.vct-cal-c .vct-agenda-cell.vct-agenda-cell-holiday::before,.vct-cal-c .vct-agenda-cell.vct-agenda-cell-holiday-puente::before{display:none}
+.vct-cal-c .vct-agenda-cell :is(.vct-agenda-event,.vct-agenda-holiday-label,.vct-agc-cell-note){
+    --b:#64748b;display:block !important;flex:0 0 auto;margin:0 !important;height:18px;line-height:18px;padding:0 6px !important;
+    border-radius:5px !important;border-left:3px solid var(--b) !important;background:color-mix(in srgb,var(--b) 12%,#fff) !important;
+    color:var(--b) !important;font-size:10px !important;font-weight:600 !important;white-space:nowrap !important;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.vct-cal-c .vct-agenda-cell .vct-agenda-events{display:flex;flex-direction:column;gap:3px;margin:0 !important;min-width:0}
+.vct-cal-c .vct-agenda-cell .vct-agc-cell-acts{display:flex;flex-direction:column;gap:3px;min-width:0}
+.vct-cal-c .vct-agenda-cell .vct-agenda-event.has-resp{display:flex !important;align-items:center}
+/* acciones: colores ya definidos (vencida / hoy / proxima / sin fecha) */
+.vct-cal-c .vct-agenda-cell .vct-agenda-event.ev-V{--b:#B4232F}
+.vct-cal-c .vct-agenda-cell .vct-agenda-event.ev-H{--b:#B5760A}
+.vct-cal-c .vct-agenda-cell .vct-agenda-event.ev-P{--b:#8C1D47}
+.vct-cal-c .vct-agenda-cell .vct-agenda-event.ev-L{--b:#51607A}
+.vct-cal-c .vct-agenda-cell .vct-agenda-event.is-planned{--b:#1D4ED8}
+.vct-cal-c .vct-agenda-cell .vct-agenda-event.is-pending{--b:#B5760A}
+.vct-cal-c .vct-agenda-cell .vct-agenda-event:not([class*="ev-"]):not(.is-planned):not(.is-pending):not(.vct-pv-calendar-holiday){--b:#64748b}
+/* "+ N actividades": sin badge */
+.vct-cal-c .vct-agenda-cell .vct-agenda-events > .vct-agenda-event:not([data-tt]):not(.vct-pv-calendar-holiday){border-left:0 !important;background:none !important;color:var(--cal-bord) !important;padding:0 2px !important;font-weight:700 !important}
+/* feriados */
+.vct-cal-c .vct-agenda-cell .vct-agenda-holiday-label,.vct-cal-c .vct-agenda-cell .vct-pv-calendar-holiday.is-fijo{--b:var(--cal-fer-f)}
+.vct-cal-c .vct-agenda-cell-holiday-puente .vct-agenda-holiday-label,.vct-cal-c .vct-agenda-cell .vct-pv-calendar-holiday.is-movible{--b:var(--cal-fer-m)}
+/* estados del consultor */
+.vct-cal-c .vct-agenda-cell.vct-agc-disponible .vct-agc-cell-note{--b:var(--cal-disp)}
+.vct-cal-c .vct-agenda-cell.vct-agc-asignado .vct-agc-cell-note{--b:var(--cal-asc)}
+.vct-cal-c .vct-agenda-cell:is(.vct-agc-ocupado,.vct-agc-no_disponible) .vct-agc-cell-note{--b:var(--cal-ocu)}
+.vct-cal-c .vct-agenda-cell.vct-agc-licencia .vct-agc-cell-note{--b:var(--cal-lic)}
+.vct-cal-c .vct-agenda-cell.vct-agc-potencial .vct-agc-cell-note{--b:var(--cal-pot)}
+.vct-cal-c .vct-agenda-cell.vct-agc-organismo .vct-agc-cell-note{--b:var(--cal-org)}
+.vct-cal-c .vct-agenda-cell.vct-agc-observacion .vct-agc-cell-note{--b:var(--cal-obs)}
+.vct-cal-c .vct-agenda-cell.vct-agc-feriado-fijo .vct-agc-cell-note{--b:var(--cal-fer-f)}
+.vct-cal-c .vct-agenda-cell.vct-agc-feriado-mov .vct-agc-cell-note{--b:var(--cal-fer-m)}
+.vct-cal-c .vct-agenda-cell.vct-agenda-cell .vct-agc-cell-note.is-asc{--b:var(--cal-asc)}
+.vct-cal-c .vct-agenda-cell.vct-agenda-cell .vct-agc-cell-note.is-asp{--b:var(--cal-asp)}
+.vct-cal-c .vct-agenda-cell.vct-agenda-cell .vct-agc-cell-note.is-disp{--b:var(--cal-disp)}
+/* actividades: mismo badge; el color del tipo viene en linea (border-left-color + fondo) */
+.vct-cal-c .vct-agenda-cell .vct-agc-cell-act{display:block !important;flex:0 0 auto;margin:0 !important;height:18px;line-height:18px;padding:0 6px !important;
+    border-radius:5px !important;border-left-width:3px !important;border-left-style:solid !important;color:var(--cal-ink) !important;
+    font-size:10px !important;font-weight:600 !important;white-space:nowrap !important;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.vct-cal-c .vct-agenda-cell .vct-agc-cell-act b{font-weight:700;margin-right:3px}
+.vct-cal-c .vct-agenda-cell .vct-agc-cell-actmore{font-size:9.5px;font-weight:700;color:var(--cal-bord);padding-left:3px}

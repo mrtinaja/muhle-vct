@@ -2005,3 +2005,198 @@ html body .vct-form-select-menu.vct-agc-select-menu { box-sizing: border-box !im
     font-size:10px !important;font-weight:600 !important;white-space:nowrap !important;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .vct-cal-c .vct-agenda-cell .vct-agc-cell-act b{font-weight:700;margin-right:3px}
 .vct-cal-c .vct-agenda-cell .vct-agc-cell-actmore{font-size:9.5px;font-weight:700;color:var(--cal-bord);padding-left:3px}
+
+/* ============================================================================
+   CAL_E_V1 — calendarios: boceto "opcion B final" (design-bocetos/boceto_calendarios_opcion_b_final.html)
+   Acciones, Agenda general, Agenda del consultor (sidebar y V360 del consultor).
+   Solo estilos: no cambia consultas, JS ni tooltips. Va al final y gana sobre CAL_D_V1.
+   - sin imagen de fondo: card con degrade pastel bordo (rosa -> blanco -> lila)
+   - celda del dia blanca; numero en circulo con borde bordo; hoy relleno bordo + HOY
+   - pasados: gris punteado (como opcion A); sabado y domingo: variante rosada "no editable"
+   - feriados con su color (fijo / movible), tambien si la fecha ya paso (no editable)
+   - leyenda e items del dia: badge con borde izquierdo del color (estilo de las cards)
+   - semana en 7 columnas; dia: numero + nombre a la izquierda, items a la derecha, sin horas
+   - alto de la celda del mes sin cambios (--cal-cellh: 112px)
+   ============================================================================ */
+.vct-cal-c{--cal-rose-line:#EFE3E9;--cal-rose-head:#A86A84;--cal-we-num:#B98AA0;--cal-we-line:#D9BCCB;
+    --cal-past-bg:#f8fafc;--cal-past-line:#e2e8f0;--cal-past-num:#cbd5e1;
+    --vct-cal-font:var(--vct-font,"Gotham","Montserrat","Segoe UI",Arial,sans-serif)}
+
+/* ---- card: sin foto, degrade pastel ---- */
+.vct-cal-c .vct-agenda-card::before,.vct-cal-c .vct-agc-card::before,.vct-acc-cal-unified.vct-cal-c::before,
+.vct-cal-c .vct-agenda-card::after,.vct-cal-c .vct-agc-card::after,.vct-acc-cal-unified.vct-cal-c::after{content:none !important;display:none !important}
+.vct-cal-c .vct-agenda-card,.vct-cal-c .vct-agc-card,.vct-acc-cal-unified.vct-cal-c{
+    background:linear-gradient(160deg,#FBF1F5 0%,#FFFFFF 38%,#FFFFFF 70%,#F5EFF7 100%) !important;
+    border:1px solid #F0E1E8 !important;border-radius:16px !important;box-shadow:0 1px 3px rgba(15,23,42,.05) !important;
+    font-family:var(--vct-cal-font)}
+.vct-cal-c .vct-cal-stp,.vct-cal-c .vct-cal-seg{background:#fff !important;border-color:#EADCE3 !important}
+.vct-cal-c .vct-agenda-table thead th{color:var(--cal-rose-head) !important}
+
+/* ---- KPI: degrade suave e icono en degrade del color ---- */
+.vct-cal-c .vct-soft-kpi{background:linear-gradient(135deg,#FFFFFF 0%,#FDF6F9 100%) !important;border:1px solid #F0E1E8 !important}
+.vct-cal-c .vct-soft-kpi .vct-soft-kpi-icon{background:linear-gradient(135deg,var(--agc-kpi-accent,#66062D),color-mix(in srgb,var(--agc-kpi-accent,#66062D) 62%,#fff)) !important}
+
+/* ---- leyenda: badge con borde izquierdo del color ---- */
+.vct-cal-c .vct-agenda-legend{display:flex !important;flex-wrap:wrap;gap:6px !important;align-items:center}
+.vct-cal-c .vct-agenda-legend-item{--c:#94a3b8;position:relative;display:inline-flex !important;align-items:center;gap:0 !important;height:24px;
+    padding:0 10px 0 12px !important;border-radius:7px;overflow:hidden;font-size:11.5px !important;font-weight:600;color:#334155 !important;
+    background:color-mix(in srgb,var(--c) 10%,#fff);border:1px solid color-mix(in srgb,var(--c) 24%,#fff)}
+.vct-cal-c .vct-agenda-legend-item > i{position:absolute !important;left:0;top:0;bottom:0;width:3px !important;height:auto !important;margin:0 !important;border:0 !important;border-radius:0 !important}
+.vct-cal-c .vct-agenda-legend-item:has(.vct-agc-dot-nocargado){--c:#cbd5e1}
+.vct-cal-c .vct-agenda-legend-item:has(.vct-agc-dot-nocargado) > i{background:#cbd5e1 !important}
+.vct-cal-c .vct-agenda-legend-item:has(.vct-agc-dot-disponible){--c:var(--cal-disp)}
+.vct-cal-c .vct-agenda-legend-item:has(.vct-agc-dot-asignado){--c:var(--cal-asc)}
+.vct-cal-c .vct-agenda-legend-item:has(.vct-agc-dot-pendiente){--c:var(--cal-asp)}
+.vct-cal-c .vct-agenda-legend-item:has(.vct-agc-dot-licencia){--c:var(--cal-lic)}
+.vct-cal-c .vct-agenda-legend-item:has(.vct-agc-dot-ocupado){--c:var(--cal-ocu)}
+.vct-cal-c .vct-agenda-legend-item:has(.vct-agc-dot-potencial){--c:var(--cal-pot)}
+.vct-cal-c .vct-agenda-legend-item:has(.vct-agc-dot-organismo){--c:var(--cal-org)}
+.vct-cal-c .vct-agenda-legend-item:has(.vct-agc-dot-observacion){--c:var(--cal-obs)}
+.vct-cal-c .vct-agenda-legend-item:has(:is(.vct-agc-dot-feriado,.vct-agenda-dot-fijo)){--c:var(--cal-fer-f)}
+.vct-cal-c .vct-agenda-legend-item:has(.vct-agenda-dot-movible){--c:var(--cal-fer-m)}
+.vct-cal-c .vct-agenda-legend-item:has(.vct-agenda-dot-fijo) > i{background:var(--cal-fer-f) !important}
+.vct-cal-c .vct-agenda-legend-item:has(.vct-agenda-dot-movible) > i{background:var(--cal-fer-m) !important}
+.vct-cal-c .vct-agenda-legend-item[data-vct-cal-ro]{--c:#cbd5e1;color:#94a3b8 !important;background:#fff;border-style:dashed}
+.vct-cal-c .vct-agenda-legend-item[data-vct-cal-ro] > i{display:none !important}
+
+/* ---- numero del dia: circulo con borde bordo ---- */
+.vct-cal-c .vct-agenda-cell .vct-agenda-daynum{display:inline-grid !important;place-items:center;width:24px !important;min-width:24px !important;height:24px !important;
+    padding:0 !important;border-radius:50% !important;border:1.5px solid #66062D !important;background:#fff !important;color:#66062D !important;
+    font-size:11px !important;font-weight:700 !important;line-height:1 !important}
+
+/* ---- celda (mes): blanca ---- */
+.vct-cal-c .vct-agenda-table td.vct-agenda-cell:not(.vct-agenda-cell-empty){background:#fff !important;border:1px solid var(--cal-rose-line) !important;
+    border-radius:10px;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;opacity:1 !important}
+.vct-cal-c .vct-agenda-table td.vct-agenda-cell > *{opacity:1}
+
+/* pasados (como opcion A) */
+.vct-cal-c .vct-agenda-table td.vct-agenda-cell:is(.vct-agenda-cell-past,.is-past):not(.vct-agenda-cell-empty){
+    background:var(--cal-past-bg) !important;border:1px dashed var(--cal-past-line) !important}
+.vct-cal-c .vct-agenda-cell:is(.vct-agenda-cell-past,.is-past) .vct-agenda-daynum{border-color:var(--cal-past-line) !important;color:var(--cal-past-num) !important}
+.vct-cal-c .vct-agenda-table td.vct-agenda-cell:is(.vct-agenda-cell-past,.is-past) > :not(.vct-agenda-daynum){opacity:.6}
+
+/* sabado y domingo: variante rosada, no editable (gana sobre pasado) */
+.vct-cal-c .vct-agenda-table td.vct-agenda-cell:is(.vct-agenda-cell-weekend,.is-wknd):not(.vct-agenda-cell-empty){
+    position:relative;background:linear-gradient(180deg,#FBF5F8,#F7F1F6) !important;border:1px solid var(--cal-rose-line) !important}
+.vct-cal-c .vct-agenda-cell:is(.vct-agenda-cell-weekend,.is-wknd) .vct-agenda-daynum{border:1.5px dashed var(--cal-we-line) !important;color:var(--cal-we-num) !important;background:#fff !important}
+.vct-cal-c .vct-agenda-table td.vct-agenda-cell:is(.vct-agenda-cell-weekend,.is-wknd):not(.vct-agenda-cell-today):not(.vct-agenda-cell-holiday):not(.vct-agenda-cell-holiday-puente):not(.vct-agc-feriado-fijo):not(.vct-agc-feriado-mov)::after{
+    content:"no editable";position:absolute;right:7px;bottom:5px;font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#C7A3B5;pointer-events:none}
+
+/* feriados: su color (fijo / movible); si ya paso, se ve igual pero no se edita */
+.vct-cal-c .vct-agenda-table td.vct-agenda-cell:is(.vct-agenda-cell-holiday,.vct-agc-feriado-fijo):not(.vct-agenda-cell-empty){
+    background:linear-gradient(180deg,#FFF1F4,#fff 70%) !important;border:1px solid #FBD0DB !important}
+.vct-cal-c .vct-agenda-table td.vct-agenda-cell:is(.vct-agenda-cell-holiday-puente,.vct-agc-feriado-mov):not(.vct-agenda-cell-empty){
+    background:linear-gradient(180deg,#F5F0FF,#fff 70%) !important;border:1px solid #DED2FB !important}
+.vct-cal-c .vct-agenda-cell:is(.vct-agenda-cell-holiday,.vct-agc-feriado-fijo) .vct-agenda-daynum{border:1.5px solid var(--cal-fer-f) !important;color:var(--cal-fer-f) !important}
+.vct-cal-c .vct-agenda-cell:is(.vct-agenda-cell-holiday-puente,.vct-agc-feriado-mov) .vct-agenda-daynum{border:1.5px solid var(--cal-fer-m) !important;color:var(--cal-fer-m) !important}
+.vct-cal-c .vct-agenda-cell:is(.vct-agenda-cell-holiday,.vct-agenda-cell-holiday-puente,.vct-agc-feriado-fijo,.vct-agc-feriado-mov):is(.vct-agenda-cell-past,.is-past) .vct-agenda-daynum{opacity:.6}
+.vct-cal-c .vct-agenda-table td.vct-agenda-cell:is(.vct-agenda-cell-holiday,.vct-agenda-cell-holiday-puente,.vct-agc-feriado-fijo,.vct-agc-feriado-mov) > :not(.vct-agenda-daynum){opacity:1 !important;filter:none !important}
+
+/* hoy: relleno bordo + borde bordo + HOY (la etiqueta HOY ya la pone HOY_V41) */
+.vct-cal-c .vct-agenda-table td.vct-agenda-cell.vct-agenda-cell-today{background:#fff !important;border:2px solid #66062D !important}
+.vct-cal-c .vct-agenda-cell.vct-agenda-cell-today .vct-agenda-daynum{background:#66062D !important;border-color:#66062D !important;color:#fff !important}
+
+/* items del dia: los colores, sin grises (el pasado se atenua por opacidad de la celda) */
+.vct-cal-c .vct-agenda-cell :is(.vct-agenda-event,.vct-agenda-holiday-label,.vct-agc-cell-note,.vct-agc-cell-act){filter:none !important}
+
+/* ---- SEMANA: 7 columnas (agenda general / acciones y agenda del consultor) ---- */
+.vct-cal-c .vct-agenda-weeklist,.vct-cal-c .vct-agc-wl{display:grid !important;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px !important;max-width:none !important;margin:0 !important}
+.vct-cal-c :is(.vct-agenda-weekrow,.vct-agc-wl-row){display:flex !important;flex-direction:column !important;align-items:stretch;gap:6px !important;min-height:220px;
+    padding:8px !important;margin:0 !important;border:1px solid var(--cal-rose-line) !important;border-radius:12px !important;background:#fff !important;box-shadow:none !important;opacity:1 !important}
+.vct-cal-c :is(.vct-agenda-weekrow-date,.vct-agc-wl-date){flex:0 0 auto !important;display:flex !important;flex-direction:row !important;align-items:center !important;justify-content:flex-start !important;
+    gap:8px;width:auto !important;min-width:0 !important;padding:0 0 6px !important;border:0 !important;border-bottom:1px solid var(--cal-rose-line) !important;border-radius:0 !important;background:none !important}
+.vct-cal-c :is(.vct-agenda-weekrow-daynum,.vct-agc-wl-dnum){order:-1;display:inline-grid !important;place-items:center;width:28px;height:28px;border-radius:50%;
+    border:1.5px solid #66062D;background:#fff;color:#66062D !important;font-size:12px !important;font-weight:700 !important;line-height:1 !important}
+.vct-cal-c :is(.vct-agenda-weekrow-dayname,.vct-agc-wl-dname){font-size:10.5px !important;font-weight:700 !important;color:#94a3b8 !important;text-transform:uppercase;letter-spacing:.05em}
+.vct-cal-c :is(.vct-agenda-weekrow-month,.vct-agc-wl-dmonth){display:none !important}
+.vct-cal-c :is(.vct-agenda-weekrow-card,.vct-agc-wl-bars){flex:1 1 auto !important;display:flex !important;flex-direction:column !important;align-items:stretch !important;align-content:flex-start !important;
+    gap:6px !important;padding:0 !important;background:none !important;box-shadow:none !important;transform:none !important;min-width:0}
+.vct-cal-c .vct-agenda-weekrow-card .vct-agenda-events{display:flex;flex-direction:column;gap:6px;margin:0}
+.vct-cal-c :is(.vct-agenda-weekrow-card,.vct-agc-wl-bars) :is(.vct-agenda-event,.vct-agc-wl-bar){--b:#64748b;display:block !important;margin:0 !important;padding:4px 8px !important;border-radius:6px !important;
+    border-left:3px solid var(--b) !important;background:color-mix(in srgb,var(--b) 10%,#fff) !important;color:#334155 !important;font-size:11px !important;font-weight:600 !important;
+    white-space:nowrap !important;overflow:hidden;text-overflow:ellipsis;max-width:100%;filter:none !important}
+.vct-cal-c .vct-agenda-weekrow-card .vct-agenda-event.ev-V{--b:#B4232F}
+.vct-cal-c .vct-agenda-weekrow-card .vct-agenda-event.ev-H{--b:#B5760A}
+.vct-cal-c .vct-agenda-weekrow-card .vct-agenda-event.ev-P{--b:#8C1D47}
+.vct-cal-c .vct-agenda-weekrow-card .vct-agenda-event.ev-L{--b:#51607A}
+.vct-cal-c .vct-agenda-weekrow-card .vct-agenda-event.is-planned{--b:#1D4ED8}
+.vct-cal-c .vct-agenda-weekrow-card .vct-agenda-event.is-pending{--b:#B5760A}
+.vct-cal-c .vct-agc-wl-bar.vct-agc-disponible{--b:var(--cal-disp)}
+.vct-cal-c .vct-agc-wl-bar.vct-agc-asignado{--b:var(--cal-asc)}
+.vct-cal-c .vct-agc-wl-bar.vct-agc-asignado.is-pend{--b:var(--cal-asp)}
+.vct-cal-c .vct-agc-wl-bar.vct-agc-licencia{--b:var(--cal-lic)}
+.vct-cal-c .vct-agc-wl-bar:is(.vct-agc-ocupado,.vct-agc-no_disponible){--b:var(--cal-ocu)}
+.vct-cal-c .vct-agc-wl-bar.vct-agc-potencial{--b:var(--cal-pot)}
+.vct-cal-c .vct-agc-wl-bar.vct-agc-organismo{--b:var(--cal-org)}
+.vct-cal-c .vct-agc-wl-bar.vct-agc-observacion{--b:var(--cal-obs)}
+.vct-cal-c .vct-agc-wl-bar.vct-agc-feriado-fijo{--b:var(--cal-fer-f)}
+.vct-cal-c .vct-agc-wl-bar.vct-agc-feriado-mov{--b:var(--cal-fer-m)}
+.vct-cal-c .vct-agenda-weekrow-card.is-fijo .vct-agenda-weekrow-badge,.vct-cal-c .vct-agenda-weekrow-card.is-movible .vct-agenda-weekrow-badge{align-self:flex-start}
+.vct-cal-c :is(.vct-agenda-weekrow-card .vct-agenda-event-detail,.vct-agc-wl-empty){font-size:11px !important;color:#b9a9b1 !important;font-style:italic}
+/* semana: pasado / fin de semana / hoy */
+.vct-cal-c :is(.vct-agenda-weekrow.vct-agenda-cell-past,.vct-agc-wl-row.is-past){background:var(--cal-past-bg) !important;border:1px dashed var(--cal-past-line) !important;cursor:not-allowed}
+.vct-cal-c :is(.vct-agenda-weekrow.vct-agenda-cell-past,.vct-agc-wl-row.is-past) :is(.vct-agenda-weekrow-daynum,.vct-agc-wl-dnum){border-color:var(--cal-past-line);color:var(--cal-past-num) !important}
+.vct-cal-c :is(.vct-agenda-weekrow.vct-agenda-cell-past,.vct-agc-wl-row.is-past) :is(.vct-agenda-weekrow-card,.vct-agc-wl-bars){opacity:.6}
+.vct-cal-c :is(.vct-agenda-weekrow.vct-agenda-cell-weekend,.vct-agc-wl-row.is-wknd){background:linear-gradient(180deg,#FBF5F8,#F7F1F6) !important;border:1px solid var(--cal-rose-line) !important;cursor:not-allowed}
+.vct-cal-c :is(.vct-agenda-weekrow.vct-agenda-cell-weekend,.vct-agc-wl-row.is-wknd) :is(.vct-agenda-weekrow-daynum,.vct-agc-wl-dnum){border:1.5px dashed var(--cal-we-line);color:var(--cal-we-num) !important}
+.vct-cal-c :is(.vct-agenda-weekrow-date.is-today,.vct-agc-wl-row.is-today .vct-agc-wl-date){background:none !important}
+.vct-cal-c :is(.vct-agenda-weekrow:has(.vct-agenda-weekrow-date.is-today),.vct-agc-wl-row.is-today){border:2px solid #66062D !important;box-shadow:none !important}
+.vct-cal-c :is(.vct-agenda-weekrow-date.is-today .vct-agenda-weekrow-daynum,.vct-agc-wl-row.is-today .vct-agc-wl-dnum){background:#66062D;border-color:#66062D;color:#fff !important}
+.vct-cal-c .vct-agenda-weekrow-date.is-today :is(.vct-agenda-weekrow-dayname,.vct-agenda-weekrow-month){color:#94a3b8 !important}
+
+/* semana: el encabezado del dia sin fondo propio (gana a FIX_NOEDIT_BG) y los items cortados con ... */
+.vct-cal-c .vct-agenda-weekrow.vct-agenda-weekrow .vct-agenda-weekrow-date,
+.vct-cal-c .vct-agc-wl-row.vct-agc-wl-row .vct-agc-wl-date{background:none !important}
+.vct-cal-c :is(.vct-agenda-weekrow,.vct-agc-wl-row){min-width:0;overflow:hidden}
+.vct-cal-c :is(.vct-agenda-weekrow-card .vct-agenda-events,.vct-agc-wl-bars){width:100%;min-width:0}
+.vct-cal-c .vct-agc-wl-bars .vct-agc-wl-bar{width:100%;box-sizing:border-box}
+
+/* ---- DIA: numero + nombre a la izquierda, items a la derecha, sin horas ---- */
+.vct-cal-c .vct-agenda-day{display:grid !important;grid-template-columns:220px minmax(0,1fr);grid-template-rows:auto auto 1fr;column-gap:14px;row-gap:6px;
+    align-items:start;text-align:left !important;padding:0 !important;background:none !important;border:0 !important;opacity:1 !important;cursor:default}
+.vct-cal-c .vct-agenda-day > .vct-agenda-day-num{grid-column:1;grid-row:1;display:inline-grid !important;place-items:center;width:46px;height:46px;margin:16px 0 0 16px;border-radius:50%;
+    background:#fff;border:1.5px solid #66062D;color:#66062D !important;font-size:18px !important;font-weight:800 !important;letter-spacing:0 !important}
+.vct-cal-c .vct-agenda-day > .vct-agenda-day-name{grid-column:1;grid-row:2;margin:0 16px !important;font-size:14px !important;font-weight:700;color:#333233 !important}
+.vct-cal-c .vct-agenda-day::before{content:"";grid-column:1;grid-row:1 / span 3;align-self:stretch;min-height:150px;border:1px solid var(--cal-rose-line);border-radius:12px;background:#fff;z-index:0}
+.vct-cal-c .vct-agenda-day > .vct-agenda-day-num,.vct-cal-c .vct-agenda-day > .vct-agenda-day-name{position:relative;z-index:1}
+.vct-cal-c .vct-agenda-day > :not(.vct-agenda-day-num):not(.vct-agenda-day-name){grid-column:2;grid-row:1 / span 3;margin:0 !important;align-self:stretch;
+    display:flex;flex-direction:column;gap:8px;min-height:150px;padding:12px;border:1px solid var(--cal-rose-line);border-radius:12px;background:#fff}
+.vct-cal-c .vct-agenda-day > :not(.vct-agenda-day-num):not(.vct-agenda-day-name) ~ :not(.vct-agenda-day-num):not(.vct-agenda-day-name){grid-row:auto;min-height:0}
+.vct-cal-c .vct-agenda-day .vct-agenda-events{flex-direction:column}
+.vct-cal-c .vct-agenda-day :is(.vct-agenda-event,.vct-agc-badge,.vct-agenda-day-holiday){--b:#64748b;display:block !important;margin:0 !important;padding:10px 12px !important;border-radius:10px !important;
+    border:1px solid color-mix(in srgb,var(--b) 22%,#fff) !important;border-left:4px solid var(--b) !important;background:color-mix(in srgb,var(--b) 8%,#fff) !important;
+    color:#333233 !important;font-size:12.5px !important;font-weight:600 !important;white-space:normal !important;text-align:left;filter:none !important}
+.vct-cal-c .vct-agenda-day .vct-agenda-event.ev-V{--b:#B4232F}
+.vct-cal-c .vct-agenda-day .vct-agenda-event.ev-H{--b:#B5760A}
+.vct-cal-c .vct-agenda-day .vct-agenda-event.ev-P{--b:#8C1D47}
+.vct-cal-c .vct-agenda-day .vct-agenda-event.ev-L{--b:#51607A}
+.vct-cal-c .vct-agenda-day .vct-agenda-event.is-planned{--b:#1D4ED8}
+.vct-cal-c .vct-agenda-day .vct-agenda-event.is-pending{--b:#B5760A}
+.vct-cal-c .vct-agenda-day .vct-agenda-day-holiday.vct-agenda-fijo{--b:var(--cal-fer-f)}
+.vct-cal-c .vct-agenda-day .vct-agenda-day-holiday.vct-agenda-movible{--b:var(--cal-fer-m)}
+.vct-cal-c .vct-agenda-day .vct-agc-badge.vct-agc-disponible{--b:var(--cal-disp)}
+.vct-cal-c .vct-agenda-day .vct-agc-badge.vct-agc-asignado{--b:var(--cal-asc)}
+.vct-cal-c .vct-agenda-day .vct-agc-badge.vct-agc-licencia{--b:var(--cal-lic)}
+.vct-cal-c .vct-agenda-day .vct-agc-badge:is(.vct-agc-ocupado,.vct-agc-no_disponible){--b:var(--cal-ocu)}
+.vct-cal-c .vct-agenda-day .vct-agc-badge.vct-agc-potencial{--b:var(--cal-pot)}
+.vct-cal-c .vct-agenda-day .vct-agc-badge.vct-agc-organismo{--b:var(--cal-org)}
+.vct-cal-c .vct-agenda-day .vct-agc-badge.vct-agc-observacion{--b:var(--cal-obs)}
+.vct-cal-c .vct-agenda-day .vct-agc-badge.vct-agc-feriado-fijo{--b:var(--cal-fer-f)}
+.vct-cal-c .vct-agenda-day .vct-agc-badge.vct-agc-feriado-mov{--b:var(--cal-fer-m)}
+.vct-cal-c .vct-agenda-day .vct-agc-dayview-hours{display:none !important}
+.vct-cal-c .vct-agenda-day > .vct-agc-dayview-note{min-height:0 !important;padding:0 4px !important;border:0 !important;background:none !important;font-size:12px;color:#64748b}
+.vct-cal-c .vct-agenda-day .vct-agenda-event-detail{font-size:12px;color:#94a3b8;font-style:italic;margin:0}
+.vct-cal-c .vct-agenda-day .vct-agenda-day-placeholder,.vct-cal-c .vct-agenda-day .vct-agenda-day-hint{font-size:12px;color:#94a3b8;margin:0}
+/* dia: hoy relleno; pasado gris; fin de semana rosado */
+.vct-cal-c .vct-agenda-day:is(.vct-agenda-cell-past,.is-past) > .vct-agenda-day-num{border-color:var(--cal-past-line);color:var(--cal-past-num) !important}
+.vct-cal-c .vct-agenda-day:is(.vct-agenda-cell-past,.is-past)::before{background:var(--cal-past-bg);border-style:dashed;border-color:var(--cal-past-line)}
+.vct-cal-c .vct-agenda-day:is(.vct-agenda-cell-weekend,.is-wknd) > .vct-agenda-day-num{border:1.5px dashed var(--cal-we-line);color:var(--cal-we-num) !important}
+.vct-cal-c .vct-agenda-day:is(.vct-agenda-cell-weekend,.is-wknd)::before{background:linear-gradient(180deg,#FBF5F8,#F7F1F6)}
+
+@media (max-width:900px){
+    .vct-cal-c .vct-agenda-weeklist,.vct-cal-c .vct-agc-wl{grid-template-columns:1fr}
+    .vct-cal-c :is(.vct-agenda-weekrow,.vct-agc-wl-row){min-height:0}
+    .vct-cal-c .vct-agenda-day{grid-template-columns:1fr}
+    .vct-cal-c .vct-agenda-day > :not(.vct-agenda-day-num):not(.vct-agenda-day-name){grid-column:1;grid-row:auto}
+    .vct-cal-c .vct-agenda-day::before{grid-row:1 / span 2;min-height:0}
+}

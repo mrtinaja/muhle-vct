@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Boceto · Agenda del proyecto y alta de visita</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--b:#66062D;--ink:#333233;--mut:#64748b;--line:#e8ebf0;--rose:#EFE3E9;--bg:#f4f5f7;--font:"Gotham","Montserrat","Segoe UI",Arial,sans-serif;
+ --disp:#2563EB;--asc:#16A34A;--asp:#CA8A04;--pot:#EA580C;--org:#0891B2;--lic:#DB2777;--ocu:#64748B;--obs:#C2410C;--ferf:#E0304D;--ferm:#8B5CF6}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:13px/1.45 var(--font);color:var(--ink);padding:20px}
+h1{font-size:18px;color:var(--b);margin:0 0 4px}.note{color:var(--mut);font-size:12px;margin:0 0 14px;max-width:1100px}
+h2{font-size:12px;color:var(--b);text-transform:uppercase;letter-spacing:.05em;margin:26px 0 10px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}.tabs button{font:600 12.5px var(--font);border:1px solid #e2e8f0;background:#fff;color:var(--mut);border-radius:999px;padding:7px 14px;cursor:pointer}.tabs button.on{background:var(--b);border-color:var(--b);color:#fff}
+.chipc{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:7px;font-size:11px;font-weight:600;color:#334155;background:color-mix(in srgb,var(--c) 10%,#fff);border:1px solid color-mix(in srgb,var(--c) 24%,#fff);border-left:3px solid var(--c);white-space:nowrap}
+/* ---------- calendario del proyecto (diseno generico B) ---------- */
+.cal{border-radius:16px;border:1px solid #F0E1E8;padding:16px;background:linear-gradient(160deg,#FBF1F5 0%,#fff 38%,#fff 70%,#F5EFF7 100%)}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.bar h3{margin:0;font-size:14px}.seg{display:inline-flex;gap:2px;background:#fff;border:1px solid #EADCE3;border-radius:999px;padding:3px}.seg span{padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;color:var(--mut)}.seg span.on{background:#F3E3EA;color:var(--b)}
+.leg{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.wd{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:6px}.wd div{text-align:center;font-size:11px;font-weight:700;letter-spacing:.06em;color:#A86A84;text-transform:uppercase}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.cell{height:112px;border-radius:10px;border:1px solid var(--rose);background:#fff;padding:7px;display:flex;flex-direction:column;gap:4px;overflow:hidden;position:relative}
+.cell .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;border:1.5px solid var(--b);color:var(--b)}
+.cell.empty{visibility:hidden}.cell.past{background:#f8fafc;border-style:dashed;border-color:#e2e8f0}.cell.past .n{border-color:#e2e8f0;color:#cbd5e1}.cell.past .ev{opacity:.6}
+.cell.we{background:linear-gradient(180deg,#FBF5F8,#F7F1F6)}.cell.we .n{border:1.5px dashed #D9BCCB;color:#B98AA0}
+.cell.we::after{content:"no editable";position:absolute;right:7px;bottom:5px;font-size:9px;font-weight:700;color:#C7A3B5;text-transform:uppercase;letter-spacing:.04em}
+.cell.today{border:2px solid var(--b)}.cell.today .n{background:var(--b);color:#fff}.cell .hoy{position:absolute;top:7px;right:7px;background:var(--b);color:#fff;font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:999px}
+.cell.ed{cursor:pointer}.cell.ed:hover{border-color:var(--b);box-shadow:0 2px 10px rgba(102,6,45,.12)}
+.cell.ed .add{position:absolute;right:7px;bottom:6px;width:22px;height:22px;border-radius:7px;border:1px dashed rgba(102,6,45,.4);color:var(--b);display:grid;place-items:center;font-weight:700;opacity:0;transition:opacity .15s}
+.cell.ed:hover .add{opacity:1}
+.ev{font-size:10.5px;font-weight:600;color:#334155;padding:3px 7px;border-radius:6px;background:color-mix(in srgb,var(--c) 10%,#fff);border:1px solid color-mix(in srgb,var(--c) 22%,#fff);border-left:3px solid var(--c);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* ---------- modal ---------- */
+.ov{background:rgba(15,23,42,.38);border-radius:18px;padding:22px;margin-top:10px}
+.dlg{background:#fff;border-radius:16px;box-shadow:0 24px 60px rgba(15,23,42,.25);max-width:1180px;margin:0 auto;overflow:hidden}
+.hd{display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--line);background:linear-gradient(90deg,#FBF1F5,#fff 60%)}
+.hd .ic{width:40px;height:40px;border-radius:12px;background:#F3E3EA;color:var(--b);display:grid;place-items:center;font-size:18px}
+.hd b{display:block;font-size:16px}.hd small{color:var(--mut);font-size:12px}.hd .x{margin-left:auto;width:32px;height:32px;border-radius:9px;border:1px solid var(--line);display:grid;place-items:center;color:var(--mut)}
+.bd{padding:16px 18px;display:grid;gap:14px;max-height:none}
+.sec{font-size:11.5px;font-weight:700;color:var(--b);text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;gap:8px;margin-top:4px}.sec::after{content:"";flex:1;height:1px;background:var(--line)}
+.sec i{font-style:normal;width:20px;height:20px;border-radius:50%;background:var(--b);color:#fff;display:grid;place-items:center;font-size:10.5px}
+.row{display:grid;gap:12px}.r3{grid-template-columns:repeat(3,1fr)}.r4{grid-template-columns:repeat(4,1fr)}.r2{grid-template-columns:1fr 1fr}
+.f label{display:block;font-size:11.5px;font-weight:600;color:#475569;margin-bottom:4px}.f label em{color:#DC2626;font-style:normal}
+.in{height:38px;border:1px solid #dfe3ea;border-radius:9px;padding:0 11px;display:flex;align-items:center;background:#fff;font-size:12.5px;color:var(--ink);width:100%;font-family:var(--font)}
+.in.ro{background:#f8fafc;color:#475569}.ta{height:62px;align-items:flex-start;padding-top:9px;resize:vertical}
+.help{font-size:11px;color:var(--mut);margin-top:4px}.help.req{color:#B91C1C;font-weight:600}
+.opt{display:flex;flex-wrap:wrap;gap:8px}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;border:1px solid #e2e8f0;background:#fff;font-size:12.5px;font-weight:600;color:#475569;cursor:pointer;user-select:none}
+.pill .sv{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:800}
+.pill.on{border-color:var(--b);background:#FBF1F5;color:var(--b);box-shadow:0 0 0 1px var(--b) inset}
+.pill small{display:block;font-weight:500;color:var(--mut);font-size:11px}
+.inst{display:none}.inst.show{display:block}
+/* servicios: recuadros iguales con el icono definido */
+.svgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;max-width:760px}
+.svbox{display:flex;align-items:center;gap:10px;height:62px;padding:0 14px;border-radius:12px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;user-select:none}
+.svbox .ico{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:#fff;flex:0 0 auto}
+.svbox .ico svg{width:17px;height:17px}
+.svbox b{display:block;font-size:13px}.svbox small{display:block;font-size:11px;color:var(--mut)}
+.svbox.on{border-color:var(--b);background:#FBF1F5;box-shadow:0 0 0 1px var(--b) inset}
+.svbox .ico.co{background:#8C1D47}.svbox .ico.au{background:#4A4849}.svbox .ico.ca{background:#CF6F92}
+/* estado: color claro del tipo */
+.est{display:inline-flex;border:1px solid #dfe3ea;border-radius:10px;padding:3px;gap:3px;background:#fff}
+.est span{padding:7px 14px;border-radius:8px;font-weight:700;font-size:12px;color:var(--mut);cursor:pointer;border:1px solid transparent}
+.est span.on.p{background:#FEF6E7;color:#A16207;border-color:#FDE3A7}
+.est span.on.c{background:#ECFDF3;color:#15803D;border-color:#BBF7D0}
+.sw{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:#334155;cursor:pointer;height:38px}
+.sw input{width:16px;height:16px;accent-color:#66062D}
+/* consultores */
+.cons{border:1px solid var(--line);border-radius:12px;overflow:auto}
+table{border-collapse:collapse;width:100%;min-width:1040px}
+th{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut);text-align:left;padding:8px;background:#fafbfc;border-bottom:1px solid var(--line);white-space:nowrap}
+th.c,td.c{text-align:center}
+td{padding:8px;border-bottom:1px solid #f1f5f9;vertical-align:middle;font-size:12px}
+tr.grp td{background:#FBF5F8;font-size:11px;font-weight:700;color:var(--b);text-transform:uppercase;letter-spacing:.04em;cursor:pointer}
+tr.grp td small{color:var(--mut);font-weight:600;text-transform:none;letter-spacing:0;margin-left:6px}
+tr.hide{display:none}
+tr.sel td{background:#FFFBFC}
+.ck{width:18px;height:18px;border-radius:5px;border:1.5px solid #cbd5e1;display:inline-grid;place-items:center;cursor:pointer;color:#fff;font-size:12px}
+tr.sel .ck{background:var(--b);border-color:var(--b)}
+.nm b{display:block;font-size:12.5px}.nm small{color:var(--mut)}
+.rol{display:inline-block;font-size:10px;font-weight:700;border-radius:999px;padding:1px 8px;margin-left:4px;vertical-align:1px}
+.rol.l{background:var(--b);color:#fff}.rol.c{background:#F3E3EA;color:var(--b)}
+.cal-b{display:inline-block;font-size:10.5px;font-weight:700;border-radius:999px;padding:2px 8px;border:1px solid}
+.cal-b.ok{color:#15803d;background:#f0fdf4;border-color:#bbf7d0}.cal-b.fo{color:#b45309;background:#fffbeb;border-color:#fde68a}.cal-b.no{color:#94a3b8;background:#fff;border-color:#e2e8f0;border-style:dashed}
+.ag{display:grid;grid-template-columns:repeat(7,30px);gap:3px}
+.ag span{height:30px;border-radius:6px;display:grid;place-items:center;font-size:9.5px;font-weight:700;line-height:1.05;text-align:center;border:1px solid color-mix(in srgb,var(--c) 30%,#fff);background:color-mix(in srgb,var(--c) 12%,#fff);color:color-mix(in srgb,var(--c) 80%,#000)}
+.ag span.in-v{box-shadow:0 0 0 2px var(--b)}
+.ag span.nc{--c:#cbd5e1;background:#fff;border-style:dashed;color:#94a3b8}
+.aghd{display:grid;grid-template-columns:repeat(7,30px);gap:3px;font-size:9.5px;color:var(--mut);font-weight:700;text-transform:none;letter-spacing:0}
+.aghd span{text-align:center;line-height:1.1}.aghd span.in-v{color:var(--b)}
+.hrs{width:66px;height:32px;border:1px solid #dfe3ea;border-radius:8px;text-align:center;font:600 12px var(--font)}
+.hrs:disabled{background:#f8fafc;color:#cbd5e1}
+.warn{display:block;font-size:10.5px;color:#B91C1C;font-weight:600;margin-top:3px}
+/* resumen */
+.sum{border:1px solid var(--line);border-radius:12px;background:#fcfcfd;padding:12px 14px;display:grid;gap:8px}
+.sum-row{display:grid;grid-template-columns:minmax(0,1.2fr) 110px minmax(0,1.4fr) 140px;gap:10px;align-items:center;font-size:12px}
+.sum-row.h{font-size:10.5px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.mail{color:#334155}.mail.no{color:#be123c;font-weight:600}
+.gen{display:flex;flex-direction:column;gap:6px;font-size:12px}.gen div{display:flex;gap:8px;align-items:center}
+.bdg{display:inline-flex;font-size:10.5px;font-weight:700;border-radius:999px;padding:1px 8px}.bdg.p{background:#fff7ed;color:#c2410c;border:1px solid #fed7aa}.bdg.a{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0}
+.seg2{display:inline-flex;border:1px solid #dfe3ea;border-radius:10px;padding:3px;gap:3px}.seg2 span{padding:7px 14px;border-radius:8px;font-weight:600;font-size:12px;color:var(--mut);cursor:pointer}.seg2 span.on{background:var(--b);color:#fff}
+.ft{display:flex;justify-content:flex-end;gap:10px;padding:12px 18px;border-top:1px solid var(--line);background:#fafbfc}
+.btn{height:38px;padding:0 18px;border-radius:10px;font:700 12.5px var(--font);border:1px solid #dfe3ea;background:#fff;color:var(--b)}.btn.p{background:var(--b);border-color:var(--b);color:#fff}
+/* opcion B: indice lateral + resumen fijo */
+.lay{display:grid;grid-template-columns:200px minmax(0,1fr) 300px;gap:0}
+.idx{border-right:1px solid var(--line);padding:16px 12px;display:flex;flex-direction:column;gap:4px;background:#fcfafb}
+.idx a{display:flex;gap:8px;align-items:center;padding:8px 10px;border-radius:9px;font-size:12px;font-weight:600;color:#475569;text-decoration:none}
+.idx a i{font-style:normal;width:20px;height:20px;border-radius:50%;border:1.5px solid #D9BCCB;display:grid;place-items:center;font-size:10px;color:#B98AA0}
+.idx a.ok i{background:var(--asc);border-color:var(--asc);color:#fff}.idx a.now{background:#F3E3EA;color:var(--b)}.idx a.now i{border-color:var(--b);color:var(--b)}
+.side{border-left:1px solid var(--line);padding:16px;background:#fcfcfd;display:flex;flex-direction:column;gap:10px}
+.side h4{margin:0;font-size:11.5px;color:var(--b);text-transform:uppercase;letter-spacing:.05em}
+.kv{display:grid;grid-template-columns:90px 1fr;gap:4px 8px;font-size:12px}.kv span{color:var(--mut)}
+.rule{border:1px dashed #D9BCCB;border-radius:12px;padding:12px 14px;background:#fff;font-size:12px;color:#475569}
+.rule b{color:var(--b)}
+.tl{display:grid;grid-template-columns:120px repeat(3,1fr);gap:6px;margin-top:8px;font-size:11.5px}
+.tl div{padding:6px 8px;border-radius:8px;background:#f8fafc;text-align:center}.tl .h{background:none;font-weight:700;color:var(--mut);text-align:left}
+.tl .pr{background:#EFF6FF;color:#1D4ED8;font-weight:700}.tl .ex{background:#F0FDF4;color:#15803D;font-weight:700}
+@media(max-width:1000px){.lay{grid-template-columns:1fr}.idx,.side{border:0}.r4,.r3{grid-template-columns:1fr 1fr}}
+
+/* ---------- modal con el diseno de Asignar consultores ---------- */
+.m-hd{display:flex;align-items:center;gap:14px;padding:16px 18px;border-bottom:1px solid var(--line);background:linear-gradient(90deg,#FBF1F5,#fff 70%)}
+.m-ic{width:42px;height:42px;border-radius:12px;background:#F3E3EA;color:var(--b);display:grid;place-items:center}
+.m-hd b{display:block;font-size:17px;color:#1e293b}.m-hd small{color:var(--mut);font-size:12px}
+.m-x{margin-left:auto;width:34px;height:34px;border-radius:9px;border:1px solid var(--line);display:grid;place-items:center;color:#be123c;background:#fff}
+.m-bd{padding:16px 18px;display:grid;gap:14px}
+.m-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}.c3{grid-column:span 3}.c4{grid-column:span 4}.c6{grid-column:span 6}
+.m-sec{display:flex;align-items:center;gap:8px;color:var(--b);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}.m-sec::after{content:"";flex:1;height:1px;background:#e2e8f0}
+.m-chips{display:flex;align-items:center;flex-wrap:wrap;gap:8px}.m-lbl{font-size:12px;color:var(--mut);font-weight:600}
+.m-chip{display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:7px;font-size:12px;font-weight:600;border:1px solid #E5C9D4;background:#F6EAEF;color:var(--b);cursor:pointer}
+.m-chip:not(.on){background:#fff;color:#94a3b8;border-style:dashed;border-color:#e2e8f0}
+.m-hint{font-size:11px;color:#94a3b8}
+.m-search{display:flex;align-items:center;gap:10px;height:38px;border:1px solid #dfe3ea;border-radius:10px;padding:0 12px;color:#94a3b8;font-size:12.5px}
+.cons2{border:1px solid var(--line);border-radius:12px;overflow:auto;max-height:420px}
+.cons2 table{min-width:1080px}
+.cons2 th{background:#fafbfc;font-size:12px;text-transform:none;letter-spacing:0;color:#475569;font-weight:600;padding:10px 8px;position:sticky;top:0;z-index:1}
+.cons2 td{padding:10px 8px}
+.ck2{width:20px;height:20px;border-radius:6px;border:1.5px solid #cbd5e1;display:inline-grid;place-items:center;cursor:pointer;color:var(--b);font-size:12px;font-weight:800;background:#fff}
+tr.sel .ck2{border-color:var(--b);box-shadow:0 0 0 1px var(--b) inset}
+.rolp{display:inline-flex;height:26px;align-items:center;padding:0 10px;border:1px solid #e2e8f0;border-radius:999px;font-size:11.5px;font-weight:600;color:#94a3b8;white-space:nowrap}
+tr.sel .rolp.is-l,tr.sel .rolp.is-c{background:#F6EAEF;border-color:#E5C9D4;color:var(--b)}
+.notif{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fcfcfd}
+.notif-t{font-size:11.5px;font-weight:700;color:var(--b);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.notif-r{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.7fr) 120px minmax(0,1.3fr) 34px;gap:12px;align-items:center;padding:5px 0;font-size:12.5px}
+.notif-r b{font-weight:600;color:#1e293b}.notif-rol{color:var(--b);font-size:12px;font-weight:600}.notif-h{color:#475569;font-size:12px}
+.notif-m{color:#334155}.notif-m.no{color:#be123c;font-weight:600}
+.plus{width:30px;height:30px;border-radius:8px;border:1px solid rgba(102,6,45,.28);display:grid;place-items:center;color:var(--b);font-size:18px;background:#fff}
+.sw{display:flex !important;height:auto !important;margin-top:10px}
+.gen2{display:flex;flex-direction:column;gap:8px;font-size:12.5px;color:#334155}.gen2 div{display:flex;align-items:center;gap:8px}
+.m-ft{display:flex;justify-content:flex-end;gap:10px;padding:12px 18px;border-top:1px solid var(--line);background:#fafbfc}
+.b2{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 20px;border-radius:10px;font:700 12.5px var(--font);border:1px solid #dfe3ea;background:#fff;color:var(--b)}
+.b2.p{background:var(--b);border-color:var(--b);color:#fff}
+@media(max-width:900px){.c3,.c4,.c6{grid-column:span 12}.svgrid{grid-template-columns:1fr}.notif-r{grid-template-columns:1fr 1fr}}
+
+/* pestania agenda */
+.tabbox{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.tab-hd{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.tab-t{display:flex;align-items:center;gap:10px}.tab-t b{font-size:14px}.tab-t small{color:var(--mut);font-size:12px;margin-left:4px}
+.tab-ic{width:30px;height:30px;border-radius:9px;background:#F3E3EA;color:var(--b);display:grid;place-items:center;font-size:14px}
+.lc{margin-left:auto;display:inline-flex;gap:4px;padding:4px;border-radius:12px;background:#f1f2f5;border:1px solid #e8eaef}
+.lc-b{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 14px;border-radius:9px;font-size:12.5px;font-weight:700;color:#64748b;cursor:pointer}
+.lc-b.on{background:#fff;color:var(--b);box-shadow:0 1px 3px rgba(15,23,42,.10)}
+.lt-bar{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.lt-s{height:38px;border:1px solid #dfe3ea;border-radius:10px;display:flex;align-items:center;padding:0 12px;color:#94a3b8;width:320px;font-size:12.5px}
+.lt-f{width:190px}.lt-sp{flex:1}
+.b3{height:36px;padding:0 14px;border-radius:9px;border:1px solid #e2e8f0;background:#fff;font:700 12px var(--font);color:#334155}
+.b3.xl{color:#15803d}.b3.pdf{color:#b91c1c}.b3.add{color:var(--b)}
+.lt{border:1px solid var(--line);border-radius:12px;overflow:auto}
+.lt table{min-width:980px}.lt th{background:#fafbfc;font-size:12px;text-transform:none;letter-spacing:0;color:#475569;font-weight:600}
+.lt tr.g1 td{background:#FBF5F8;color:var(--b);font-weight:700;font-size:12.5px}
+.lt tr.g1 td small{color:var(--mut);font-weight:600;margin-left:8px}
+.lt tr.g2 td{background:#fcfcfd;color:#334155;font-weight:600;font-size:12px;padding-left:34px}
+.lt .svi{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:7px;color:#fff;margin-right:8px;vertical-align:-6px}
+.lt .svi svg{width:13px;height:13px}
+.av{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#eef0f3;color:#334155;font-size:10px;font-weight:700;margin-right:-4px;border:2px solid #fff}
+.av.l{background:var(--b);color:#fff}
+.tg{display:inline-flex;height:22px;align-items:center;padding:0 8px;border-radius:6px;background:#F6EAEF;color:var(--b);font-size:11px;font-weight:600;margin:1px 3px 1px 0}
+.st{display:inline-flex;font-size:11px;font-weight:700;border-radius:999px;padding:2px 10px;border:1px solid}
+.st.p{background:#FEF6E7;color:#A16207;border-color:#FDE3A7}.st.c{background:#ECFDF3;color:#15803D;border-color:#BBF7D0}.st.e{background:#EFF6FF;color:#1D4ED8;border-color:#BFDBFE}
+.dots{width:30px;height:30px;border-radius:8px;border:1px solid #e2e8f0;display:grid;place-items:center;color:#475569;font-weight:800;cursor:pointer;position:relative;background:#fff}
+.menu{position:absolute;right:0;top:34px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 10px 24px rgba(15,23,42,.12);padding:4px;z-index:5;min-width:130px;text-align:left;font-weight:600}
+.menu div{padding:7px 10px;border-radius:7px;font-size:12px;color:#334155}.menu div:hover{background:#F3E3EA;color:var(--b)}.menu div.del{color:#b91c1c}
+.hsub{display:block;font-size:10.5px;color:var(--mut)}
+</style></head><body>
+<h1>Boceto · Agenda de la V360 de proyecto + alta de visita</h1>
+<p class="note">Proyecto de ejemplo (1349) Implementación ISO 9001 / 14001 · Aguas Danone de Argentina S.A. · hoy 23/10/2026. Calendario con el diseño genérico (opción B). Los días editables (hábiles desde hoy) se pueden tocar para agregar una visita. Las visitas salen de <b>VCT_PROYECTOS_VISITAS</b> / <b>VCT_PROYECTOS_VISITAS_CONSULTORES</b>. El modal es <b>uno solo</b> (opción A: una columna con secciones numeradas). Interactivo: marcá consultores, cambiá servicio, fechas y estado. <b>Nada aplicado todavía.</b></p>
+
+<h2>1 · Pestaña Agenda de la V360 (Lista por defecto · Calendario)</h2>
+<div class="tabbox">
+  <div class="tab-hd"><div class="tab-t"><span class="tab-ic">▦</span><b>Agenda del proyecto</b><small>6 visitas · 72 h programadas · 8 h ejecutadas</small></div>
+    <div class="lc"><span class="lc-b on" data-lc="lista">☰ Lista</span><span class="lc-b" data-lc="cal">▦ Calendario</span></div></div>
+  <div data-pane="lista">
+    <div class="lt-bar"><div class="lt-s">⌕ Buscar visita, consultor o norma...</div><select class="in lt-f"><option>Todos los estados</option><option>Pendiente</option><option>Confirmada</option><option>Ejecutada</option></select>
+      <span class="lt-sp"></span><button class="b3 xl">▤ Excel</button><button class="b3 pdf">▤ PDF</button><button class="b3 add" data-addvis>＋ Agregar</button></div>
+    <div class="lt"><table><thead><tr><th>Fecha</th><th>Consultor(es)</th><th>Normas</th><th class="c">Horas</th><th class="c">Estado</th><th>Logística</th><th style="width:44px"></th></tr></thead><tbody id="ltbody"></tbody></table></div>
+    <div class="help">Agrupado por servicio como en Servicios; dentro de Auditoría y Capacitación, por instancia (nombre · lugar · fecha). Menú ⋮: Editar (abre el mismo modal con los datos) y Eliminar (confirmación; libera la agenda del consultor). Excel y PDF exportan lo filtrado. «Agregar» abre el modal con Fecha desde vacía para elegir.</div>
+  </div>
+  <div data-pane="cal" hidden>
+  <div class="cal">
+  <div class="bar"><span></span><div style="display:flex;gap:8px"><span class="seg"><span>‹</span><span><b>Octubre</b></span><span>›</span></span><span class="seg"><span class="on">Mes</span><span>Semana</span><span>Día</span></span></div></div>
+  <div class="leg"><span class="chipc" style="--c:var(--asc)">Visita confirmada</span><span class="chipc" style="--c:var(--asp)">Visita pendiente</span><span class="chipc" style="--c:#15803d">Ejecutada</span><span class="chipc" style="--c:var(--ferf)">Feriado fijo</span><span class="chipc" style="--c:var(--ferm)">Feriado movible</span><span class="chipc" style="--c:#cbd5e1;color:#94a3b8;background:#fff;border-style:dashed">No editable (pasado, sábado y domingo)</span></div>
+  <div class="wd"><div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div></div>
+  <div class="grid" id="pgrid"></div>
+</div>
+  </div>
+</div>
+
+<h2>2 · Modal «Nueva visita» (desde Agregar o al tocar un día editable del calendario)</h2>
+<div class="ov"><div class="dlg" id="dlg"></div></div>
+
+<h2>3 · Regla de horas (programadas → ejecutadas)</h2>
+<div class="rule">Cada día de visita vale <b>8 h por consultor</b> por defecto (se puede bajar; nunca más de días × 8). Al guardar, todo queda <b>programado</b>. A medida que pasan los días, el día ya transcurrido pasa a <b>ejecutado</b> (lo calcula la consulta contra la fecha de hoy; no hace falta un proceso aparte).
+  <div class="tl"><div class="h">Visita 26 y 27/10 (16 h)</div><div class="h">al guardar (23/10)</div><div class="h">el 27/10</div><div class="h">el 28/10</div>
+  <div class="h">26/10</div><div class="pr">8 h programadas</div><div class="ex">8 h ejecutadas</div><div class="ex">8 h ejecutadas</div>
+  <div class="h">27/10</div><div class="pr">8 h programadas</div><div class="pr">8 h programadas</div><div class="ex">8 h ejecutadas</div></div>
+</div>
+
+<script>
+var HOY=23, VIS={26:[["1349 · Visita · Gils Carbo, Martín A.",'var(--asc)']],27:[["1349 · Visita · Gils Carbo",'var(--asc)']],30:[["1349 · Auditoría interna · pendiente",'var(--asp)']],14:[["1349 · Visita ejecutada",'#15803d']]};
+function wd(d){return (d+3)%7}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;")}
+(function(){var h="";for(var i=0;i<4;i++)h+='<div class="cell empty"></div>';
+ for(var d=1;d<=31;d++){var we=wd(d)===0||wd(d)===6,past=d<HOY,fer=d===12,ed=!we&&!past&&!fer;
+  var cls=d===HOY?"today ed":fer?"past":we?"we":past?"past":"ed";
+  h+='<div class="cell '+cls+'" '+(ed?'title="Agregar visita el '+d+'/10"':'')+'><span class="n">'+d+'</span>'+(d===HOY?'<span class="hoy">HOY</span>':'')+
+  (fer?'<div class="ev" style="--c:var(--ferm)">Día del Respeto a la Diversidad Cultural</div>':'')+(VIS[d]||[]).map(function(e){return '<div class="ev" style="--c:'+e[1]+'">'+esc(e[0])+'</div>'}).join("")+(ed?'<span class="add">+</span>':'')+'</div>'}
+ document.getElementById("pgrid").innerHTML=h})();
+
+/* ---------- datos del modal ---------- */
+var NORMAS=[{k:"9001",t:"ISO 9001:2015"},{k:"14001",t:"ISO 14001:2015"}];
+var DN=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"],DIAS=[];for(var q=0;q<14;q++){var dd=23+q,mm=dd>31?11:10,dn=dd>31?dd-31:dd;DIAS.push({l:DN[(5+q)%7]+" "+dn,f:dn+"/"+mm+"/2026",we:((5+q)%7===0||(5+q)%7===6)});}
+function mkAg(base,ov){var r=[];for(var q=0;q<14;q++){r.push(ov[q]||(DIAS[q].we?"NC":base));}return r}
+var A={D:['var(--disp)','D<br>8h'],D4:['var(--disp)','D<br>4h'],ND:['var(--ocu)','ND'],NC:['','—'],OC:['var(--ocu)','Oc'],PO:['var(--pot)','Pot'],LI:['var(--lic)','Lic'],AS:['var(--asc)','Asig'],FE:['var(--ferm)','Fer'],OR:['var(--org)','Org']};
+var CONS=[
+ {id:1,n:"Gils Carbo, Silvia Estela",s:"Consultoría, Auditoría",rol:"l",cal:{9001:"ok",14001:"ok"},pr:4,ag:mkAg("D",{5:"D4"})},
+ {id:2,n:"Agustín, Norberto Raúl",s:"Consultoría",rol:"c",cal:{9001:"ok",14001:"no"},pr:2,ag:mkAg("D",{4:"OC"})},
+ {id:3,n:"Gioventu, Luis Miguel",s:"Consultoría, Auditoría",cal:{9001:"ok",14001:"fo"},pr:5,ag:mkAg("D",{0:"AS",6:"ND",7:"AS"})},
+ {id:4,n:"Gómez Sanz, Carolina",s:"Consultoría, Auditoría",cal:{9001:"no",14001:"ok"},pr:3,ag:mkAg("D",{3:"PO",4:"LI",5:"LI"})},
+ {id:5,n:"Grimaux, Sabrina",s:"Consultoría",cal:{9001:"ok",14001:"no"},pr:9,ag:mkAg("NC",{6:"D",7:"D"})}];
+var S={desde:3,hasta:4,serv:"CO",inst:"",nor:{"9001":true,"14001":true},sel:{1:true},hrs:{},est:"P",otros:false};
+var CALT={ok:"Calificado",fo:"En formación",no:"Sin calificación"};
+function dias(){return S.hasta-S.desde+1}
+function inV(i){return i>=S.desde&&i<=S.hasta}
+function win(){var r=[];for(var i=S.desde;i<S.desde+7;i++)r.push(i);return r}
+function disp(c){for(var i=S.desde;i<=S.hasta;i++){var a=c.ag[i];if(a!=="D"&&a!=="D4")return DIAS[i].l+": "+(a==="NC"?"no cargado":a==="ND"?"no disponible":a==="OC"?"ocupado":a==="PO"?"potencial":a==="LI"?"licencia":a==="AS"?"asignado a otro proyecto":a);}return ""}
+function sinCal(c){return NORMAS.some(function(n){return S.nor[n.k]&&c.cal[n.k]!=="ok"})}
+function nsel(){return CONS.filter(function(c){return S.sel[c.id]})}
+function fDate(i){return DIAS[i].f}
+var ICO={CO:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V4h8v3M3 12h18"/>',AU:'<path d="M9 5h6v3H9z"/><path d="M7 6H5v15h14V6h-2"/><path d="m9 15 2 2 4-4"/>',CA:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',SAVE:'<path d="M5 4h12l2 2v14H5z"/><path d="M8 4v6h8V4M8 20v-6h8v6"/>',CAL:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',SRCH:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>'};
+function svg(k,w){return '<svg viewBox="0 0 24 24" width="'+(w||16)+'" height="'+(w||16)+'" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+ICO[k]+'</svg>'}
+var INST={AU:[],CA:[["c1","Capacitación en auditor interno · Sede Microcentro · 05/11/2026"],["c2","Capacitación en requisitos legales · Planta Pilar · 19/11/2026"]]};
+(function(){var lug=["Planta Pilar","Sede central","Depósito Tortuguitas","Planta Córdoba","Oficina Rosario"];for(var i=1;i<=34;i++){var d=new Date(2026,10,2+i*7);INST.AU.push(["a"+i,(i%5===0?"Auditoría de certificación":"Auditoría interna "+i)+" · "+lug[i%lug.length]+" · "+("0"+d.getDate()).slice(-2)+"/"+("0"+(d.getMonth()+1)).slice(-2)+"/"+d.getFullYear()])}})();
+function mailOf(c){return c.id===2?"":c.n.split(",")[0].toLowerCase().replace(/ /g,"")+"@vocaturo.com.ar"}
+function H(c){return S.hrs[c.id]!=null?+S.hrs[c.id]:dias()*8}
+function head(){return '<div class="m-hd"><span class="m-ic">'+svg("CAL",18)+'</span><div><b>Nueva visita</b><small>Proyecto (1349) · Aguas Danone de Argentina S.A.</small></div><span class="m-x">×</span></div>'}
+function partDatos(){return '<div class="m-grid">'+
+ '<div class="f c4"><label>Tipo</label><div class="in ro">Visita</div></div><div class="f c4"><label>Subtipo</label><div class="in ro">Visita al cliente</div></div><div class="f c4"><label>Resultado</label><div class="in ro">'+(S.est==="C"?"Visita confirmada":"Visita programada")+'</div></div>'+
+ '<div class="f c3"><label>Fecha desde <em>*</em></label><select class="in" data-k="desde">'+[3,4,5,6,7].map(function(i){return '<option value="'+i+'"'+(i===S.desde?" selected":"")+'>'+fDate(i)+'</option>'}).join("")+'</select></div>'+
+ '<div class="f c3"><label>Fecha hasta <em>*</em></label><select class="in" data-k="hasta">'+[3,4,5,6,7,10].filter(function(i){return i>=S.desde}).map(function(i){return '<option value="'+i+'"'+(i===S.hasta?" selected":"")+'>'+fDate(i)+'</option>'}).join("")+'</select></div>'+
+ '<div class="f c3"><label>Días</label><div class="in ro">'+dias()+' día(s) · hasta '+dias()*8+' h c/u</div></div>'+
+ '<div class="f c3"><label>Estado <em>*</em></label><div class="est" data-k="est"><span data-v="P" class="p '+(S.est==="P"?"on":"")+'">Pendiente</span><span data-v="C" class="c '+(S.est==="C"?"on":"")+'">Confirmada</span></div></div></div>'}
+function partServ(){var sv=[["CO","Consultoría","co","Implementación ISO 9001 / 14001"],["AU","Auditoría","au",INST.AU.length+" auditorías"],["CA","Capacitación","ca",INST.CA.length+" capacitaciones"]],lst=INST[S.serv]||[];
+ return '<div class="m-sec">Servicio y normas de la visita</div>'+
+ '<div class="svgrid">'+sv.map(function(x){return '<span class="svbox '+(S.serv===x[0]?"on":"")+'" data-serv="'+x[0]+'"><span class="ico '+x[2]+'">'+svg(x[0],17)+'</span><span><b>'+x[1]+'</b><small>'+x[3]+'</small></span></span>'}).join("")+'</div>'+
+ (S.serv!=="CO"?'<div class="f"><label>'+(S.serv==="AU"?"Auditoría":"Capacitación")+' a la que se carga la visita <em>*</em></label><select class="in" data-k="inst"><option value="">Seleccione '+(S.serv==="AU"?"la auditoría":"la capacitación")+' ('+lst.length+')</option>'+lst.map(function(x){return '<option value="'+x[0]+'"'+(S.inst===x[0]?" selected":"")+'>'+esc(x[1])+'</option>'}).join("")+'</select></div>':'')+
+ '<div class="m-chips"><span class="m-lbl">Normas</span>'+NORMAS.map(function(n){return '<span class="m-chip '+(S.nor[n.k]?"on":"")+'" data-nor="'+n.k+'">'+(S.nor[n.k]?"✓ ":"")+n.t+'</span>'}).join("")+'<span class="m-hint">tocá para sacar o agregar una norma del proyecto</span></div>'}
+function partCons(){var ns=NORMAS.filter(function(n){return S.nor[n.k]});
+ var th='<tr><th style="width:44px"></th><th>Consultor</th>'+ns.map(function(n){return '<th>'+n.t+'</th>'}).join("")+'<th>Proyectos</th><th><div class="aghd">'+win().map(function(i){return '<span class="'+(inV(i)?"in-v":"")+'">'+DIAS[i].l.replace(" ","<br>")+'</span>'}).join("")+'</div></th><th>Rol</th><th style="width:84px">Horas</th></tr>';
+ function row(c,hide){var sel=!!S.sel[c.id],ds=disp(c);
+  return '<tr class="'+(sel?"sel ":"")+(hide?"hide ":"")+'"><td><span class="ck2" data-ck="'+c.id+'">'+(sel?"✓":"")+'</span></td>'+
+  '<td class="nm"><b>'+esc(c.n)+'</b><small>'+c.s+'</small>'+(sel&&ds?'<span class="warn">No disponible · '+ds+'</span>':'')+'</td>'+
+  ns.map(function(n){return '<td><span class="cal-b '+c.cal[n.k]+'">'+CALT[c.cal[n.k]]+'</span></td>'}).join("")+
+  '<td>'+c.pr+' en curso</td><td><div class="ag">'+win().map(function(i){var a=c.ag[i],x=A[a];return '<span class="'+(a==="NC"?"nc ":"")+(inV(i)?"in-v":"")+'" style="--c:'+(x[0]||"#cbd5e1")+'">'+x[1]+'</span>'}).join("")+'</div></td>'+
+  '<td><span class="rolp '+(c.rol==="l"?"is-l":c.rol==="c"?"is-c":"")+'">'+(c.rol==="l"?"Consultor líder":c.rol==="c"?"Consultor":"Sin asignar")+'</span></td>'+
+  '<td><input class="hrs" type="number" min="1" max="'+dias()*8+'" value="'+H(c)+'" data-h="'+c.id+'" '+(sel?"":"disabled")+'></td></tr>'}
+ var eq=CONS.filter(function(c){return c.rol}),ot=CONS.filter(function(c){return !c.rol}),cols=6+ns.length;
+ return '<div class="m-sec">Consultores de la visita</div>'+
+ '<div class="m-search">'+svg("SRCH",15)+'<span>Buscar consultor, servicio o norma...</span></div>'+
+ '<div class="cons2"><table><thead>'+th+'</thead><tbody>'+
+ '<tr class="grp"><td colspan="'+cols+'">Equipo del proyecto<small>líder y consultores asignados</small></td></tr>'+eq.map(function(c){return row(c,false)}).join("")+
+ '<tr class="grp" data-otros><td colspan="'+cols+'">'+(S.otros?"▾":"▸")+' Otros consultores con el servicio y las normas<small>'+ot.length+' · tocá para '+(S.otros?"ocultar":"ver")+'</small></td></tr>'+ot.map(function(c){return row(c,!S.otros)}).join("")+
+ '</tbody></table></div><div class="help">Agenda desde la fecha desde, 7 días seguidos (incluye sábado, domingo y feriados); en bordó, los días de la visita. D = disponible + horas · ND = no disponible · Oc = ocupado · Pot = potencial · Lic = licencia · Asig = asignado a otro proyecto · — = no cargado. Horas: por defecto días × 8, máximo días × 8.</div>'}
+function partDet(){var s=nsel(),falta=s.some(sinCal),nd=s.filter(function(c){return disp(c)});
+ return '<div class="notif"><div class="notif-t">Se notifica a</div>'+(s.length?s.map(function(c){var m=mailOf(c);return '<div class="notif-r"><b>'+esc(c.n)+'</b><span class="notif-rol">'+(c.rol==="l"?"Consultor líder":"Consultor")+'</span><span class="notif-h">'+H(c)+' h programadas</span><span class="notif-m '+(m?"":"no")+'">'+(m||"sin email cargado")+'</span>'+(m?'<span></span>':'<span class="plus">+</span>')+'</div>'}).join(""):'<div class="help">Ningún consultor seleccionado.</div>')+'</div>'+
+ (nd.length?'<div class="help req">'+nd.length+' consultor(es) no está(n) disponible(s) en esas fechas: no se puede guardar.</div>':'')+
+ '<div class="f" style="max-width:640px"><label>Con copia a</label><div class="in" style="color:#94a3b8">nombre@dominio.com; otro@dominio.com</div><div class="help">Opcional: va en copia del mail a los consultores.</div>'+
+ '<label class="sw"><input type="checkbox" checked data-k="mail"> Enviar mail a los consultores (plantilla Visita programada)</label></div>'+
+ '<div class="m-grid"><div class="f c6"><label>Observaciones de logística</label><textarea class="in ta" placeholder="Traslado, horario de ingreso, contacto en planta, viáticos…"></textarea></div>'+
+ '<div class="f c6"><label>Observaciones de calificación '+(falta?'<em>*</em>':'')+'</label><textarea class="in ta" placeholder="Por qué se asigna sin calificación, quién acompaña…"></textarea>'+(falta?'<div class="help req">Obligatorio: hay consultores sin calificación en alguna norma de la visita.</div>':'<div class="help">Opcional: todos los seleccionados están calificados.</div>')+'</div></div>'+
+ '<div class="m-sec">Al guardar se genera</div><div class="gen2">'+
+ '<div><span class="bdg '+(S.est==="C"?"a":"p")+'">'+(S.est==="C"?"Confirmada":"Pendiente")+'</span> '+s.length+' registro(s) en VCT_PROYECTOS_VISITAS (uno por consultor) · '+fDate(S.desde)+(dias()>1?' al '+fDate(S.hasta):'')+' · '+s.reduce(function(a,c){return a+H(c)},0)+' h programadas</div>'+
+ '<div><span class="bdg '+(S.est==="C"?"a":"p")+'">'+(S.est==="C"?"Asignado confirmado":"Asignado pendiente")+'</span> agenda de cada consultor (VCT_PRM_AGENDA_CONSULTOR) en los días de la visita</div>'+
+ '<div><span class="bdg a">Mail</span> «Visita programada» a los consultores (con copia, si se completa)</div></div>'}
+function foot(){var nd=nsel().some(function(c){return disp(c)});return '<div class="m-ft"><button class="b2">Cancelar</button><button class="b2 p" '+(nd?'style="opacity:.55" title="Hay consultores no disponibles"':'')+'>'+svg("SAVE",14)+'<span>Guardar y notificar</span></button></div>'}
+function render(){document.getElementById("dlg").innerHTML=head()+'<div class="m-bd">'+partDatos()+partServ()+partCons()+partDet()+'</div>'+foot()}
+document.addEventListener("click",function(e){var t=e.target;
+ var ck=t.closest("[data-ck]");if(ck){var id=+ck.dataset.ck;S.sel[id]=!S.sel[id];render();return}
+ if(t.closest("[data-otros]")){S.otros=!S.otros;render();return}
+ var sv=t.closest("[data-serv]");if(sv){S.serv=sv.dataset.serv;S.inst="";render();return}
+ var ins=t.closest("[data-inst]");if(ins){S.inst=ins.dataset.inst;render();return}
+ var nr=t.closest("[data-nor]");if(nr){S.nor[nr.dataset.nor]=!S.nor[nr.dataset.nor];render();return}
+ var es=t.closest("[data-k=est] span");if(es){S.est=es.dataset.v;render();return}
+});
+document.addEventListener("change",function(e){var t=e.target;if(t.dataset.k==="inst"){S.inst=t.value;return}if(t.dataset.k==="desde"){S.desde=+t.value;if(S.hasta<S.desde)S.hasta=S.desde;S.hrs={};render()}
+ if(t.dataset.k==="hasta"){S.hasta=+t.value;S.hrs={};render()}
+ if(t.dataset.h){var v=Math.max(1,Math.min(dias()*8,+t.value||0));S.hrs[t.dataset.h]=v;render()}});
+render();
+
+/* ---------- lista de visitas ---------- */
+var LV=[{g:"CO",gi:"",f:"14/10/2026",cons:[["SG","Gils Carbo, Silvia",1]],nor:["ISO 9001:2015"],hp:0,he:8,st:"e",log:"Planta Pilar · ingreso 9 h"},
+ {g:"CO",gi:"",f:"26/10 al 27/10/2026",cons:[["SG","Gils Carbo, Silvia",1],["NA","Agustín, Norberto",0]],nor:["ISO 9001:2015","ISO 14001:2015"],hp:32,he:0,st:"c",log:"Traslado en remis"},
+ {g:"CO",gi:"",f:"04/11/2026",cons:[["SG","Gils Carbo, Silvia",1]],nor:["ISO 14001:2015"],hp:8,he:0,st:"p",log:"—"},
+ {g:"AU",gi:"Auditoría interna · Planta Pilar · 10/11/2026",f:"10/11 al 11/11/2026",cons:[["LG","Gioventu, Luis",0]],nor:["ISO 9001:2015"],hp:16,he:0,st:"p",log:"Viáticos: 2 noches"},
+ {g:"AU",gi:"Auditoría de certificación · Sede central · 15/12/2026",f:"15/12/2026",cons:[["SG","Gils Carbo, Silvia",1]],nor:["ISO 9001:2015","ISO 14001:2015"],hp:8,he:0,st:"c",log:"—"},
+ {g:"CA",gi:"Capacitación en auditor interno · Sede Microcentro · 05/11/2026",f:"05/11/2026",cons:[["CG","Gómez Sanz, Carolina",0]],nor:["ISO 9001:2015"],hp:8,he:0,st:"p",log:"Proyector y sala"}];
+var GN={CO:["Consultoría","#8C1D47","CO"],AU:["Auditoría","#4A4849","AU"],CA:["Capacitación","#CF6F92","CA"]},STT={p:"Pendiente",c:"Confirmada",e:"Ejecutada"};
+function renderLista(){var h="",pg="",pi="";["CO","AU","CA"].forEach(function(g){var rows=LV.filter(function(v){return v.g===g});if(!rows.length)return;
+ var hp=rows.reduce(function(a,v){return a+v.hp},0),he=rows.reduce(function(a,v){return a+v.he},0);
+ h+='<tr class="g1"><td colspan="7"><span class="svi" style="background:'+GN[g][1]+'">'+svg(GN[g][2],13)+'</span>'+GN[g][0]+'<small>'+rows.length+' visita(s) · '+hp+' h programadas · '+he+' h ejecutadas</small></td></tr>';pi="";
+ rows.forEach(function(v,ix){if(v.gi&&v.gi!==pi){h+='<tr class="g2"><td colspan="7">'+esc(v.gi)+'</td></tr>';pi=v.gi}
+  var id=LV.indexOf(v);h+='<tr><td><b>'+v.f+'</b></td><td>'+v.cons.map(function(c){return '<span class="av '+(c[2]?"l":"")+'" title="'+c[1]+'">'+c[0]+'</span>'}).join("")+' <span style="margin-left:10px">'+v.cons.map(function(c){return c[1]}).join(", ")+'</span></td><td>'+v.nor.map(function(n){return '<span class="tg">'+n+'</span>'}).join("")+'</td>'+
+  '<td class="c"><b>'+(v.hp+v.he)+' h</b><span class="hsub">'+v.hp+' prog · '+v.he+' ejec</span></td><td class="c"><span class="st '+v.st+'">'+STT[v.st]+'</span></td><td>'+esc(v.log)+'</td>'+
+  '<td class="c"><span class="dots" data-dots="'+id+'">⋮</span></td></tr>'})});
+ document.getElementById("ltbody").innerHTML=h}
+document.addEventListener("click",function(e){var t=e.target;
+ var lc=t.closest("[data-lc]");if(lc){[].forEach.call(document.querySelectorAll("[data-lc]"),function(b){b.classList.toggle("on",b===lc)});[].forEach.call(document.querySelectorAll("[data-pane]"),function(p){p.hidden=p.dataset.pane!==lc.dataset.lc});return}
+ var dt=t.closest("[data-dots]");document.querySelectorAll(".menu").forEach(function(m){m.remove()});if(dt){var m=document.createElement("div");m.className="menu";m.innerHTML='<div>✎ Editar</div><div class="del">🗑 Eliminar</div>';dt.appendChild(m);return}
+ if(t.closest("[data-addvis]")){document.getElementById("dlg").scrollIntoView({behavior:"smooth"})}});
+renderLista();
+</script>
+</body></html>

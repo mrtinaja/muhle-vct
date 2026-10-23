@@ -44,7 +44,13 @@
    v35/v26 PL_V360_V2: plan - requiere atencion en grilla (item, responsable con iniciales, resaltado si es
      del usuario, vence), arbol con responsable solo iniciales, Excel / PDF en arbol y cronograma (vct-export v2),
      referencias del cronograma tambien arriba, titulo: tipo de plan - codigo del proyecto - nombre (- lugar).
-   Assets: css/vct-proyecto-v360.css?v=38  js/vct-proyecto-v360.js?v=30
+   v39/v31 PV_AGENDA_V1: pestania Agenda (Lista agrupada por servicio / Calendario) sobre VCT_PROYECTOS_VISITAS;
+     modal Nueva visita: fechas, servicio (instancia de auditoria / capacitacion), normas, consultores con calificacion
+     por norma, agenda de 7 dias, horas (8 h por dia), estado, observaciones y mail (PROYECTO_VISITA_CONSULTOR).
+     Una visita por consultor; valida disponibilidad (VCT_FN_AGENDA_CONSULTOR_RANGO) y bloqueo por licencia (51012).
+   v40/v32 PV_AGENDA_V1: permiso de agenda = el del plan (consultores del equipo, analista o EDIT); calendario solo
+     pendiente (amarillo) / confirmada (verde); modal con el diseno del boceto (aviso de no disponibles, "+" email).
+   Assets: css/vct-proyecto-v360.css?v=40  js/vct-proyecto-v360.js?v=32  (+ vct-calendario v44)
    No crea vistas, funciones ni tablas. ASCII. Re-ejecutable.
    ======================================================================== */
 USE [MuhlePROD];
@@ -84,9 +90,10 @@ BEGIN
             @ID_PROYECTO INT, @MSG VARCHAR(1000) = '', @ERR VARCHAR(1000) = '',
             @ASSETS VARCHAR(MAX);
 
-    SET @ASSETS = '<link rel="stylesheet" href="../css/vct-datagrid.css?v=30"><script src="../js/vct-export.js?v=2"></script><script src="../js/vct-datagrid.js?v=12"></script>'
+    SET @ASSETS = '<link rel="stylesheet" href="../css/vct-datagrid.css?v=30"><script src="../js/vct-export.js?v=plpdf2"></script><script src="../js/vct-datagrid.js?v=12"></script>'
                 + '<link rel="stylesheet" href="../css/vct-datepicker.css?v=1"><script src="../js/vct-datepicker.js?v=2"></script>'
-                + '<link rel="stylesheet" href="../css/vct-proyecto-v360.css?v=38"><script src="../js/vct-proyecto-v360.js?v=30"></script>';
+                + '<link rel="stylesheet" href="../css/vct-calendario.css?v=44"><script src="../js/vct-calendario.js?v=44"></script>'
+                + '<link rel="stylesheet" href="../css/vct-proyecto-v360.css?v=40"><script src="../js/vct-proyecto-v360.js?v=32"></script>';
 
     /* ---------- buffer: proyecto + comando ---------- */
     DECLARE @B_PROY VARCHAR(100), @B_FLAG VARCHAR(10), @B_CMD VARCHAR(100), @B_SEL3 VARCHAR(100),
@@ -1574,6 +1581,368 @@ BEGIN
         BEGIN
             UPDATE dbo.VCT_PROYECTOS_DOCUMENTOS SET ACTIVO = 0, FECHA_BAJA = GETDATE(), USUARIO_BAJA = @IAGENTE WHERE ID = @DOC_OK;
             SET @MSG = 'Documento eliminado.';
+        END;
+    END;
+
+    /* ======================= AGENDA: comandos (PV_AGENDA_V1) =======================
+       PV_AG_GUARDAR: alta (IDSELEC03 vacio / 0) o edicion (IDSELEC03 = ID de VCT_PROYECTOS_VISITAS).
+         TEXTO11 desde, TEXTO12 hasta (aaaa-mm-dd), TEXTO13 ID de VCT_PROYECTOS_SERVICIOS (instancia),
+         TEXTO14 normas "id,id", TEXTO15 consultores "id:horas;id:horas", TEXTO16 estado P / C,
+         TEXTO17 detalle, TEXTO18 observaciones de logistica, TEXTO19 observaciones de calificacion,
+         TEXTO20 enviar mail (1 / 0), TEXTO21 con copia a, TEXTO22 emails nuevos "id:email;id:email" (VCT_EMAILS, PRINCIPAL NO).
+         Alta: una VCT_PROYECTOS_VISITAS por consultor (+ VISITAS_CONSULTORES + VISITAS_NORMAS). Edicion: la visita y sus consultores.
+         Horas: hasta 8 por dia de visita; disponibilidad del consultor por VCT_FN_AGENDA_CONSULTOR_RANGO + VCT_PRM_AGENDA_CONSULTOR
+         (dia DISPONIBLE, no feriado, capacidad menos lo ya asignado). Calificacion: VCT_CONSULTORES_NORMAS (norma + servicio);
+         si algun consultor no esta calificado, las observaciones de calificacion son obligatorias.
+         Mail opcional a cada consultor: plantilla PROYECTO_VISITA_CONSULTOR (VCT_MAIN_SEND_EMAIL).
+       PV_AG_BORRAR: IDSELEC03 = ID de la visita (solo visitas que no empezaron y sin horas registradas).
+       Permiso: consultores del equipo, analista del proyecto o EDIT de PROYECTOS (@PUEDE_PLAN). Vuelve a la pestania Agenda. */
+    IF @B_FLAG = '1' AND @B_CMD IN ('PV_AG_GUARDAR','PV_AG_BORRAR')
+    BEGIN
+        DECLARE @AG_T14 VARCHAR(4000) = '', @AG_T15 VARCHAR(4000) = '', @AG_T16 VARCHAR(4000) = '', @AG_T17 VARCHAR(4000) = '',
+                @AG_T18 VARCHAR(4000) = '', @AG_T19 VARCHAR(4000) = '', @AG_T20 VARCHAR(4000) = '', @AG_T21 VARCHAR(4000) = '', @AG_T22 VARCHAR(4000) = '';
+        SELECT TOP 1 @AG_T14 = LTRIM(RTRIM(ISNULL(TEXTO14,''))), @AG_T15 = LTRIM(RTRIM(ISNULL(TEXTO15,''))), @AG_T16 = LTRIM(RTRIM(ISNULL(TEXTO16,''))),
+                     @AG_T17 = LTRIM(RTRIM(ISNULL(TEXTO17,''))), @AG_T18 = LTRIM(RTRIM(ISNULL(TEXTO18,''))), @AG_T19 = LTRIM(RTRIM(ISNULL(TEXTO19,''))),
+                     @AG_T20 = LTRIM(RTRIM(ISNULL(TEXTO20,''))), @AG_T21 = LTRIM(RTRIM(ISNULL(TEXTO21,''))), @AG_T22 = LTRIM(RTRIM(ISNULL(TEXTO22,'')))
+        FROM dbo.VCT_BUFFER WITH(NOLOCK) WHERE PAR_KEY = @IPKEYJOB;
+        UPDATE dbo.VCT_BUFFER SET FLAG01 = '0', TEXTO30 = NULL, IDSELEC03 = NULL, TEXTO11 = NULL, TEXTO12 = NULL, TEXTO13 = NULL, TEXTO14 = NULL,
+               TEXTO15 = NULL, TEXTO16 = NULL, TEXTO17 = NULL, TEXTO18 = NULL, TEXTO19 = NULL, TEXTO20 = NULL, TEXTO21 = NULL, TEXTO22 = NULL
+        WHERE PAR_KEY = @IPKEYJOB;
+        SET @VOLVER = 'agenda';
+
+        DECLARE @AG_ID INT, @AG_DES DATETIME, @AG_HAS DATETIME, @AG_PS INT, @AG_SRV INT, @AG_PS_INI DATETIME, @AG_PS_FIN DATETIME,
+                @AG_LUGAR VARCHAR(300) = '', @AG_DIAS INT = 0, @AG_EST VARCHAR(20) = 'PENDIENTE', @AG_X VARCHAR(1000) = '',
+                @AG_L VARCHAR(4000), @AG_P INT, @AG_PAR VARCHAR(400), @AG_Q INT, @AG_A VARCHAR(100), @AG_B VARCHAR(300),
+                @AG_I INT = 0, @AG_C INT, @AG_HR NUMERIC(9,2), @AG_LID BIT, @AG_VID INT, @AG_NEW INT, @AG_ORIG_N INT = 0, @AG_NG INT = 0,
+                @AG_V_IDENT BIT = ISNULL(COLUMNPROPERTY(OBJECT_ID('dbo.VCT_PROYECTOS_VISITAS'), 'ID', 'IsIdentity'), 0),
+                @AG_VC_IDENT BIT = ISNULL(COLUMNPROPERTY(OBJECT_ID('dbo.VCT_PROYECTOS_VISITAS_CONSULTORES'), 'ID', 'IsIdentity'), 0),
+                @AG_VN_IDENT BIT = ISNULL(COLUMNPROPERTY(OBJECT_ID('dbo.VCT_PROYECTOS_VISITAS_NORMAS'), 'ID', 'IsIdentity'), 0);
+        DECLARE @AGC TABLE (ORD INT IDENTITY(1,1), CONS INT, HORAS NUMERIC(9,2), LIDER BIT, NOM VARCHAR(300), MAIL VARCHAR(300));
+        DECLARE @AGN TABLE (ID_NORMA INT);
+        IF @B_SEL3 <> '' AND @B_SEL3 <> '0' AND PATINDEX('%[^0-9]%', @B_SEL3) = 0 AND LEN(@B_SEL3) <= 9 SET @AG_ID = CONVERT(INT, @B_SEL3);
+
+        IF @ID_PROYECTO IS NULL SET @ERR = 'No hay proyecto seleccionado.'
+        ELSE IF @PUEDE_PLAN = 0 SET @ERR = 'No tiene permiso para modificar la agenda del proyecto.'
+        ELSE IF @B_CMD = 'PV_AG_BORRAR' AND @AG_ID IS NULL SET @ERR = 'Falta la visita.'
+        ELSE IF @AG_ID IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.VCT_PROYECTOS_VISITAS WITH(NOLOCK) WHERE ID = @AG_ID AND ID_PROYECTO = @ID_PROYECTO)
+            SET @ERR = 'La visita no es de este proyecto.'
+        ELSE IF @AG_ID IS NOT NULL AND EXISTS (SELECT 1 FROM dbo.VCT_PROYECTOS_VISITAS WITH(NOLOCK) WHERE ID = @AG_ID AND FECHA_DESDE < @HOY)
+            SET @ERR = 'La visita ya empez' + CHAR(243) + ': no se puede ' + CASE WHEN @B_CMD = 'PV_AG_BORRAR' THEN 'eliminar' ELSE 'editar' END + '.'
+        ELSE IF @AG_ID IS NOT NULL AND EXISTS (SELECT 1 FROM dbo.VCT_PROYECTOS_VISITAS_REGISTRO WITH(NOLOCK) WHERE ID_VISITA = @AG_ID)
+            SET @ERR = 'La visita tiene horas registradas: no se puede ' + CASE WHEN @B_CMD = 'PV_AG_BORRAR' THEN 'eliminar' ELSE 'editar' END + '.';
+
+        /* ---------- eliminar ---------- */
+        IF @ERR = '' AND @B_CMD = 'PV_AG_BORRAR'
+        BEGIN
+            BEGIN TRY
+                BEGIN TRAN;
+                DELETE FROM dbo.VCT_PROYECTOS_VISITAS_NORMAS WHERE ID_VISITA = @AG_ID;
+                DELETE FROM dbo.VCT_PROYECTOS_VISITAS_CONSULTORES WHERE ID_VISITA = @AG_ID;
+                DELETE FROM dbo.VCT_PROYECTOS_VISITAS WHERE ID = @AG_ID AND ID_PROYECTO = @ID_PROYECTO;
+                COMMIT;
+                SET @MSG = 'Visita eliminada: se liber' + CHAR(243) + ' la agenda del consultor.';
+            END TRY
+            BEGIN CATCH
+                IF @@TRANCOUNT > 0 ROLLBACK;
+                SET @ERR = LEFT('No se pudo eliminar la visita: ' + ERROR_MESSAGE(), 1000);
+            END CATCH;
+        END;
+
+        /* ---------- guardar: lectura y validaciones ---------- */
+        IF @ERR = '' AND @B_CMD = 'PV_AG_GUARDAR'
+        BEGIN
+            IF @AG_ID IS NOT NULL SELECT @AG_ORIG_N = COUNT(*) FROM dbo.VCT_PROYECTOS_VISITAS_CONSULTORES WITH(NOLOCK) WHERE ID_VISITA = @AG_ID;
+            IF @B_T11 LIKE '[12][0-9][0-9][0-9]-[01][0-9]-[0-3][0-9]' AND ISDATE(REPLACE(@B_T11,'-','')) = 1 SET @AG_DES = CONVERT(DATETIME, REPLACE(@B_T11,'-',''), 112);
+            IF @B_T12 = '' SET @AG_HAS = @AG_DES
+            ELSE IF @B_T12 LIKE '[12][0-9][0-9][0-9]-[01][0-9]-[0-3][0-9]' AND ISDATE(REPLACE(@B_T12,'-','')) = 1 SET @AG_HAS = CONVERT(DATETIME, REPLACE(@B_T12,'-',''), 112);
+            IF @B_T13 <> '' AND PATINDEX('%[^0-9]%', @B_T13) = 0 AND LEN(@B_T13) <= 9 SET @AG_PS = CONVERT(INT, @B_T13);
+            SELECT @AG_SRV = S.ID_SERVICIO, @AG_PS_INI = S.FECHA_INICIO, @AG_PS_FIN = S.FECHA_FIN, @AG_LUGAR = LTRIM(RTRIM(ISNULL(S.LUGAR,'')))
+            FROM dbo.VCT_PROYECTOS_SERVICIOS S WITH(NOLOCK) WHERE S.ID = @AG_PS AND S.ID_PROYECTO = @ID_PROYECTO;
+            SET @AG_EST = CASE WHEN UPPER(@AG_T16) = 'C' THEN 'CONFIRMADO' ELSE 'PENDIENTE' END;
+            IF @AG_DES IS NOT NULL AND @AG_HAS IS NOT NULL SET @AG_DIAS = DATEDIFF(DAY, @AG_DES, @AG_HAS) + 1;
+
+            /* normas: solo las del proyecto */
+            SET @AG_L = @AG_T14 + ',';
+            SET @AG_P = CHARINDEX(',', @AG_L);
+            WHILE @AG_P > 0
+            BEGIN
+                SET @AG_PAR = LTRIM(RTRIM(LEFT(@AG_L, @AG_P - 1)));
+                SET @AG_L = SUBSTRING(@AG_L, @AG_P + 1, 4000);
+                IF @AG_PAR <> '' AND PATINDEX('%[^0-9]%', @AG_PAR) = 0 AND LEN(@AG_PAR) <= 9
+                   AND NOT EXISTS (SELECT 1 FROM @AGN WHERE ID_NORMA = CONVERT(INT, @AG_PAR))
+                   AND EXISTS (SELECT 1 FROM dbo.VCT_PROYECTOS_NORMAS PN WITH(NOLOCK) WHERE PN.ID_PROYECTO = @ID_PROYECTO AND PN.ID_NORMA = CONVERT(INT, @AG_PAR) AND ISNULL(PN.ESTADO,'ACTIVA') = 'ACTIVA')
+                    INSERT INTO @AGN (ID_NORMA) VALUES (CONVERT(INT, @AG_PAR));
+                SET @AG_P = CHARINDEX(',', @AG_L);
+            END;
+
+            /* consultores "id:horas" */
+            SET @AG_L = @AG_T15 + ';';
+            SET @AG_P = CHARINDEX(';', @AG_L);
+            WHILE @AG_P > 0
+            BEGIN
+                SET @AG_PAR = LTRIM(RTRIM(LEFT(@AG_L, @AG_P - 1)));
+                SET @AG_L = SUBSTRING(@AG_L, @AG_P + 1, 4000);
+                SET @AG_Q = CHARINDEX(':', @AG_PAR);
+                IF @AG_Q > 1
+                BEGIN
+                    SET @AG_A = LTRIM(RTRIM(LEFT(@AG_PAR, @AG_Q - 1)));
+                    SET @AG_B = REPLACE(LTRIM(RTRIM(SUBSTRING(@AG_PAR, @AG_Q + 1, 50))), ',', '.');
+                    IF PATINDEX('%[^0-9]%', @AG_A) = 0 AND LEN(@AG_A) BETWEEN 1 AND 9
+                       AND @AG_B <> '' AND @AG_B <> '.' AND PATINDEX('%[^0-9.]%', @AG_B) = 0 AND @AG_B NOT LIKE '%.%.%' AND LEN(@AG_B) <= 7
+                       AND NOT EXISTS (SELECT 1 FROM @AGC WHERE CONS = CONVERT(INT, @AG_A))
+                        INSERT INTO @AGC (CONS, HORAS, LIDER, NOM, MAIL)
+                        SELECT C.ID, CONVERT(NUMERIC(9,2), @AG_B),
+                               CASE WHEN EXISTS (SELECT 1 FROM dbo.VCT_PROYECTOS_EQUIPO EQ WITH(NOLOCK)
+                                                 INNER JOIN dbo.VCT_PRM_PROYECTOS_ROLES R WITH(NOLOCK) ON R.ID = EQ.ID_ROL AND R.CODIGO = 'CONSULTOR_LIDER'
+                                                 WHERE EQ.ID_PROYECTO = @ID_PROYECTO AND EQ.ESTADO = 'ACTIVO' AND EQ.TIPO_MIEMBRO = 'CONSULTOR' AND EQ.ID_CONSULTOR = C.ID) THEN 1 ELSE 0 END,
+                               LTRIM(RTRIM(ISNULL(CONVERT(VARCHAR(150),C.APELLIDOS),'') + ', ' + ISNULL(CONVERT(VARCHAR(150),C.NOMBRES),''))),
+                               ISNULL((SELECT TOP 1 LTRIM(RTRIM(M.EMAIL)) FROM dbo.VCT_EMAILS M WITH(NOLOCK)
+                                       WHERE M.TIPO_ENTIDAD = 'CONSULTOR' AND M.ID_ENTIDAD = C.ID AND LTRIM(RTRIM(ISNULL(M.EMAIL,''))) <> ''
+                                       ORDER BY CASE WHEN M.PRINCIPAL = 'SI' THEN 0 ELSE 1 END, M.ID), '')
+                        FROM dbo.VCT_CONSULTORES C WITH(NOLOCK)
+                        WHERE C.ID = CONVERT(INT, @AG_A) AND UPPER(ISNULL(C.ESTADO,'ACTIVO')) = 'ACTIVO';
+                END;
+                SET @AG_P = CHARINDEX(';', @AG_L);
+            END;
+
+            /* emails nuevos de los consultores "id:email" (se graban con PRINCIPAL NO, como al asignar) */
+            SET @AG_L = @AG_T22 + ';';
+            SET @AG_P = CHARINDEX(';', @AG_L);
+            WHILE @AG_P > 0
+            BEGIN
+                SET @AG_PAR = LTRIM(RTRIM(LEFT(@AG_L, @AG_P - 1)));
+                SET @AG_L = SUBSTRING(@AG_L, @AG_P + 1, 4000);
+                SET @AG_Q = CHARINDEX(':', @AG_PAR);
+                IF @AG_Q > 1
+                BEGIN
+                    SET @AG_A = LTRIM(RTRIM(LEFT(@AG_PAR, @AG_Q - 1)));
+                    SET @AG_B = LTRIM(RTRIM(SUBSTRING(@AG_PAR, @AG_Q + 1, 300)));
+                    IF PATINDEX('%[^0-9]%', @AG_A) = 0 AND LEN(@AG_A) BETWEEN 1 AND 9
+                       AND LEN(@AG_B) <= 100 AND @AG_B LIKE '%_@_%._%' AND CHARINDEX(' ', @AG_B) = 0 AND @AG_B NOT LIKE '%@%@%'
+                        UPDATE @AGC SET MAIL = @AG_B WHERE CONS = CONVERT(INT, @AG_A) AND MAIL = '';
+                END;
+                SET @AG_P = CHARINDEX(';', @AG_L);
+            END;
+
+            IF @AG_DES IS NULL SET @ERR = 'Fecha desde es obligatoria.'
+            ELSE IF @AG_HAS IS NULL SET @ERR = 'Fecha hasta no es v' + CHAR(225) + 'lida.'
+            ELSE IF @AG_HAS < @AG_DES SET @ERR = 'Fecha hasta no puede ser anterior a Fecha desde.'
+            ELSE IF @AG_DES < @HOY SET @ERR = 'Fecha desde no puede ser anterior a hoy.'
+            ELSE IF @AG_DIAS > 31 SET @ERR = 'La visita no puede durar m' + CHAR(225) + 's de 31 d' + CHAR(237) + 'as.'
+            ELSE IF @AG_SRV IS NULL SET @ERR = 'Servicio es obligatorio: elija el servicio (y la auditor' + CHAR(237) + 'a o capacitaci' + CHAR(243) + 'n) de la visita.'
+            ELSE IF @AG_PS_INI IS NOT NULL AND @AG_DES < CONVERT(DATETIME, CONVERT(DATE, @AG_PS_INI))
+                SET @ERR = 'La visita no puede empezar antes del inicio del servicio (' + CONVERT(VARCHAR(10), @AG_PS_INI, 103) + ').'
+            ELSE IF @AG_PS_FIN IS NOT NULL AND @AG_HAS > CONVERT(DATETIME, CONVERT(DATE, @AG_PS_FIN))
+                SET @ERR = 'La visita no puede terminar despu' + CHAR(233) + 's del fin del servicio (' + CONVERT(VARCHAR(10), @AG_PS_FIN, 103) + ').'
+            ELSE IF NOT EXISTS (SELECT 1 FROM @AGN) SET @ERR = 'Norma es obligatoria: deje al menos una norma del proyecto.'
+            ELSE IF NOT EXISTS (SELECT 1 FROM @AGC) SET @ERR = 'Consultor es obligatorio: marque al menos uno.'
+            ELSE IF @AG_ID IS NOT NULL AND (SELECT COUNT(*) FROM @AGC) > CASE WHEN @AG_ORIG_N > 1 THEN @AG_ORIG_N ELSE 1 END
+                SET @ERR = 'Al editar, la visita conserva su cantidad de consultores. Para sumar otro consultor use Agregar.'
+            ELSE IF EXISTS (SELECT 1 FROM @AGC WHERE HORAS <= 0 OR HORAS > @AG_DIAS * 8)
+            BEGIN
+                SELECT TOP 1 @ERR = 'Horas de ' + NOM + ': mayor a 0 y hasta ' + CONVERT(VARCHAR(10), @AG_DIAS * 8) + ' (8 h por d' + CHAR(237) + 'a de visita).'
+                FROM @AGC WHERE HORAS <= 0 OR HORAS > @AG_DIAS * 8 ORDER BY ORD;
+            END;
+
+            /* calificacion: sin fila en VCT_CONSULTORES_NORMAS para la norma y el servicio -> observaciones obligatorias */
+            IF @ERR = '' AND @AG_T19 = ''
+                SELECT TOP 1 @ERR = 'Observaciones de calificaci' + CHAR(243) + 'n es obligatorio: ' + C.NOM + ' no est' + CHAR(225) + ' calificado en '
+                                  + ISNULL(N.DESCRIPCION, 'una norma') + ' para este servicio.'
+                FROM @AGC C CROSS JOIN @AGN AN
+                LEFT JOIN dbo.VCT_PRM_NORMAS N WITH(NOLOCK) ON N.ID = AN.ID_NORMA
+                WHERE NOT EXISTS (SELECT 1 FROM dbo.VCT_CONSULTORES_NORMAS CN WITH(NOLOCK)
+                                  WHERE CN.ID_CONSULTOR = C.CONS AND CN.ID_NORMA = AN.ID_NORMA AND CN.ID_SERVICIO = @AG_SRV
+                                    AND LTRIM(RTRIM(ISNULL(CN.CALIFICACION,''))) <> '')
+                ORDER BY C.ORD, N.DESCRIPCION;
+
+            /* disponibilidad: cada dia de la visita, horas del dia (horas / dias) <= capacidad libre del consultor */
+            IF @ERR = ''
+                SELECT TOP 1 @ERR = C.NOM + ' no est' + CHAR(225) + ' disponible el ' + CONVERT(VARCHAR(10), R.FECHA, 103) + ' ('
+                     + CASE WHEN ISNULL(CL.IsHoliday, 0) = 1 THEN 'feriado'
+                            WHEN AG.TIPO IS NULL THEN 'agenda sin cargar'
+                            WHEN AG.TIPO <> 'DISPONIBLE' THEN LOWER(REPLACE(AG.TIPO, '_', ' '))
+                            ELSE 'le quedan ' + CONVERT(VARCHAR(20), CONVERT(DECIMAL(9,1), X.LIBRE)) + ' h de ' + CONVERT(VARCHAR(20), CONVERT(DECIMAL(9,1), ISNULL(AG.HORAS_CAPACIDAD, 8))) END
+                     + '; la visita pide ' + CONVERT(VARCHAR(20), CONVERT(DECIMAL(9,1), C.HORAS / @AG_DIAS)) + ' h por d' + CHAR(237) + 'a).'
+                FROM @AGC C
+                CROSS APPLY dbo.VCT_FN_AGENDA_CONSULTOR_RANGO(C.CONS, CONVERT(DATE, @AG_DES), CONVERT(DATE, @AG_HAS)) R
+                LEFT JOIN dbo.VCT_PRM_AGENDA_CONSULTOR AG WITH(NOLOCK) ON AG.ID_CONSULTOR = C.CONS AND AG.FECHA = R.FECHA
+                LEFT JOIN dbo.Calendar CL WITH(NOLOCK) ON CL.Fecha = R.FECHA
+                OUTER APPLY (SELECT SUM(ISNULL(VC.HORAS_PLANIFICADAS, 0) / NULLIF(COALESCE(NULLIF(V.DIAS, 0), DATEDIFF(DAY, V.FECHA_DESDE, ISNULL(V.FECHA_HASTA, V.FECHA_DESDE)) + 1), 0)) AS H
+                             FROM dbo.VCT_PROYECTOS_VISITAS V WITH(NOLOCK)
+                             INNER JOIN dbo.VCT_PROYECTOS_VISITAS_CONSULTORES VC WITH(NOLOCK) ON VC.ID_VISITA = V.ID AND VC.ID_CONSULTOR = C.CONS
+                             WHERE V.ID = @AG_ID AND R.FECHA BETWEEN CONVERT(DATE, V.FECHA_DESDE) AND CONVERT(DATE, ISNULL(V.FECHA_HASTA, V.FECHA_DESDE))) OWN
+                CROSS APPLY (SELECT CASE WHEN ISNULL(CL.IsHoliday, 0) = 1 OR ISNULL(AG.TIPO, '') <> 'DISPONIBLE' THEN 0
+                                         ELSE ISNULL(AG.HORAS_CAPACIDAD, 8) - CASE WHEN R.ESTADO = 'ASIGNADO' THEN ISNULL(R.HORAS, 0) ELSE 0 END + ISNULL(OWN.H, 0) END AS LIBRE) X
+                WHERE X.LIBRE + 0.05 < C.HORAS / @AG_DIAS
+                ORDER BY C.ORD, R.FECHA;
+            /* dias sin fila en el calendario (dbo.Calendar) */
+            IF @ERR = '' AND (SELECT COUNT(*) FROM dbo.Calendar WITH(NOLOCK) WHERE Fecha BETWEEN CONVERT(DATE, @AG_DES) AND CONVERT(DATE, @AG_HAS)) < @AG_DIAS
+                SET @ERR = 'Faltan d' + CHAR(237) + 'as de la visita en el calendario (dbo.Calendar).';
+
+            /* mail: cada consultor necesita un email; con copia a: direcciones validas */
+            IF @ERR = '' AND @AG_T20 = '1'
+                SELECT TOP 1 @ERR = NOM + ' no tiene email: agr' + CHAR(233) + 'guelo o destilde Enviar mail.' FROM @AGC WHERE MAIL = '' ORDER BY ORD;
+            IF @ERR = '' AND @AG_T20 = '1' AND @AG_T21 <> ''
+            BEGIN
+                SET @AG_L = REPLACE(@AG_T21, ',', ';') + ';';
+                SET @AG_P = CHARINDEX(';', @AG_L);
+                WHILE @AG_P > 0 AND @ERR = ''
+                BEGIN
+                    SET @AG_PAR = LTRIM(RTRIM(LEFT(@AG_L, @AG_P - 1)));
+                    SET @AG_L = SUBSTRING(@AG_L, @AG_P + 1, 4000);
+                    IF @AG_PAR <> '' AND NOT (@AG_PAR LIKE '%_@_%._%' AND CHARINDEX(' ', @AG_PAR) = 0 AND @AG_PAR NOT LIKE '%@%@%')
+                        SET @ERR = 'Con copia a: "' + LEFT(@AG_PAR, 100) + '" no es una direcci' + CHAR(243) + 'n v' + CHAR(225) + 'lida.';
+                    SET @AG_P = CHARINDEX(';', @AG_L);
+                END;
+                SET @AG_T21 = REPLACE(@AG_T21, ',', ';');
+            END;
+        END;
+
+        /* ---------- guardar ---------- */
+        IF @ERR = '' AND @B_CMD = 'PV_AG_GUARDAR'
+        BEGIN
+            BEGIN TRY
+                BEGIN TRAN;
+                /* emails nuevos de los consultores */
+                INSERT INTO dbo.VCT_EMAILS (TIPO_ENTIDAD, ID_ENTIDAD, EMAIL, PRINCIPAL, OBSERVACIONES)
+                SELECT 'CONSULTOR', C.CONS, C.MAIL, 'NO', NULL FROM @AGC C
+                WHERE C.MAIL <> '' AND NOT EXISTS (SELECT 1 FROM dbo.VCT_EMAILS M WITH(NOLOCK) WHERE M.TIPO_ENTIDAD = 'CONSULTOR' AND M.ID_ENTIDAD = C.CONS
+                                                   AND LOWER(LTRIM(RTRIM(ISNULL(M.EMAIL,'')))) = LOWER(C.MAIL));
+                SET @AG_I = 0;
+                WHILE 1 = 1
+                BEGIN
+                    SELECT TOP 1 @AG_I = ORD, @AG_C = CONS, @AG_HR = HORAS, @AG_LID = LIDER FROM @AGC WHERE ORD > @AG_I ORDER BY ORD;
+                    IF @@ROWCOUNT = 0 BREAK;
+                    /* la visita: en la edicion, la misma para todos sus consultores; en el alta, una por consultor */
+                    IF @AG_ID IS NOT NULL SET @AG_VID = @AG_ID
+                    ELSE
+                    BEGIN
+                        IF @AG_V_IDENT = 1
+                        BEGIN
+                            INSERT INTO dbo.VCT_PROYECTOS_VISITAS (ID_PROYECTO, ID_PROYECTO_SERVICIO, FECHA_DESDE, FECHA_HASTA, DIAS, LUGAR, DESCRIPCION,
+                                   OBSERV_LOGISTICA, OBSERV_CALIF, ESTADO, FECHA_ALTA, USUARIO_ALTA)
+                            VALUES (@ID_PROYECTO, @AG_PS, @AG_DES, @AG_HAS, @AG_DIAS, NULLIF(@AG_LUGAR,''), NULLIF(LEFT(@AG_T17,1000),''),
+                                   NULLIF(LEFT(@AG_T18,400),''), NULLIF(LEFT(@AG_T19,400),''), @AG_EST, GETDATE(), @IAGENTE);
+                            SET @AG_VID = SCOPE_IDENTITY();
+                        END
+                        ELSE
+                        BEGIN
+                            SELECT @AG_NEW = ISNULL(MAX(ID), 0) + 1 FROM dbo.VCT_PROYECTOS_VISITAS WITH (UPDLOCK, HOLDLOCK);
+                            INSERT INTO dbo.VCT_PROYECTOS_VISITAS (ID, ID_PROYECTO, ID_PROYECTO_SERVICIO, FECHA_DESDE, FECHA_HASTA, DIAS, LUGAR, DESCRIPCION,
+                                   OBSERV_LOGISTICA, OBSERV_CALIF, ESTADO, FECHA_ALTA, USUARIO_ALTA)
+                            VALUES (@AG_NEW, @ID_PROYECTO, @AG_PS, @AG_DES, @AG_HAS, @AG_DIAS, NULLIF(@AG_LUGAR,''), NULLIF(LEFT(@AG_T17,1000),''),
+                                   NULLIF(LEFT(@AG_T18,400),''), NULLIF(LEFT(@AG_T19,400),''), @AG_EST, GETDATE(), @IAGENTE);
+                            SET @AG_VID = @AG_NEW;
+                        END;
+                        SET @AG_NG = @AG_NG + 1;
+                    END;
+                    /* el consultor en la visita */
+                    IF EXISTS (SELECT 1 FROM dbo.VCT_PROYECTOS_VISITAS_CONSULTORES WITH(NOLOCK) WHERE ID_VISITA = @AG_VID AND ID_CONSULTOR = @AG_C)
+                        UPDATE dbo.VCT_PROYECTOS_VISITAS_CONSULTORES SET HORAS_PLANIFICADAS = @AG_HR, LIDER = @AG_LID, FECHA_UPD = GETDATE(), USUARIO_UPD = @IAGENTE
+                        WHERE ID_VISITA = @AG_VID AND ID_CONSULTOR = @AG_C
+                    ELSE IF @AG_VC_IDENT = 1
+                        INSERT INTO dbo.VCT_PROYECTOS_VISITAS_CONSULTORES (ID_VISITA, ID_CONSULTOR, LIDER, HORAS_PLANIFICADAS, FECHA_ALTA, USUARIO_ALTA)
+                        VALUES (@AG_VID, @AG_C, @AG_LID, @AG_HR, GETDATE(), @IAGENTE)
+                    ELSE
+                    BEGIN
+                        SELECT @AG_NEW = ISNULL(MAX(ID), 0) + 1 FROM dbo.VCT_PROYECTOS_VISITAS_CONSULTORES WITH (UPDLOCK, HOLDLOCK);
+                        INSERT INTO dbo.VCT_PROYECTOS_VISITAS_CONSULTORES (ID, ID_VISITA, ID_CONSULTOR, LIDER, HORAS_PLANIFICADAS, FECHA_ALTA, USUARIO_ALTA)
+                        VALUES (@AG_NEW, @AG_VID, @AG_C, @AG_LID, @AG_HR, GETDATE(), @IAGENTE);
+                    END;
+                    /* normas de la visita (en la edicion se cargan una sola vez, con el primer consultor) */
+                    IF @AG_ID IS NULL OR @AG_I = (SELECT MIN(ORD) FROM @AGC)
+                    BEGIN
+                        DELETE FROM dbo.VCT_PROYECTOS_VISITAS_NORMAS WHERE ID_VISITA = @AG_VID;
+                        IF @AG_VN_IDENT = 1
+                            INSERT INTO dbo.VCT_PROYECTOS_VISITAS_NORMAS (ID_VISITA, ID_NORMA, FECHA_ALTA, USUARIO_ALTA)
+                            SELECT @AG_VID, ID_NORMA, GETDATE(), @IAGENTE FROM @AGN
+                        ELSE
+                        BEGIN
+                            SELECT @AG_NEW = ISNULL(MAX(ID), 0) FROM dbo.VCT_PROYECTOS_VISITAS_NORMAS WITH (UPDLOCK, HOLDLOCK);
+                            INSERT INTO dbo.VCT_PROYECTOS_VISITAS_NORMAS (ID, ID_VISITA, ID_NORMA, FECHA_ALTA, USUARIO_ALTA)
+                            SELECT @AG_NEW + ROW_NUMBER() OVER (ORDER BY ID_NORMA), @AG_VID, ID_NORMA, GETDATE(), @IAGENTE FROM @AGN;
+                        END;
+                    END;
+                END;
+                /* edicion: datos de la visita y consultores que se quitaron */
+                IF @AG_ID IS NOT NULL
+                BEGIN
+                    UPDATE dbo.VCT_PROYECTOS_VISITAS
+                       SET ID_PROYECTO_SERVICIO = @AG_PS, FECHA_DESDE = @AG_DES, FECHA_HASTA = @AG_HAS, DIAS = @AG_DIAS, LUGAR = NULLIF(@AG_LUGAR,''),
+                           DESCRIPCION = NULLIF(LEFT(@AG_T17,1000),''), OBSERV_LOGISTICA = NULLIF(LEFT(@AG_T18,400),''), OBSERV_CALIF = NULLIF(LEFT(@AG_T19,400),''),
+                           ESTADO = @AG_EST, FECHA_UPD = GETDATE(), USUARIO_UPD = @IAGENTE
+                     WHERE ID = @AG_ID AND ID_PROYECTO = @ID_PROYECTO;
+                    DELETE VC FROM dbo.VCT_PROYECTOS_VISITAS_CONSULTORES VC
+                    WHERE VC.ID_VISITA = @AG_ID AND NOT EXISTS (SELECT 1 FROM @AGC C WHERE C.CONS = VC.ID_CONSULTOR);
+                END;
+                COMMIT;
+                SET @MSG = CASE WHEN @AG_ID IS NOT NULL THEN 'Visita actualizada.'
+                                ELSE CONVERT(VARCHAR(10), @AG_NG) + ' visita(s) agendada(s): una por consultor.' END;
+            END TRY
+            BEGIN CATCH
+                IF @@TRANCOUNT > 0 ROLLBACK;
+                /* 51012: bloqueo por licencia (triggers VCT_CIERRE12_*) */
+                SET @ERR = LEFT(CASE WHEN ERROR_NUMBER() = 51012 THEN ERROR_MESSAGE() ELSE 'No se pudo guardar la visita: ' + ERROR_MESSAGE() END, 1000);
+            END CATCH;
+        END;
+
+        /* ---------- mail a cada consultor (plantilla PROYECTO_VISITA_CONSULTOR) ---------- */
+        IF @ERR = '' AND @MSG <> '' AND @B_CMD = 'PV_AG_GUARDAR' AND @AG_T20 = '1'
+        BEGIN
+            DECLARE @AM_PERFIL SYSNAME, @AM_ANA INT, @AM_ASU VARCHAR(500), @AM_BODY VARCHAR(MAX), @AM_PARA VARCHAR(1000), @AM_CC VARCHAR(2000),
+                    @AM_NOR VARCHAR(2000) = '', @AM_SRV VARCHAR(400) = '', @AM_FEC VARCHAR(100) = '', @AM_ERR VARCHAR(500) = '', @AM_OK INT = 0, @AM_ROL VARCHAR(100);
+            DECLARE @AM_PV TABLE (ASUNTO VARCHAR(500), HTML_CONTENIDO VARCHAR(MAX), DESTINATARIO VARCHAR(1000), CC VARCHAR(1000), ENVIADO BIT, ADVERTENCIA VARCHAR(500));
+            SELECT TOP 1 @AM_PERFIL = P.name FROM msdb.dbo.sysmail_profile P WHERE P.name = 'VocaturoProfile';
+            IF @AM_PERFIL IS NULL
+                SELECT TOP 1 @AM_PERFIL = P.name FROM msdb.dbo.sysmail_profile P
+                JOIN msdb.dbo.sysmail_principalprofile PP ON PP.profile_id = P.profile_id WHERE PP.is_default = 1 ORDER BY P.profile_id;
+            SELECT TOP 1 @AM_ANA = EQ.ID_EMPLEADO FROM dbo.VCT_PROYECTOS_EQUIPO EQ WITH(NOLOCK)
+            INNER JOIN dbo.VCT_PRM_PROYECTOS_ROLES R WITH(NOLOCK) ON R.ID = EQ.ID_ROL AND R.CODIGO = 'ANALISTA'
+            WHERE EQ.ID_PROYECTO = @ID_PROYECTO AND EQ.ESTADO = 'ACTIVO' ORDER BY EQ.PRINCIPAL DESC, EQ.ID;
+            SELECT @AM_NOR = @AM_NOR + CASE WHEN @AM_NOR = '' THEN '' ELSE ', ' END + ISNULL(N.DESCRIPCION,'')
+            FROM @AGN AN JOIN dbo.VCT_PRM_NORMAS N WITH(NOLOCK) ON N.ID = AN.ID_NORMA ORDER BY N.DESCRIPCION;
+            SELECT @AM_SRV = ISNULL(PS.DESCRIPCION,'') + CASE WHEN LTRIM(RTRIM(ISNULL(S.NOMBRE,''))) <> '' AND LTRIM(RTRIM(ISNULL(S.NOMBRE,''))) <> ISNULL(PS.DESCRIPCION,'') THEN ' - ' + LTRIM(RTRIM(S.NOMBRE)) ELSE '' END
+            FROM dbo.VCT_PROYECTOS_SERVICIOS S WITH(NOLOCK) LEFT JOIN dbo.VCT_PRM_SERVICIOS PS WITH(NOLOCK) ON PS.ID = S.ID_SERVICIO WHERE S.ID = @AG_PS;
+            SET @AM_FEC = CONVERT(VARCHAR(10), @AG_DES, 103) + CASE WHEN @AG_HAS > @AG_DES THEN ' al ' + CONVERT(VARCHAR(10), @AG_HAS, 103) ELSE '' END;
+            SET @AG_I = 0;
+            WHILE 1 = 1
+            BEGIN
+                SELECT TOP 1 @AG_I = ORD, @AG_C = CONS, @AG_HR = HORAS, @AG_LID = LIDER FROM @AGC WHERE ORD > @AG_I ORDER BY ORD;
+                IF @@ROWCOUNT = 0 BREAK;
+                DELETE FROM @AM_PV;
+                SELECT @AM_ASU = NULL, @AM_BODY = NULL, @AM_PARA = NULL, @AM_CC = NULL;
+                SET @AM_ROL = CASE WHEN @AG_LID = 1 THEN 'consultor l&iacute;der' ELSE 'consultor' END;
+                BEGIN TRY
+                    IF NOT EXISTS (SELECT 1 FROM dbo.VCT_PRM_EMAIL_TEMPLATES WITH(NOLOCK) WHERE CODIGO = 'PROYECTO_VISITA_CONSULTOR' AND ESTADO = 'ACTIVO')
+                        RAISERROR('no existe la plantilla activa PROYECTO_VISITA_CONSULTOR en VCT_PRM_EMAIL_TEMPLATES.', 16, 1);
+                    IF @AM_PERFIL IS NULL RAISERROR('no hay un perfil de Database Mail en msdb.', 16, 1);
+                    INSERT INTO @AM_PV EXEC dbo.VCT_MAIN_SEND_EMAIL @CODIGO = 'PROYECTO_VISITA_CONSULTOR', @ID_CONSULTOR = @AG_C, @ID_PROYECTO = @ID_PROYECTO,
+                                            @ID_ANALISTA = @AM_ANA, @ID_CLIENTE = @CLI, @PROFILE_NAME = NULL;
+                    SELECT TOP 1 @AM_ASU = ASUNTO, @AM_BODY = HTML_CONTENIDO, @AM_PARA = LTRIM(RTRIM(ISNULL(DESTINATARIO,''))), @AM_CC = LTRIM(RTRIM(ISNULL(CC,''))) FROM @AM_PV;
+                    IF ISNULL(@AM_PARA,'') = '' RAISERROR('la plantilla no resolvio el destinatario.', 16, 1);
+                    SET @AM_CC = CASE WHEN ISNULL(@AM_CC,'') = '' THEN @AG_T21 WHEN @AG_T21 = '' THEN @AM_CC ELSE @AM_CC + '; ' + @AG_T21 END;
+                    SET @AM_ASU = REPLACE(REPLACE(REPLACE(ISNULL(@AM_ASU,''), '{{CODIGO_PROYECTO}}', ISNULL(@COD,'')), '{{FECHAS}}', @AM_FEC), '{{SERVICIO}}', @AM_SRV);
+                    SET @AM_BODY = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(ISNULL(@AM_BODY,''),
+                                       '{{CODIGO_PROYECTO}}', ISNULL(@COD,'')),
+                                       '{{FECHAS}}', @AM_FEC),
+                                       '{{SERVICIO}}', REPLACE(REPLACE(REPLACE(@AM_SRV,'&','&amp;'),'<','&lt;'),'>','&gt;')),
+                                       '{{LUGAR}}', ISNULL(NULLIF(REPLACE(REPLACE(REPLACE(@AG_LUGAR,'&','&amp;'),'<','&lt;'),'>','&gt;'),''), '-')),
+                                       '{{NORMAS}}', REPLACE(REPLACE(REPLACE(@AM_NOR,'&','&amp;'),'<','&lt;'),'>','&gt;')),
+                                       '{{HORAS}}', REPLACE(CONVERT(VARCHAR(20), CONVERT(DECIMAL(9,1), @AG_HR)), '.0', '')),
+                                       '{{ESTADO}}', CASE WHEN @AG_EST = 'CONFIRMADO' THEN 'Confirmada' ELSE 'Pendiente de confirmaci&oacute;n' END),
+                                       '{{ROL}}', @AM_ROL),
+                                       '{{LOGISTICA}}', ISNULL(NULLIF(REPLACE(REPLACE(REPLACE(@AG_T18,'&','&amp;'),'<','&lt;'),'>','&gt;'),''), '-')),
+                                       '{{DETALLE}}', ISNULL(NULLIF(REPLACE(REPLACE(REPLACE(@AG_T17,'&','&amp;'),'<','&lt;'),'>','&gt;'),''), '-'));
+                    EXEC msdb.dbo.sp_send_dbmail @profile_name = @AM_PERFIL, @recipients = @AM_PARA, @copy_recipients = @AM_CC,
+                                                 @subject = @AM_ASU, @body = @AM_BODY, @body_format = 'HTML';
+                    SET @AM_OK = @AM_OK + 1;
+                END TRY
+                BEGIN CATCH
+                    SET @AM_ERR = LEFT(ERROR_MESSAGE(), 500);
+                END CATCH;
+            END;
+            SET @MSG = LEFT(@MSG + CASE WHEN @AM_OK > 0 THEN ' Mail enviado (' + CONVERT(VARCHAR(10), @AM_OK) + ').' ELSE '' END
+                             + CASE WHEN @AM_ERR <> '' THEN ' El mail no se pudo enviar: ' + @AM_ERR ELSE '' END, 1000);
         END;
     END;
 
@@ -3124,6 +3493,337 @@ BEGIN
     SELECT @AC_F_TIPO = ISNULL((SELECT '<option value="' + REPLACE(TIPO,'"','') + '">' + REPLACE(REPLACE(TIPO,'<','&lt;'),'>','&gt;') + '</option>' FROM (SELECT DISTINCT TIPO FROM #A WHERE TIPO <> '') Z
         ORDER BY TIPO FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), '');
 
+    /* ======================= AGENDA DEL PROYECTO (PV_AGENDA_V1) =======================
+       Lista (por defecto) agrupada por servicio como Servicios, y Calendario (motor vct-calendario).
+       Fuente: VCT_PROYECTOS_VISITAS + VISITAS_CONSULTORES + VISITAS_NORMAS del proyecto (sin canceladas / anuladas).
+       Horas: 8 h por dia; los dias ya transcurridos cuentan como ejecutados (si la visita termino: HORAS_EJECUTADAS o las planificadas).
+       Estado: Pendiente / Confirmada (ESTADO); Ejecutada cuando todos sus dias ya pasaron.
+       Editar / Eliminar: solo visitas que no empezaron y sin horas registradas, con permiso (@PUEDE_PLAN: consultores del equipo, analista o EDIT de PROYECTOS). */
+    DECLARE @AG_H VARCHAR(MAX) = '', @AG_ROWS VARCHAR(MAX) = '', @AG_EVT VARCHAR(MAX) = '', @AG_FER VARCHAR(MAX) = '', @AG_META VARCHAR(MAX) = '',
+            @AG_FSRV VARCHAR(MAX) = '', @AG_NV INT = 0, @AG_MODAL VARCHAR(MAX) = '', @AG_PUEDE BIT = 0, @AG_ND INT = 92,
+            @AG_IC_L VARCHAR(400) = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="m3 6 1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2"/></svg>',
+            @AG_IC_C VARCHAR(400) = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>';
+    IF @PUEDE_PLAN = 1 AND EXISTS (SELECT 1 FROM #SV) SET @AG_PUEDE = 1;
+
+    CREATE TABLE #AGV (ID INT, ID_PS INT, T VARCHAR(2), INST VARCHAR(300), LUGAR VARCHAR(300), DESDE DATETIME, HASTA DATETIME, ND INT, NP INT,
+                       EST VARCHAR(50), LOGI VARCHAR(400), CALIF VARCHAR(400), DET VARCHAR(1000), REG INT, HT NUMERIC(18,2), HE NUMERIC(18,2), SIT CHAR(1),
+                       EQ VARCHAR(MAX), CONS VARCHAR(2000), CONS_TXT VARCHAR(2000), INI1 VARCHAR(4), NOR VARCHAR(MAX), NOR_IDS VARCHAR(400), NOR_TXT VARCHAR(2000));
+    INSERT INTO #AGV (ID, ID_PS, T, INST, LUGAR, DESDE, HASTA, ND, NP, EST, LOGI, CALIF, DET, REG, HT, HE)
+    SELECT V.ID, V.ID_PROYECTO_SERVICIO, LEFT(S.COD, 2),
+           CASE WHEN S.NOMBRE <> '' THEN S.NOMBRE WHEN LEFT(S.COD, 2) = 'CO' THEN S.DES ELSE S.DES + ' ' + ISNULL(CONVERT(VARCHAR(10), S.ORDEN), '') END,
+           ISNULL(NULLIF(LTRIM(RTRIM(ISNULL(V.LUGAR,''))), ''), S.LUGAR),
+           CONVERT(DATETIME, CONVERT(DATE, V.FECHA_DESDE)), CONVERT(DATETIME, CONVERT(DATE, ISNULL(V.FECHA_HASTA, V.FECHA_DESDE))),
+           DATEDIFF(DAY, V.FECHA_DESDE, ISNULL(V.FECHA_HASTA, V.FECHA_DESDE)) + 1, 0,
+           UPPER(LTRIM(RTRIM(ISNULL(V.ESTADO,'')))), LTRIM(RTRIM(ISNULL(V.OBSERV_LOGISTICA,''))), LTRIM(RTRIM(ISNULL(V.OBSERV_CALIF,''))), LTRIM(RTRIM(ISNULL(V.DESCRIPCION,''))),
+           (SELECT COUNT(*) FROM dbo.VCT_PROYECTOS_VISITAS_REGISTRO R WITH(NOLOCK) WHERE R.ID_VISITA = V.ID), 0, 0
+    FROM dbo.VCT_PROYECTOS_VISITAS V WITH(NOLOCK)
+    INNER JOIN #SV S ON S.ID = V.ID_PROYECTO_SERVICIO
+    WHERE V.ID_PROYECTO = @ID_PROYECTO AND UPPER(LTRIM(RTRIM(ISNULL(V.ESTADO,'')))) NOT IN ('CANCELADO','ANULADO');
+    UPDATE #AGV SET NP = CASE WHEN HASTA < @HOY THEN ND WHEN DESDE >= @HOY THEN 0 ELSE DATEDIFF(DAY, DESDE, @HOY) END;
+    UPDATE A SET
+        HT = CASE WHEN A.NP >= A.ND THEN ISNULL(X.E, 0) ELSE ISNULL(X.P, 0) END,
+        HE = CASE WHEN A.NP >= A.ND THEN ISNULL(X.E, 0) WHEN A.NP = 0 THEN 0 ELSE ROUND(ISNULL(X.P, 0) * A.NP / A.ND, 1) END,
+        SIT = CASE WHEN A.NP >= A.ND THEN 'e' WHEN A.EST = 'CONFIRMADO' THEN 'c' ELSE 'p' END,
+        EQ = ISNULL((SELECT '<span class="vctdg-avatar is-c" title="' + REPLACE(REPLACE(REPLACE(Y.NOM,'&','&amp;'),'"',''),'<','')
+                          + CASE WHEN VC.LIDER = 1 THEN ' &middot; Consultor l&iacute;der' ELSE '' END + '">' + Y.INI + '</span>'
+                     FROM dbo.VCT_PROYECTOS_VISITAS_CONSULTORES VC WITH(NOLOCK)
+                     CROSS APPLY (SELECT TOP 1 LTRIM(RTRIM(ISNULL(CONVERT(VARCHAR(150),C.APELLIDOS),'') + ', ' + ISNULL(CONVERT(VARCHAR(150),C.NOMBRES),''))) AS NOM,
+                                         UPPER(LEFT(LTRIM(ISNULL(CONVERT(VARCHAR(150),C.NOMBRES),'')),1) + LEFT(LTRIM(ISNULL(CONVERT(VARCHAR(150),C.APELLIDOS),'')),1)) AS INI
+                                  FROM dbo.VCT_CONSULTORES C WITH(NOLOCK) WHERE C.ID = VC.ID_CONSULTOR) Y
+                     WHERE VC.ID_VISITA = A.ID ORDER BY VC.LIDER DESC, VC.ID
+                     FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), ''),
+        CONS = ISNULL(STUFF((SELECT ';' + CONVERT(VARCHAR(20), VC.ID_CONSULTOR) + ':' + REPLACE(CONVERT(VARCHAR(20), CONVERT(DECIMAL(9,1), ISNULL(VC.HORAS_PLANIFICADAS,0))), '.0', '')
+                             FROM dbo.VCT_PROYECTOS_VISITAS_CONSULTORES VC WITH(NOLOCK) WHERE VC.ID_VISITA = A.ID ORDER BY VC.LIDER DESC, VC.ID
+                             FOR XML PATH('')), 1, 1, ''), ''),
+        CONS_TXT = ISNULL(STUFF((SELECT ', ' + LTRIM(RTRIM(ISNULL(CONVERT(VARCHAR(150),C.APELLIDOS),'') + ', ' + ISNULL(CONVERT(VARCHAR(150),C.NOMBRES),'')))
+                                 FROM dbo.VCT_PROYECTOS_VISITAS_CONSULTORES VC WITH(NOLOCK) JOIN dbo.VCT_CONSULTORES C WITH(NOLOCK) ON C.ID = VC.ID_CONSULTOR
+                                 WHERE VC.ID_VISITA = A.ID ORDER BY VC.LIDER DESC, VC.ID
+                                 FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), 1, 2, ''), ''),
+        INI1 = ISNULL((SELECT TOP 1 UPPER(LEFT(LTRIM(ISNULL(CONVERT(VARCHAR(150),C.NOMBRES),'')),1) + LEFT(LTRIM(ISNULL(CONVERT(VARCHAR(150),C.APELLIDOS),'')),1))
+                       FROM dbo.VCT_PROYECTOS_VISITAS_CONSULTORES VC WITH(NOLOCK) JOIN dbo.VCT_CONSULTORES C WITH(NOLOCK) ON C.ID = VC.ID_CONSULTOR
+                       WHERE VC.ID_VISITA = A.ID ORDER BY VC.LIDER DESC, VC.ID), ''),
+        NOR = ISNULL((SELECT '<span class="vctdg-li">' + REPLACE(REPLACE(REPLACE(ISNULL(N.DESCRIPCION,''),'&','&amp;'),'<','&lt;'),'>','&gt;') + '</span>'
+                      FROM dbo.VCT_PROYECTOS_VISITAS_NORMAS VN WITH(NOLOCK) JOIN dbo.VCT_PRM_NORMAS N WITH(NOLOCK) ON N.ID = VN.ID_NORMA
+                      WHERE VN.ID_VISITA = A.ID ORDER BY N.DESCRIPCION
+                      FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), ''),
+        NOR_IDS = ISNULL(STUFF((SELECT ',' + CONVERT(VARCHAR(20), VN.ID_NORMA) FROM dbo.VCT_PROYECTOS_VISITAS_NORMAS VN WITH(NOLOCK)
+                                WHERE VN.ID_VISITA = A.ID ORDER BY VN.ID_NORMA FOR XML PATH('')), 1, 1, ''), ''),
+        NOR_TXT = ISNULL(STUFF((SELECT ' ' + ISNULL(N.DESCRIPCION,'') FROM dbo.VCT_PROYECTOS_VISITAS_NORMAS VN WITH(NOLOCK) JOIN dbo.VCT_PRM_NORMAS N WITH(NOLOCK) ON N.ID = VN.ID_NORMA
+                                WHERE VN.ID_VISITA = A.ID FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), 1, 1, ''), '')
+    FROM #AGV A
+    OUTER APPLY (SELECT SUM(ISNULL(VC.HORAS_PLANIFICADAS, 0)) AS P, SUM(ISNULL(VC.HORAS_EJECUTADAS, ISNULL(VC.HORAS_PLANIFICADAS, 0))) AS E
+                 FROM dbo.VCT_PROYECTOS_VISITAS_CONSULTORES VC WITH(NOLOCK) WHERE VC.ID_VISITA = A.ID) X;
+    SELECT @AG_NV = COUNT(*) FROM #AGV;
+
+    /* filas de la lista */
+    SELECT @AG_ROWS = ISNULL((
+        SELECT '<tr data-vct-row data-pv-agg="' + LOWER(A.T) + '" data-vct-filter-servicio="' + LOWER(A.T) + '" data-vct-filter-estado="' + A.SIT + '" data-vct-search="'
+             + LOWER(REPLACE(REPLACE(REPLACE(REPLACE(A.INST + ' ' + A.LUGAR + ' ' + A.CONS_TXT + ' ' + A.NOR_TXT + ' ' + A.LOGI,'&','&amp;'),'"',''),'<',''),'>','')) + '">'
+             + '<td><span class="vct-360-project-name">' + REPLACE(REPLACE(REPLACE(A.INST,'&','&amp;'),'<','&lt;'),'>','&gt;') + '</span>'
+             + CASE WHEN A.LUGAR <> '' THEN '<span class="vct-360-project-ref">' + REPLACE(REPLACE(REPLACE(A.LUGAR,'&','&amp;'),'<','&lt;'),'>','&gt;') + '</span>' ELSE '' END + '</td>'
+             + '<td class="vct-text-center" data-vct-sort-value="' + CONVERT(VARCHAR(8), A.DESDE, 112) + '">' + CONVERT(VARCHAR(10), A.DESDE, 103) + '</td>'
+             + '<td class="vct-text-center" data-vct-sort-value="' + CONVERT(VARCHAR(8), A.HASTA, 112) + '">' + CONVERT(VARCHAR(10), A.HASTA, 103) + '</td>'
+             + '<td class="vct-text-center"><span class="vct-pv-sv-eq">' + CASE WHEN A.EQ = '' THEN '<span class="vctdg-none">-</span>' ELSE A.EQ END + '</span></td>'
+             + '<td>' + CASE WHEN A.NOR = '' THEN '<span class="vctdg-none">-</span>' ELSE '<div class="vctdg-list">' + A.NOR + '</div>' END + '</td>'
+             + '<td class="vct-text-right" data-vct-sort-value="' + CONVERT(VARCHAR(20), CONVERT(DECIMAL(9,1), A.HT)) + '" data-vct-export-value="'
+             +   REPLACE(CONVERT(VARCHAR(20), CONVERT(DECIMAL(9,1), A.HE)), '.0', '') + ' / ' + REPLACE(CONVERT(VARCHAR(20), CONVERT(DECIMAL(9,1), A.HT)), '.0', '') + ' h">'
+             +   REPLACE(CONVERT(VARCHAR(20), CONVERT(DECIMAL(9,1), A.HE)), '.0', '') + ' / ' + REPLACE(CONVERT(VARCHAR(20), CONVERT(DECIMAL(9,1), A.HT)), '.0', '') + ' h'
+             +   '<span class="vct-360-project-ref">' + REPLACE(CONVERT(VARCHAR(20), CONVERT(DECIMAL(9,1), A.HT - A.HE)), '.0', '') + ' h programadas</span></td>'
+             + '<td class="vct-text-center"><span class="vct-360-badge ' + CASE A.SIT WHEN 'e' THEN 'is-progress">Ejecutada' WHEN 'c' THEN 'is-active">Confirmada' ELSE 'is-planned">Pendiente' END + '</span></td>'
+             + '<td>' + CASE WHEN A.LOGI = '' THEN '<span class="vctdg-none">-</span>' ELSE REPLACE(REPLACE(REPLACE(A.LOGI,'&','&amp;'),'<','&lt;'),'>','&gt;') END + '</td>'
+             + '<td class="vct-table-action-cell" data-vct-export-ignore="true">'
+             + CASE WHEN @AG_PUEDE = 1 AND A.DESDE >= @HOY AND A.REG = 0 THEN
+                    '<button type="button" class="vct-row-menu-trigger" data-vctdg-rowmenu aria-label="Acciones" title="Acciones"><span class="vct-row-menu-dots" aria-hidden="true">&#8942;</span></button>'
+                  + '<div class="vctdg-rowmenu-items" hidden>'
+                  + '<button type="button" class="vct-pv-menu-btn" data-pv-ag-edit="' + CONVERT(VARCHAR(20), A.ID) + '" data-ps="' + CONVERT(VARCHAR(20), A.ID_PS) + '"'
+                  +   ' data-t="' + LOWER(A.T) + '" data-desde="' + CONVERT(VARCHAR(10), A.DESDE, 120) + '" data-hasta="' + CONVERT(VARCHAR(10), A.HASTA, 120) + '"'
+                  +   ' data-nor="' + A.NOR_IDS + '" data-cons="' + A.CONS + '" data-est="' + CASE WHEN A.EST = 'CONFIRMADO' THEN 'C' ELSE 'P' END + '"'
+                  +   ' data-det="' + REPLACE(REPLACE(REPLACE(REPLACE(A.DET,'&','&amp;'),'"','&quot;'),'<','&lt;'),'>','&gt;') + '"'
+                  +   ' data-log="' + REPLACE(REPLACE(REPLACE(REPLACE(A.LOGI,'&','&amp;'),'"','&quot;'),'<','&lt;'),'>','&gt;') + '"'
+                  +   ' data-calif="' + REPLACE(REPLACE(REPLACE(REPLACE(A.CALIF,'&','&amp;'),'"','&quot;'),'<','&lt;'),'>','&gt;') + '">'
+                  +   '<span data-vct-icon="edit"></span><span>Editar</span></button>'
+                  + '<button type="button" class="vct-pv-menu-btn" data-pv-ag-del="' + CONVERT(VARCHAR(20), A.ID) + '"'
+                  +   ' data-nombre="' + REPLACE(REPLACE(REPLACE(REPLACE(A.INST + ' - ' + CONVERT(VARCHAR(10), A.DESDE, 103) + CASE WHEN A.HASTA > A.DESDE THEN ' al ' + CONVERT(VARCHAR(10), A.HASTA, 103) ELSE '' END
+                  +   CASE WHEN A.CONS_TXT <> '' THEN ' - ' + A.CONS_TXT ELSE '' END,'&','&amp;'),'"','&quot;'),'<','&lt;'),'>','&gt;') + '">'
+                  +   '<span data-vct-icon="trash"></span><span>Eliminar</span></button></div>'
+               ELSE '' END
+             + '</td></tr>'
+        FROM #AGV A
+        ORDER BY CASE A.T WHEN 'CO' THEN 1 WHEN 'AU' THEN 2 WHEN 'CA' THEN 3 ELSE 9 END, A.DESDE, A.ID
+        FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), '');
+
+    /* grupos por servicio: "t|titulo|icono|visitas|ejecutadas|proyectadas|programadas;..." (el JS arma las filas de grupo) */
+    SELECT @AG_META = ISNULL(STUFF((
+        SELECT ';' + LOWER(T.T) + '|' + CASE T.T WHEN 'CO' THEN 'Consultor&iacute;a' WHEN 'AU' THEN 'Auditor&iacute;as' WHEN 'CA' THEN 'Capacitaciones'
+                                                ELSE REPLACE(REPLACE(REPLACE(REPLACE(T.DES,'&','&amp;'),'<',''),'|',''),';','') END
+             + '|' + T.ICO + '|' + CONVERT(VARCHAR(10), ISNULL(X.N, 0)) + '|' + REPLACE(CONVERT(VARCHAR(20), CONVERT(DECIMAL(18,1), ISNULL(X.E, 0))), '.0', '')
+             + '|' + REPLACE(CONVERT(VARCHAR(20), CONVERT(DECIMAL(18,1), T.PROY)), '.0', '') + '|' + REPLACE(CONVERT(VARCHAR(20), CONVERT(DECIMAL(18,1), ISNULL(X.P, 0))), '.0', '')
+        FROM #SVT T
+        OUTER APPLY (SELECT COUNT(*) AS N, SUM(A.HE) AS E, SUM(A.HT - A.HE) AS P FROM #AGV A WHERE A.T = T.T) X
+        ORDER BY T.ORD FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), 1, 1, ''), '');
+    SELECT @AG_FSRV = ISNULL((
+        SELECT '<option value="' + LOWER(T.T) + '">' + CASE T.T WHEN 'CO' THEN 'Consultor&iacute;a' WHEN 'AU' THEN 'Auditor&iacute;as' WHEN 'CA' THEN 'Capacitaciones'
+                                                     ELSE REPLACE(REPLACE(REPLACE(T.DES,'&','&amp;'),'<','&lt;'),'>','&gt;') END + '</option>'
+        FROM #SVT T ORDER BY T.ORD FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), '');
+
+    /* calendario: un evento por dia de cada visita (mismo formato que Acciones: f, x, c, cli, proy, srv, r, ri) */
+    SELECT @AG_EVT = ISNULL(STUFF((
+        SELECT ',{"f":"' + CONVERT(VARCHAR(10), CL.Fecha, 120) + '","x":"' + REPLACE(REPLACE(REPLACE(REPLACE(A.INST + CASE WHEN A.CONS_TXT <> '' THEN ' - ' + A.CONS_TXT ELSE '' END,'\','/'),'"',''''),CHAR(10),' '),CHAR(13),' ')
+             + '","c":"' + CASE WHEN A.EST = 'CONFIRMADO' THEN 'VC' ELSE 'VP' END   /* calendario: solo pendiente (amarillo) / confirmada (verde) */
+             + '","cli":"' + REPLACE(REPLACE(ISNULL(@CLI_NOM,''),'\','/'),'"','''')
+             + '","proy":"' + REPLACE(REPLACE('(' + ISNULL(@COD,'') + ') ' + ISNULL(@NOM,''),'\','/'),'"','''')
+             + '","srv":"' + A.T + '|' + REPLACE(REPLACE(REPLACE(A.INST,'\','/'),'"',''''),'|','/')
+             + '","r":"' + REPLACE(REPLACE(A.CONS_TXT,'\','/'),'"','''') + '","ri":"' + A.INI1 + '"}'
+        FROM #AGV A
+        INNER JOIN dbo.Calendar CL WITH(NOLOCK) ON CL.Fecha BETWEEN CONVERT(DATE, A.DESDE) AND CONVERT(DATE, A.HASTA)
+        WHERE A.ND <= 62
+        ORDER BY CL.Fecha, A.DESDE, A.ID
+        FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), 1, 1, ''), '');
+    SET @AG_EVT = '[' + @AG_EVT + ']';
+    SELECT @AG_FER = ISNULL(STUFF((
+        SELECT ',{"f":"' + CONVERT(VARCHAR(10), CL.Fecha, 120) + '","t":' + CONVERT(VARCHAR(5), CONVERT(INT, ISNULL(CL.Feriado, 1)))
+             + ',"x":"' + REPLACE(REPLACE(ISNULL(NULLIF(CL.HolidayText,''),'Feriado'),'\','/'),'"','''') + '"}'
+        FROM dbo.Calendar CL WITH(NOLOCK)
+        WHERE CL.IsHoliday = 1 AND CL.Fecha BETWEEN CONVERT(DATE, DATEADD(YEAR, -1, @HOY)) AND CONVERT(DATE, DATEADD(YEAR, 2, @HOY))
+        ORDER BY CL.Fecha FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), 1, 1, ''), '');
+    SET @AG_FER = '[' + @AG_FER + ']';
+
+    SET @AG_H = CONVERT(VARCHAR(MAX), '')
+        + '<div class="vct-360-panel" data-vct-panel="agenda"><div class="vct-360-box vct-360-box-grid-auto vctdg-in-box" data-pv-agbox>'
+        + '<div class="vct-360-box-head"><h3><span class="vct-360-title-icon"><span data-vct-icon="calendar"></span></span>Agenda del proyecto (' + CONVERT(VARCHAR(10), @AG_NV) + ')</h3>'
+        + '<div class="vct-pv-agview"><button type="button" class="is-on" data-pv-agv="lista">' + @AG_IC_L + '<span>Lista</span></button>'
+        + '<button type="button" data-pv-agv="cal">' + @AG_IC_C + '<span>Calendario</span></button></div></div>'
+        + '<div data-pv-agpane="lista">'
+        + '<div data-vct-dg data-vct-dg-id="pv_agenda" data-vct-dg-title="Agenda del proyecto" data-vct-dg-subtitle="Proyecto (' + @E_COD + ')" data-vct-dg-unit="visita(s)" data-vct-dg-page-size="10"'
+        + ' data-vct-dg-search-placeholder="Buscar visita, consultor o norma..." data-vct-dg-density="compact" data-vct-dg-layout="fixed" data-pv-agmeta="' + REPLACE(@AG_META,'"','') + '">'
+        + '<div data-vct-dg-slot="filters"><select data-vct-dg-filter="estado" aria-label="Estado"><option value="">Estado</option><option value="p">Pendiente</option><option value="c">Confirmada</option><option value="e">Ejecutada</option></select>'
+        + '<select data-vct-dg-filter="servicio" aria-label="Servicio"><option value="">Servicio</option>' + @AG_FSRV + '</select></div>'
+        + CASE WHEN @AG_PUEDE = 1 THEN '<div data-vct-dg-slot="actions"><button type="button" class="vct-btn vct-btn-new vct-btn-sm" data-pv-ag-new title="Agregar visita"><span data-vct-icon="plus"></span><span>Agregar</span></button></div>' ELSE '' END
+        + '<table><thead><tr><th data-vct-sortable="true"><span>Servicio</span></th>'
+        + '<th class="vct-text-center" data-vct-width="100" data-vct-sortable="true" data-vct-sort-type="number"><span>Desde</span></th>'
+        + '<th class="vct-text-center" data-vct-width="100" data-vct-sortable="true" data-vct-sort-type="number"><span>Hasta</span></th>'
+        + '<th class="vct-text-center" data-vct-width="120"><span>Equipo</span></th><th data-vct-width="150"><span>Normas</span></th>'
+        + '<th class="vct-text-right" data-vct-width="110" data-vct-sortable="true" data-vct-sort-type="number"><span>Horas</span></th>'
+        + '<th class="vct-text-center" data-vct-width="110"><span>Estado</span></th><th data-vct-width="18%"><span>Log&iacute;stica</span></th>'
+        + '<th class="vct-col-action" data-vct-width="48" data-vct-export-ignore="true"></th></tr></thead><tbody>'
+        + @AG_ROWS + '</tbody></table></div></div>'
+        + '<div data-pv-agpane="cal" hidden><div data-pv-agcal data-pv-agcal-edit="' + CONVERT(VARCHAR(1), @AG_PUEDE) + '"'
+        + ' data-pv-agfer="' + REPLACE(REPLACE(REPLACE(@AG_FER,'&','&amp;'),'"','&quot;'),'<','&lt;') + '"'
+        + ' data-pv-agevt="' + REPLACE(REPLACE(REPLACE(@AG_EVT,'&','&amp;'),'"','&quot;'),'<','&lt;') + '"></div></div>'
+        + '</div></div>';
+
+    /* ---------- modal Nueva visita / Editar visita (mismo diseno que Asignar consultores) ---------- */
+    IF @AG_PUEDE = 1
+    BEGIN
+        DECLARE @AGM_SV VARCHAR(MAX) = '', @AGM_INST VARCHAR(MAX) = '', @AGM_NOR VARCHAR(MAX) = '', @AGM_NTH VARCHAR(MAX) = '', @AGM_ROWS VARCHAR(MAX) = '',
+                @AGM_NCOL INT = 0, @AGM_TPL BIT = 0, @AGM_CO INT, @AGM_COSRV INT, @AGM_COINI VARCHAR(10) = '', @AGM_COFIN VARCHAR(10) = '';
+        IF EXISTS (SELECT 1 FROM dbo.VCT_PRM_EMAIL_TEMPLATES WITH(NOLOCK) WHERE CODIGO = 'PROYECTO_VISITA_CONSULTOR' AND ESTADO = 'ACTIVO') SET @AGM_TPL = 1;
+        SELECT @AGM_NCOL = COUNT(*) FROM #NO;
+
+        /* servicios: un recuadro por tipo; consultoria es unica, auditorias y capacitaciones eligen la instancia */
+        SELECT @AGM_SV = ISNULL((
+            SELECT '<button type="button" class="vct-pv-ag-sv" data-pv-ag-svt="' + LOWER(T.T) + '"'
+                 + CASE WHEN T.T NOT IN ('AU','CA') THEN ' data-ps="' + CONVERT(VARCHAR(20), F.ID) + '" data-srv="' + CONVERT(VARCHAR(20), F.ID_SERVICIO) + '"'
+                             + ' data-ini="' + ISNULL(CONVERT(VARCHAR(10), F.INI, 120), '') + '" data-fin="' + ISNULL(CONVERT(VARCHAR(10), F.FIN, 120), '') + '"' ELSE '' END + '>'
+                 + '<span class="vctdg-svc is-' + LOWER(CASE WHEN T.T = '' THEN 'xx' ELSE T.T END) + ' is-on"><span data-vct-icon="' + T.ICO + '"></span></span>'
+                 + '<span class="vct-pv-ag-sv-t"><b>' + CASE T.T WHEN 'CO' THEN 'Consultor&iacute;a' WHEN 'AU' THEN 'Auditor&iacute;a' WHEN 'CA' THEN 'Capacitaci&oacute;n'
+                                                    ELSE REPLACE(REPLACE(REPLACE(T.DES,'&','&amp;'),'<','&lt;'),'>','&gt;') END + '</b>'
+                 + '<small>' + CASE WHEN T.T IN ('AU','CA') THEN CONVERT(VARCHAR(10), T.N) + CASE T.T WHEN 'AU' THEN ' auditor&iacute;a(s)' ELSE ' capacitaci&oacute;n(es)' END
+                                    ELSE REPLACE(REPLACE(REPLACE(CASE WHEN F.NOMBRE <> '' THEN F.NOMBRE ELSE F.DES END,'&','&amp;'),'<','&lt;'),'>','&gt;') END + '</small></span></button>'
+            FROM #SVT T
+            OUTER APPLY (SELECT TOP 1 S.ID, S.ID_SERVICIO, S.INI, S.FIN, S.NOMBRE, S.DES FROM #SV S WHERE LEFT(S.COD, 2) = T.T ORDER BY S.ORDEN, S.ID) F
+            ORDER BY T.ORD FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), '');
+        SELECT @AGM_INST = ISNULL((
+            SELECT '<div class="vct-field vct-col-12" data-pv-ag-inst="' + LOWER(T.T) + '" hidden><label class="vct-label">'
+                 + CASE T.T WHEN 'AU' THEN 'Auditor&iacute;a' ELSE 'Capacitaci&oacute;n' END + ' a la que se carga la visita <span class="vct-req">*</span></label>'
+                 + '<select data-pv-ag-ps="' + LOWER(T.T) + '"><option value="">Seleccione ' + CASE T.T WHEN 'AU' THEN 'la auditor&iacute;a' ELSE 'la capacitaci&oacute;n' END
+                 + ' (' + CONVERT(VARCHAR(10), T.N) + ')</option>'
+                 + ISNULL((SELECT '<option value="' + CONVERT(VARCHAR(20), S.ID) + '" data-srv="' + CONVERT(VARCHAR(20), S.ID_SERVICIO) + '"'
+                                + ' data-ini="' + ISNULL(CONVERT(VARCHAR(10), S.INI, 120), '') + '" data-fin="' + ISNULL(CONVERT(VARCHAR(10), S.FIN, 120), '') + '">'
+                                + REPLACE(REPLACE(REPLACE(CASE WHEN S.NOMBRE <> '' THEN S.NOMBRE ELSE S.DES + ' ' + CONVERT(VARCHAR(10), S.ORDEN) END
+                                       + CASE WHEN S.LUGAR <> '' THEN ' - ' + S.LUGAR ELSE '' END
+                                       + CASE WHEN S.INI IS NOT NULL THEN ' - ' + CONVERT(VARCHAR(10), S.INI, 103) + CASE WHEN S.FIN IS NOT NULL AND CONVERT(DATE, S.FIN) <> CONVERT(DATE, S.INI) THEN ' al ' + CONVERT(VARCHAR(10), S.FIN, 103) ELSE '' END ELSE '' END,
+                                       '&','&amp;'),'<','&lt;'),'>','&gt;') + '</option>'
+                           FROM #SV S WHERE LEFT(S.COD, 2) = T.T ORDER BY S.INI, S.ORDEN, S.ID
+                           FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), '')
+                 + '</select></div>'
+            FROM #SVT T WHERE T.T IN ('AU','CA') ORDER BY T.ORD
+            FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), '');
+        /* normas del proyecto: chips (todas marcadas) y una columna por norma con la calificacion del consultor */
+        SELECT @AGM_NOR = ISNULL((
+            SELECT '<button type="button" class="vct-pv-chip is-b vct-pv-ag-nor is-on" data-pv-ag-nor="' + CONVERT(VARCHAR(20), N.ID_NORMA) + '">'
+                 + REPLACE(REPLACE(REPLACE(N.DES,'&','&amp;'),'<','&lt;'),'>','&gt;') + '</button>'
+            FROM #NO N ORDER BY N.PRINCIPAL DESC, N.DES FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), '');
+        SELECT @AGM_NTH = ISNULL((
+            SELECT '<th data-pv-agn="' + CONVERT(VARCHAR(20), N.ID_NORMA) + '">' + REPLACE(REPLACE(REPLACE(N.DES,'&','&amp;'),'<','&lt;'),'>','&gt;') + '</th>'
+            FROM #NO N ORDER BY N.PRINCIPAL DESC, N.DES FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), '');
+
+        /* consultores: el equipo del proyecto (lider y consultores) y los otros con algun servicio del proyecto */
+        CREATE TABLE #AGK (ID INT, NOMBRE VARCHAR(300), SRV VARCHAR(1000), SRV_IDS VARCHAR(400), ROL CHAR(1), ORD INT, PROYS INT, EMAIL VARCHAR(300),
+                           CAL VARCHAR(MAX), AG VARCHAR(MAX));
+        INSERT INTO #AGK (ID, NOMBRE, SRV, SRV_IDS, ROL, ORD, PROYS, EMAIL)
+        SELECT C.ID,
+               LTRIM(RTRIM(ISNULL(CONVERT(VARCHAR(150),C.APELLIDOS),'') + ', ' + ISNULL(CONVERT(VARCHAR(150),C.NOMBRES),''))),
+               ISNULL(STUFF((SELECT ', ' + T.DES FROM #SVT T
+                             WHERE EXISTS (SELECT 1 FROM dbo.VCT_CONSULTORES_SERVICIOS CS WITH(NOLOCK) JOIN #SV S ON S.ID_SERVICIO = CS.ID_SERVICIO
+                                           WHERE CS.ID_CONSULTOR = C.ID AND LEFT(S.COD, 2) = T.T)
+                             ORDER BY T.ORD FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), 1, 2, ''), ''),
+               ',' + ISNULL((SELECT DISTINCT CONVERT(VARCHAR(20), CS.ID_SERVICIO) + ',' FROM dbo.VCT_CONSULTORES_SERVICIOS CS WITH(NOLOCK)
+                             WHERE CS.ID_CONSULTOR = C.ID FOR XML PATH('')), ''),
+               CASE WHEN EXISTS (SELECT 1 FROM #EQ Q WHERE Q.TIPO = 'CONSULTOR' AND Q.ID_ENT = C.ID AND Q.ROL_COD = 'CONSULTOR_LIDER') THEN 'l'
+                    WHEN EXISTS (SELECT 1 FROM #EQ Q WHERE Q.TIPO = 'CONSULTOR' AND Q.ID_ENT = C.ID) THEN 'c' ELSE '' END,
+               CASE WHEN EXISTS (SELECT 1 FROM #EQ Q WHERE Q.TIPO = 'CONSULTOR' AND Q.ID_ENT = C.ID AND Q.ROL_COD = 'CONSULTOR_LIDER') THEN 1
+                    WHEN EXISTS (SELECT 1 FROM #EQ Q WHERE Q.TIPO = 'CONSULTOR' AND Q.ID_ENT = C.ID) THEN 2 ELSE 3 END,
+               (SELECT COUNT(DISTINCT EQ.ID_PROYECTO) FROM dbo.VCT_PROYECTOS_EQUIPO EQ WITH(NOLOCK)
+                JOIN dbo.VCT_PROYECTOS P2 WITH(NOLOCK) ON P2.ID = EQ.ID_PROYECTO
+                JOIN dbo.VCT_PRM_PROYECTOS_ESTADOS E2 WITH(NOLOCK) ON E2.ID = P2.ID_ESTADO AND E2.CODIGO IN ('CONFIRMADO','ENCURSO')
+                WHERE EQ.TIPO_MIEMBRO = 'CONSULTOR' AND EQ.ID_CONSULTOR = C.ID AND EQ.ESTADO = 'ACTIVO'),
+               ISNULL((SELECT TOP 1 LTRIM(RTRIM(M.EMAIL)) FROM dbo.VCT_EMAILS M WITH(NOLOCK)
+                       WHERE M.TIPO_ENTIDAD = 'CONSULTOR' AND M.ID_ENTIDAD = C.ID AND LTRIM(RTRIM(ISNULL(M.EMAIL,''))) <> ''
+                       ORDER BY CASE WHEN M.PRINCIPAL = 'SI' THEN 0 ELSE 1 END, M.ID), '')
+        FROM dbo.VCT_CONSULTORES C WITH(NOLOCK)
+        WHERE UPPER(ISNULL(C.ESTADO,'ACTIVO')) = 'ACTIVO'
+          AND (EXISTS (SELECT 1 FROM #EQ Q WHERE Q.TIPO = 'CONSULTOR' AND Q.ID_ENT = C.ID)
+               OR EXISTS (SELECT 1 FROM dbo.VCT_CONSULTORES_SERVICIOS CS WITH(NOLOCK) JOIN #SV S ON S.ID_SERVICIO = CS.ID_SERVICIO WHERE CS.ID_CONSULTOR = C.ID));
+        /* calificacion por servicio y norma del proyecto: "servicio:norma:calificacion|..." */
+        UPDATE K SET CAL = ISNULL(STUFF((
+            SELECT '|' + CONVERT(VARCHAR(20), CN.ID_SERVICIO) + ':' + CONVERT(VARCHAR(20), CN.ID_NORMA) + ':'
+                 + REPLACE(REPLACE(REPLACE(LTRIM(RTRIM(CN.CALIFICACION)),'|','/'),':','-'),';','-')
+            FROM dbo.VCT_CONSULTORES_NORMAS CN WITH(NOLOCK)
+            WHERE CN.ID_CONSULTOR = K.ID AND LTRIM(RTRIM(ISNULL(CN.CALIFICACION,''))) <> '' AND EXISTS (SELECT 1 FROM #NO N WHERE N.ID_NORMA = CN.ID_NORMA)
+            FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), 1, 1, ''), '')
+        FROM #AGK K;
+        /* agenda desde hoy (@AG_ND dias): "dia:codigo:horas libres,..." (mismo criterio que la validacion al guardar) */
+        UPDATE K SET AG = ISNULL(STUFF((
+            SELECT ',' + CONVERT(VARCHAR(10), DATEDIFF(DAY, @HOY, R.FECHA)) + ':'
+                 + CASE WHEN ISNULL(CL.IsHoliday, 0) = 1 THEN 'FE'
+                        WHEN R.ESTADO = 'ASIGNADO' AND ISNULL(AG.TIPO,'') = 'DISPONIBLE' THEN 'A'
+                        WHEN R.ESTADO = 'ASIGNADO' THEN 'AX'
+                        WHEN R.ESTADO = 'DISPONIBLE' AND ISNULL(AG.TIPO,'') = 'DISPONIBLE' THEN 'D'
+                        WHEN R.ESTADO = 'LICENCIA' THEN 'LI' WHEN R.ESTADO = 'NO_DISPONIBLE' THEN 'ND' WHEN R.ESTADO = 'OCUPADO' THEN 'OC'
+                        WHEN R.ESTADO = 'POTENCIAL' THEN 'PO' WHEN R.ESTADO = 'ORGANISMO' THEN 'OR' WHEN R.ESTADO = 'OBSERVACION' THEN 'OB'
+                        WHEN R.ESTADO LIKE 'FERIADO%' THEN 'FE' ELSE 'NC' END + ':'
+                 + REPLACE(CONVERT(VARCHAR(20), CONVERT(DECIMAL(9,1),
+                       CASE WHEN ISNULL(CL.IsHoliday, 0) = 1 OR ISNULL(AG.TIPO,'') <> 'DISPONIBLE' THEN 0
+                            ELSE ISNULL(AG.HORAS_CAPACIDAD, 8) - CASE WHEN R.ESTADO = 'ASIGNADO' THEN ISNULL(R.HORAS, 0) ELSE 0 END END)), '.0', '')
+            FROM dbo.VCT_FN_AGENDA_CONSULTOR_RANGO(K.ID, CONVERT(DATE, @HOY), CONVERT(DATE, DATEADD(DAY, @AG_ND - 1, @HOY))) R
+            LEFT JOIN dbo.VCT_PRM_AGENDA_CONSULTOR AG WITH(NOLOCK) ON AG.ID_CONSULTOR = K.ID AND AG.FECHA = R.FECHA
+            LEFT JOIN dbo.Calendar CL WITH(NOLOCK) ON CL.Fecha = R.FECHA
+            ORDER BY R.FECHA FOR XML PATH('')), 1, 1, ''), '')
+        FROM #AGK K;
+
+        SELECT @AGM_ROWS = ISNULL((
+            SELECT CASE WHEN K.ORD = 3 AND NOT EXISTS (SELECT 1 FROM #AGK K2 WHERE K2.ORD = 3 AND (K2.NOMBRE < K.NOMBRE OR (K2.NOMBRE = K.NOMBRE AND K2.ID < K.ID)))
+                        THEN '<tr class="vct-pv-ag-grp" data-pv-agc-otros><td colspan="' + CONVERT(VARCHAR(10), @AGM_NCOL + 6) + '"><span class="vct-pv-ag-chev">&#9656;</span> Otros consultores con el servicio de la visita<small data-pv-agc-otros-n></small></td></tr>'
+                        ELSE '' END
+                 + '<tr data-pv-agc="' + CONVERT(VARCHAR(20), K.ID) + '" data-rol="' + K.ROL + '" data-srv="' + K.SRV_IDS + '"'
+                 + ' data-email="' + REPLACE(REPLACE(REPLACE(K.EMAIL,'"',''),'<',''),'&','&amp;') + '" data-cal="' + REPLACE(REPLACE(REPLACE(REPLACE(K.CAL,'&','&amp;'),'"','&quot;'),'<','&lt;'),'>','&gt;') + '"'
+                 + ' data-ag="' + K.AG + '" data-q="' + LOWER(REPLACE(REPLACE(REPLACE(REPLACE(K.NOMBRE + ' ' + K.SRV,'&','&amp;'),'"',''),'<',''),'>','')) + '"'
+                 + CASE WHEN K.ORD = 3 THEN ' data-otro hidden' ELSE '' END + '>'
+                 + '<td><span class="vct-pv-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg></span></td>'
+                 + '<td><span class="vct-360-project-name">' + REPLACE(REPLACE(REPLACE(K.NOMBRE,'&','&amp;'),'<','&lt;'),'>','&gt;') + '</span>'
+                 + '<span class="vct-360-project-ref">' + CASE WHEN K.SRV = '' THEN '-' ELSE REPLACE(REPLACE(REPLACE(K.SRV,'&','&amp;'),'<','&lt;'),'>','&gt;') END + '</span>'
+                 + '<span class="vct-pv-ag-warn" data-pv-agc-warn hidden></span></td>'
+                 + ISNULL((SELECT '<td data-pv-agn="' + CONVERT(VARCHAR(20), N.ID_NORMA) + '"></td>' FROM #NO N ORDER BY N.PRINCIPAL DESC, N.DES
+                           FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), '')
+                 + '<td>' + CONVERT(VARCHAR(10), K.PROYS) + ' en curso</td>'
+                 + '<td data-pv-agc-agd></td>'
+                 + '<td><span class="vct-pv-ag-rol' + CASE K.ROL WHEN 'l' THEN ' is-l">Consultor l&iacute;der' WHEN 'c' THEN ' is-c">Consultor' ELSE '">Sin asignar' END + '</span></td>'
+                 + '<td><input type="number" class="vct-input vct-pv-ag-hrs" min="0.5" step="0.5" data-pv-agc-h disabled aria-label="Horas"></td></tr>'
+            FROM #AGK K ORDER BY K.ORD, K.NOMBRE, K.ID
+            FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), '');
+
+        SET @AG_MODAL = CONVERT(VARCHAR(MAX), '')
+            + '<div class="vct-modal vct-form-shell vct-form-lg vct-pv-modal vct-pv-agm" id="vctPvAgenda" data-vct-component="modal" data-vct-pv-modal="ag"'
+            + ' data-pv-ag-hoy="' + CONVERT(VARCHAR(10), @HOY, 120) + '" data-pv-ag-nd="' + CONVERT(VARCHAR(10), @AG_ND) + '" data-pv-ag-tpl="' + CONVERT(VARCHAR(1), @AGM_TPL) + '"'
+            + ' data-pv-ag-fer="' + REPLACE(REPLACE(REPLACE(@AG_FER,'&','&amp;'),'"','&quot;'),'<','&lt;') + '">'
+            + '<div class="vct-modal-backdrop" data-vct-pv-close></div><div class="vct-modal-dialog">'
+            + '<div class="vct-modal-header vct-form-header"><div class="vct-form-header-accent"></div><div class="vct-form-header-icon"><span data-vct-icon="calendar"></span></div>'
+            + '<div class="vct-form-header-copy"><h3 class="vct-modal-title" data-pv-ag-mtitle>Nueva visita</h3><p class="vct-modal-subtitle">Proyecto (' + @E_COD + ') &middot; ' + @E_CLI + '</p></div>'
+            + '<button type="button" class="vct-form-close" data-vct-pv-close aria-label="Cerrar">&times;</button></div>'
+            + '<div class="vct-modal-body vct-form-body"><div class="vct-validation-box" data-vct-pv-error style="display:none;"></div><div class="vct-form-grid">'
+            + '<div class="vct-field vct-col-4"><label class="vct-label">Tipo</label><input type="text" class="vct-input" value="Visita" readonly></div>'
+            + '<div class="vct-field vct-col-4"><label class="vct-label">Subtipo</label><input type="text" class="vct-input" value="Visita al cliente" readonly></div>'
+            + '<div class="vct-field vct-col-4"><label class="vct-label">Resultado</label><input type="text" class="vct-input" value="Visita programada" readonly data-pv-ag-res></div>'
+            + '<div class="vct-field vct-col-3"><label class="vct-label">Fecha desde <span class="vct-req">*</span></label>'
+            +   '<input type="date" class="vct-input" data-vct-datepicker data-pv-ag-f="desde" min="' + CONVERT(VARCHAR(10), @HOY, 120) + '"></div>'
+            + '<div class="vct-field vct-col-3"><label class="vct-label">Fecha hasta <span class="vct-req">*</span></label>'
+            +   '<input type="date" class="vct-input" data-vct-datepicker data-pv-ag-f="hasta" min="' + CONVERT(VARCHAR(10), @HOY, 120) + '"></div>'
+            + '<div class="vct-field vct-col-3"><label class="vct-label">D&iacute;as</label><input type="text" class="vct-input" readonly data-pv-ag-dias value="-"></div>'
+            + '<div class="vct-field vct-col-3"><label class="vct-label">Estado <span class="vct-req">*</span></label>'
+            +   '<div class="vct-pv-ag-est" data-pv-ag-est><button type="button" class="is-p is-on" data-v="P">Pendiente</button><button type="button" class="is-c" data-v="C">Confirmada</button></div></div>'
+            + '<div class="vct-field vct-col-12"><div class="vct-pv-sec">Servicio y normas de la visita</div></div>'
+            + '<div class="vct-field vct-col-12"><div class="vct-pv-ag-svgrid">' + @AGM_SV + '</div></div>'
+            + @AGM_INST
+            + '<div class="vct-field vct-col-12"><div class="vct-pv-chips"><span class="vct-pv-chips-lbl">Normas</span>' + @AGM_NOR
+            +   '<span class="vct-pv-ag-hint">toc&aacute; una norma para sacarla o agregarla a la visita</span></div></div>'
+            + '<div class="vct-field vct-col-12"><div class="vct-pv-sec">Consultores de la visita</div></div>'
+            + '<div class="vct-field vct-col-12">'
+            + CASE WHEN @AGM_ROWS = '' THEN '<div class="vct-360-empty">No hay consultores activos con los servicios del proyecto (VCT_CONSULTORES_SERVICIOS).</div>'
+                   ELSE '<div class="vct-pv-cons-search"><span data-vct-icon="search"></span><input type="text" class="vct-input" style="padding-left:38px !important" placeholder="Buscar consultor o servicio..." data-pv-ag-buscar autocomplete="off"></div>'
+                      + '<div class="vct-pv-cons-wrap vct-pv-ag-wrap" data-vct-dg-id="pv_agenda_cons"><table class="vct-pv-cons vct-pv-ag-cons"><thead><tr><th class="vct-pv-ag-c0"></th><th class="vct-pv-ag-c1">Consultor</th>' + @AGM_NTH
+                      + '<th class="vct-pv-ag-c2">Proyectos</th><th class="vct-pv-ag-c3"><div class="vct-pv-ag-days" data-pv-agc-dhd></div></th><th class="vct-pv-ag-c4">Rol</th><th class="vct-pv-ag-c5">Horas</th></tr></thead><tbody>'
+                      + '<tr class="vct-pv-ag-grp is-eq"><td colspan="' + CONVERT(VARCHAR(10), @AGM_NCOL + 6) + '">Equipo del proyecto<small>l&iacute;der y consultores asignados</small></td></tr>'
+                      + @AGM_ROWS + '</tbody></table></div>'
+                      + '<div class="vct-help">Agenda desde la fecha desde, 7 d&iacute;as seguidos; con borde bord&oacute;, los d&iacute;as de la visita. D = disponible y horas libres &middot; Asig = asignado &middot; ND = no disponible &middot; Oc = ocupado &middot; Pot = potencial &middot; Org = organismo &middot; Lic = licencia &middot; Fer = feriado &middot; &mdash; = no cargado. Horas: por defecto d&iacute;as &times; 8, m&aacute;ximo d&iacute;as &times; 8.</div>' END
+            + '</div>'
+            + '<div class="vct-field vct-col-12"><div class="vct-pv-ag-notif" data-pv-ag-notif></div></div>'
+            + '<div class="vct-field vct-col-8"><label class="vct-label">Con copia a</label><input type="text" class="vct-input" maxlength="500" placeholder="nombre@dominio.com; otro@dominio.com" data-pv-ag-f="cc">'
+            +   '<div class="vct-help">Opcional: va en copia del mail a los consultores.</div>'
+            +   '<label class="vct-pv-switch vct-pv-ag-mail"><input type="checkbox" data-pv-ag-f="mail"' + CASE WHEN @AGM_TPL = 1 THEN ' checked' ELSE ' disabled' END + '><span>Enviar mail a los consultores'
+            +   CASE WHEN @AGM_TPL = 1 THEN ' (plantilla Visita programada)' ELSE ' (no hay plantilla activa PROYECTO_VISITA_CONSULTOR)' END + '</span></label></div>'
+            + '<div class="vct-field vct-col-12"><label class="vct-label">Detalle</label><textarea class="vct-textarea" rows="2" maxlength="1000" data-pv-ag-f="det" placeholder="Objetivo de la visita, temas a trabajar..."></textarea></div>'
+            + '<div class="vct-field vct-col-6"><label class="vct-label">Observaciones de log&iacute;stica</label><textarea class="vct-textarea" rows="2" maxlength="400" data-pv-ag-f="log" placeholder="Traslado, horario de ingreso, contacto en planta, vi&aacute;ticos..."></textarea></div>'
+            + '<div class="vct-field vct-col-6"><label class="vct-label">Observaciones de calificaci&oacute;n <span class="vct-req" data-pv-ag-calreq hidden>*</span></label>'
+            +   '<textarea class="vct-textarea" rows="2" maxlength="400" data-pv-ag-f="calif" placeholder="Por qu&eacute; se asigna sin calificaci&oacute;n, qui&eacute;n acompa&ntilde;a..."></textarea><div class="vct-help" data-pv-ag-calhelp></div></div>'
+            + '<div class="vct-field vct-col-12"><div class="vct-pv-sec">Al guardar se genera</div></div>'
+            + '<div class="vct-field vct-col-12"><div class="vct-pv-gen" data-pv-ag-gen></div></div>'
+            + '</div></div>'
+            + '<div class="vct-modal-footer vct-form-footer"><button type="button" class="vct-btn vct-btn-secondary" data-vct-pv-close><span>Cancelar</span></button>'
+            + '<button type="button" class="vct-btn vct-btn-primary" data-pv-ag-save><span data-vct-icon="save"></span><span data-pv-ag-savelbl>Guardar y notificar</span></button></div>'
+            + '</div></div>';
+    END;
+
     SET @H = @H + '<div class="vct-360-panel" data-vct-panel="acciones"><div class="vct-360-box vct-360-box-grid-auto vctdg-in-box" data-pv-acbox>'
         + '<div class="vct-360-box-head"><h3><span class="vct-360-title-icon"><span data-vct-icon="clipboard-check"></span></span>Acciones (' + CONVERT(VARCHAR(10), @N_TOT_ACC) + ')</h3></div>'
         + CASE WHEN @AC <> '' THEN '<div class="vct-pv-acchips" data-pv-acchips><button type="button" class="vct-pv-acchip is-on" data-pv-acchip="">Todas<i>' + CONVERT(VARCHAR(10), @N_TOT_ACC) + '</i></button>' + @AC_CHIPS + '</div>' ELSE '' END
@@ -3191,7 +3891,7 @@ BEGIN
     /* ======================= PESTANIAS DE PASOS SIGUIENTES ======================= */
     SET @H = @H
         + @PL_H
-        + '<div class="vct-360-panel" data-vct-panel="agenda"><div class="vct-360-box"><div class="vct-360-empty">La agenda del proyecto (visitas y horas) se habilita en el paso de agenda.</div></div></div>'
+        + @AG_H   /* PV_AGENDA_V1 */
         + '<div class="vct-360-panel" data-vct-panel="admin"><div class="vct-360-box"><div class="vct-360-empty">Honorarios, vi&aacute;ticos y rentabilidad se habilitan en el paso de administraci&oacute;n.</div></div></div>'
         + @DOC_H   /* PV_DOCS_V1 */
         + '</div>';
@@ -3632,19 +4332,19 @@ BEGIN
         + ' data-vct-tabs data-vct-tabs-active="resumen" data-vct-tabs-reset="0" data-vct-pv-proyecto="' + CONVERT(VARCHAR(20), @ID_PROYECTO) + '"' + ' data-vct-pv-cod="' + REPLACE(@E_COD,'"','&quot;') + '"'
         + ' data-vct-pv-guid="' + REPLACE(@GUID_V360,'"','') + '"' + CASE WHEN @MSG <> '' OR @ERR <> '' THEN ' data-vct-pv-volver="' + @VOLVER + '"' ELSE '' END + '>'
         + @H + @MODAL
-        + @LZ_MODALS + @PL_MODALS + @AC_MODAL + @PE_MODAL /* SP_IDSELEC02_V1 */
+        + @LZ_MODALS + @PL_MODALS + @AC_MODAL + @PE_MODAL + @AG_MODAL /* SP_IDSELEC02_V1 */
         + '<input type="hidden" name="SP.IDSELEC02" data-vct-field="IDSELEC02" value="' + CONVERT(VARCHAR(20), @ID_PROYECTO) + '">'
         + '<input type="hidden" name="SP.TEXTO30" data-vct-field="TEXTO30" value=""><input type="hidden" name="SP.IDSELEC03" data-vct-field="IDSELEC03" value="">'
         + '<input type="hidden" name="SP.TEXTO11" data-vct-field="TEXTO11" value=""><input type="hidden" name="SP.TEXTO12" data-vct-field="TEXTO12" value="">'
-        + '<input type="hidden" name="SP.TEXTO13" data-vct-field="TEXTO13" value=""><input type="hidden" name="SP.TEXTO14" data-vct-field="TEXTO14" value=""><input type="hidden" name="SP.TEXTO15" data-vct-field="TEXTO15" value=""><input type="hidden" name="SP.TEXTO16" data-vct-field="TEXTO16" value=""><input type="hidden" name="SP.TEXTO17" data-vct-field="TEXTO17" value=""><input type="hidden" name="SP.TEXTO18" data-vct-field="TEXTO18" value=""><input type="hidden" name="SP.TEXTO19" data-vct-field="TEXTO19" value=""><input type="hidden" name="SP.TEXTO20" data-vct-field="TEXTO20" value=""><input type="hidden" name="SP.TEXTO21" data-vct-field="TEXTO21" value=""><input type="hidden" name="SP.FLAG01" data-vct-field="FLAG01" value="">'
+        + '<input type="hidden" name="SP.TEXTO13" data-vct-field="TEXTO13" value=""><input type="hidden" name="SP.TEXTO14" data-vct-field="TEXTO14" value=""><input type="hidden" name="SP.TEXTO15" data-vct-field="TEXTO15" value=""><input type="hidden" name="SP.TEXTO16" data-vct-field="TEXTO16" value=""><input type="hidden" name="SP.TEXTO17" data-vct-field="TEXTO17" value=""><input type="hidden" name="SP.TEXTO18" data-vct-field="TEXTO18" value=""><input type="hidden" name="SP.TEXTO19" data-vct-field="TEXTO19" value=""><input type="hidden" name="SP.TEXTO20" data-vct-field="TEXTO20" value=""><input type="hidden" name="SP.TEXTO21" data-vct-field="TEXTO21" value=""><input type="hidden" name="SP.TEXTO22" data-vct-field="TEXTO22" value=""><input type="hidden" name="SP.FLAG01" data-vct-field="FLAG01" value="">'
         + '</section></div>';
 END
 GO
 
 DECLARE @TRG BIT;
 SELECT @TRG = TRG FROM #P2V;
-IF OBJECT_DEFINITION(OBJECT_ID('dbo.VCT_MAIN_PROYECTO_V360')) LIKE '%PV_PLAN_V1%'
-    PRINT 'OK   dbo.VCT_MAIN_PROYECTO_V360 reemplazado (lanzamiento y parte logistico).';
+IF OBJECT_DEFINITION(OBJECT_ID('dbo.VCT_MAIN_PROYECTO_V360')) LIKE '%PV_AGENDA_V1%'
+    PRINT 'OK   dbo.VCT_MAIN_PROYECTO_V360 reemplazado (con la Agenda del proyecto PV_AGENDA_V1).';
 ELSE
     PRINT 'FALLO dbo.VCT_MAIN_PROYECTO_V360 no se actualizo: revisar el error de arriba.';
 IF @TRG = 1
@@ -3688,5 +4388,53 @@ BEGIN
             PRINT 'FALLO dbo.VCT_PROYECTO_ASIGNAR_CONSULTOR: ' + @AERR;
         END CATCH;
     END;
+END;
+GO
+
+/* PV_AGENDA_V1: plantilla de mail PROYECTO_VISITA_CONSULTOR (aviso al consultor de la visita agendada).
+   Destino LIBRE con los mails de prueba hasta pasar a produccion. Si ya existe, no se toca. Re-ejecutable.
+   Variables: {{CONSULTOR}} {{PROYECTO}} {{CLIENTE}} {{ANALISTA}} {{FECHA}} {{HORA}} (VCT_MAIN_SEND_EMAIL) y
+   {{CODIGO_PROYECTO}} {{FECHAS}} {{SERVICIO}} {{LUGAR}} {{NORMAS}} {{HORAS}} {{ESTADO}} {{ROL}} {{LOGISTICA}} {{DETALLE}} (la V360). */
+IF EXISTS (SELECT 1 FROM dbo.VCT_PRM_EMAIL_TEMPLATES WHERE UPPER(LTRIM(RTRIM(CODIGO))) = 'PROYECTO_VISITA_CONSULTOR')
+    PRINT 'OK   plantilla PROYECTO_VISITA_CONSULTOR ya existia (sin cambios).'
+ELSE
+BEGIN
+    INSERT INTO dbo.VCT_PRM_EMAIL_TEMPLATES
+        (CODIGO, DESCRIPCION, TIPO_ENVIO, DESTINO_TIPO, DESTINO_LIBRE, CC_TIPO, CC_LIBRE, ESTADO, ASUNTO, HTML_CONTENIDO, DISENO_JSON, FECHA_ALTA, USUARIO_ALTA)
+    VALUES
+        ('PROYECTO_VISITA_CONSULTOR',
+         'Aviso al consultor cuando se le agenda una visita del proyecto (Agenda de la Vista 360 de proyecto).',
+         'AUTOMATICO', 'LIBRE', 'martin.aja@squad.com.ar; esteban.de.marco@squad.com.ar', 'NINGUNO', NULL, 'ACTIVO',
+         'Visita programada: ({{CODIGO_PROYECTO}}) {{PROYECTO}} - {{FECHAS}}',
+           CONVERT(VARCHAR(MAX), '')
+         + '<!doctype html><html><head><meta charset="utf-8"><style>html,body{overflow-x:hidden;}</style></head>'
+         + '<body style="margin:0;padding:0;background:#f3f5f7;">'
+         + '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#f3f5f7;padding:24px 0;"><tr><td align="center">'
+         + '<table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="width:600px;max-width:94%;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;"><tr>'
+         + '<td data-vct-email-content style="padding:20px 24px;color:#263247;font-family:Arial,sans-serif;font-size:14px;line-height:1.6;">'
+         + '<img src="https://vocaturo.desa.interdev.online/img/vct-mail-banner-Bordeaux.png" alt="" width="600" height="90" style="max-width:100%;width:100%;height:auto;display:block;margin:0;">'
+         + '<div><br></div>'
+         + '<div style="font-size:17px;font-weight:bold;color:#66062D;">Visita programada</div>'
+         + '<div><br></div>'
+         + '<div>Hola {{CONSULTOR}},</div>'
+         + '<div>Se te agend&oacute; una visita del proyecto <b>({{CODIGO_PROYECTO}}) {{PROYECTO}}</b> del cliente <b>{{CLIENTE}}</b> como <b>{{ROL}}</b>.</div>'
+         + '<div><br></div>'
+         + '<div><b>Fecha:</b> {{FECHAS}}</div>'
+         + '<div><b>Servicio:</b> {{SERVICIO}}</div>'
+         + '<div><b>Lugar:</b> {{LUGAR}}</div>'
+         + '<div><b>Normas:</b> {{NORMAS}}</div>'
+         + '<div><b>Horas programadas:</b> {{HORAS}} h</div>'
+         + '<div><b>Estado:</b> {{ESTADO}}</div>'
+         + '<div><b>Log&iacute;stica:</b> {{LOGISTICA}}</div>'
+         + '<div><b>Detalle:</b> {{DETALLE}}</div>'
+         + '<div><b>Analista:</b> {{ANALISTA}}</div>'
+         + '<div><br></div>'
+         + '<div>Pod&eacute;s verla en <a href="https://vocaturo.desa.interdev.online/main/">https://vocaturo.desa.interdev.online/main/</a></div>'
+         + '<div><br></div>'
+         + '<div style="color:#6b7280;font-size:12px;">Mail generado autom&aacute;ticamente el {{FECHA}} a las {{HORA}}.</div>'
+         + '</td></tr></table>'
+         + '</td></tr></table></body></html>',
+         NULL, GETDATE(), 'PV_AGENDA_V1');
+    PRINT 'OK   plantilla PROYECTO_VISITA_CONSULTOR creada (destino LIBRE: mails de prueba).';
 END;
 GO

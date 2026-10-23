@@ -1,4 +1,6 @@
-/* vct-proyecto-v360.js - v29 PV_ASIG_V2 (asignar: lider al primero, + email del consultor, CC, confirmacion)
+/* vct-proyecto-v360.js - v32 PV_AGENDA_V1 (permiso del plan, calendario pendiente / confirmada, modal del boceto)
+   v31 PV_AGENDA_V1 (pestania Agenda: lista por servicio / calendario, modal Nueva visita)
+   v29 PV_ASIG_V2 (asignar: lider al primero, + email del consultor, CC, confirmacion)
    v22 (plan estrategico en arbol con detalle 50/50; responsable otro)
    v21 (paginado de servicios > 10; pestania Plan de auditoria / capacitacion)
    v20 (servicios en grilla agrupada; pestania del plan deshabilitada hasta Ver plan / Gestionar)
@@ -828,16 +830,143 @@
             rows: rows
         };
     }
+    /* PL_PDF_GANTT_VECTOR_V1: solo PDF de cronograma. No altera DOM, Excel ni PDF del arbol. */
+    function plGanttPDF(spec) {
+        if (!window.pdfMake || typeof window.pdfMake.createPdf !== "function")
+            return Promise.reject(new Error("pdfMake no esta disponible para el PDF vectorial del cronograma."));
+
+        function fecha(valor) {
+            var s = String(valor == null ? "" : valor).trim(), m, y, mo, d;
+            if ((m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s))) { y = +m[1]; mo = +m[2]; d = +m[3]; }
+            else if ((m = /^(\d{2})\/(\d{2})\/(\d{4})/.exec(s))) { d = +m[1]; mo = +m[2]; y = +m[3]; }
+            else return null;
+            var f = new Date(y, mo - 1, d);
+            return f.getFullYear() === y && f.getMonth() === mo - 1 && f.getDate() === d ? f : null;
+        }
+        function dia(f) { return Math.floor(Date.UTC(f.getFullYear(), f.getMonth(), f.getDate()) / 86400000); }
+        function sumar(f, n) { return new Date(f.getFullYear(), f.getMonth(), f.getDate() + n); }
+        function etiqueta(f) { return (f.getDate() < 10 ? "0" : "") + f.getDate() + "/" + (f.getMonth() + 1 < 10 ? "0" : "") + (f.getMonth() + 1); }
+        function celda(t, opt) { return Object.assign({ text: String(t == null ? "" : t), fontSize: 7, margin: [3, 5, 3, 5] }, opt || {}); }
+        var entradas = spec.rows.map(function (r) {
+            var ini = fecha(r[5]), fin = fecha(r[6]);
+            return { r: r, ini: ini, fin: fin, a: Math.max(0, Math.min(100, parseFloat(String(r[8]).replace(",", ".")) || 0)) };
+        });
+        var fechas = [];
+        entradas.forEach(function (e) { if (e.ini) fechas.push(dia(e.ini)); if (e.fin) fechas.push(dia(e.fin)); });
+        if (!fechas.length) return Promise.reject(new Error("El cronograma no contiene fechas validas de inicio o vencimiento."));
+        var min = Math.min.apply(null, fechas), max = Math.max.apply(null, fechas);
+        var primer = new Date(min * 86400000);
+        primer = new Date(primer.getUTCFullYear(), primer.getUTCMonth(), primer.getUTCDate());
+        primer = sumar(primer, -((primer.getDay() + 6) % 7));
+        var ultimo = new Date(max * 86400000);
+        ultimo = new Date(ultimo.getUTCFullYear(), ultimo.getUTCMonth(), ultimo.getUTCDate());
+        var semanas = Math.ceil((dia(ultimo) - dia(primer) + 1) / 7);
+        if (semanas > 260) return Promise.reject(new Error("El rango supera 260 semanas. Ajusta las fechas antes de exportar."));
+        var porPagina = 13, contenido = [];
+        /* El ancho de cada semana es fijo para dibujar duraciones parciales con precision. */
+        var anchoSemana = 55;
+        function barraSemana(e, desde, hasta) {
+            var ini = e.ini ? dia(e.ini) : null, fin = e.fin ? dia(e.fin) : null;
+            if (ini === null && fin === null) return celda("");
+            if (ini === null) ini = fin;
+            if (fin === null) fin = ini;
+            if (fin < ini) { var aux = ini; ini = fin; fin = aux; }
+            var esHito = /hito/i.test(String(e.r[0] || "")) || /hito/i.test(String(e.r[2] || "")) || /^hito$/i.test(String(e.r[1] || ""));
+            var ancho = anchoSemana - 4, alto = 12, dibujo = [];
+            if (esHito) {
+                /* Un hito se ubica en su fecha de vencimiento, sin simular duracion. */
+                if (fin >= desde && fin <= hasta) {
+                    var x = 2 + ((fin - desde + 0.5) / 7) * ancho;
+                    dibujo.push({ type: "polyline", points: [{ x: x, y: 1 }, { x: x + 5, y: 6 }, { x: x, y: 11 }, { x: x - 5, y: 6 }], closePath: true, color: "#751A3D", lineColor: "#751A3D" });
+                }
+            } else {
+                var a = Math.max(ini, desde), b = Math.min(fin, hasta);
+                if (a <= b) {
+                    var x0 = 2 + ((a - desde) / 7) * ancho;
+                    var x1 = 2 + ((b - desde + 1) / 7) * ancho;
+                    dibujo.push({ type: "rect", x: x0, y: 3, w: Math.max(1, x1 - x0), h: 7, r: 2, color: "#DDE9FF" });
+                    /* El avance se calcula sobre toda la actividad, no sobre cada semana. */
+                    var diasEjecutados = (fin - ini + 1) * e.a / 100;
+                    var extremoAvance = ini + diasEjecutados;
+                    var hastaAvance = Math.min(extremoAvance, b + 1);
+                    if (hastaAvance > a) {
+                        var xp = 2 + ((hastaAvance - desde) / 7) * ancho;
+                        dibujo.push({ type: "rect", x: x0, y: 3, w: Math.max(0.5, xp - x0), h: 7, r: 2, color: "#12864A" });
+                    }
+                }
+            }
+            return { canvas: dibujo.length ? dibujo : [{ type: "line", x1: 0, y1: 0, x2: 0, y2: 0, lineColor: "#FFFFFF", lineWidth: 0.1 }], margin: [0, 4, 0, 4] };
+        }
+        for (var base = 0; base < semanas; base += porPagina) {
+            var cantidad = Math.min(porPagina, semanas - base);
+            var comienzo = sumar(primer, base * 7), cierre = sumar(comienzo, cantidad * 7 - 1);
+            if (base) contenido.push({ text: "", pageBreak: "before", margin: 0 });
+            contenido.push({ text: spec.title, style: "titulo" });
+            contenido.push({ text: spec.subtitle + "  |  " + etiqueta(comienzo) + " - " + etiqueta(cierre) + "  |  Semanas " + (base + 1) + "-" + (base + cantidad) + " de " + semanas, style: "subtitulo" });
+            var widths = [35, 155, 68, 38];
+            for (var w = 0; w < cantidad; w++) widths.push(anchoSemana);
+            var cab = [celda("Codigo"), celda("Item / subitem"), celda("Responsable"), celda("Avance")];
+            for (var h = 0; h < cantidad; h++) cab.push(celda(etiqueta(sumar(comienzo, h * 7)), { alignment: "center" }));
+            var cuerpo = [cab], capAnterior = null;
+            entradas.forEach(function (e) {
+                var r = e.r;
+                if (r[0] !== capAnterior) {
+                    capAnterior = r[0];
+                    cuerpo.push([{ text: String(capAnterior || "Sin capitulo"), colSpan: cantidad + 4, bold: true, color: "#751A3D", fillColor: "#F3EAF0", fontSize: 8, margin: [4, 5, 4, 5] }].concat(Array(cantidad + 3).fill({ text: "" })));
+                }
+                var fila = [celda(r[1]), celda((r[2] === "Subítem" ? "  · " : "") + r[3]), celda(r[4]), celda(r[8], { alignment: "right" })];
+                var ini = e.ini ? dia(e.ini) : null, fin = e.fin ? dia(e.fin) : null;
+                if (ini !== null && fin !== null && fin < ini) { var tmp = ini; ini = fin; fin = tmp; }
+                for (var j = 0; j < cantidad; j++) {
+                    var desde = dia(sumar(comienzo, j * 7)), hasta = desde + 6;
+                    fila.push(barraSemana(e, desde, hasta));
+                }
+                cuerpo.push(fila);
+            });
+            contenido.push({ table: { headerRows: 1, widths: widths, body: cuerpo, dontBreakRows: true }, layout: { fillColor: function (row) { return row === 0 ? "#EDEDED" : null; }, hLineColor: function () { return "#D8D8D8"; }, vLineColor: function () { return "#E8E8E8"; }, hLineWidth: function () { return 0.4; }, vLineWidth: function () { return 0.4; } } });
+        }
+        /* Recupera el mismo logo original que utiliza vct-export.js.
+           Solo afecta el PDF Gantt; no altera los demas exportadores. */
+        function cargarLogo() {
+            return new Promise(function (resolve) {
+                var img = new Image();
+                img.onload = function () {
+                    try {
+                        var canvas = document.createElement("canvas");
+                        canvas.width = img.naturalWidth || img.width;
+                        canvas.height = img.naturalHeight || img.height;
+                        if (!canvas.width || !canvas.height) { resolve(null); return; }
+                        canvas.getContext("2d").drawImage(img, 0, 0);
+                        resolve({ data: canvas.toDataURL("image/png"), ratio: canvas.width / canvas.height });
+                    } catch (e) { resolve(null); }
+                };
+                img.onerror = function () { resolve(null); };
+                img.src = "../img/LogoBordo.png";
+            });
+        }
+        return cargarLogo().then(function (logo) {
+            var cabecera = logo
+                ? { image: logo.data, width: 84, margin: [25, 7, 0, 0] }
+                : { text: "Vocaturo", bold: true, fontSize: 12, color: "#751A3D", margin: [25, 7, 0, 0] };
+            var doc = { pageSize: "A3", pageOrientation: "landscape", pageMargins: [25, 43, 25, 30], content: contenido,
+                header: function () { return cabecera; },
+                defaultStyle: { font: "Roboto" }, styles: { titulo: { fontSize: 15, bold: true, color: "#751A3D", margin: [0, 0, 0, 5] }, subtitulo: { fontSize: 9, color: "#555555", margin: [0, 0, 0, 12] } },
+                footer: function (p, total) { return { text: "Pagina " + p + " de " + total, alignment: "right", margin: [0, 0, 25, 0], fontSize: 8, color: "#777777" }; } };
+            return new Promise(function (resolve, reject) {
+                try { window.pdfMake.createPdf(doc).download((spec.filename || "Cronograma") + ".pdf", function () { resolve(); }); }
+                catch (e) { reject(e); }
+            });
+        });
+    }
+
     function plExport(btn, kind) {
         var box = btn.closest("[data-pl-box]");
         if (!box || btn.classList.contains("is-busy")) return;
         if (!window.VCTExport) { if (window.VCT && VCT.Toast) VCT.Toast.show("Falta cargar vct-export.js: no se puede exportar.", "warning"); return; }
         var spec = plExportSpec(box);
         btn.classList.add("is-busy");
-        var g = box.classList.contains("is-gantt") ? box.querySelector('[data-pl-pane="gantt"] .vct-pl-g') : null;
         var job = kind === "pdf"
-            ? (g && window.VCTExport.rasterize ? window.VCTExport.rasterize(g).catch(function () { return null; }) : Promise.resolve(null))
-                .then(function (img) { if (img) spec.images = [{ dataUrl: img, caption: "Cronograma", full: true }]; return window.VCTExport.pdf(spec); })
+            ? (box.classList.contains("is-gantt") ? plGanttPDF(spec) : window.VCTExport.pdf(spec))
             : window.VCTExport.excel(spec);
         Promise.resolve(job).catch(function (e) { if (window.VCT && VCT.Toast) VCT.Toast.show("No se pudo exportar: " + (e && e.message ? e.message : e), "warning"); })
             .then(function () { btn.classList.remove("is-busy"); });
@@ -1186,6 +1315,8 @@
         setTimeout(plInit, 200);
         /* acciones: chip de origen elegido y filas de grupo */
         setTimeout(function () { acInit(r); }, 300);
+        /* agenda: filas de grupo por servicio (PV_AGENDA_V1) */
+        setTimeout(function () { r.querySelectorAll('[data-vct-dg-id="pv_agenda"]').forEach(agGroups); }, 300);
         var al = r.querySelector("[data-vct-pv-alert].is-ok");
         if (al) setTimeout(function () { al.classList.add("is-hiding"); setTimeout(function () { if (al.parentNode) al.parentNode.removeChild(al); }, 400); }, 9000);
     }
@@ -1199,6 +1330,545 @@
             setTimeout(function () { pend = false; scan(); }, 40);
         }).observe(document.documentElement, { childList: true, subtree: true });
     }
+
+    /* ---------------- agenda del proyecto (PV_AGENDA_V1) ----------------
+       Lista agrupada por servicio (como Servicios) / Calendario (motor vct-calendario, dias editables con "+"),
+       modal Nueva visita / Editar visita: servicio e instancia, normas, consultores con calificacion por norma,
+       agenda de 7 dias desde la fecha desde, horas (8 h por dia), estado, observaciones y mail. Graba PV_AG_GUARDAR. */
+    var AG_LBL = {
+        D: ["d", "D"], A: ["d", "D"], AX: ["a", "Asig"], ND: ["o", "ND"], OC: ["o", "Oc"], PO: ["p", "Pot"], OR: ["g", "Org"],
+        OB: ["b", "Obs"], LI: ["l", "Lic"], FE: ["f", "Fer"], NC: ["n", "—"], X: ["n", "?"]
+    };
+    var AG_TXT = {
+        AX: "asignado a otro proyecto", ND: "no disponible", OC: "ocupado", PO: "potencial", OR: "organismo", OB: "observación",
+        LI: "licencia", FE: "feriado", NC: "agenda sin cargar"
+    };
+    var AG_DN = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+    var ag = null;   /* estado del modal abierto */
+    function agM(from) {
+        var r = (from && from.closest ? from.closest("[data-vct-pv]") : null) || root();
+        return r ? r.querySelector('[data-vct-pv-modal="ag"]') : null;
+    }
+    function agIso(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+    function agFmt(d) { return pad(d.getDate()) + "/" + pad(d.getMonth() + 1) + "/" + d.getFullYear(); }
+    function agAdd(d, n) { return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n); }
+    function agDiff(a, b) { return Math.round((b - a) / 86400000); }
+    function agNum(v) { var n = parseFloat(String(v == null ? "" : v).replace(",", ".")); return isNaN(n) ? 0 : n; }
+    function agH(n) { n = Math.round(n * 10) / 10; return String(n).replace(".", ","); }
+    function agToast(msg) { if (window.VCT && VCT.Toast && typeof VCT.Toast.show === "function") VCT.Toast.show(msg, "info"); }
+    function agF(m, k) { return m.querySelector('[data-pv-ag-f="' + k + '"]'); }
+    function agRows(m) { return Array.prototype.slice.call(m.querySelectorAll("tr[data-pv-agc]")); }
+    function agSel(m) { return agRows(m).filter(function (tr) { return tr.classList.contains("is-selected"); }); }
+    function agDias() { return ag && ag.desde && ag.hasta && ag.hasta >= ag.desde ? agDiff(ag.desde, ag.hasta) + 1 : 0; }
+    /* agenda del consultor: "dia:codigo:horas libres" desde hoy */
+    function agAgenda(tr) {
+        if (tr.__ag) return tr.__ag;
+        var o = {};
+        (tr.getAttribute("data-ag") || "").split(",").forEach(function (x) {
+            var p = x.split(":");
+            if (p.length === 3) o[p[0]] = { c: p[1], h: agNum(p[2]) };
+        });
+        tr.__ag = o;
+        return o;
+    }
+    function agDia(m, tr, d) {
+        var hoy = parseISO(m.getAttribute("data-pv-ag-hoy")), i = agDiff(hoy, d);
+        var nd = parseInt(m.getAttribute("data-pv-ag-nd"), 10) || 0;
+        var x = i >= 0 && i < nd ? agAgenda(tr)[String(i)] : null;
+        var r = x ? { c: x.c, h: x.h } : { c: "X", h: 0 };
+        /* edicion: lo que ya ocupaba esta misma visita vuelve a estar libre */
+        var own = ag && ag.own ? ag.own[tr.getAttribute("data-pv-agc")] : 0;
+        if (own && r.c === "A" && ag.oDesde && d >= ag.oDesde && d <= ag.oHasta) r.h += own;
+        return r;
+    }
+    function agFalta(m, tr) {
+        var dias = agDias();
+        if (!dias) return "";
+        var inp = tr.querySelector("[data-pv-agc-h]"), need = agNum(inp && inp.value) / dias;
+        for (var i = 0; i < dias; i++) {
+            var d = agAdd(ag.desde, i), x = agDia(m, tr, d);
+            if (x.c === "X") continue;   /* fuera de la ventana: lo valida el servidor al guardar */
+            if ((x.c === "D" || x.c === "A") && x.h + 0.05 >= need) continue;
+            return AG_DN[d.getDay()] + " " + pad(d.getDate()) + "/" + pad(d.getMonth() + 1) + ": " +
+                (x.c === "D" || x.c === "A" ? (x.h > 0 ? "le quedan " + agH(x.h) + " h" : "asignado a otro proyecto") : AG_TXT[x.c] || x.c);
+        }
+        return "";
+    }
+    function agCal(tr, nor) {
+        if (!ag || !ag.srv) return null;
+        var v = null;
+        (tr.getAttribute("data-cal") || "").split("|").forEach(function (x) {
+            var p = x.split(":");
+            if (p.length >= 3 && p[0] === ag.srv && p[1] === nor) v = p.slice(2).join(":");
+        });
+        return v;
+    }
+    function agSinCal(tr) {
+        if (!ag || !ag.srv) return false;
+        return Object.keys(ag.nor).some(function (n) { return ag.nor[n] && !agCal(tr, n); });
+    }
+    function agSetDate(el, v) { if (el) setVal(el, v); }
+
+    function agOpen(btn, fecha, ed) {
+        var m = agM(btn);
+        if (!m) return;
+        var hoy = parseISO(m.getAttribute("data-pv-ag-hoy"));
+        ag = { busy: true, id: "", t: "", ps: "", srv: "", ini: null, fin: null, est: "P", nor: {}, own: {}, otros: false, desde: null, hasta: null, max: 0, emails: {} };
+        m.querySelectorAll("[data-pv-ag-nor]").forEach(function (c) { ag.nor[c.getAttribute("data-pv-ag-nor")] = true; });
+        agRows(m).forEach(function (tr) {
+            tr.classList.remove("is-selected");
+            var h = tr.querySelector("[data-pv-agc-h]");
+            if (h) { h.value = ""; h.disabled = true; h.removeAttribute("data-user"); }
+        });
+        ["cc", "det", "log", "calif"].forEach(function (k) { var x = agF(m, k); if (x) x.value = ""; });
+        var bus = m.querySelector("[data-pv-ag-buscar]");
+        if (bus) bus.value = "";
+        var mail = agF(m, "mail");
+        if (mail && !mail.disabled) mail.checked = true;
+        if (window.VCT && VCT.FormSelect && typeof VCT.FormSelect.build === "function")
+            m.querySelectorAll("select[data-pv-ag-ps]").forEach(function (sel) { try { VCT.FormSelect.build(sel); } catch (e) { } });
+        m.querySelectorAll("[data-pv-ag-ps]").forEach(function (s) { setVal(s, ""); });
+        if (ed) {
+            ag.id = ed.getAttribute("data-pv-ag-edit") || "";
+            ag.est = ed.getAttribute("data-est") === "C" ? "C" : "P";
+            ag.desde = parseISO(ed.getAttribute("data-desde"));
+            ag.hasta = parseISO(ed.getAttribute("data-hasta")) || ag.desde;
+            ag.oDesde = ag.desde; ag.oHasta = ag.hasta;
+            var t = ed.getAttribute("data-t") || "", ps = ed.getAttribute("data-ps") || "";
+            agServ(m, t, ps);
+            ag.nor = {};
+            m.querySelectorAll("[data-pv-ag-nor]").forEach(function (c) { ag.nor[c.getAttribute("data-pv-ag-nor")] = false; });
+            (ed.getAttribute("data-nor") || "").split(",").forEach(function (n) { if (n) ag.nor[n] = true; });
+            var dias = agDiff(ag.desde, ag.hasta) + 1, cons = (ed.getAttribute("data-cons") || "").split(";").filter(Boolean);
+            ag.max = Math.max(1, cons.length);
+            cons.forEach(function (x) {
+                var p = x.split(":"), tr = m.querySelector('tr[data-pv-agc="' + p[0] + '"]');
+                ag.own[p[0]] = agNum(p[1]) / dias;
+                if (!tr) return;
+                tr.classList.add("is-selected");
+                var h = tr.querySelector("[data-pv-agc-h]");
+                if (h) { h.disabled = false; h.value = agH(agNum(p[1])).replace(",", "."); h.setAttribute("data-user", "1"); }
+                if (tr.hasAttribute("data-otro")) ag.otros = true;
+            });
+            var map = { det: "data-det", log: "data-log", calif: "data-calif" };
+            Object.keys(map).forEach(function (k) { var x = agF(m, k); if (x) x.value = ed.getAttribute(map[k]) || ""; });
+            if (mail && !mail.disabled) mail.checked = false;
+        } else {
+            var f = parseISO(fecha);
+            if (f && f >= hoy) { ag.desde = f; ag.hasta = f; }
+            /* un solo servicio: queda elegido */
+            var svs = m.querySelectorAll("[data-pv-ag-svt]");
+            if (svs.length === 1) agServ(m, svs[0].getAttribute("data-pv-ag-svt"), "");
+            /* el lider del proyecto arranca marcado */
+            var lid = m.querySelector('tr[data-pv-agc][data-rol="l"]');
+            if (lid) lid.classList.add("is-selected");
+        }
+        agSetDate(agF(m, "desde"), ag.desde ? agIso(ag.desde) : "");
+        agSetDate(agF(m, "hasta"), ag.hasta ? agIso(ag.hasta) : "");
+        var tt = m.querySelector("[data-pv-ag-mtitle]");
+        if (tt) tt.textContent = ag.id ? "Editar visita" : "Nueva visita";
+        showError(m, null);
+        var sv = m.querySelector("[data-pv-ag-save]");
+        if (sv) sv.disabled = false;
+        agHoras(m, false);
+        ag.busy = false;
+        agRender(m);
+        m.classList.add("is-open");
+        document.body.classList.add("vct-modal-open");
+        icons(m);
+    }
+    /* servicio: tipo (co / au / ca) y la instancia */
+    function agServ(m, t, ps) {
+        ag.t = t; ag.ps = ""; ag.srv = ""; ag.ini = null; ag.fin = null;
+        var box = m.querySelector('[data-pv-ag-svt="' + t + '"]');
+        if (box && box.hasAttribute("data-ps")) {
+            ag.ps = box.getAttribute("data-ps"); ag.srv = box.getAttribute("data-srv") || "";
+            ag.ini = parseISO(box.getAttribute("data-ini")); ag.fin = parseISO(box.getAttribute("data-fin"));
+        }
+        var sel = m.querySelector('[data-pv-ag-ps="' + t + '"]');
+        if (sel) {
+            if (ps) setVal(sel, ps);
+            agInst(m, sel);
+        }
+    }
+    function agInst(m, sel) {
+        var o = sel.options[sel.selectedIndex];
+        if (!o || !o.value) { ag.ps = ""; ag.srv = ""; ag.ini = null; ag.fin = null; return; }
+        ag.ps = o.value; ag.srv = o.getAttribute("data-srv") || "";
+        ag.ini = parseISO(o.getAttribute("data-ini")); ag.fin = parseISO(o.getAttribute("data-fin"));
+    }
+    /* horas por defecto: dias x 8 (salvo las que el usuario cambio a mano) */
+    function agHoras(m, reset) {
+        var max = agDias() * 8;
+        agRows(m).forEach(function (tr) {
+            var h = tr.querySelector("[data-pv-agc-h]");
+            if (!h) return;
+            var on = tr.classList.contains("is-selected");
+            h.disabled = !on;
+            h.max = max ? String(max) : "";
+            if (!on) { h.value = ""; h.removeAttribute("data-user"); return; }
+            if (reset || !h.hasAttribute("data-user") || !h.value) { h.value = max ? String(max) : ""; if (reset) h.removeAttribute("data-user"); }
+            else if (max && agNum(h.value) > max) h.value = String(max);
+        });
+    }
+    function agRender(m) {
+        if (!ag) return;
+        var dias = agDias(), hoy = parseISO(m.getAttribute("data-pv-ag-hoy"));
+        var di = m.querySelector("[data-pv-ag-dias]");
+        if (di) di.value = dias ? dias + " día(s) · hasta " + dias * 8 + " h c/u" : "-";
+        var res = m.querySelector("[data-pv-ag-res]");
+        if (res) res.value = ag.est === "C" ? "Visita confirmada" : "Visita programada";
+        m.querySelectorAll("[data-pv-ag-est] [data-v]").forEach(function (b) { b.classList.toggle("is-on", b.getAttribute("data-v") === ag.est); });
+        m.querySelectorAll("[data-pv-ag-svt]").forEach(function (b) { b.classList.toggle("is-on", b.getAttribute("data-pv-ag-svt") === ag.t); });
+        m.querySelectorAll("[data-pv-ag-inst]").forEach(function (w) { w.hidden = w.getAttribute("data-pv-ag-inst") !== ag.t; });
+        m.querySelectorAll("[data-pv-ag-nor]").forEach(function (c) {
+            var on = !!ag.nor[c.getAttribute("data-pv-ag-nor")];
+            if (!c.hasAttribute("data-t")) c.setAttribute("data-t", c.textContent);
+            c.classList.toggle("is-on", on);
+            c.textContent = (on ? "✓ " : "") + c.getAttribute("data-t");
+        });
+        m.querySelectorAll("th[data-pv-agn], td[data-pv-agn]").forEach(function (c) { c.hidden = !ag.nor[c.getAttribute("data-pv-agn")]; });
+        /* cabecera de la agenda: 7 dias desde la fecha desde (o hoy) */
+        var base = ag.desde || hoy, win = [];
+        for (var i = 0; i < 7; i++) win.push(agAdd(base, i));
+        var inV = function (d) { return ag.desde && ag.hasta && d >= ag.desde && d <= ag.hasta; };
+        var hd = m.querySelector("[data-pv-agc-dhd]");
+        if (hd) hd.innerHTML = win.map(function (d) { return '<span class="' + (inV(d) ? "is-in" : "") + '">' + AG_DN[d.getDay()] + "<br>" + d.getDate() + "</span>"; }).join("");
+        var q = ((m.querySelector("[data-pv-ag-buscar]") || {}).value || "").trim().toLowerCase();
+        var nOtros = 0;
+        agRows(m).forEach(function (tr) {
+            var sel = tr.classList.contains("is-selected"), otro = tr.hasAttribute("data-otro");
+            var okSrv = !ag.srv || (tr.getAttribute("data-srv") || "").indexOf("," + ag.srv + ",") >= 0;
+            var okQ = !q || (tr.getAttribute("data-q") || "").indexOf(q) >= 0;
+            if (otro && okSrv) nOtros++;
+            tr.hidden = !sel && (!okQ || (otro && (!okSrv || (!ag.otros && !q))));
+            /* calificacion por norma (del servicio elegido) */
+            tr.querySelectorAll("td[data-pv-agn]").forEach(function (td) {
+                if (!ag.srv) { td.innerHTML = '<span class="vctdg-none">-</span>'; return; }
+                var c = agCal(tr, td.getAttribute("data-pv-agn"));
+                td.innerHTML = c ? '<span class="vct-pv-ag-cal is-ok">' + escH(c) + "</span>" : '<span class="vct-pv-ag-cal is-no">Sin calificación</span>';
+            });
+            /* agenda de 7 dias */
+            var cell = tr.querySelector("[data-pv-agc-agd]");
+            if (cell) cell.innerHTML = '<div class="vct-pv-ag-days">' + win.map(function (d) {
+                var x = agDia(m, tr, d), lb = AG_LBL[x.c] || AG_LBL.NC, k = lb[0], t = lb[1];
+                if (x.c === "D" || x.c === "A") { if (x.h > 0) t = "D<br>" + agH(x.h) + "h"; else { k = "a"; t = "Asig"; } }
+                return '<span class="is-' + k + (inV(d) ? " is-in" : "") + '" title="' + escH(AG_DN[d.getDay()] + " " + agFmt(d) + ": " + (x.c === "D" || x.c === "A" ? (x.h > 0 ? "disponible, " + agH(x.h) + " h libres" : "asignado") : AG_TXT[x.c] || "sin dato")) + '">' + t + "</span>";
+            }).join("") + "</div>";
+            var w = tr.querySelector("[data-pv-agc-warn]"), f = sel ? agFalta(m, tr) : "";
+            if (w) { w.hidden = !f; w.textContent = f ? "No disponible · " + f : ""; }
+        });
+        var og = m.querySelector("[data-pv-agc-otros]");
+        if (og) {
+            og.hidden = nOtros === 0;
+            og.classList.toggle("is-open", ag.otros || !!q);
+            var n = og.querySelector("[data-pv-agc-otros-n]");
+            if (n) n.textContent = nOtros + " · tocá para " + (ag.otros ? "ocultar" : "ver");
+        }
+        var eqg = m.querySelector(".vct-pv-ag-grp.is-eq");
+        if (eqg) eqg.hidden = !m.querySelector("tr[data-pv-agc]:not([data-otro])");
+        /* observaciones de calificacion: obligatorias si hay consultores sin calificacion */
+        var sel2 = agSel(m), falta = sel2.some(agSinCal);
+        var rq = m.querySelector("[data-pv-ag-calreq]"), hp = m.querySelector("[data-pv-ag-calhelp]");
+        if (rq) rq.hidden = !falta;
+        if (hp) { hp.textContent = falta ? "Obligatorio: hay consultores sin calificación en alguna norma de la visita." : (sel2.length && ag.srv ? "Opcional: todos los seleccionados están calificados." : ""); hp.classList.toggle("is-req", falta); }
+        agNotif(m, sel2);
+        agGen(m, sel2);
+    }
+    /* "Se notifica a": consultores marcados con su email (o para cargarlo) */
+    function agNotif(m, sel) {
+        var box = m.querySelector("[data-pv-ag-notif]");
+        if (!box) return;
+        box.querySelectorAll("[data-pv-ag-em]").forEach(function (i) { ag.emails[i.getAttribute("data-pv-ag-em")] = i.value; });
+        var nd = sel.filter(function (tr) { return !!agFalta(m, tr); }).length;
+        box.innerHTML = '<div class="vct-pv-ag-notif-t">Se notifica a</div>' + (sel.length ? sel.map(function (tr) {
+            var id = tr.getAttribute("data-pv-agc"), nm = tr.querySelector(".vct-360-project-name"), em = tr.getAttribute("data-email") || "";
+            var rol = tr.getAttribute("data-rol") === "l" ? "Consultor líder" : "Consultor", h = tr.querySelector("[data-pv-agc-h]");
+            var abierto = Object.prototype.hasOwnProperty.call(ag.emails, id);
+            return '<div class="vct-pv-ag-notif-r"><b>' + escH(nm ? nm.textContent : "") + '</b><span class="vct-pv-ag-notif-rol">' + rol + '</span>' +
+                '<span class="vct-pv-ag-notif-h">' + agH(agNum(h && h.value)) + ' h programadas</span>' +
+                (em ? '<span class="vct-pv-ag-notif-m">' + escH(em) + "</span><span></span>"
+                    : abierto ? '<input type="text" class="vct-input" maxlength="100" placeholder="Email del consultor (se guarda)" data-pv-ag-em="' + id + '" value="' + escH(ag.emails[id] || "") + '"><span></span>'
+                    : '<span class="vct-pv-ag-notif-m is-no">sin email cargado</span><button type="button" class="vct-pv-ag-plus" data-pv-ag-emadd="' + id + '" title="Agregar email">+</button>') + "</div>";
+        }).join("") : '<div class="vct-help">Ningún consultor seleccionado.</div>') +
+        (nd ? '<div class="vct-help is-req">' + nd + " consultor(es) no está(n) disponible(s) en esas fechas: no se puede guardar.</div>" : "");
+        var sv = m.querySelector("[data-pv-ag-save]");
+        if (sv) { sv.classList.toggle("is-dim", nd > 0); sv.title = nd ? "Hay consultores no disponibles" : ""; }
+    }
+    function agGen(m, sel) {
+        var g = m.querySelector("[data-pv-ag-gen]");
+        if (!g) return;
+        var tot = 0;
+        sel.forEach(function (tr) { var h = tr.querySelector("[data-pv-agc-h]"); tot += agNum(h && h.value); });
+        var fe = ag.desde ? agFmt(ag.desde) + (ag.hasta && ag.hasta > ag.desde ? " al " + agFmt(ag.hasta) : "") : "sin fecha";
+        var bd = ag.est === "C" ? '<span class="vct-360-badge is-active">Confirmada</span>' : '<span class="vct-360-badge is-planned">Pendiente</span>';
+        var mail = agF(m, "mail");
+        g.innerHTML = '<div>' + bd + " " + (ag.id ? "Se actualiza la visita" : sel.length + " visita(s) en la agenda del proyecto (una por consultor)") + " · " + fe + " · " + agH(tot) + " h programadas</div>" +
+            '<div>' + bd + " Horas asignadas en la agenda de cada consultor en esos días</div>" +
+            (mail && mail.checked ? '<div><span class="vct-360-badge is-active">Mail</span> «Visita programada» a los consultores' + ((agF(m, "cc") || {}).value ? " (con copia)" : "") + "</div>" : "");
+    }
+    function agGuardar(btn) {
+        var m = btn.closest('[data-vct-pv-modal="ag"]');
+        if (!m || !ag) return;
+        var errs = [], sel = agSel(m), dias = agDias(), hoy = parseISO(m.getAttribute("data-pv-ag-hoy"));
+        if (!ag.desde) errs.push("Fecha desde es obligatoria.");
+        else if (ag.desde < hoy) errs.push("Fecha desde no puede ser anterior a hoy.");
+        if (ag.desde && !ag.hasta) errs.push("Fecha hasta es obligatoria.");
+        else if (ag.desde && ag.hasta < ag.desde) errs.push("Fecha hasta no puede ser anterior a Fecha desde.");
+        if (dias > 31) errs.push("La visita no puede durar más de 31 días.");
+        if (!ag.t) errs.push("Servicio es obligatorio.");
+        else if (!ag.ps) errs.push((ag.t === "au" ? "Auditoría" : ag.t === "ca" ? "Capacitación" : "Servicio") + " es obligatorio: elija a cuál se carga la visita.");
+        if (ag.ps && ag.desde && ag.ini && ag.desde < ag.ini) errs.push("La visita no puede empezar antes del inicio del servicio (" + agFmt(ag.ini) + ").");
+        if (ag.ps && ag.hasta && ag.fin && ag.hasta > ag.fin) errs.push("La visita no puede terminar después del fin del servicio (" + agFmt(ag.fin) + ").");
+        var nor = Object.keys(ag.nor).filter(function (n) { return ag.nor[n]; });
+        if (!nor.length) errs.push("Norma es obligatoria: deje al menos una.");
+        if (!sel.length) errs.push("Consultor es obligatorio: marque al menos uno.");
+        var lista = [], nuevos = [], mail = agF(m, "mail"), conMail = !!(mail && mail.checked);
+        sel.forEach(function (tr) {
+            var nm = tr.querySelector(".vct-360-project-name"), n = escH(nm ? nm.textContent : "El consultor");
+            var h = tr.querySelector("[data-pv-agc-h]"), v = agNum(h && h.value);
+            if (!(v > 0) || (dias && v > dias * 8)) errs.push("Horas de " + n + ": mayor a 0 y hasta " + (dias * 8 || 8) + " (8 h por día).");
+            var f = agFalta(m, tr);
+            if (f) errs.push(n + " no está disponible (" + escH(f) + ").");
+            lista.push(tr.getAttribute("data-pv-agc") + ":" + v);
+            if (conMail && !tr.getAttribute("data-email")) {
+                var i = m.querySelector('[data-pv-ag-em="' + tr.getAttribute("data-pv-agc") + '"]'), em = i ? i.value.trim() : "";
+                if (!em) errs.push(n + " no tiene email: agréguelo con el botón + o destilde Enviar mail.");
+                else if (!MAIL_RE.test(em)) errs.push("Email de " + n + " no tiene un formato válido.");
+                else nuevos.push(tr.getAttribute("data-pv-agc") + ":" + em);
+            }
+        });
+        var cal = agF(m, "calif");
+        if (sel.some(agSinCal) && cal && !cal.value.trim()) errs.push("Observaciones de calificación es obligatorio: hay consultores sin calificación en alguna norma de la visita.");
+        var cc = conMail ? (agF(m, "cc") || {}).value || "" : "";
+        cc = cc.replace(/,/g, ";").trim();
+        if (cc) cc.split(";").forEach(function (x) { x = x.trim(); if (x && !MAIL_RE.test(x)) errs.push("Con copia a: &quot;" + escH(x) + "&quot; no es una dirección válida."); });
+        if (errs.length) { showError(m, errs); return; }
+        showError(m, null);
+        var v = function (k) { var x = agF(m, k); return x ? String(x.value || "").trim() : ""; };
+        enviar(btn, "PV_AG_GUARDAR", ag.id || "0", {
+            TEXTO11: agIso(ag.desde), TEXTO12: agIso(ag.hasta), TEXTO13: ag.ps, TEXTO14: nor.join(","), TEXTO15: lista.join(";"),
+            TEXTO16: ag.est, TEXTO17: v("det"), TEXTO18: v("log"), TEXTO19: v("calif"), TEXTO20: conMail ? "1" : "0", TEXTO21: cc, TEXTO22: nuevos.join(";")
+        }, "agenda");
+    }
+
+    /* lista: filas de grupo por servicio (como Servicios), con totales de horas */
+    function agGroups(host) {
+        var tb = host ? host.querySelector("tbody") : null;
+        if (!tb) return;
+        tb.querySelectorAll("tr.vct-pv-agg-g").forEach(function (x) { x.parentNode.removeChild(x); });
+        if (host.querySelector("th.is-asc, th.is-desc, th[aria-sort='ascending'], th[aria-sort='descending']")) return;
+        var G = {};
+        (host.getAttribute("data-pv-agmeta") || "").split(";").forEach(function (x) {
+            var p = x.split("|");
+            if (p.length >= 7) G[p[0]] = { t: p[1], ic: p[2], n: p[3], ej: agNum(p[4]), cap: agNum(p[5]), pr: agNum(p[6]) };
+        });
+        var cols = host.querySelectorAll("thead th").length || 9, prev = null, open = host.__agOpen || {};
+        Array.prototype.slice.call(tb.querySelectorAll("tr[data-pv-agg]")).forEach(function (r) {
+            var k = r.getAttribute("data-pv-agg");
+            r.classList.toggle("is-hidden", open[k] === false);
+            if (k === prev) return;
+            prev = k;
+            var g = G[k] || { t: k, ic: "briefcase", n: "", ej: 0, cap: 0, pr: 0 };
+            var pe = g.cap ? Math.min(100, Math.round(g.ej * 100 / g.cap)) : 0, pp = g.cap ? Math.min(100 - pe, Math.round(g.pr * 100 / g.cap)) : 0;
+            var tr = document.createElement("tr");
+            tr.className = "vct-pv-agg-g" + (open[k] === false ? "" : " is-open");
+            tr.setAttribute("data-k", k);
+            tr.innerHTML = '<td colspan="' + cols + '"><div class="vct-pv-svt-gh"><span class="vct-pv-svt-chev"><span data-vct-icon="chevron-right"></span></span>' +
+                '<span class="vctdg-svc is-' + escH(k) + ' is-on"><span data-vct-icon="' + escH(g.ic) + '"></span></span><b>' + g.t + " (" + escH(g.n) + ")</b>" +
+                "<small>" + agH(g.ej) + " / " + agH(g.cap) + " h ejecutadas" + (g.pr ? " · " + agH(g.pr) + " h programadas" : "") + "</small>" +
+                '<span class="vct-pv-bar"><span class="is-ejec" style="width:' + pe + '%"></span><span class="is-prog" style="width:' + pp + '%"></span></span></div></td>';
+            r.parentNode.insertBefore(tr, r);
+        });
+        icons(tb);
+    }
+    document.addEventListener("vctdg:render", function (e) {
+        var h = e.target;
+        if (h && h.getAttribute && h.getAttribute("data-vct-dg-id") === "pv_agenda") agGroups(h);
+    });
+
+    /* calendario: mismo motor que Acciones (vct-calendario); dias editables con "+" */
+    function agCalMount(box) {
+        var host = box ? box.querySelector("[data-pv-agcal]") : null;
+        if (!host || host.getAttribute("data-pv-agcal-on") === "1") return;
+        host.setAttribute("data-pv-agcal-on", "1");
+        var mo = "";
+        ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"].forEach(function (x, i) { mo += '<option value="' + (i + 1) + '">' + x + "</option>"; });
+        var leg = [["Visita pendiente", "#CA8A04"], ["Visita confirmada", "#16A34A"], ["Feriado fijo", "#E0304D"], ["Feriado movible", "#8B5CF6"]];
+        host.innerHTML = '<div class="vct-agenda vct-acc-cal-unified vct-cal-c vct-pv-agc" data-vct-agenda-root data-pv-agroot data-vct-feriados="' + escH(host.getAttribute("data-pv-agfer") || "[]") +
+            '" data-vct-calendar-events="' + escH(host.getAttribute("data-pv-agevt") || "[]") + '">' +
+            '<div class="vct-agenda-toolbar"><div class="vct-agenda-nav"><button type="button" class="vct-agenda-nav-btn" data-vct-agenda-prev aria-label="Anterior"><span data-vct-icon="chevron-left"></span></button>' +
+            '<h2 class="vct-agenda-title" data-vct-agenda-title></h2><button type="button" class="vct-agenda-nav-btn" data-vct-agenda-next aria-label="Siguiente"><span data-vct-icon="chevron-right"></span></button></div>' +
+            '<div class="vct-agenda-view-toggle"><button type="button" class="vct-agenda-view-btn is-active" data-vct-agenda-view="month">Mes</button>' +
+            '<button type="button" class="vct-agenda-view-btn" data-vct-agenda-view="week">Semana</button><button type="button" class="vct-agenda-view-btn" data-vct-agenda-view="day">Día</button></div>' +
+            '<div class="vct-agenda-jump vct-cal-hide"><select class="vct-select" data-vct-agenda-select-month>' + mo + '</select><select class="vct-select" data-vct-agenda-select-year></select></div></div>' +
+            '<div class="vct-agenda-legend">' + leg.map(function (l) { return '<span class="vct-agenda-legend-item" style="--c:' + l[1] + '"><i style="background:' + l[1] + '"></i>' + l[0] + "</span>"; }).join("") +
+            '<span class="vct-agenda-legend-item" data-vct-cal-ro><i class="vct-cal-dot-ro"></i>No editable (pasado, sábado y domingo)</span></div>' +
+            '<div class="vct-agenda-view-pane" data-vct-agenda-view-pane></div></div>';
+        document.dispatchEvent(new Event("vct:content-loaded"));
+        var rt = host.querySelector("[data-pv-agroot]");
+        setTimeout(function () { agCalNav(rt); agCalPlus(rt); }, 0);
+        try { new MutationObserver(function () { agCalPlus(rt); }).observe(rt.querySelector("[data-vct-agenda-view-pane]"), { childList: true }); } catch (e) { }
+        icons(host);
+    }
+    /* barra como el resto de los calendarios:  < Mes >  |  Mes Semana Dia  |  < Anio > */
+    function agCalNav(rt) {
+        if (!rt || rt.querySelector(".vct-cal-navgroup")) return;
+        var title = rt.querySelector("[data-vct-agenda-title]"), selY = rt.querySelector("[data-vct-agenda-select-year]");
+        var nav = title ? title.parentNode : null, tb = rt.querySelector(".vct-agenda-toolbar"), tg = rt.querySelector(".vct-agenda-view-toggle");
+        if (!nav || !tb) return;
+        var grp = document.createElement("div");
+        grp.className = "vct-cal-navgroup";
+        nav.classList.add("vct-cal-stp");
+        grp.appendChild(nav);
+        if (tg) { tg.classList.add("vct-cal-seg"); grp.appendChild(tg); }
+        var ys = document.createElement("div");
+        ys.className = "vct-cal-stp is-year";
+        ys.innerHTML = '<button type="button" class="vct-cal-stp-btn" data-pv-agy="-1" aria-label="Año anterior">‹</button><span class="vct-cal-stp-lbl" data-pv-agylbl></span>' +
+            '<button type="button" class="vct-cal-stp-btn" data-pv-agy="1" aria-label="Año siguiente">›</button>';
+        grp.appendChild(ys);
+        tb.appendChild(grp);
+        var yl = ys.querySelector("[data-pv-agylbl]");
+        function sync() {
+            var t = title.textContent || "", mm = /\s(\d{4})$/.exec(t);
+            if (mm) { yl.textContent = mm[1]; title.textContent = t.replace(/\s\d{4}$/, ""); }
+            else if (!yl.textContent) yl.textContent = (selY && selY.value) || String(new Date().getFullYear());
+        }
+        sync();
+        try { new MutationObserver(sync).observe(title, { childList: true, characterData: true, subtree: true }); } catch (e) { }
+        ys.addEventListener("click", function (ev) {
+            var b = ev.target.closest("[data-pv-agy]");
+            if (!b || !selY) return;
+            var y = (parseInt(yl.textContent, 10) || new Date().getFullYear()) + parseInt(b.getAttribute("data-pv-agy"), 10), has = false;
+            for (var i = 0; i < selY.options.length; i++) if (selY.options[i].value === String(y)) has = true;
+            if (!has) { var o = document.createElement("option"); o.value = String(y); o.textContent = String(y); selY.appendChild(o); }
+            selY.value = String(y);
+            try { selY.dispatchEvent(new Event("change", { bubbles: true })); } catch (e) { }
+        });
+        icons(rt);
+    }
+    /* "+" en los dias habiles desde hoy que no son feriado (con permiso) */
+    function agCalPlus(rt) {
+        var host = rt ? rt.closest("[data-pv-agcal]") : null;
+        if (!host || host.getAttribute("data-pv-agcal-edit") !== "1") return;
+        rt.querySelectorAll("td.vct-agenda-cell[data-vct-agenda-day]").forEach(function (td) {
+            var ro = /vct-agenda-cell-(past|weekend|holiday|holiday-puente)\b/.test(td.className);
+            td.classList.toggle("vct-pv-ag-ed", !ro);
+            var b = td.querySelector(".vct-pv-ag-add");
+            if (ro) { if (b) b.parentNode.removeChild(b); return; }
+            if (!b) {
+                b = document.createElement("button");
+                b.type = "button";
+                b.className = "vct-pv-ag-add";
+                var dk = (td.getAttribute("data-vct-agenda-day") || "").split("-");
+                b.title = "Agregar visita el " + (dk.length === 3 ? dk[2] + "/" + dk[1] : "");
+                b.textContent = "+";
+                td.appendChild(b);
+            }
+        });
+    }
+    /* clic en un dia editable (fuera de una visita): abre el alta con esa fecha; antes que el motor (vista dia) */
+    document.addEventListener("click", function (e) {
+        var t = e.target && e.target.closest ? e.target : null;
+        if (!t) return;
+        var td = t.closest("[data-pv-agroot] td.vct-pv-ag-ed");
+        if (!td || (t.closest(".vct-agenda-event") && !t.closest(".vct-pv-ag-add"))) return;
+        e.preventDefault();
+        e.stopPropagation();
+        agOpen(td, td.getAttribute("data-vct-agenda-day"), null);
+    }, true);
+    document.addEventListener("click", function (e) {
+        var t = e.target && e.target.closest ? e.target : null;
+        if (!t) return;
+        var v = t.closest("[data-pv-agv]");
+        if (v) {
+            e.preventDefault();
+            var box = v.closest("[data-pv-agbox]");
+            if (!box) return;
+            box.querySelectorAll("[data-pv-agv]").forEach(function (b) { b.classList.toggle("is-on", b === v); });
+            box.querySelectorAll("[data-pv-agpane]").forEach(function (p) { p.hidden = p.getAttribute("data-pv-agpane") !== v.getAttribute("data-pv-agv"); });
+            if (v.getAttribute("data-pv-agv") === "cal") agCalMount(box);
+            return;
+        }
+        var gr = t.closest("tr.vct-pv-agg-g");
+        if (gr) {
+            var host = gr.closest("[data-vct-dg]"), k = gr.getAttribute("data-k"), op = !gr.classList.contains("is-open");
+            if (host) { host.__agOpen = host.__agOpen || {}; host.__agOpen[k] = op; }
+            gr.classList.toggle("is-open", op);
+            var n = gr.nextElementSibling;
+            while (n && !n.classList.contains("vct-pv-agg-g")) { n.classList.toggle("is-hidden", !op); n = n.nextElementSibling; }
+            return;
+        }
+        var nw = t.closest("[data-pv-ag-new]");
+        if (nw) { e.preventDefault(); agOpen(nw, "", null); return; }
+        var ed = t.closest("[data-pv-ag-edit]");
+        if (ed) { e.preventDefault(); agOpen(ed, "", ed); return; }
+        var del = t.closest("[data-pv-ag-del]");
+        if (del) {
+            e.preventDefault();
+            if (!window.confirm("¿Eliminar esta visita?\n\n" + (del.getAttribute("data-nombre") || "") + "\n\nSe libera la agenda del consultor.")) return;
+            enviar(del, "PV_AG_BORRAR", del.getAttribute("data-pv-ag-del") || "0", {}, "agenda");
+            return;
+        }
+        var m = t.closest('[data-vct-pv-modal="ag"]');
+        if (!m || !ag) return;
+        var sv = t.closest("[data-pv-ag-save]");
+        if (sv && !sv.disabled) { e.preventDefault(); agGuardar(sv); return; }
+        var es = t.closest("[data-pv-ag-est] [data-v]");
+        if (es) { e.preventDefault(); ag.est = es.getAttribute("data-v"); agRender(m); return; }
+        var st = t.closest("[data-pv-ag-svt]");
+        if (st) { e.preventDefault(); agServ(m, st.getAttribute("data-pv-ag-svt"), ""); agRender(m); return; }
+        var nr = t.closest("[data-pv-ag-nor]");
+        if (nr) { e.preventDefault(); var k2 = nr.getAttribute("data-pv-ag-nor"); ag.nor[k2] = !ag.nor[k2]; agRender(m); return; }
+        var ea = t.closest("[data-pv-ag-emadd]");
+        if (ea) {
+            e.preventDefault();
+            var cid = ea.getAttribute("data-pv-ag-emadd");
+            ag.emails[cid] = ag.emails[cid] || "";
+            agNotif(m, agSel(m));
+            var inp = m.querySelector('[data-pv-ag-em="' + cid + '"]');
+            if (inp) inp.focus();
+            return;
+        }
+        if (t.closest("[data-pv-agc-otros]")) { e.preventDefault(); ag.otros = !ag.otros; agRender(m); return; }
+        var tr = t.closest("tr[data-pv-agc]");
+        if (tr && !t.closest("input")) {
+            e.preventDefault();
+            if (!tr.classList.contains("is-selected") && ag.id && agSel(m).length >= ag.max) {
+                agToast("Al editar, la visita conserva su cantidad de consultores. Para sumar otro consultor use Agregar.");
+                return;
+            }
+            tr.classList.toggle("is-selected");
+            agHoras(m, false);
+            agRender(m);
+        }
+    });
+    document.addEventListener("change", function (e) {
+        var t = e.target;
+        var m = t && t.closest ? t.closest('[data-vct-pv-modal="ag"]') : null;
+        if (!m || !ag || ag.busy) return;
+        if (t.matches('[data-pv-ag-f="desde"]')) {
+            ag.desde = parseISO(t.value);
+            if (ag.desde && (!ag.hasta || ag.hasta < ag.desde)) { ag.hasta = ag.desde; agSetDate(agF(m, "hasta"), t.value); }
+            agHoras(m, true); agRender(m); return;
+        }
+        if (t.matches('[data-pv-ag-f="hasta"]')) { ag.hasta = parseISO(t.value); agHoras(m, true); agRender(m); return; }
+        if (t.matches("[data-pv-ag-ps]")) { agInst(m, t); agRender(m); return; }
+        if (t.matches('[data-pv-ag-f="mail"]')) { agRender(m); return; }
+        if (t.matches("[data-pv-agc-h]")) {
+            var max = agDias() * 8, v = agNum(t.value);
+            if (max && v > max) t.value = String(max);
+            t.setAttribute("data-user", "1");
+            agRender(m);
+        }
+    });
+    document.addEventListener("input", function (e) {
+        var t = e.target;
+        if (!t || !t.matches) return;
+        if (t.matches("[data-pv-ag-buscar]")) { agRender(t.closest('[data-vct-pv-modal="ag"]')); return; }
+        if (t.matches("[data-pv-ag-em]") && ag) ag.emails[t.getAttribute("data-pv-ag-em")] = t.value;
+        if (t.matches('[data-pv-ag-f="cc"]') && ag) agGen(t.closest('[data-vct-pv-modal="ag"]'), agSel(t.closest('[data-vct-pv-modal="ag"]')));
+    });
 
     window.VCTProyectoV360 = { version: 1, open: openModal, close: closeModal };
 })(window, document);

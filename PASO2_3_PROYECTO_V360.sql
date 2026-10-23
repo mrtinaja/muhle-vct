@@ -31,6 +31,8 @@
    v27/v22 PL_ARBOL_V1: plan estrategico por norma en arbol capitulo > item > subitem, detalle 50/50
      del nodo elegido, acciones con editar / eliminar y responsable equipo / cliente / otro;
      avance del plan sobre el total de items. Requiere PASO4_1 (columnas nuevas).
+   v38/v29 PV_AC_SIN_WF_V1: Acciones sin el grupo Workflow: las que genera el sistema van al grupo Proyecto
+     (siguen sin editarse ni eliminarse a mano); el paso del lanzamiento vuelve a llamarse Reuniones.
    v38/v29 PV_RIESGO_V2: el nivel de riesgo del proyecto se ve apenas se graba el riesgo (encabezado y Riesgos);
      la edicion de los datos del proyecto ya no pide ni toca el nivel de riesgo (se define en el lanzamiento).
    v38/v29 PV_LZ_ORDEN_V1: lanzamiento en el orden de la minuta 16/10: datos de entrada, reuniones del proyecto,
@@ -42,7 +44,7 @@
    v35/v26 PL_V360_V2: plan - requiere atencion en grilla (item, responsable con iniciales, resaltado si es
      del usuario, vence), arbol con responsable solo iniciales, Excel / PDF en arbol y cronograma (vct-export v2),
      referencias del cronograma tambien arriba, titulo: tipo de plan - codigo del proyecto - nombre (- lugar).
-   Assets: css/vct-proyecto-v360.css?v=38  js/vct-proyecto-v360.js?v=29
+   Assets: css/vct-proyecto-v360.css?v=38  js/vct-proyecto-v360.js?v=30
    No crea vistas, funciones ni tablas. ASCII. Re-ejecutable.
    ======================================================================== */
 USE [MuhlePROD];
@@ -84,7 +86,7 @@ BEGIN
 
     SET @ASSETS = '<link rel="stylesheet" href="../css/vct-datagrid.css?v=30"><script src="../js/vct-export.js?v=2"></script><script src="../js/vct-datagrid.js?v=12"></script>'
                 + '<link rel="stylesheet" href="../css/vct-datepicker.css?v=1"><script src="../js/vct-datepicker.js?v=2"></script>'
-                + '<link rel="stylesheet" href="../css/vct-proyecto-v360.css?v=38"><script src="../js/vct-proyecto-v360.js?v=29"></script>';
+                + '<link rel="stylesheet" href="../css/vct-proyecto-v360.css?v=38"><script src="../js/vct-proyecto-v360.js?v=30"></script>';
 
     /* ---------- buffer: proyecto + comando ---------- */
     DECLARE @B_PROY VARCHAR(100), @B_FLAG VARCHAR(10), @B_CMD VARCHAR(100), @B_SEL3 VARCHAR(100),
@@ -2565,7 +2567,7 @@ BEGIN
         +   '<div class="' + CASE WHEN @L_DATOS = 1 THEN 'ok' WHEN @L_CONS = 1 THEN 'now' ELSE '' END + '" data-vct-pv-sub="datos" role="button" tabindex="0"><i>' + CASE WHEN @L_DATOS = 1 THEN '&#10003;' ELSE '2' END + '</i><span><b>Datos de entrada</b>'
         +     CASE WHEN @L_DATOS = 1 THEN 'completo &middot; ' + CONVERT(VARCHAR(10), @N_DE) + ' datos'
                WHEN @DE_OBL > 0 THEN CONVERT(VARCHAR(10), @DE_OBL_OK) + ' de ' + CONVERT(VARCHAR(10), @DE_OBL) + ' obligatorios' ELSE CONVERT(VARCHAR(10), @N_DE) + ' cargados' END + '</span></div>'
-        +   '<div class="' + CASE WHEN @L_REU = 1 THEN 'ok' WHEN @L_CONS = 1 THEN 'now' ELSE '' END + '" data-vct-pv-sub="reunion" role="button" tabindex="0"><i>' + CASE WHEN @L_REU = 1 THEN '&#10003;' ELSE '3' END + '</i><span><b>Reuniones del proyecto</b>'
+        +   '<div class="' + CASE WHEN @L_REU = 1 THEN 'ok' WHEN @L_CONS = 1 THEN 'now' ELSE '' END + '" data-vct-pv-sub="reunion" role="button" tabindex="0"><i>' + CASE WHEN @L_REU = 1 THEN '&#10003;' ELSE '3' END + '</i><span><b>Reuniones</b>'
         +     CASE WHEN @L_REU = 1 THEN 'lanzamiento' + ISNULL(' ' + CONVERT(VARCHAR(5), @RE_FECHA, 103), '') ELSE @L_REU_TXT END + '</span></div>'
         +   '<div class="' + CASE WHEN @L_RI = 1 THEN 'ok' WHEN @L_CONS = 1 THEN 'now' ELSE '' END + '" data-vct-pv-sub="riesgos" role="button" tabindex="0"><i>' + CASE WHEN @L_RI = 1 THEN '&#10003;' ELSE '4' END + '</i><span><b>Riesgos</b>'
         +     CASE WHEN @N_RI = 0 THEN 'sin cargar' ELSE CONVERT(VARCHAR(10), @N_RI) + ' cargado(s)' END + CASE WHEN @E_RI_ACT <> '' THEN ' &middot; ' + @E_RI_ACT ELSE '' END + '</span></div>'
@@ -3045,8 +3047,8 @@ BEGIN
     DECLARE @AC VARCHAR(MAX) = '', @AC_F_EST VARCHAR(MAX) = '', @AC_F_AREA VARCHAR(MAX) = '', @AC_F_TIPO VARCHAR(MAX) = '',
             @AC_CHIPS VARCHAR(MAX) = '', @AC_NOPT VARCHAR(MAX) = '', @AC_F_CAP VARCHAR(MAX) = '';
     SELECT @AC = ISNULL((
-        SELECT '<tr data-vct-row data-pv-acg="' + CASE OG WHEN 1 THEN 'proyecto' WHEN 2 THEN 'plan' WHEN 3 THEN 'cliente' ELSE 'workflow' END + '"'
-             + ' data-vct-filter-origen="' + CASE OG WHEN 1 THEN 'proyecto' WHEN 2 THEN 'plan' WHEN 3 THEN 'cliente' ELSE 'workflow' END + '"'
+        SELECT '<tr data-vct-row data-pv-acg="' + CASE OG WHEN 2 THEN 'plan' WHEN 3 THEN 'cliente' ELSE 'proyecto' END + '"'
+             + ' data-vct-filter-origen="' + CASE OG WHEN 2 THEN 'plan' WHEN 3 THEN 'cliente' ELSE 'proyecto' END + '"'
              + ' data-vct-filter-cap="' + ISNULL(CONVERT(VARCHAR(20), CAPI), '') + '"'
              + ' data-vct-filter-estado="' + CASE WHEN SIT = 'V' THEN 'VENCIDA' ELSE EST_COD END + '" data-vct-filter-area="' + REPLACE(AREA,'"','') + '" data-vct-filter-tipo="' + REPLACE(TIPO,'"','') + '">'
              + '<td><span class="vct-360-project-name">' + REPLACE(REPLACE(REPLACE(TIPO + CASE WHEN SUB_DES <> '' THEN ' - ' + SUB_DES ELSE '' END,'&','&amp;'),'<','&lt;'),'>','&gt;') + '</span>'
@@ -3094,25 +3096,25 @@ BEGIN
                     ELSE '' END
              + '</div></td></tr>'
         FROM #A
-        ORDER BY OG, CREA DESC, ID DESC   /* por grupo; dentro del grupo la mas nueva arriba */
+        ORDER BY CASE WHEN OG = 4 THEN 1 ELSE OG END, CREA DESC, ID DESC   /* por grupo (workflow va en proyecto); dentro del grupo la mas nueva arriba */
         FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), '');
 
     /* chips de origen (con cantidad) y el filtro oculto que los aplica en la grilla */
     SELECT @AC_CHIPS = ISNULL((SELECT '<button type="button" class="vct-pv-acchip' + CASE WHEN N = 0 THEN ' is-zero' ELSE '' END + '" data-pv-acchip="' + K + '" data-pv-acchip-lbl="' + L + '"'
                                     + ' data-pv-acchip-ab="' + CONVERT(VARCHAR(10), AB) + '" data-pv-acchip-ve="' + CONVERT(VARCHAR(10), VE) + '">'
                                     + L + '<i>' + CONVERT(VARCHAR(10), N) + '</i></button>'
-        /* los 4 grupos siempre visibles (con 0 si no tienen acciones) */
+        /* los 3 grupos siempre visibles (con 0 si no tienen acciones); las del workflow cuentan en Proyecto */
         FROM (SELECT G.OG, G.K, G.L, COUNT(A.ID) AS N,
                      ISNULL(SUM(CASE WHEN A.SIT <> 'C' THEN 1 ELSE 0 END), 0) AS AB, ISNULL(SUM(CASE WHEN A.SIT = 'V' THEN 1 ELSE 0 END), 0) AS VE
               FROM (SELECT 1 AS OG, 'proyecto' AS K, 'Proyecto' AS L UNION ALL SELECT 2, 'plan', 'Plan estrat&eacute;gico'
-                    UNION ALL SELECT 3, 'cliente', 'Pendientes del cliente' UNION ALL SELECT 4, 'workflow', 'Workflow') G
-              LEFT JOIN #A A ON A.OG = G.OG
+                    UNION ALL SELECT 3, 'cliente', 'Pendientes del cliente') G
+              LEFT JOIN #A A ON CASE WHEN A.OG = 4 THEN 1 ELSE A.OG END = G.OG
               GROUP BY G.OG, G.K, G.L) Z
         ORDER BY OG FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), '');
     SELECT @AC_F_CAP = ISNULL((SELECT '<option value="' + CONVERT(VARCHAR(20), CAPI) + '">' + REPLACE(REPLACE(REPLACE(CAP_LBL,'&','&amp;'),'<','&lt;'),'>','&gt;') + '</option>'
         FROM (SELECT DISTINCT CAPI, CAP_ORD, CAP_LBL FROM #A WHERE CAPI IS NOT NULL) Z
         ORDER BY CAP_ORD, CAPI FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), '');
-    SET @AC_NOPT = '<option value="proyecto">Proyecto</option><option value="plan">Plan</option><option value="cliente">Cliente</option><option value="workflow">Workflow</option>';
+    SET @AC_NOPT = '<option value="proyecto">Proyecto</option><option value="plan">Plan</option><option value="cliente">Cliente</option>';
 
     SELECT @AC_F_EST = ISNULL((SELECT '<option value="' + K + '">' + D + '</option>' FROM (
         SELECT DISTINCT CASE WHEN SIT = 'V' THEN 'VENCIDA' ELSE EST_COD END AS K, CASE WHEN SIT = 'V' THEN 'Vencida' ELSE EST_DES END AS D FROM #A) Z
@@ -3618,7 +3620,7 @@ BEGIN
             +   '<div class="vct-help">El badge toma las iniciales del nombre.</div></div>'
             + '<div class="vct-field vct-col-12"><label class="vct-label">Detalle</label>'
             +   '<textarea class="vct-textarea" rows="2" maxlength="2000" data-vct-pv-f="obs" data-vct-pv-buf="TEXTO18"></textarea></div>'
-            + '<div class="vct-field vct-col-12"><div class="vct-help">Acciones del proyecto fuera del plan. Las del plan se cargan desde su &iacute;tem; las del workflow (alta, asignaciones, datos de entrada, lanzamiento) las genera el sistema. El resultado se pide solo si el estado es final.</div></div>'
+            + '<div class="vct-field vct-col-12"><div class="vct-help">Acciones del proyecto fuera del plan. Las del plan se cargan desde su &iacute;tem; las autom&aacute;ticas (alta, asignaciones, datos de entrada, lanzamiento) las genera el sistema. El resultado se pide solo si el estado es final.</div></div>'
             + '</div></div>'
             + '<div class="vct-modal-footer vct-form-footer"><button type="button" class="vct-btn vct-btn-secondary" data-vct-pv-close><span>Cancelar</span></button>'
             + '<button type="button" class="vct-btn vct-btn-primary" data-vct-pv-save><span data-vct-icon="save"></span><span>Guardar</span></button></div></div></div>';

@@ -1107,7 +1107,7 @@
             tr.setAttribute("data-pv-acg-k", k);
             tr.innerHTML = '<td colspan="' + cols + '"><span class="vct-pv-acg-t">' + (chip ? chip.getAttribute("data-pv-acchip-lbl") : k) + "</span>" +
                 '<small>' + n + " acci" + (n === "1" ? "ón" : "ones") + (ab ? " · " + ab + " abierta" + (ab > 1 ? "s" : "") : "") +
-                (ve ? ' · <b>' + ve + " vencida" + (ve > 1 ? "s" : "") + "</b>" : "") + (k === "workflow" ? " · las genera el sistema" : k === "plan" ? " · se gestionan en el plan" : "") + "</small></td>";
+                (ve ? ' · <b>' + ve + " vencida" + (ve > 1 ? "s" : "") + "</b>" : "") + (k === "plan" ? " · se gestionan en el plan" : "") + "</small></td>";
             row.parentNode.insertBefore(tr, row);
         });
     }

@@ -197,7 +197,7 @@
 .vct-proy-srv-head,
 .vct-proy-srv-row {
     display: grid;
-    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr) 110px;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr) 160px;
     gap: 10px;
     align-items: center;
     padding: 8px 12px;
@@ -346,3 +346,68 @@ html body .vct-form-shell.vct-proy-alta input.vct-input[readonly]:not([type="hid
 }
 .vct-proy-head-icon svg { width: 16px; height: 16px; }
 .vct-proy-alta .vct-form-footer { display: flex; justify-content: flex-end; gap: 8px; }
+
+/* ALTA_DOCS_V1: dias al lado de las horas del servicio + propuesta comercial adjunta */
+.vct-proy-srv-hcell { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.vct-proy-srv-hcell .vct-proy-srv-hrs { flex: 0 0 82px; width: 82px; }
+.vct-proy-srv-dias { flex: 1 1 auto; font-size: 11px; font-weight: 600; color: var(--vct-proy-muted, #64748b); white-space: nowrap; }
+.vct-proy-adj { margin: 6px 18px 14px; padding: 12px 14px; border: 1px dashed #cbd5e1; border-radius: 12px; background: #FAFBFC;
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.vct-proy-adj-h { display: flex; align-items: center; gap: 10px; flex: 1 1 260px; min-width: 0; }
+.vct-proy-adj-h > [data-vct-icon] { width: 34px; height: 34px; border-radius: 10px; background: #F3E3EA; color: #66062D; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+.vct-proy-adj-h b { display: block; font-size: 12.5px; color: #333233; }
+.vct-proy-adj-h small { display: block; font-size: 11px; color: #64748b; }
+.vct-proy-adj-btn { cursor: pointer; position: relative; overflow: hidden; }
+.vct-proy-adj-btn input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.vct-proy-adj-list { flex: 1 1 100%; font-size: 12px; color: #334155; }
+.vct-proy-adj-list:empty { display: none; }
+/* ALTA_ADJ_V2: archivos adjuntados (tarjetas propias; la lista w3 del framework queda oculta) */
+.vct-proy-adj-raw { display: none !important; }
+.vct-proy-adj-files { flex: 1 1 100%; display: flex; flex-direction: column; gap: 8px; }
+.vct-proy-adj-files[hidden] { display: none; }
+.vct-proy-adj.has-files { border-style: solid; border-color: #e2e8f0; background: #fff; }
+.vct-proy-adj-file { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff;
+    box-shadow: 0 1px 2px rgba(15,23,42,.04); transition: opacity .18s ease, transform .18s ease, border-color .15s ease; }
+.vct-proy-adj-file:hover { border-color: rgba(102,6,45,.28); }
+.vct-proy-adj-file.is-out { opacity: 0; transform: translateX(8px); }
+.vct-proy-adj-ext { flex: 0 0 38px; height: 38px; border-radius: 9px; background: #F3E3EA; color: #66062D; display: inline-flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 800; letter-spacing: .04em; }
+.vct-proy-adj-name { all: unset; cursor: pointer; flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.vct-proy-adj-name b { font-size: 12.5px; font-weight: 600; color: #333233; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vct-proy-adj-name:hover b { color: #66062D; text-decoration: underline; }
+.vct-proy-adj-name small { font-size: 11px; color: #64748b; }
+.vct-proy-adj-del { all: unset; cursor: pointer; flex: 0 0 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+    color: #94a3b8; border: 1px solid transparent; transition: background .15s ease, color .15s ease, border-color .15s ease; }
+.vct-proy-adj-del:hover { background: #FEF2F2; color: #DC2626; border-color: #FECACA; }
+.vct-proy-adj-del:focus-visible { outline: 2px solid #66062D; outline-offset: 2px; }
+/* ALTA_CONTACTO_V1: "+" al lado de Contacto del cliente y modal de alta de contacto */
+.vct-proy-ct-field { display: grid !important; grid-template-columns: minmax(0, 1fr) 38px; column-gap: 8px; align-items: end; }
+.vct-proy-ct-field > .vct-label { grid-column: 1 / -1; }
+.vct-proy-ct-field > :not(.vct-label):not(.vct-proy-ct-add) { grid-column: 1; min-width: 0; }
+.vct-proy-ct-add { grid-column: 2; grid-row: 2; height: 38px; width: 38px; border-radius: 9px; border: 1px solid rgba(102,6,45,.28); background: #fff;
+    color: #66062D; font-size: 20px; font-weight: 500; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+    transition: background .15s ease, border-color .15s ease; }
+.vct-proy-ct-add:hover { background: #F3E3EA; border-color: #66062D; }
+.vct-proy-ct-add:focus-visible { outline: 2px solid #66062D; outline-offset: 2px; }
+/* ALTA_CONTACTO_V2: el modal usa las clases del framework (vct-modal vct-form-shell); solo va por encima del alta */
+.vct-modal.vct-proy-ct-modal { z-index: 10050; }
+/* aviso "Contacto agregado" al volver del servidor (no es un error) */
+.vct-proy-alta [data-vct-validation-box].vct-proy-ct-ok { background: #F0FDF4 !important; border-color: #BBF7D0 !important; color: #166534 !important; }
+.vct-proy-alta [data-vct-validation-box].vct-proy-ct-ok * { color: #166534 !important; }
+
+/* ALTA_CONFIRMA_V1: mail de asignacion (analista sin email) y confirmacion al crear */
+.vct-proy-mail { margin: 0 18px 14px; padding: 12px 14px; border: 1px solid #FDE68A; border-radius: 12px; background: #FFFBEB; display: grid; gap: 10px; }
+.vct-proy-mail[hidden] { display: none; }
+.vct-proy-mail-msg { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #92400E; }
+.vct-proy-mail-msg [data-vct-icon] { color: #B45309; flex: 0 0 auto; }
+.vct-proy-mail-field { margin: 0; max-width: 480px; }
+.vct-proy-mail-field .vct-input { width: 100%; box-sizing: border-box; background: #fff; }
+.vct-proy-cf .vct-modal-body { display: grid; gap: 0; }
+.vct-proy-cf-row { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 11px 0; border-bottom: 1px solid #eef2f6; }
+.vct-proy-cf-row:last-child { border-bottom: 0; }
+.vct-proy-cf-row > span { font-size: 11.5px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: .03em; }
+.vct-proy-cf-row > div { font-size: 13.5px; color: #333233; word-break: break-word; }
+.vct-proy-cf-code { display: inline-block; background: #F3E3EA; color: #66062D; font-weight: 700; font-size: 12px; padding: 1px 7px; border-radius: 6px; margin-right: 4px; }
+.vct-proy-cf-muted { color: #94a3b8; font-weight: 400; }
+@media (max-width: 560px) { .vct-proy-cf-row { grid-template-columns: 1fr; gap: 2px; } }
+.vct-proy-cf-note { margin: 12px 0 0; padding: 10px 12px; border-radius: 10px; background: #F3E3EA; color: #66062D; font-size: 12.5px; display: flex; gap: 8px; align-items: center; }

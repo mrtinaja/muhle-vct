@@ -912,3 +912,34 @@ html body .vct-pv .vct-pv-hd-r2 .vctdg-svc-set { gap: 12px !important; padding-r
 .vct-pv .vct-pl-g-legend.is-top { border: 1px solid #e2e8f0; border-radius: 10px; margin: 0 0 10px; }
 /* arbol: encabezado "Resp." centrado sobre el badge de iniciales */
 .vct-pv .vct-plt-hd > span:nth-child(2) { text-align: center; }
+/* documentos del proyecto (PV_DOCS_V1) */
+.vct-pv .vct-pv-doc-n { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.vct-pv .vct-pv-doc-n [data-vct-icon] { flex: 0 0 auto; color: #66062D; display: inline-flex; }
+.vct-pv .vct-pv-doc-n [data-vct-icon] svg { width: 16px; height: 16px; }
+.vct-pv .vct-pv-doc-n > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* PV_ASIG_V2: + email del consultor, lider bloqueado, modales Email y confirmacion */
+.vct-pv-modal .vct-pv-sel-row { grid-template-columns: minmax(0, 1.4fr) minmax(0, .8fr) minmax(0, 1.4fr) 32px; }
+.vct-pv-modal .vct-pv-sel-new { color: #64748b; font-weight: 400; }
+.vct-pv-modal .vct-pv-em-add { width: 30px; height: 30px; border-radius: 8px; border: 1px solid rgba(102,6,45,.28); background: #fff; color: #66062D;
+    font-size: 18px; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+.vct-pv-modal .vct-pv-em-add:hover { background: #F3E3EA; border-color: #66062D; }
+.vct-pv-modal .vct-pv-role.is-locked { opacity: .35 !important; cursor: not-allowed; border-style: dashed; }
+.vct-pv-modal .vct-pv-role.is-locked:hover { border-color: #e2e8f0; color: #64748b; }
+.vct-modal.vct-pv-ov2 { z-index: 10050; }
+.vct-pv-ov2 .vct-modal-body { display: grid; gap: 0; }
+.vct-pv-cf-row { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 11px 0; border-bottom: 1px solid #eef2f6; }
+.vct-pv-cf-row > span { font-size: 11.5px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: .03em; }
+.vct-pv-cf-row > div { font-size: 13.5px; color: #333233; word-break: break-word; display: grid; gap: 8px; }
+.vct-pv-cf-code { display: inline-block; background: #F3E3EA; color: #66062D; font-weight: 700; font-size: 12px; padding: 1px 7px; border-radius: 6px; margin-right: 4px; }
+.vct-pv-cf-rol { display: inline-block; font-size: 11px; font-weight: 700; color: #66062D; background: #F6EAEF; border: 1px solid #E5C9D4; border-radius: 999px; padding: 0 8px; margin-left: 4px; }
+.vct-pv-cf-mail { font-size: 12.5px; color: #475569; }
+.vct-pv-cf-mail small { color: #94a3b8; }
+.vct-pv-cf-note { margin: 12px 0 0; padding: 10px 12px; border-radius: 10px; background: #F3E3EA; color: #66062D; font-size: 12.5px; display: flex; gap: 8px; align-items: center; }
+.vct-pv-cf-gen { margin-top: 12px; }
+@media (max-width: 560px) { .vct-pv-cf-row { grid-template-columns: 1fr; gap: 2px; } }
+.vct-pv-ov2 .vct-pv-sec { display: flex; align-items: center; gap: 8px; margin: 2px 0 8px; color: #66062D; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+.vct-pv-ov2 .vct-pv-sec:after { content: ""; flex: 1; height: 1px; background: #e2e8f0; }
+.vct-pv-ov2 .vct-pv-gen { display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: #334155; }
+.vct-pv-ov2 .vct-pv-gen > div { display: flex; align-items: center; gap: 8px; }
+.vct-pv-ov2 .vct-pv-gen .vct-360-badge { display: inline-flex !important; width: auto !important; flex: 0 0 auto; }

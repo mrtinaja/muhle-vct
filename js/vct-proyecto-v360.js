@@ -1,4 +1,5 @@
-/* vct-proyecto-v360.js - v22 (plan estrategico en arbol con detalle 50/50; responsable otro)
+/* vct-proyecto-v360.js - v29 PV_ASIG_V2 (asignar: lider al primero, + email del consultor, CC, confirmacion)
+   v22 (plan estrategico en arbol con detalle 50/50; responsable otro)
    v21 (paginado de servicios > 10; pestania Plan de auditoria / capacitacion)
    v20 (servicios en grilla agrupada; pestania del plan deshabilitada hasta Ver plan / Gestionar)
    v19 (encabezado 3 filas, resumen por etapas, editar proyecto, servicios)
@@ -192,6 +193,106 @@
         var d = tr.querySelector(".vct-pv-role.is-default") || tr.querySelector('.vct-pv-role[data-lider="0"]');
         if (d) setRol(tr, d);
     }
+    /* PV_ASIG_V2: el primero que se marca es lider (si el proyecto no tiene); el resto solo consultor */
+    function rolAlMarcar(m, tr) {
+        var l = tr.querySelector('.vct-pv-role[data-lider="1"]');
+        if (l && !hayLider(m)) setRol(tr, l); else rolDefault(tr);
+    }
+    function lockLider(m) {
+        var lider = hayLider(m);
+        m.querySelectorAll("tr[data-vct-pv-cons]").forEach(function (tr) {
+            var o = rowRol(tr), esLider = tr.classList.contains("is-selected") && o && o.getAttribute("data-lider") === "1";
+            tr.querySelectorAll('.vct-pv-role[data-lider="1"]').forEach(function (b) {
+                var off = lider && !esLider;
+                b.classList.toggle("is-locked", off);
+                b.setAttribute("aria-disabled", off ? "true" : "false");
+                b.title = off ? "Ya hay un consultor l\u00edder" : "";
+            });
+        });
+    }
+    function consMail(tr) { return tr.getAttribute("data-email") || tr.getAttribute("data-email-new") || ""; }
+    var MAIL_RE = /^[^\s@;,]+@[^\s@;,]+\.[^\s@;,]+$/;
+    function escH(x) { return String(x == null ? "" : x).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+    function icons(sc) { if (window.VCT && VCT.Icon && typeof VCT.Icon.init === "function") VCT.Icon.init(sc); }
+    function ovClose(id) {
+        var o = document.getElementById(id);
+        if (!o) return;
+        o.classList.remove("is-open");
+        setTimeout(function () { if (o.parentNode) o.parentNode.removeChild(o); }, 200);
+    }
+    function ovOpen(id, icon, tit, sub, body, okAttr, okTxt, cancelAttr) {
+        var prev = document.getElementById(id);
+        if (prev) prev.parentNode.removeChild(prev);
+        var o = document.createElement("div");
+        o.id = id;
+        o.className = "vct-modal vct-form-shell vct-form-md vct-pv-ov2";
+        o.innerHTML =
+            '<div class="vct-modal-backdrop" ' + cancelAttr + '></div>' +
+            '<div class="vct-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="' + id + '_t">' +
+              '<div class="vct-modal-header vct-form-header"><div class="vct-form-header-accent"></div>' +
+                '<div class="vct-form-header-icon"><span data-vct-icon="' + icon + '"></span></div>' +
+                '<div class="vct-form-header-copy"><h3 class="vct-modal-title" id="' + id + '_t">' + tit + '</h3><p class="vct-modal-subtitle">' + sub + '</p></div>' +
+                '<button type="button" class="vct-form-close" ' + cancelAttr + ' aria-label="Cerrar">\u00d7</button></div>' +
+              '<div class="vct-modal-body vct-form-body">' + body + '</div>' +
+              '<div class="vct-modal-footer vct-form-footer">' +
+                '<button type="button" class="vct-btn vct-btn-secondary" ' + cancelAttr + '>Cancelar</button>' +
+                '<button type="button" class="vct-btn vct-btn-primary" ' + okAttr + '><span data-vct-icon="save"></span><span>' + okTxt + '</span></button>' +
+              '</div></div>';
+        document.body.appendChild(o);
+        icons(o);
+        requestAnimationFrame(function () { o.classList.add("is-open"); });
+        return o;
+    }
+    /* "+" email del consultor: se guarda en la fila y se graba al asignar (VCT_EMAILS, PRINCIPAL NO) */
+    var EM_ID = "vctPvEmail", emCons = "";
+    function emOpen(m, cons) {
+        var tr = m.querySelector('tr[data-vct-pv-cons="' + cons + '"]');
+        if (!tr) return;
+        emCons = cons;
+        var nm = tr.querySelector(".vct-360-project-name");
+        var o = ovOpen(EM_ID, "mail", "Email", "Direcci\u00f3n de correo de " + escH(nm ? nm.textContent : "") + ".",
+            '<div class="vct-validation-box" data-pv-em-box style="display:none;"></div>' +
+            '<div class="vct-form-grid"><div class="vct-field vct-col-12"><label class="vct-label">Email <span class="vct-required">*</span></label>' +
+            '<input type="text" class="vct-input" data-pv-em-in maxlength="100" placeholder="Email" autocomplete="off" value="' + escH(tr.getAttribute("data-email-new") || "") + '"></div></div>',
+            "data-vct-pv-em-ok", "Guardar", "data-vct-pv-em-cancel");
+        setTimeout(function () { var i = o.querySelector("[data-pv-em-in]"); if (i) i.focus(); }, 60);
+    }
+    function emSave() {
+        var o = document.getElementById(EM_ID), m = modal();
+        if (!o || !m) return;
+        var i = o.querySelector("[data-pv-em-in]"), v = i ? i.value.trim() : "", box = o.querySelector("[data-pv-em-box]");
+        i.classList.remove("vct-field-error"); box.style.display = "none"; box.innerHTML = "";
+        var msg = !v ? "Email es obligatorio." : !MAIL_RE.test(v) ? "Email no tiene un formato v\u00e1lido." : "";
+        if (msg) {
+            box.innerHTML = '<div class="vct-validation-title">Complete o corrija los datos indicados</div><ul><li>' + msg + '</li></ul>';
+            box.style.display = "block"; i.classList.add("vct-field-error"); i.focus();
+            return;
+        }
+        var tr = m.querySelector('tr[data-vct-pv-cons="' + emCons + '"]');
+        if (tr) { tr.setAttribute("data-email-new", v); if (!tr.getAttribute("data-email")) tr.setAttribute("data-email", ""); }
+        ovClose(EM_ID);
+        syncSel(m);
+    }
+    /* confirmacion previa (igual que el alta del proyecto) */
+    var CF_ID = "vctPvAsigConf", cfData = null;
+    function cfRow(lbl, val) { return '<div class="vct-pv-cf-row"><span>' + lbl + '</span><div>' + val + '</div></div>'; }
+    function cfOpen(m, d) {
+        cfData = d;
+        var cons = picked(m).map(function (tr) {
+            var nm = tr.querySelector(".vct-360-project-name"), o = rowRol(tr);
+            return '<div class="vct-pv-cf-cons"><b>' + escH(nm ? nm.textContent : "") + '</b> <span class="vct-pv-cf-rol">' + escH(o ? o.textContent : "") + '</span>' +
+                   '<div class="vct-pv-cf-mail">' + escH(consMail(tr)) + (tr.getAttribute("data-email-new") && !tr.getAttribute("data-email") ? ' <small>(nuevo)</small>' : '') + '</div></div>';
+        }).join("");
+        var gen = m.querySelector(".vct-pv-gen");
+        var body = cfRow("Cliente", '<b>' + escH(m.getAttribute("data-vct-pv-cli") || "") + '</b>') +
+            cfRow("Proyecto", '<b>' + (m.getAttribute("data-vct-pv-pcod") ? "(" + escH(m.getAttribute("data-vct-pv-pcod")) + ") " : "") + escH(m.getAttribute("data-vct-pv-pnom") || "") + '</b>') +
+            cfRow(d.n > 1 ? "Consultores" : "Consultor", cons) +
+            (d.cc ? cfRow("Con copia a", escH(d.cc)) : "") +
+            '<p class="vct-pv-cf-note"><span data-vct-icon="mail"></span>Se env\u00eda el mail de asignaci\u00f3n a ' + (d.n > 1 ? "los consultores" : "el consultor") + '.</p>' +
+            (d.lideres && gen ? '<div class="vct-pv-cf-gen"><div class="vct-pv-sec">Al asignar el l\u00edder se genera</div><div class="vct-pv-gen">' + gen.innerHTML + '</div></div>' : "");
+        var o = ovOpen(CF_ID, "user-plus", "Asignar consultores", "Revise los datos antes de confirmar.", body, "data-vct-pv-cf-ok", "Asignar y notificar", "data-vct-pv-cf-cancel");
+        setTimeout(function () { var b = o.querySelector("[data-vct-pv-cf-ok]"); if (b) b.focus(); }, 60);
+    }
     function syncSel(m) {
         var lider = hayLider(m);
         m.querySelectorAll("[data-vct-pv-vence-wrap], [data-vct-pv-gen-lider]").forEach(function (g) { g.style.display = lider ? "" : "none"; });
@@ -201,20 +302,20 @@
         if (sel) {
             sel.innerHTML = !n.length ? '<span class="vct-pv-sel-empty">Ning&uacute;n consultor seleccionado.</span>'
                 : '<div class="vct-pv-sel-title">Se notifica a</div>' + n.map(function (tr) {
-                    var nm = tr.querySelector(".vct-360-project-name"), o = rowRol(tr), mail = tr.getAttribute("data-email") || "";
+                    var nm = tr.querySelector(".vct-360-project-name"), o = rowRol(tr), mail = consMail(tr), nuevo = !tr.getAttribute("data-email") && !!mail;
                     if (!mail) faltan++;
                     return '<div class="vct-pv-sel-row"><b>' + esc(nm ? nm.textContent : "") + '</b>' +
                            '<span class="vct-pv-sel-rol">' + esc(o ? o.textContent : "") + '</span>' +
-                           (mail ? '<span class="vct-pv-sel-mail">' + esc(mail) + '</span>'
-                                 : '<span class="vct-pv-sel-mail is-missing">sin email cargado</span>') + '</div>';
+                           (mail ? '<span class="vct-pv-sel-mail">' + esc(mail) + (nuevo ? ' <small class="vct-pv-sel-new">(nuevo)</small>' : '') + '</span>'
+                                 : '<span class="vct-pv-sel-mail is-missing">sin email cargado</span>') +
+                           (tr.getAttribute("data-email") ? '' : '<button type="button" class="vct-pv-em-add" data-vct-pv-em-add="' + esc(tr.getAttribute("data-vct-pv-cons")) + '" title="Agregar email" aria-label="Agregar email">+</button>') + '</div>';
                 }).join("");
         }
         m.setAttribute("data-vct-pv-faltan", String(faltan));
         var lbl = m.querySelector("[data-vct-pv-email-lbl]"), help = m.querySelector("[data-vct-pv-email-help]");
-        if (lbl) lbl.innerHTML = faltan ? 'Email para los consultores sin email <span class="vct-required">*</span>' : "Email adicional (CC)";
-        if (help) help.innerHTML = faltan
-            ? "Obligatorio: " + (faltan === 1 ? "un consultor seleccionado no tiene" : faltan + " consultores seleccionados no tienen") + " email cargado; el aviso se env&iacute;a a esta direcci&oacute;n."
-            : "Opcional: va en copia del mail a los consultores.";
+        if (lbl) lbl.innerHTML = "Con copia a";
+        if (help) help.innerHTML = "Opcional: va en copia del mail a los consultores.";
+        lockLider(m);
         syncFechas(m);
     }
     /* un solo lider: al elegir Lider en una fila, las otras con Lider vuelven a Consultor */
@@ -249,7 +350,7 @@
     function openModal() {
         var m = modal();
         if (!m) return;
-        m.querySelectorAll("tr[data-vct-pv-cons]").forEach(function (tr) { tr.classList.remove("is-selected"); rolDefault(tr); });
+        m.querySelectorAll("tr[data-vct-pv-cons]").forEach(function (tr) { tr.classList.remove("is-selected"); tr.removeAttribute("data-email-new"); rolDefault(tr); });
         ["[data-vct-pv-obs]", "[data-vct-pv-email]", "[data-vct-pv-buscar]"].forEach(function (q) { var x = m.querySelector(q); if (x) x.value = ""; });
         filtrar(m, "");
         showError(m, null);
@@ -281,18 +382,25 @@
         else if (lista.length !== filas.length) errs.push("Rol es obligatorio para cada consultor marcado.");
         if (lideres > 1) errs.push("Solo puede haber un consultor l&iacute;der.");
         if (lideres && vence && vence.value && hoy && vence.value < hoy) errs.push("Vence pr&oacute;xima acci&oacute;n no puede ser anterior a hoy.");
-        var mv = mail ? mail.value.replace(/,/g, ";").trim() : "";
-        if (filas.length && m.getAttribute("data-vct-pv-faltan") !== "0" && !mv)
-            errs.push("Email es obligatorio: hay consultores seleccionados sin email cargado.");
+        var mv = mail ? mail.value.replace(/,/g, ";").trim() : "", nuevos = [];
+        filas.forEach(function (tr) {
+            var nm = tr.querySelector(".vct-360-project-name");
+            if (!consMail(tr)) errs.push(escH(nm ? nm.textContent : "El consultor") + " no tiene email: agr&eacute;guelo con el bot&oacute;n +.");
+            else if (!tr.getAttribute("data-email") && tr.getAttribute("data-email-new")) nuevos.push(tr.getAttribute("data-vct-pv-cons") + ":" + tr.getAttribute("data-email-new"));
+        });
         if (mv) mv.split(";").forEach(function (x) {
             x = x.trim();
-            if (x && !/^[^\s@;]+@[^\s@;]+\.[^\s@;]+$/.test(x)) errs.push("Email adicional: &quot;" + x.replace(/</g, "&lt;") + "&quot; no es una direcci&oacute;n v&aacute;lida.");
+            if (x && !/^[^\s@;]+@[^\s@;]+\.[^\s@;]+$/.test(x)) errs.push("Con copia a: &quot;" + x.replace(/</g, "&lt;") + "&quot; no es una direcci&oacute;n v&aacute;lida.");
         });
         var guid = m.getAttribute("data-vct-pv-guid") || "";
         if (!guid) errs.push("No se encontr&oacute; la pantalla de la Vista 360 (permiso PROYECTOS VIEW).");
-        if (mail) mail.classList.toggle("is-invalid", !!(filas.length && m.getAttribute("data-vct-pv-faltan") !== "0" && !mv));
         if (errs.length) { showError(m, errs); return; }
         showError(m, null);
+        if (!btn.hasAttribute("data-vct-pv-cf-go")) {
+            cfOpen(m, { n: filas.length, lideres: lideres, cc: mv.replace(/;/g, "; ") });
+            return;
+        }
+        btn.removeAttribute("data-vct-pv-cf-go");
         if (!window.VCT || !VCT.Buffer || !VCT.Navigation) return;
         btn.disabled = true;
         if (VCT.Tabs && typeof VCT.Tabs.rememberInternalTab === "function") VCT.Tabs.rememberInternalTab("equipo");
@@ -302,6 +410,7 @@
             .then(function () { return S("TEXTO12", lideres && vence ? vence.value : ""); })
             .then(function () { return S("TEXTO13", obs ? obs.value : ""); })
             .then(function () { return S("TEXTO14", mv); })
+            .then(function () { return S("TEXTO15", nuevos.join(";")); })
             .then(function () { return S("FLAG01", "1"); })
             .then(function () { closeModal(); VCT.Navigation.goto(btn, guid); })
             .catch(function () { btn.disabled = false; showError(m, ["No se pudo guardar. Intente nuevamente."]); });
@@ -519,7 +628,7 @@
         if (!window.confirm(msg)) return;
         var extra = {};
         if (btn.hasAttribute("data-t11")) extra.TEXTO11 = btn.getAttribute("data-t11");
-        enviar(btn, cmd, btn.getAttribute("data-id") || "0", extra, /^PV_PL_/.test(cmd) ? "plan" : /^PV_AC_/.test(cmd) ? "acciones" : "lanzamiento");
+        enviar(btn, cmd, btn.getAttribute("data-id") || "0", extra, /^PV_PL_/.test(cmd) ? "plan" : /^PV_AC_/.test(cmd) ? "acciones" : /^PV_DOC_/.test(cmd) ? "documentos" : "lanzamiento");
     }
     /* calendario dentro de un modal: se muestra completo (no lo recorta el scroll del cuerpo del modal) */
     function dpPlace(wrap) {
@@ -802,6 +911,20 @@
             return;
         }
 
+        /* documentos del proyecto (PV_DOCS_V1): ver / descargar con el handler del framework */
+        var pdoc = t.closest("[data-vct-pv-doc]");
+        if (pdoc) {
+            e.preventDefault();
+            if (window.VCT && VCT.RowMenu && typeof VCT.RowMenu.close === "function") VCT.RowMenu.close();
+            var durl = "../task/DownloadFile.ashx?action=view&pKey=" + encodeURIComponent(pdoc.getAttribute("data-pkey") || "")
+                     + "&fileName=" + encodeURIComponent(pdoc.getAttribute("data-file") || "");
+            if (pdoc.getAttribute("data-vct-pv-doc") === "download") {
+                var da = document.createElement("a");
+                da.href = durl; da.setAttribute("download", pdoc.getAttribute("data-nombre") || pdoc.getAttribute("data-file") || "documento");
+                da.style.display = "none"; document.body.appendChild(da); da.click(); document.body.removeChild(da);
+            } else window.open(durl, "_blank", "noopener");
+            return;
+        }
         var plx = t.closest("[data-pl-export]");
         if (plx) { e.preventDefault(); plExport(plx, plx.getAttribute("data-pl-export")); return; }
         /* requiere atencion: ver todas -> Acciones con el chip Plan estrategico */
@@ -893,10 +1016,16 @@
         var g = t.closest("[data-vct-pv-asignar]");
         if (g && !g.disabled) { e.preventDefault(); guardar(g); return; }
 
+        var ea = t.closest("[data-vct-pv-em-add]");
+        if (ea) { e.preventDefault(); e.stopPropagation(); emOpen(ea.closest("[data-vct-pv-modal]") || modal(), ea.getAttribute("data-vct-pv-em-add")); return; }
         var rb = t.closest(".vct-pv-role");
         if (rb && rb.closest("tr[data-vct-pv-cons]")) {
             e.preventDefault();
             var rtr = rb.closest("tr"), rm = rtr.closest("[data-vct-pv-modal]");
+            if (rb.classList.contains("is-locked")) {
+                if (window.VCT && VCT.Toast && typeof VCT.Toast.show === "function") VCT.Toast.show("Ya hay un consultor l\u00edder: este solo puede asignarse como consultor.", "info");
+                return;
+            }
             rtr.classList.add("is-selected");          /* elegir un rol marca la fila */
             setRol(rtr, rb);
             unLider(rm, rtr);
@@ -905,9 +1034,10 @@
         }
         var tr = t.closest("tr[data-vct-pv-cons]");
         if (tr) {
+            var trm = tr.closest("[data-vct-pv-modal]");
             tr.classList.toggle("is-selected");
-            if (!tr.classList.contains("is-selected")) rolDefault(tr);
-            syncSel(tr.closest("[data-vct-pv-modal]"));
+            if (!tr.classList.contains("is-selected")) rolDefault(tr); else rolAlMarcar(trm, tr);
+            syncSel(trm);
         }
     });
     document.addEventListener("change", function (e) {
@@ -933,6 +1063,25 @@
         filtrar(e.target.closest("[data-vct-pv-modal]"), e.target.value);
     });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape") { closeModal(); bellPanel(null, false); } });
+    /* PV_ASIG_V2: modales Email y confirmacion (por encima del de asignar) */
+    document.addEventListener("click", function (e) {
+        var t = e.target && e.target.closest ? e.target : null;
+        if (!t) return;
+        if (t.closest("[data-vct-pv-em-cancel]")) { e.preventDefault(); e.stopImmediatePropagation(); ovClose(EM_ID); return; }
+        if (t.closest("[data-vct-pv-em-ok]")) { e.preventDefault(); e.stopImmediatePropagation(); emSave(); return; }
+        if (t.closest("[data-vct-pv-cf-cancel]")) { e.preventDefault(); e.stopImmediatePropagation(); ovClose(CF_ID); return; }
+        if (t.closest("[data-vct-pv-cf-ok]")) {
+            e.preventDefault(); e.stopImmediatePropagation();
+            ovClose(CF_ID);
+            var m = modal(), b = m ? m.querySelector("[data-vct-pv-asignar]") : null;
+            if (b && !b.disabled) { b.setAttribute("data-vct-pv-cf-go", "1"); guardar(b); }
+        }
+    }, true);
+    document.addEventListener("keydown", function (e) {
+        if (e.key !== "Escape") return;
+        if (document.getElementById(EM_ID)) { e.stopImmediatePropagation(); ovClose(EM_ID); }
+        else if (document.getElementById(CF_ID)) { e.stopImmediatePropagation(); ovClose(CF_ID); }
+    }, true);
 
     /* ---------------- acciones: grilla agrupada por origen + chips (AC_PESTANIA_V1) ---------------- */
     var AC_KEY = "vct.pv.acciones.origen.";

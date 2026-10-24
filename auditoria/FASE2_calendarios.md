@@ -27,8 +27,8 @@ La celda de hoy (jueves 22) trae la clase `vct-agenda-cell-weekend` en el calend
 ### C. 🟡 Doble `<link>` del mismo CSS
 El host principal carga `vct-calendario.css` **dos veces** (`?v=42` y `?v=44`) → es el mismo archivo físico (el `?v` es cache-buster), pero duplica reglas y ensucia la cascada. Origen: dos SP distintos (shell + pantalla) emiten el `<link>` y el bump de versión no los dejó iguales. → normalizar a un único `<link>` y una sola versión (Fase 6/SP).
 
-### D. 🟡 Tema visual distinto por calendario
-El calendario de **Acciones** se ve con **fondo/bordes rosados** (`--cal-rose-line`), mientras la Agenda del consultor y la del V360 se ven **blancas**. Verificar si el tinte rosa es intencional (contexto "Vencidas") o un arrastre del diseño nuevo. Si no es intencional → unificar a blanco (normalización visual). **No** unificar datos/funciones.
+### D. ✅ Tema visual distinto por calendario — INTENCIONAL (confirmado 2026-10-24)
+El calendario de **Acciones** se ve con **fondo/bordes rosados** (`--cal-rose-line`), mientras la Agenda del consultor y la del V360 se ven **blancas**. **Confirmado por el usuario: es intencional — NO tocar.** Se conserva como diferencia de diseño deliberada.
 
 ### E. ✅ Consistencia que SÍ está bien
 Toolbar compacto `‹ Mes › · Mes/Semana/Día · ‹ Año ›`, leyenda "No editable", número de días (círculo gris / hoy destacado), tooltip-tarjeta con iconos de servicio — homogéneos en los calendarios `.vct-cal-c`. El mini-calendario lateral de la vista Semana (consultor y V360) se conserva.

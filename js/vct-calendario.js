@@ -836,6 +836,23 @@
 
         if (!paneEl) return; /* sin consultor elegido: solo queda el prompt */
 
+        /* AUDIT_HERO: sin consultor (solo standalone; el V360 tiene consultor fijo)
+           no se arma calendario: se oculta KPIs + leyenda y se muestra el hero
+           "Elegi un consultor". El selector de consultor del toolbar queda visible. */
+        if (!consId && !root.classList.contains("vct-agc-v360")) {
+            if (statsEl) statsEl.style.setProperty("display", "none", "important"); /* los KPIs tienen display:grid !important */
+            var _leg = root.querySelector(".vct-agc-legend, .vct-agenda-legend");
+            if (_leg) _leg.style.setProperty("display", "none", "important");
+            paneEl.innerHTML =
+                '<div class="vct-agc-hero">'
+              + '<div class="vct-agc-hero-icon"><span data-vct-icon="users"></span></div>'
+              + '<h3 class="vct-agc-hero-title">Eleg&iacute; un consultor</h3>'
+              + '<p class="vct-agc-hero-text">Seleccion&aacute; un consultor arriba para ver su disponibilidad por d&iacute;a: disponible, asignado, licencia, ocupado y feriados.</p>'
+              + '</div>';
+            if (window.VCT && VCT.Icon && typeof VCT.Icon.init === "function") VCT.Icon.init(paneEl);
+            return;
+        }
+
         var state = { cursor: new Date(today), view: "month", selDay: null };   /* todos los calendarios inician en Mes */
 
         /* dia sin registro = NO_CARGADO (blanco), tambien los fines de semana */

@@ -21,8 +21,9 @@ En `css/vct-calendario.css` hay **~9 bloques distintos** que tocan el día actua
 **Mecánica del bug (Acciones):** la regla rosa final tiene **misma especificidad** (0,0,5,1) que la del borde bordó de hoy y está **más abajo** en el archivo → gana la rosa. Además el boceto C había puesto `outline:none !important`, matando el anillo de respaldo. Resultado: hoy con **borde rosa 1px** en vez de bordó.
 Evidencia (vivo, Acciones): `borderTopColor=#EFE3E9`; ni un `border` inline `!important` lo cambiaba (lo pisa la regla rosa); `outline:2px #66062D` sí se aplica.
 
-### B. 🟡 "Hoy" clasificado como finde en Acciones
-La celda de hoy (jueves 22) trae la clase `vct-agenda-cell-weekend` en el calendario de Acciones (root `vct-agenda vct-acc-cal-unified vct-cal-c`). Por eso cae en la regla rosa de finde. **Revisar el cálculo de día de la semana / por qué el motor marca finde** (posible bug de columna 0/6 en la vista Vencidas). → Fase 5.
+### B. ✅ "Hoy" clasificado como finde — FALSO POSITIVO (resuelto 2026-10-24)
+La nota original ("hoy jueves 22 marcado como finde") fue un error de medición: la inspección de clases se hizo el **2026-10-24 (sábado, getDay=6)**, no el 22. Por lo tanto `vct-agenda-cell-weekend` en la celda de hoy es **correcto** — ese día es realmente fin de semana. **No hay bug de cálculo de día.**
+Implicancia real: cuando hoy cae en sábado/domingo, la celda toma el estilo de finde (rosa/punteado) y el marcador de hoy debe seguir visible → lo garantiza `FIX_AUDIT_HOY` (outline bordó, independiente del borde). Nada más que hacer acá.
 
 ### C. 🟡 Doble `<link>` del mismo CSS
 El host principal carga `vct-calendario.css` **dos veces** (`?v=42` y `?v=44`) → es el mismo archivo físico (el `?v` es cache-buster), pero duplica reglas y ensucia la cascada. Origen: dos SP distintos (shell + pantalla) emiten el `<link>` y el bump de versión no los dejó iguales. → normalizar a un único `<link>` y una sola versión (Fase 6/SP).

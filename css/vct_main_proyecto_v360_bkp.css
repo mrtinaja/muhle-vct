@@ -1,0 +1,177 @@
+
+/* ==========================================================
+   VCT MAIN PROYECTO V360
+   Estilos exclusivos Vista 360 Proyecto
+   No modifica componentes globales
+========================================================== */
+
+.vct-proyecto360 {
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+}
+
+.vct-proyecto360 .vct-breadcrumb {
+    font-size:12px;
+    color:#64748b;
+    margin-bottom:8px;
+}
+
+/* Cabecera proyecto */
+.vct-proyecto360-header {
+    background:#ffffff;
+    border-radius:12px;
+    border:1px solid #e5e7eb;
+    padding:18px 22px;
+}
+
+.vct-proyecto360-title {
+    font-size:18px;
+    font-weight:700;
+    color:#17233c;
+    margin:0 0 8px;
+}
+
+.vct-proyecto360-subtitle {
+    font-size:12px;
+    color:#64748b;
+    line-height:1.6;
+}
+
+
+/* KPIs */
+.vct-proyecto360-kpis {
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+}
+
+.vct-proyecto360-kpi {
+    min-height:95px;
+    background:#ffffff;
+    border-radius:12px;
+    border:1px solid #e5e7eb;
+    padding:15px;
+}
+
+.vct-proyecto360-kpi-label {
+    font-size:12px;
+    color:#64748b;
+}
+
+.vct-proyecto360-kpi-value {
+    font-size:28px;
+    font-weight:700;
+    color:#17233c;
+    margin-top:10px;
+}
+
+
+/* Cards generales */
+.vct-proyecto360-card {
+    background:#ffffff;
+    border-radius:12px;
+    border:1px solid #e5e7eb;
+    padding:16px;
+}
+
+.vct-proyecto360-card-title {
+    font-size:14px;
+    font-weight:700;
+    color:#17233c;
+    margin-bottom:12px;
+}
+
+
+/* Gestiones */
+.vct-proyecto360-gestiones table {
+    width:100%;
+    border-collapse:collapse;
+}
+
+.vct-proyecto360-gestiones th {
+    background:#f4f7fa;
+    font-size:11px;
+    text-align:left;
+    padding:8px;
+}
+
+.vct-proyecto360-gestiones td {
+    font-size:12px;
+    padding:8px;
+    border-bottom:1px solid #edf1f5;
+}
+
+
+/* Plan estrategico */
+.vct-proyecto360-plan {
+    background:#ffffff;
+    border-radius:12px;
+    border:1px solid #e5e7eb;
+    padding:16px;
+}
+
+.vct-plan-tree {
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.vct-plan-node {
+    border-left:3px solid #66062d;
+    background:#fafafa;
+    padding:10px 14px;
+    border-radius:8px;
+}
+
+.vct-plan-node-title {
+    font-size:13px;
+    font-weight:600;
+    color:#17233c;
+}
+
+.vct-plan-node-info {
+    font-size:11px;
+    color:#64748b;
+    margin-top:5px;
+}
+
+
+/* Tabs futuras */
+.vct-proyecto360-tabs {
+    display:flex;
+    gap:8px;
+    margin-bottom:12px;
+}
+
+.vct-proyecto360-tab {
+    padding:8px 14px;
+    border-radius:8px;
+    background:#f3f4f6;
+    font-size:12px;
+    cursor:pointer;
+}
+
+.vct-proyecto360-tab.active {
+    background:#66062d;
+    color:white;
+}
+
+
+/* Responsive */
+@media(max-width:900px){
+
+    .vct-proyecto360-kpis {
+        grid-template-columns:repeat(2,1fr);
+    }
+
+}
+
+@media(max-width:600px){
+
+    .vct-proyecto360-kpis {
+        grid-template-columns:1fr;
+    }
+
+}

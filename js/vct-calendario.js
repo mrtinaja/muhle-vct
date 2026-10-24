@@ -77,7 +77,7 @@
                     var pr=parts[si].split('|'),code=(pr.shift()||'').trim().toUpperCase(),nm=(pr.join('|')||code).trim();
                     if(!code)continue;
                     var ico=code==='AU'?'clipboard-check':code==='CA'?'users':'briefcase';
-                    chips+='<span class="vct-cal-tip-service"><span class="vct-cal-tip-svc is-'+escapeAttr(code.toLowerCase())+'" aria-label="'+escapeAttr(nm)+'">'+SVG[ico]+'</span><span>'+escapeHtml(nm)+'</span></span>';
+                    chips+='<span class="vct-cal-tip-svc is-'+escapeAttr(code.toLowerCase())+'" role="img" aria-label="'+escapeAttr(nm)+'">'+SVG[ico]+'</span>';
                 }
                 if(chips)m+='<div class="vct-cal-tip-row vct-cal-tip-services">'+chips+'</div>';
             }
@@ -304,7 +304,7 @@
                         /* HOY_V41: Acciones marca hoy tambien en lectura; conserva los permisos y la V360 de proyecto. */
                         var cls="vct-agenda-cell"+(isWeekend?" vct-agenda-cell-weekend":"")+((isToday && (!hasActivities || root.classList.contains("vct-acc-cal-unified")))?" vct-agenda-cell-today":"")+holidayClass(fer)+((canEdit && !isPastDay)?"":" vct-agenda-cell-nocreate")+(isPastDay?" vct-agenda-cell-past":"");
 
-                        html+='<td class="'+cls+'" data-vct-agenda-day="'+key+'"'+(fer && fer.texto ? ' title="'+escapeAttr(fer.texto)+'"' : '')+'>';
+                        html+='<td class="'+cls+'" data-vct-agenda-day="'+key+'"'+(fer && fer.texto ? ' data-tt="1" data-tt-x="'+escapeAttr(fer.texto)+'"' : '')+'>';
                         html+='<span class="vct-agenda-daynum">'+dayNum+'</span>';
                         if(fer && fer.texto){
                             html+='<span class="vct-agenda-holiday-label">'+escapeHtml(fer.texto)+'</span>';
@@ -1071,7 +1071,7 @@
                         var isToday=sameDay(cd,today), isPastCell=(cd<today && !isToday);
                         var isWknd=(cd.getDay()===0||cd.getDay()===6);
                         var cls="vct-agenda-cell "+clsOf(r.e)+(isToday?" vct-agenda-cell-today":"")+(isWknd?" is-wknd":"")+(isPastCell?" is-past":"");
-                        html+='<td class="'+cls+'" data-vct-agc-day="'+k+'"'+(r.n?' title="'+escAttr(r.n)+'"':'')+'>';
+                        html+='<td class="'+cls+'" data-vct-agc-day="'+k+'">';
                         html+='<span class="vct-agenda-daynum">'+dayNum+'</span>';
                         html+=stripHtml(r);
                         html+=cellBadge(r);

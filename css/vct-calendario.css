@@ -2212,3 +2212,11 @@ html body .vct-form-select-menu.vct-agc-select-menu { box-sizing: border-box !im
     outline:2px solid #66062D !important;
     outline-offset:-2px !important;
 }
+
+/* FASE3_TOOLTIP: iconos de servicio SOLO icono (sin label de texto), horizontales
+   a la izquierda y sin superposicion. Hasta 3 servicios entran holgados; si
+   hubiera mas, hacen wrap (cartas apiladas no hace falta). El nombre del servicio
+   queda en aria-label (accesible). */
+.vct-cal-tip-services{display:flex !important;flex-wrap:wrap;gap:6px;justify-content:flex-start;align-items:center}
+.vct-cal-tip-services .vct-cal-tip-svc{margin-left:0 !important;width:22px;height:22px;border:0}
+.vct-cal-tip-services .vct-cal-tip-svc svg{width:13px;height:13px}

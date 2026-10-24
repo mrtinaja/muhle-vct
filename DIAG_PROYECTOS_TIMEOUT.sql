@@ -1,60 +1,83 @@
 /* ============================================================
-   DIAG_PROYECTOS_TIMEOUT  —  por qué VCT_MAIN_PROYECTOS da timeout
-   Sólo-lectura. SSMS no tiene el límite de 30s de la app, así que
-   el SP completa y STATISTICS TIME muestra QUÉ statement tarda.
+   DIAG_PROYECTOS_TIMEOUT  (v2)  —  aislar el cuello de VCT_MAIN_PROYECTOS
+   Sólo-lectura. NO ejecuta el SP entero (colgaba). Replica y cronometra
+   por separado: (C) INSERT #P (datos)  y  (D) armado del @ROWS (HTML+UDF).
+   Batches con GO: los conteos e indices quedan escritos aunque algo tarde.
 
-   USO:  SSMS > Query > SQLCMD Mode  ->  F5.
-   Salida: _diag\PROYECTOS_TIMEOUT.txt
+   USO:  SSMS > Query > SQLCMD Mode  ->  F5.   Salida: _diag\PROYECTOS_TIMEOUT.txt
    ============================================================ */
 :OUT C:\Users\Usuario\Desktop\muhle-vct\_diag\PROYECTOS_TIMEOUT.txt
 USE [MuhlePROD];
+GO
 SET NOCOUNT ON;
-
-/* ---------- 1) Volumen de datos involucrado ---------- */
-PRINT '=== CONTEOS ===';
-SELECT 'VCT_PROYECTOS'            AS tabla, COUNT(*) AS filas FROM dbo.VCT_PROYECTOS
+PRINT '=== A) CONTEOS ===';
+SELECT 'VCT_PROYECTOS' AS tabla, COUNT(*) AS filas FROM dbo.VCT_PROYECTOS
 UNION ALL SELECT 'VCT_PROYECTOS_EQUIPO',    COUNT(*) FROM dbo.VCT_PROYECTOS_EQUIPO
 UNION ALL SELECT 'VCT_PROYECTOS_SERVICIOS', COUNT(*) FROM dbo.VCT_PROYECTOS_SERVICIOS
 UNION ALL SELECT 'VCT_PRM_SERVICIOS',       COUNT(*) FROM dbo.VCT_PRM_SERVICIOS
 UNION ALL SELECT 'VCT_EMPLEADOS',           COUNT(*) FROM dbo.VCT_EMPLEADOS
-UNION ALL SELECT 'VCT_CLIENTES',            COUNT(*) FROM dbo.VCT_CLIENTES;
-
-/* ---------- 2) Índices existentes en las tablas de las subconsultas ---------- */
+UNION ALL SELECT 'VCT_PRM_PROYECTOS_ROLES', COUNT(*) FROM dbo.VCT_PRM_PROYECTOS_ROLES;
+GO
 PRINT '';
-PRINT '=== INDICES en EQUIPO / SERVICIOS (para ver si falta soporte) ===';
-SELECT OBJECT_NAME(i.object_id) AS tabla, i.name AS indice, i.type_desc,
+PRINT '=== B) INDICES en EQUIPO / SERVICIOS ===';
+SELECT OBJECT_NAME(i.object_id) AS tabla, ISNULL(i.name,'(heap)') AS indice, i.type_desc,
        STUFF((SELECT ', ' + c.name FROM sys.index_columns ic
               JOIN sys.columns c ON c.object_id=ic.object_id AND c.column_id=ic.column_id
               WHERE ic.object_id=i.object_id AND ic.index_id=i.index_id AND ic.is_included_column=0
-              ORDER BY ic.key_ordinal FOR XML PATH('')),1,2,'') AS columnas
+              ORDER BY ic.key_ordinal FOR XML PATH('')),1,2,'') AS columnas_clave
 FROM sys.indexes i
-WHERE i.object_id IN (OBJECT_ID('dbo.VCT_PROYECTOS_EQUIPO'), OBJECT_ID('dbo.VCT_PROYECTOS_SERVICIOS'))
-  AND i.type_desc <> 'HEAP'
+WHERE i.object_id IN (OBJECT_ID('dbo.VCT_PROYECTOS_EQUIPO'), OBJECT_ID('dbo.VCT_PROYECTOS_SERVICIOS'), OBJECT_ID('dbo.VCT_PROYECTOS_SERVICIOS'))
 ORDER BY tabla, indice;
-
-/* ---------- 3) Ejecutar el SP con timing por statement ---------- */
+GO
+/* ---------- C) INSERT #P (gather de datos, sin HTML) ---------- */
 PRINT '';
-PRINT '=== EJECUCION DEL SP (mirar el statement con mayor elapsed time) ===';
+PRINT '=== C) INSERT #P (datos) ===';
 SET STATISTICS IO ON;
-SET STATISTICS TIME ON;
-
-DECLARE @o1 VARCHAR(MAX), @o2 VARCHAR(MAX), @o3 VARCHAR(MAX);
-DECLARE @t0 DATETIME2 = SYSDATETIME();
-
-EXEC dbo.VCT_MAIN_PROYECTOS
-     @IPKEYJOB = '00000000-0000-0000-0000-000000000000',
-     @FORM_ID  = 'diag',
-     @IUNIDAD  = 'GERENCIA',
-     @IAGENTE  = 'avocaturo',
-     @OUTPARAM1 = @o1 OUTPUT, @OUTPARAM2 = @o2 OUTPUT, @OUTPARAM3 = @o3 OUTPUT;
-
-SET STATISTICS TIME OFF;
+IF OBJECT_ID('tempdb..#P') IS NOT NULL DROP TABLE #P;
+CREATE TABLE #P (
+    ID INT, ID_CLIENTE INT, CODIGO VARCHAR(100), NOMBRE VARCHAR(300), REFERENCIA VARCHAR(300),
+    CLIENTE VARCHAR(300), EST_COD VARCHAR(50), ESTADO VARCHAR(100), ANALISTA VARCHAR(320),
+    SERV_HTML VARCHAR(MAX), SERV_TXT VARCHAR(400), FINI DATETIME, FFIN DATETIME, AVANCE INT
+);
+DECLARE @c0 DATETIME2 = SYSDATETIME();
+INSERT INTO #P
+SELECT
+    P.ID, P.IDCLIENTE, CONVERT(VARCHAR(100), P.CODIGO), CONVERT(VARCHAR(300), P.NOMBRE),
+    CONVERT(VARCHAR(300), ISNULL(P.REFERENCIA,'')),
+    CONVERT(VARCHAR(300), ISNULL(NULLIF(C.RAZON_SOCIAL,''),'Sin cliente')),
+    PE.CODIGO, PE.DESCRIPCION,
+    (SELECT TOP 1 LTRIM(RTRIM(ISNULL(E.APELLIDOS,'') + CASE WHEN ISNULL(E.NOMBRES,'')<>'' THEN ', '+E.NOMBRES ELSE '' END))
+     FROM dbo.VCT_PROYECTOS_EQUIPO EQ
+     JOIN dbo.VCT_EMPLEADOS E ON E.ID = EQ.ID_EMPLEADO
+     JOIN dbo.VCT_PRM_PROYECTOS_ROLES R ON R.ID = EQ.ID_ROL
+     WHERE EQ.ID_PROYECTO = P.ID AND R.CODIGO = 'ANALISTA' AND ISNULL(EQ.ESTADO,'ACTIVO')='ACTIVO'),
+    ISNULL((SELECT ' ' + dbo.VCT_HTML_ESC(PS.DESCRIPCION)
+     FROM dbo.VCT_PROYECTOS_SERVICIOS XS JOIN dbo.VCT_PRM_SERVICIOS PS ON PS.ID = XS.ID_SERVICIO
+     WHERE XS.ID_PROYECTO = P.ID FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)'), ''),
+    ISNULL((SELECT ' ' + PS.DESCRIPCION
+     FROM dbo.VCT_PROYECTOS_SERVICIOS XS JOIN dbo.VCT_PRM_SERVICIOS PS ON PS.ID = XS.ID_SERVICIO
+     WHERE XS.ID_PROYECTO = P.ID FOR XML PATH(''), TYPE).value('.','VARCHAR(400)'), ''),
+    P.FECHA_INICIO, P.FECHA_FIN, ISNULL(P.PORCENTAJE_AVANCE,0)
+FROM dbo.VCT_PROYECTOS P
+LEFT JOIN dbo.VCT_CLIENTES C ON C.ID = P.IDCLIENTE
+LEFT JOIN dbo.VCT_PRM_PROYECTOS_ESTADOS PE ON PE.ID = P.ID_ESTADO;
 SET STATISTICS IO OFF;
-
+PRINT 'INSERT #P elapsed (ms): ' + CONVERT(VARCHAR(20), DATEDIFF(MILLISECOND, @c0, SYSDATETIME()));
+PRINT 'Filas en #P: ' + CONVERT(VARCHAR(20), (SELECT COUNT(*) FROM #P));
+GO
+/* ---------- D) armado @ROWS (HTML + ~15 VCT_HTML_ESC por fila) ---------- */
 PRINT '';
-PRINT '=== TOTAL ===';
-PRINT 'Elapsed total (ms): ' + CONVERT(VARCHAR(20), DATEDIFF(MILLISECOND, @t0, SYSDATETIME()));
-PRINT 'Largo del HTML devuelto: ' + CONVERT(VARCHAR(20), LEN(@o1));
-
+PRINT '=== D) armado @ROWS (HTML+UDF) ===';
+DECLARE @d0 DATETIME2 = SYSDATETIME();
+DECLARE @ROWS VARCHAR(MAX);
+SELECT @ROWS = (SELECT
+        dbo.VCT_HTML_ESC(ISNULL(P.CODIGO,'')) + dbo.VCT_HTML_ESC(ISNULL(P.NOMBRE,'')) + dbo.VCT_HTML_ESC(ISNULL(P.REFERENCIA,''))
+      + dbo.VCT_HTML_ESC(ISNULL(P.CLIENTE,'')) + dbo.VCT_HTML_ESC(ISNULL(P.ANALISTA,'')) + dbo.VCT_HTML_ESC(ISNULL(P.SERV_TXT,''))
+    FROM #P P FOR XML PATH(''), TYPE).value('.','VARCHAR(MAX)');
+PRINT 'Armado @ROWS elapsed (ms): ' + CONVERT(VARCHAR(20), DATEDIFF(MILLISECOND, @d0, SYSDATETIME()));
+PRINT 'Largo @ROWS: ' + CONVERT(VARCHAR(20), LEN(@ROWS));
+IF OBJECT_ID('tempdb..#P') IS NOT NULL DROP TABLE #P;
+GO
 :OUT stdout
-SET NOCOUNT OFF;
+PRINT 'DIAG completo.';
+GO

@@ -8,6 +8,25 @@
    (Paso siguiente del bloque: unificar los dos render en un solo motor + look GCal.)
    ============================================================================ */
 
+/* FASE2_C: dedupe de <link vct-calendario.css>. La SPA inyecta el CSS en <head> y
+   no limpia los <link> de navegaciones/versiones anteriores, con lo que quedan dos
+   (ej. ?v=42 en head + ?v=44 en el step), ensuciando la cascada. Se conserva SOLO
+   el ultimo (el del step actual) y se quitan los anteriores. Re-corre en cada carga
+   de contenido AJAX. Solo toca <link> de este CSS; no afecta datos ni otros assets. */
+(function(){
+    "use strict";
+    function dedupeCalCss(){
+        try{
+            var ls=[].slice.call(document.querySelectorAll('link[href*="vct-calendario.css"]'));
+            for(var i=0;i<ls.length-1;i++){ if(ls[i].parentNode) ls[i].parentNode.removeChild(ls[i]); }
+        }catch(e){}
+    }
+    dedupeCalCss();
+    if(document.addEventListener){
+        document.addEventListener("vct:content-loaded", function(){ setTimeout(dedupeCalCss,0); });
+    }
+})();
+
 /* ===================== [FERIADOS] ex vct-Agenda.js ===================== */
 /* vct-agenda.js - v9
    Calendario full-width con vistas Mes / Semana / Dia, 100% cliente

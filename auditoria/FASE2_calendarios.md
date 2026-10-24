@@ -25,8 +25,9 @@ Evidencia (vivo, Acciones): `borderTopColor=#EFE3E9`; ni un `border` inline `!im
 La nota original ("hoy jueves 22 marcado como finde") fue un error de medición: la inspección de clases se hizo el **2026-10-24 (sábado, getDay=6)**, no el 22. Por lo tanto `vct-agenda-cell-weekend` en la celda de hoy es **correcto** — ese día es realmente fin de semana. **No hay bug de cálculo de día.**
 Implicancia real: cuando hoy cae en sábado/domingo, la celda toma el estilo de finde (rosa/punteado) y el marcador de hoy debe seguir visible → lo garantiza `FIX_AUDIT_HOY` (outline bordó, independiente del borde). Nada más que hacer acá.
 
-### C. 🟡 Doble `<link>` del mismo CSS
-El host principal carga `vct-calendario.css` **dos veces** (`?v=42` y `?v=44`) → es el mismo archivo físico (el `?v` es cache-buster), pero duplica reglas y ensucia la cascada. Origen: dos SP distintos (shell + pantalla) emiten el `<link>` y el bump de versión no los dejó iguales. → normalizar a un único `<link>` y una sola versión (Fase 6/SP).
+### C. ✅ Doble `<link>` del mismo CSS — corregido
+El host cargaba `vct-calendario.css` **dos veces**: `?v=42` en `<head>` (stale, quedó de una navegación/versión anterior — la SPA no limpia los `<link>` viejos del head) + `?v=44` dentro del `<form>` del step actual (lo emite el SP de la pantalla). El del step (último en el DOM) ganaba, así que no había bug visible, pero era redundante y, si el `?v=42` quedaba cacheado viejo, mezclaba reglas.
+**Fix (`js/vct-calendario.js`, FASE2_C):** dedupe que conserva **sólo el último** `<link vct-calendario.css>` y quita los anteriores; re-corre en `vct:content-loaded` (navegación AJAX). Contenido, bajo riesgo (sólo toca `<link>` de ese CSS). Validado en vivo: `[v=42(head), v=44(body)]` → `[v=44(body)]`.
 
 ### D. ✅ Tema visual distinto por calendario — INTENCIONAL (confirmado 2026-10-24)
 El calendario de **Acciones** se ve con **fondo/bordes rosados** (`--cal-rose-line`), mientras la Agenda del consultor y la del V360 se ven **blancas**. **Confirmado por el usuario: es intencional — NO tocar.** Se conserva como diferencia de diseño deliberada.

@@ -16,8 +16,9 @@
 | `js/vct-proyecto-agenda.js` | 5,4 KB | sin refs (idem) |
 | `css/vct-proyectos.css` | 2,9 KB | sin refs (pantalla Proyectos sin SP, cae en Inicio) |
 | `css/vct_main_proyecto_v360_bkp.css` | 2,9 KB | backup (`_bkp`); sin refs |
-| `js/vct-loading-overlay.js` | 1,9 KB | sin refs |
 | `js/vct-Agenda.js` | 22 KB | 0 refs en SPs/aspx (sólo aparece dentro de otro asset) |
+
+> **Corrección (24/10):** `js/vct-loading-overlay.js` **NO es huérfano** — el `main/Default.aspx` real del server lo carga (`<script src="../js/vct-loading-overlay.js">`). La copia del repo estaba vieja. Confirma el caveat: validar siempre contra el server antes de borrar.
 
 **Total candidato ≈ 834 KB** (dominado por `vct-mainMobile.css` + `vct-main_SI.js`).
 
@@ -28,6 +29,7 @@ Clasificación:
 
 ## B. Font Awesome duplicado (en uso, pero redundante)
 - `font-awesome-5-all.css` (71 KB) → **8 refs** y `font-awesome.min.css` (53 KB) → **6 refs**: **dos versiones distintas de FA se cargan** según la pantalla. `font-awesome.css` (37 KB) → 0 refs (huérfano, §A).
+- **Además (24/10, del Default.aspx real):** el head del shell carga FA **por CDN** (`https://use.fontawesome.com/releases/v5.15.3/css/all.css`) **y** la copia **local** `font-awesome-5-all.css` a la vez → misma versión bajada dos veces (una externa, una local). Dejar sólo una (preferible la local, por CSP/offline).
 - Riesgo: peso doble + posibles iconos inconsistentes entre pantallas.
 - **Recomendación (F8/F9, con OK):** unificar a **una sola** versión de FA en todas las pantallas (o, mejor aún, cargarla desde el shell). No urgente; verificar que los iconos usados existan en la versión elegida antes de consolidar.
 

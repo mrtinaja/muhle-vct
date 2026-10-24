@@ -13,223 +13,44 @@
         <link rel="stylesheet" href="../css/progress-wizard.min.css"/>
         <link rel="shortcut icon" href="../favicon.ico" type="image/x-icon"/>
         <link rel="icon" href="../favicon.ico" type="image/x-icon"/>
-        <link rel="stylesheet" href="../css/main.css"/>
-        
-        <style>
-            /* ⚪ TOPBAR BLANCA ULTRA CLEAN */
-            body #muhleTopBar.w3-muhle-topbar {
-                height: 60px !important;
-                background-color: #ffffff !important;
-                border-bottom: 1px solid #e2e8f0 !important;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.05) !important;
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                width: 100% !important;              
-                padding: 0 !important;
-                margin: 0 !important;
-                z-index: 1000 !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: space-between !important;
-            }
-            
-            /* LOGO IZQUIERDO */
-            body #muhleTopBar .w3-muhle-logo-container {
-                position: absolute !important;
-                left: 0 !important;
-                top: 0 !important;
-                height: 60px !important;
-                display: flex !important;
-                align-items: center !important;
-            }
-            
-            body #muhleTopBar .w3-muhle-logo {
-                height: 38px !important;
-                width: auto !important;
-                margin-left: 15px !important;
-                display: block !important;
-                object-fit: contain !important;
-            }
-
-            /* SECCIÓN DERECHA DE USUARIO */
-            .vct-header-right-container {
-                position: absolute !important;
-                right: 15px !important;
-                top: 0 !important;
-                height: 60px !important;
-                display: flex !important;
-                align-items: center !important;
-                gap: 12px !important;
-            }
-
-            /* WIDGET DE USUARIO */
-            .vct-user-widget {
-                display: flex !important;
-                align-items: center !important;
-                gap: 10px !important;
-                padding: 4px 10px !important;
-                border-radius: 8px !important;
-                background: #f8fafc !important;
-                border: 1px solid #e2e8f0 !important;
-                transition: background 0.2s ease !important;
-            }
-            .vct-user-widget:hover {
-                background: #f1f5f9 !important;
-            }
-
-            /* AVATAR CIRCULAR */
-            .vct-avatar {
-                width: 34px !important;
-                height: 34px !important;
-                border-radius: 50% !important;
-                background: #66062C !important;
-                border: 1px solid #cbd5e1 !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                overflow: hidden !important;
-                flex-shrink: 0 !important;
-                margin-bottom: 3px;
-            }
-
-            .vct-avatar img {
-                width: 100% !important;
-                height: 100% !important;
-                object-fit: cover !important;
-                object-position: center !important;
-                display: block !important;
-                margin-bottom: 3px;
-            }
-
-            /* TEXTO Y NOMBRE */
-            .vct-user-details {
-                display: flex !important;
-                flex-direction: column !important;
-                text-align: left !important;
-            }
-
-            .vct-user-subtitle {
-                color: #64748b !important;
-                font-size: 10px !important;
-                font-weight: 600 !important;
-                line-height: 1 !important;
-                text-transform: uppercase !important;
-            }
-
-            .vct-user-title {
-                color: #0f172a !important;
-                font-size: 13px !important;
-                font-weight: 700 !important;
-                line-height: 1.2 !important;
-            }
-
-            /* BOTÓN SALIR */
-            .w3-muhle-topbar-button {
-                height: 36px !important;
-                width: 36px !important;
-                display: inline-flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                background: transparent !important;
-                border: none !important;
-                border-radius: 8px !important;
-                cursor: pointer !important;
-                transition: background 0.2s !important;
-            }
-            .w3-muhle-topbar-button:hover {
-                background: #fee2e2 !important;
-            }
-            .w3-muhle-topbar-button i {
-                color: #66062D !important;
-                font-size: 16px !important;
-            }
-
-            /* ESTILOS DEL SIDEBAR INYECTADO DESDE SQL */
-            body #muhleSideBar {
-                display: block !important;
-                visibility: visible !important;
-                position: fixed !important;
-                top: 60px !important;
-                left: 0 !important;
-                height: calc(100vh - 60px) !important;
-                width: 60px !important;
-                background-color: #66062C !important;
-                z-index: 999 !important;
-                overflow: hidden !important;
-                box-shadow: 2px 0 15px rgba(0,0,0,0.1) !important;
-            }
-
-            body #muhleSideBar a {
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                color: rgba(255, 255, 255, 0.7) !important;
-                text-decoration: none !important;
-                height: 55px !important;
-                width: 60px !important;
-                transition: all 0.2s ease !important;
-            }
-
-            body #muhleSideBar a:first-child {
-                margin-top: 15px !important;
-            }
-
-            body #muhleSideBar a:hover {
-                background-color: rgba(255, 255, 255, 0.15) !important;
-                color: #ffffff !important;
-            }
-
-            body #muhleSideBar a i {
-                font-size: 18px !important;
-            }
-
-            body #muhleSideBar a span {
-                display: none !important;
-            }
-
-            /* CONTENIDO ACOPLADO */
-            body #main.w3-main {
-                margin-left: 60px !important;
-                margin-top: 60px !important;
-                padding: 0 !important;
-            }
-
-            body #mainContainer {
-                padding: 20px !important;
-            }
-        </style>
+        <link rel="stylesheet" href="/css/vct-main.css">
+        <link rel="stylesheet" href="/css/vct-shell.css">
     </head>
     <body class="w3-light-grey">
 
         <!------ BARRA SUPERIOR ------>
         <div id="muhleTopBar" class="w3-bar w3-top w3-muhle-topbar">
-            <span class="w3-bar-item w3-muhle-logo-container">
-                <a href="javascript:loadHome();"><img class="w3-muhle-logo" src="../img/logo.jpg"></a>
-            </span>
-            
             <div class="vct-header-right-container">
-                <!-- WIDGET DE PERFIL -->
-                <div class="vct-user-widget" onclick="profile();" style="cursor: pointer;" title="Ver Perfil">
-                    <div class="vct-avatar">
-                        <img src="../img/avatar1.png" alt="Avatar">
-                    </div>
+
+                <!-- USUARIO INFORMATIVO: NO ABRE PERFIL / NO ES CLICKABLE -->
+                <div class="vct-user-widget" aria-label="Usuario actual">
+                    <span id="vctUserInitials" class="vct-user-initials" aria-hidden="true">--</span>
+
                     <div class="vct-user-details">
-                        <span class="vct-user-subtitle">¡HOLA!</span>
-                        <span class="vct-user-title">
-                            <span id="fullname"><asp:Label id="lblAgentValue" runat="server" Text=""></asp:Label></span>
-                        </span>
+                        <span id="vctUserFullName" class="vct-user-fullname"></span>
+
+                        <!-- Control obligatorio del framework. Se conserva intacto. -->
+                        <span id="fullname" class="vct-framework-fullname"><asp:Label id="lblAgentValue" runat="server" Text=""></asp:Label></span>
                     </div>
                 </div>
 
-                <!-- BOTÓN DE SALIR -->
-                <button type="button" class="w3-muhle-topbar-button" onclick="logout();" title="Salir del Sistema">
-                    <i class="fas fa-sign-out-alt"></i>
+                <span class="vct-header-user-divider" aria-hidden="true"></span>
+
+                <!-- BOTÓN DE SALIR: reutiliza logout() nativa del framework. -->
+                <button type="button"
+                        class="vct-logout-button"
+                        onclick="logout();"
+                        title="Salir del Sistema"
+                        aria-label="Salir del Sistema">
+                    <svg class="vct-logout-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M14 8L18 12L14 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M18 12H8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <path d="M10 5H6.8C5.81 5 5 5.81 5 6.8V17.2C5 18.19 5.81 19 6.8 19H10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                    <span>Salir</span>
                 </button>
             </div>
         </div>
-
-        <!-- ℹ️ EL SIDEBAR SE INYECTA AHORA AUTOMÁTICAMENTE DESDE EL SP HOME_INICIO_PORTAL EN @OMENU -->
 
         <div id="muhlePopup" class="w3-hide">
             <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
@@ -238,10 +59,15 @@
 
         <!------ CONTENIDO DINÁMICO ------>
         <div id="main" class="w3-main">
-            <div class="w3-container">
+            <div class="w3-container" style="padding:0 !important;">
                 <div id="loader" class="loading" style="display: none;"><div class="loader"></div></div>
                 <div id="mainContainer" class="w3-light-grey"></div>
             </div>
+        </div>
+
+        <!-- OVERLAY DE CARGA GLOBAL (AJAX). Ver vct-loading-overlay.js -->
+        <div id="vct-loading-overlay" class="vct-loading-overlay">
+            <div class="vct-spinner"></div>
         </div>
 
         <script src="../lib/jquery/jquery.min.js"></script>
@@ -251,20 +77,47 @@
         <script src="../lib/DataTables/datatables.min.js"></script>
         <script src="../lib/easy-timer/easytimer.min.js"></script>
         <script src="../lib/tableToExcel/tableToExcel.js"></script>
-        <%-- AUDITORIA F9: Google Maps API se cargaba en cada pantalla pero NO se usa en ningun lado
-             (sin google.maps.*, sin contenedor de mapa, sin initMap en SPs/JS/aspx). Se comenta para
-             quitar descarga + warning 'loading=async' + reducir exposicion de la API key.
-             Si en el futuro se usa un mapa, descomentar con loading=async + callback:
-             <script async src="https://maps.googleapis.com/maps/api/js?key=...&loading=async&callback=initMap"></script>
-        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBZxqMtqChOx4vdThcsr_-W2CJ762OBxRg"></script>
-        --%>
+        <%-- AUDITORIA: Google Maps API quitada (no se usaba en MAIN: sin google.maps.*, sin mapa, sin initMap) --%>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
         <script src="../css/sw2/sweetalert2.all.min.js"></script>
         <script src="../css/sw2/sweetalert2.min.js"></script>
         <script src="../js/main.js"></script>
+        <script src="../js/vct-main.js"></script>
+        <script src="../js/vct-loading-overlay.js"></script>
         <script>
         try {
             var full_name = document.getElementById("fullname").innerText.trim();
+
+            /* Iniciales para el nuevo header. Se calculan antes de conservar
+               el comportamiento existente que muestra solamente el primer nombre. */
+            var initialsNode = document.getElementById("vctUserInitials");
+            if(initialsNode && full_name && full_name !== "") {
+                var initials = "";
+
+                if(full_name.indexOf(',') !== -1) {
+                    var nameParts = full_name.split(',');
+                    var surnamePart = (nameParts[0] || "").trim();
+                    var givenPart = (nameParts[1] || "").trim();
+                    initials = (givenPart.charAt(0) + surnamePart.charAt(0)).toUpperCase();
+                } else {
+                    var cleanParts = full_name.split(/\s+/).filter(function(item){ return item !== ""; });
+                    if(cleanParts.length >= 2) {
+                        initials = (cleanParts[0].charAt(0) + cleanParts[cleanParts.length - 1].charAt(0)).toUpperCase();
+                    } else if(cleanParts.length === 1) {
+                        initials = cleanParts[0].substring(0,2).toUpperCase();
+                    }
+                }
+
+                initialsNode.innerText = initials || "--";
+            }
+
+            /* Copia visual del nombre completo para el nuevo shell.
+               #fullname se conserva intacto para compatibilidad del framework. */
+            var fullNameDisplay = document.getElementById("vctUserFullName");
+            if(fullNameDisplay) {
+                fullNameDisplay.innerText = full_name || "";
+            }
+
             if(full_name && full_name !== "") {
                 if(full_name.indexOf(',') !== -1) {
                     var name = full_name.split(',')[1].trim();
@@ -277,7 +130,21 @@
 
         function loadHome() {
             try {
-                newTaskForContactWithParams('VOCATURO', 'ACTION=INICIO', 'XAGENDA', 'Inicio');
+                /* Inicio es la pantalla inicial del framework.
+                   Limpiamos únicamente el estado visual persistido del sidebar
+                   para que una sesión anterior (por ejemplo Clientes) no pueda
+                   quedar activa cuando el dashboard se vuelve a cargar. */
+                try {
+                    window.sessionStorage.removeItem('VCT_SIDEBAR_SELECTED_MODULE');
+                    window.sessionStorage.removeItem('VCT_SIDEBAR_ACTIVE_SELECTION');
+                } catch(ignore) {}
+
+                try {
+                    window.VCT_ACTIVE_MODULE = '';
+                    document.documentElement.removeAttribute('data-vct-active');
+                } catch(ignore) {}
+
+                newTaskForContactWithParams('VOCATURO', 'ACTION=INICIO', 'VCT_GESTION', 'Inicio');
             } catch(err) {
                 console.warn("Mühle loadHome fallback:", err);
                 $('#mainContainer').empty();
@@ -285,19 +152,20 @@
         }
 
         function profile() {
-            $('#mainContainer').hide(); 
+            $('#mainContainer').hide();
             $('#loader').show();
             $.ajax({
-                type: 'GET', 
-                url: '../profile/', 
+                type: 'GET',
+                url: '../profile/',
                 dataType: "text",
-                success: function (data) { 
-                    $("#mainContainer").html(data); 
-                    $('#loader').hide(); 
-                    $("#mainContainer").show(); 
+                success: function (data) {
+                    $("#mainContainer").html(data);
+                    $('#loader').hide();
+                    $("#mainContainer").show();
+                    refreshLucideIcons();
                 },
-                error: function (httpReq, status, exception) { 
-                    console.log(status + " " + exception); 
+                error: function (httpReq, status, exception) {
+                    console.log(status + " " + exception);
                     $('#loader').hide();
                     $('#mainContainer').show();
                 }
@@ -305,24 +173,37 @@
         }
 
         function logout() {
-            $('#mainContainer').hide(); 
+            $('#mainContainer').hide();
             $('#loader').show();
             $.ajax({
-                type: 'GET', 
-                url: '../logout/', 
+                type: 'GET',
+                url: '../logout/',
                 dataType: "text",
-                success: function (data) { 
-                    window.location.href = '../'; 
+                success: function (data) {
+                    window.location.href = '../';
                 },
-                error: function (httpReq, status, exception) { 
-                    console.log(status + " " + exception); 
+                error: function (httpReq, status, exception) {
+                    console.log(status + " " + exception);
                     $('#loader').hide();
                 }
             });
         }
 
+        function refreshLucideIcons() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+
         $(document).ready(function () {
             loadHome();
+            refreshLucideIcons();
+            setTimeout(refreshLucideIcons, 300);
+            setTimeout(refreshLucideIcons, 800);
+        });
+
+        $(document).ajaxComplete(function() {
+            setTimeout(refreshLucideIcons, 150);
         });
         </script>
     </body>

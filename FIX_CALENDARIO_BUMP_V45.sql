@@ -1,4 +1,4 @@
-/* CAL_E_V1 v44: invalida la cache de calendario CSS/JS (y Acciones JS). Boceto B final: sin foto de fondo,
+/* CAL_E_V1 v45: invalida la cache de calendario CSS/JS (y Acciones JS). Boceto B final: sin foto de fondo,
    degrade pastel, celdas blancas, circulo bordo, fin de semana / pasados / feriados, semana en 7 columnas, dia sin horas.
    Lee las definiciones actuales; conserva consultas y guardados. Reejecutable.
    Subir css/vct-calendario.css antes de ejecutar (los JS no cambian). */
@@ -8,7 +8,7 @@ SET NOCOUNT ON; SET XACT_ABORT ON; SET ANSI_NULLS ON; SET QUOTED_IDENTIFIER ON;
 DECLARE @D NVARCHAR(MAX), @ORIG NVARCHAR(MAX), @OID INT, @POS INT,
  @START INT, @FIN INT, @SCAN INT, @N INT=0, @ASSET INT, @TOKEN NVARCHAR(80),
  @HDR13_P INT,@HDR13_Q INT,@HDR13_DEPTH INT,@HDR13_PREFIX NVARCHAR(100);
-DECLARE bump44 CURSOR LOCAL FAST_FORWARD FOR
+DECLARE bump45 CURSOR LOCAL FAST_FORWARD FOR
  SELECT m.object_id FROM sys.sql_modules m
  JOIN sys.objects o ON o.object_id=m.object_id
  WHERE o.type='P' AND (m.definition LIKE N'%vct-calendario.js?v=%'
@@ -16,8 +16,8 @@ DECLARE bump44 CURSOR LOCAL FAST_FORWARD FOR
  OR m.definition LIKE N'%vct-acciones.js?v=%');
 BEGIN TRY
  BEGIN TRANSACTION;
- OPEN bump44;
- FETCH NEXT FROM bump44 INTO @OID;
+ OPEN bump45;
+ FETCH NEXT FROM bump45 INTO @OID;
  WHILE @@FETCH_STATUS=0
  BEGIN
  SET @D=OBJECT_DEFINITION(@OID); SET @ORIG=@D; SET @ASSET=1;
@@ -78,17 +78,17 @@ BEGIN TRY
 
  EXEC sys.sp_executesql @D;
  SET @N=@N+1;
- PRINT OBJECT_SCHEMA_NAME(@OID)+'.'+OBJECT_NAME(@OID)+': assets v44';
+ PRINT OBJECT_SCHEMA_NAME(@OID)+'.'+OBJECT_NAME(@OID)+': assets v45';
  END;
- FETCH NEXT FROM bump44 INTO @OID;
+ FETCH NEXT FROM bump45 INTO @OID;
  END;
- CLOSE bump44; DEALLOCATE bump44;
+ CLOSE bump45; DEALLOCATE bump45;
  COMMIT TRANSACTION;
  PRINT 'OK. Procedimientos actualizados: '+CONVERT(VARCHAR(10),@N);
 END TRY
 BEGIN CATCH
- IF CURSOR_STATUS('local','bump44')>=0 CLOSE bump44;
- IF CURSOR_STATUS('local','bump44')>-3 DEALLOCATE bump44;
+ IF CURSOR_STATUS('local','bump45')>=0 CLOSE bump45;
+ IF CURSOR_STATUS('local','bump45')>-3 DEALLOCATE bump45;
  IF @@TRANCOUNT>0 ROLLBACK TRANSACTION;
  THROW;
 END CATCH;

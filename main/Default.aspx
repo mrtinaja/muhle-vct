@@ -251,7 +251,13 @@
         <script src="../lib/DataTables/datatables.min.js"></script>
         <script src="../lib/easy-timer/easytimer.min.js"></script>
         <script src="../lib/tableToExcel/tableToExcel.js"></script>
+        <%-- AUDITORIA F9: Google Maps API se cargaba en cada pantalla pero NO se usa en ningun lado
+             (sin google.maps.*, sin contenedor de mapa, sin initMap en SPs/JS/aspx). Se comenta para
+             quitar descarga + warning 'loading=async' + reducir exposicion de la API key.
+             Si en el futuro se usa un mapa, descomentar con loading=async + callback:
+             <script async src="https://maps.googleapis.com/maps/api/js?key=...&loading=async&callback=initMap"></script>
         <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBZxqMtqChOx4vdThcsr_-W2CJ762OBxRg"></script>
+        --%>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
         <script src="../css/sw2/sweetalert2.all.min.js"></script>
         <script src="../css/sw2/sweetalert2.min.js"></script>

@@ -15,6 +15,16 @@
         <link rel="icon" href="../favicon.ico" type="image/x-icon"/>
         <link rel="stylesheet" href="/css/vct-main.css">
         <link rel="stylesheet" href="/css/vct-shell.css">
+        <%-- FOUC fix: CSS de grilla + de cada pantalla precargado en el head (evita flash al inyectar la pantalla). --%>
+        <link rel="stylesheet" href="/css/vct-datagrid.css?v=50">
+        <link rel="stylesheet" href="/css/vct-datepicker.css?v=13">
+        <link rel="stylesheet" href="/css/vct-inicio.css?v=5">
+        <link rel="stylesheet" href="/css/vct-acciones.css?v=21">
+        <link rel="stylesheet" href="/css/vct-calendario.css?v=47">
+        <link rel="stylesheet" href="/css/vct-reportes.css?v=32">
+        <link rel="stylesheet" href="/css/vct-config-parametria.css?v=10">
+        <link rel="stylesheet" href="/css/vct-email-template-designer.css?v=31">
+        <link rel="stylesheet" href="/css/vct-proyecto-v360.css?v=40">
     </head>
     <body class="w3-light-grey">
 

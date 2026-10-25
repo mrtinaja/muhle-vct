@@ -16,7 +16,7 @@
         <link rel="stylesheet" href="/css/vct-main.css">
         <link rel="stylesheet" href="/css/vct-shell.css">
         <%-- FOUC fix: CSS de grilla + de cada pantalla precargado en el head (evita flash al inyectar la pantalla). --%>
-        <link rel="stylesheet" href="/css/vct-datagrid.css?v=50">
+        <link rel="stylesheet" href="/css/vct-datagrid.css?v=51">
         <link rel="stylesheet" href="/css/vct-datepicker.css?v=50">
         <link rel="stylesheet" href="/css/vct-inicio.css?v=5">
         <link rel="stylesheet" href="/css/vct-acciones.css?v=21">

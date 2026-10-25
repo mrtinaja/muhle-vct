@@ -158,6 +158,9 @@
             return new Date(+m[3], +m[2] - 1, +m[1], +(m[4] || 0), +(m[5] || 0), +(m[6] || 0)).getTime();
         if ((m = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?/.exec(t)))
             return new Date(+m[1], +m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0)).getTime();
+        /* yyyymmdd (CONVERT 112) usado en data-vct-sort-value de columnas fecha (ej. Proyectos Inicio/Fin) */
+        if ((m = /^(\d{4})(\d{2})(\d{2})$/.exec(t)))
+            return new Date(+m[1], +m[2] - 1, +m[3]).getTime();
         return null;
     }
     function sortKind(raw) {

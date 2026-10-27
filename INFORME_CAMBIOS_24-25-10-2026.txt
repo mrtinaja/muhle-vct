@@ -1,0 +1,196 @@
+================================================================================
+INFORME DE CAMBIOS - Muhle / Vocaturo (MAIN)
+Periodo: 24/10/2026 (mañana) -> 25/10/2026
+================================================================================
+
+Resumen ejecutivo
+-----------------
+Se hizo una auditoría formal por fases (F1-F9), se corrigió un timeout grave en
+Proyectos, y -lo más importante- se resolvió el FLASH/FOUC que afectaba a casi
+todas las pantallas al navegar. Además: compresión y caché en el server, pulido
+de UI, fix de tooltips en la Vista 360 de Consultor, y la suite de Playwright
+quedó verde (40/42 -> 42/42 tras el último fix).
+
+Leyenda de estado:
+  [OK/DESPLEGADO]  aplicado y verificado en desa
+  [EN PR #13]      en código, pendiente de subir al server + correr SQL
+  [SERVER]         cambiado directo en el server (fuera de git)
+
+
+================================================================================
+1) AUDITORÍA POR FASES (24/10 a la mañana)
+================================================================================
+- F1: inventario + sync de assets repo<->server (se resolvió divergencia).  [OK]
+- F2: calendarios; fix marcador "HOY" por outline (robusto). El hallazgo
+      "hoy = fin de semana" era falso positivo (el 24 era sábado).           [OK]
+- F2-C: dedupe del <link vct-calendario.css> stale en el head.               [OK]
+- F3: tooltips -> iconos de servicio "solo icono" + sacar title nativo
+      duplicado.                                                             [OK]
+- F4: relevamiento de componentes reutilizables (DataGrid/Select/DatePicker).
+- F5: errores JS y navegación (sin errores; se detectaron versiones ?v
+      inconsistentes entre SPs).
+- F6: performance (sin compresión/cache HTTP; ?v dispares; huérfanos pesados).
+- F7: obsoletos (archivos huérfanos ~834KB; Font Awesome duplicado CDN+local).
+- F8: plan de corrección consolidado (P0-P4).
+- F9: referencia de web.config (compresión + cache) y fix quirúrgico de Google
+      Maps (estaba comentado, no se usaba).                                  [OK]
+
+
+================================================================================
+2) PERFORMANCE - Timeout de VCT_MAIN_PROYECTOS (24/10)
+================================================================================
+Problema: la pantalla Proyectos caía en "Execution Timeout Expired".
+Causa: usaba una función escalar (VCT_HTML_ESC) por cada fila (~13k llamadas) y
+       columnas VARCHAR(MAX) concatenadas en FOR XML (LOB = lento).
+Fix:   se eliminó la UDF escalar (REPLACE inline + UPDATE set-based) y se pasaron
+       las columnas a VARCHAR(4000). Resultado ~250 ms.                      [OK]
+Diagnósticos usados: DIAG_PROYECTOS_TIMEOUT (v1-v4), DIAG_PROYECTOS_DEF,
+                     DIAG_PROYECTOS_TIEMPO.
+
+
+================================================================================
+3) FLASH / FOUC EN TODA LA SPA (el tema grande, 25/10)
+================================================================================
+Síntoma: al tocar cada solapa, la pantalla "flasheaba" (se veía la tabla cruda
+y después se montaban estilos/toolbar/paginado). Notorio en Proyectos,
+Empleados, Consultores; también en Calendario; Inicio/Acciones casi no se
+notaban (grilla abajo o pantalla liviana).
+
+Causas (varias sumadas), diagnosticadas en vivo con el navegador:
+  a) El commit de tooltips (22/10) infló vct-datagrid.css (+889) y
+     vct-datagrid.js (+654). Archivos enormes, servidos SIN compresión y SIN
+     cache -> el CSS llegaba después del paint = FOUC en cada pantalla.
+  b) El motor del datagrid inicializaba en setTimeout(0) -> la tabla cruda
+     (todas las filas, sin toolbar) se pintaba y recién después se
+     reestructuraba (reshape visible).
+  c) VCTColStd (en vct-datagrid.js) reescribía el <colgroup> de las tablas 360
+     con setTimeout(...,60) -> salto de anchos post-paint (se midió: la columna
+     Proyecto saltaba +43px a los ~81 ms).
+  d) El calendario inyectaba vct-datepicker.css?v=20 (hardcodeado en JS),
+     distinto del v50 del head -> doble carga tardía en Calendario.
+
+Fixes aplicados:
+  - vct-datagrid.js: init del motor y VCTColStd pasados a MICROTASK
+    (Promise.resolve().then) -> corren ANTES del primer paint. Ya no se ve la
+    tabla cruda ni el reshape de columnas.                                   [EN PR #13]
+  - vct-datagrid.css: ANTI-FLASH. Mientras la grilla no está lista
+    ([data-vct-dg]:not([data-vct-dg-ready="1"])) se oculta y muestra un
+    spinner (aparece recién a los 250 ms). Cuando el motor termina, aparece la
+    grilla ya armada. Verificado en vivo en Proyectos: 1ra pintura ya sale
+    armada, 0 saltos (las 862 filas crudas nunca se ven).                    [EN PR #13]
+  - main/Default.aspx: head datagrid.css?v=51.                              [EN PR #13]
+  - DATAGRID_BUMP_V51.sql: bump de datagrid.css + datagrid.js a v51 en los SP. [EN PR #13]
+  - web.config del server: ver sección 6.                                    [SERVER]
+  - vct-calendario.js (server): datepicker.css?v=20 -> ?v=50 (cierra el último
+    FOUC, el de Calendario).                                                 [SERVER/OK]
+
+Fixes previos relacionados del 25/10 (ya commiteados):
+  - Precargar CSS de grilla + de cada pantalla en el <head> de Default.aspx.
+  - Proyectos: cargar vct-datagrid.js + vct-export.js en el SP (el datagrid
+    nunca inicializaba -> no paginaba ni buscaba).
+  - datepicker.css del head a v50 (alinear con P2).
+  - P2_UNIFICAR_VERSIONES_1.sql: unificar ?v de datagrid/datepicker a 50.
+
+
+================================================================================
+4) PULIDO DE UI (25/10)
+================================================================================
+- vct-main.css: .vct-serv-chip (chips de Servicios en la tabla de Proyectos)
+  al MISMO tamaño que el pill de Estado (font 11px, line-height 1.4,
+  padding 1px 9px -> alto ~19px, idéntico a .vct-ini-pill).                  [EN PR #13]
+- Reportes: tarjetas KPI con números grandes -> nowrap + font-size clamp
+  (ya aplicado en jornadas previas).
+- Sort de fechas en el DataGrid: acepta yyyymmdd (CONVERT 112) en
+  data-vct-sort-value -> Proyectos Inicio/Fin ahora ordenan bien.            [OK]
+
+
+================================================================================
+5) TOOLTIPS - Vista 360 de Consultor (25/10)
+================================================================================
+Problema: el tooltip del calendario del V360 de Consultor NO mostraba proyecto
+ni servicios, cuando sí andan en la Agenda del consultor.
+Causa: VCT_MAIN_CONSULTORES_V360 arma el JSON de días (@V360_AGC_DIAS) SIN las
+       claves "proy"/"srv" (el render JS ya sabe mostrarlas).
+Fix:   CONSULTOR_V360_DIAS_PROYSRV_V1.sql -> calca en el V360 el mismo
+       enriquecimiento (OUTER APPLY: visita asignada ese día -> proyecto +
+       servicios) que ya tiene VCT_MAIN_AGENDA_CONSULTOR. Re-ejecutable,
+       falla-seguro.                                                         [EN PR #13 / falta correr]
+Diagnóstico usado: DIAG_DIAS_PROY_SRV.sql.
+
+
+================================================================================
+6) SERVER - web.config (compresión + caché) (25/10)
+================================================================================
+Estado real (confirmado por headers HTTP en vivo):
+  - urlCompression doStaticCompression="true": gzip ANDA (css 121KB -> 24KB).
+    OJO: IIS comprime recién del 2do hit de cada archivo (frequentHitThreshold),
+    por eso un fetch único puede dar content-encoding: null (no está roto).
+  - staticContent/clientCache cacheControlMaxAge="1.00:00:00": caché de 1 día
+    (elegido para desarrollo; en prod conviene 365).                        [SERVER/OK]
+Consecuencia operativa: al deployar un asset, bumpear su ?v o hacer hard-reload
+(Ctrl+Shift+R). OJO: algunos assets se cargan SIN ?v (vct-main.css, vct-shell.css,
+vct-calendario.js) -> esos solo se actualizan con hard-reload o esperando 1 día.
+Nota: el web.config NO va al repo (machineKey); la copia local estaba vieja (julio).
+
+
+================================================================================
+7) QA - Playwright (Bokaturo-QA-Playwright) (25/10)
+================================================================================
+- Suite de regresión corrida punta a punta: 40 passed / 2 failed (los 2 = el
+  mismo test FOUC en desktop+mobile, por el datepicker v20 de Calendario).
+- Tras el fix del datepicker (?v=20 -> v=50): la suite quedó VERDE (0 fallos).
+- Colaboración con Codex para diagnosticar (sort de fechas, FOUC).
+- Entregables nuevos en el repo QA:
+    * COMO_LEER_EL_REPORTE.md  (instructivo para interpretar el reporte)
+    * PROMPT_CODEX_QA.md       (prompt para que Codex escale la suite; con
+                                versión larga y versión corta día a día)
+- Recordatorio clave: la sesión del server dura 3 min -> si "todo falla rápido"
+  es la auth vencida (npm run auth), no un bug.
+
+
+================================================================================
+8) GIT
+================================================================================
+- Rama: fix/flash-fouc-datagrid  ->  PR #13 (abierto, a main).
+  github.com/mrtinaja/muhle-vct/pull/13
+- Commits del período (más recientes arriba):
+    21bc47b Fix flash/FOUC: anti-flash datagrid + microtask + tooltips 360
+    aa44f6e Restaurar P2_UNIFICAR_VERSIONES_1.sql
+    25ab24b Head: datepicker.css a v50
+    90a257a Datagrid: sort de fechas yyyymmdd
+    28bef2c Fix Proyectos: cargar vct-datagrid.js+export.js en el SP
+    04305e7 FOUC: precargar CSS en el <head> de Default.aspx
+    ec3fb9a Fix Maps quirurgico + F7 loading-overlay/FA duplicado
+    9d9629f F9 P1: ref web.config compresion+cache; fix Maps
+    94b733e F8: plan de correccion
+    ac6b113 F7: inventario de obsoletos
+    5e356d2 F6: performance
+    3f05c11 F5: errores JS y navegacion
+    9055804 F4: componentes reutilizables
+    41cac6a F2-C: dedupe <link vct-calendario.css>
+    5dc0180 F3: tooltips iconos de servicio
+    e030743 Agenda consultor: sin consultor -> estado vacio
+    42d1b93 F2 calendarios + fix HOY via outline
+    e5cb405 F1 + sync assets del server
+
+
+================================================================================
+9) PENDIENTES (para el próximo lote)
+================================================================================
+Deploy del PR #13:
+  1. Subir al server: css/vct-datagrid.css, js/vct-datagrid.js, css/vct-main.css,
+     main/Default.aspx.
+  2. Correr en SSMS: DATAGRID_BUMP_V51.sql  y  CONSULTOR_V360_DIAS_PROYSRV_V1.sql.
+  3. Hard-reload.
+Otros:
+  - Bumpear el ?v de vct-calendario.js en su SP (para usuarios con caché 1 día).
+  - Re-bajar al repo los archivos editados directo en el server
+    (tools/pull_assets.ps1) para que local = server.
+  - Correr PULIDO_1_TILDES_AVISOS.sql (pendiente de jornadas previas).
+  - Badges/otros detalles cosméticos menores.
+  - Al ir a producción: subir cache a 365 días y definir destinatarios reales
+    de mails.
+
+================================================================================
+FIN DEL INFORME
+================================================================================

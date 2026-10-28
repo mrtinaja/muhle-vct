@@ -1201,3 +1201,99 @@ html body .vct-pv-modal.vct-pv-w-xl .vct-modal-dialog { width: min(920px, calc(1
 /* ---------- v46: el anillo de avance del capitulo no se achica cuando el texto es largo ---------- */
 .vct-pv .vct-pl-ring { flex: 0 0 40px; min-width: 40px; }
 .vct-pv .vct-pl-ring > span { flex: 0 0 30px; min-width: 30px; }
+
+/* ---------- v47 PL_DES_V7: estado de la accion en chips; trabajo de la visita (boceto B) ---------- */
+.vct-pv-modal .vct-field.has-chips > select, .vct-pv-modal .vct-field.has-chips > .vct-form-select { display: none !important; }
+.vct-pv-modal .vct-pv-pa-est { display: flex; flex-wrap: wrap; gap: 4px; padding: 3px; border: 1px solid #dfe3ea; border-radius: 10px; background: #fff; }
+.vct-pv-modal .vct-pv-pa-chip { height: 32px; padding: 0 10px; white-space: nowrap; border: 1px solid transparent; border-radius: 8px; background: transparent; font: inherit; font-size: 12px; font-weight: 700; color: #64748b; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.vct-pv-modal .vct-pv-pa-chip:hover { background: #f8fafc; }
+.vct-pv-modal .vct-pv-pa-chip small { font-size: 9px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .03em; }
+.vct-pv-modal .vct-pv-pa-chip.is-auto.is-on { background: #EFF6FF; color: #1D4ED8; border-color: #BFDBFE; }
+.vct-pv-modal .vct-pv-pa-chip.is-ok.is-on { background: #ECFDF3; color: #15803D; border-color: #BBF7D0; }
+.vct-pv-modal .vct-pv-pa-chip.is-wait.is-on { background: #FFFBEB; color: #B45309; border-color: #FDE68A; }
+.vct-pv-modal .vct-pv-pa-chip.is-canc.is-on { background: #FEF2F2; color: #B91C1C; border-color: #FECACA; }
+.vct-pv-agwm .vct-pv-agw-k em { display: block; font-style: normal; font-size: 11px; color: #64748b; font-weight: 500; margin-top: 2px; }
+.vct-pv-agwm .vct-pv-agw-sec { margin: 14px 0 6px; font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: #66062D; }
+.vct-pv-agwm .vct-pv-agw-tb { border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; margin-bottom: 12px; }
+.vct-pv-agwm .vct-pv-agw-tr { display: grid; grid-template-columns: minmax(0, 2.2fr) 80px 90px 100px minmax(0, 2fr); gap: 10px; align-items: center; padding: 8px 12px; font-size: 12px; color: #334155; border-top: 1px solid #f1f5f9; }
+.vct-pv-agwm .vct-pv-agw-tr:first-child { border-top: 0; }
+.vct-pv-agwm .vct-pv-agw-tr.is-h { background: #f8fafc; font-size: 10.5px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .03em; }
+.vct-pv-agwm .vct-pv-agw-tr b { color: #1e293b; }
+.vct-pv-agwm .vct-pv-agw-tr .vct-pv-bar { height: 6px; }
+.vct-pv-agwm .vct-pv-agw-lid { margin-left: 6px; padding: 0 6px; border: 1px solid #e2e8f0; border-radius: 999px; font-style: normal; font-size: 10px; color: #475569; }
+.vct-pv-agwm .vct-pv-agw-ix { display: block; font-size: 10.5px; font-weight: 700; color: #66062D; margin-bottom: 2px; }
+.vct-pv-agwm .vct-pv-agw-it.is-paso b { font-weight: 600; }
+@media (max-width: 760px) { .vct-pv-agwm .vct-pv-agw-tr { grid-template-columns: minmax(0, 1fr) 60px 70px; } .vct-pv-agwm .vct-pv-agw-tr > :nth-child(4), .vct-pv-agwm .vct-pv-agw-tr > :nth-child(5) { display: none; } }
+
+/* ---------- v48 VIS_SRV_V1: visitas por servicio, columna Desarrollos y vista Desarrollo ---------- */
+.vct-pv .vct-pv-agchips { margin: 4px 0 14px; }
+.vct-pv .vct-pv-agsum { margin: 0 0 14px; }
+.vct-pv .vct-pv-agview .vct-pv-agv-n { font-style: normal; min-width: 18px; padding: 0 5px; border-radius: 999px; background: #F3E3EA; color: #66062D; font-size: 10px; line-height: 16px; text-align: center; }
+.vct-pv button.vct-pl-dchip { font: inherit; font-size: 10.5px; font-weight: 700; }
+.vct-pv button.vct-pl-dchip:hover { box-shadow: 0 0 0 2px #CFFAFE; }
+.vct-pv .vct-pl-dchip.is-pl { color: #1D4ED8; background: #EFF6FF; border-color: #BFDBFE; }
+.vct-pv .vct-pl-dchip.is-pl:hover { box-shadow: 0 0 0 2px #DBEAFE; }
+.vct-pv .vct-pv-agd-stats { margin: 0 0 14px; }
+.vct-pv .vct-pv-agd-nx { color: #1D4ED8 !important; }
+.vct-pv .vct-pv-agd-who { display: inline-flex; align-items: center; gap: 6px; }
+.vct-pv .vct-pv-agd-who .vctdg-avatar { flex: 0 0 auto; }
+
+/* ---------- v49 VIS_SRV_V2: logistica debajo del servicio; desarrollo sin servicios con desarrollo ---------- */
+.vct-pv .vct-pv-ag-logi { color: #475569 !important; }
+.vct-pv .vct-pv-agd-none { grid-column: 1 / -1; padding: 14px 16px; border: 1px dashed #e2e8f0; border-radius: 14px; color: #64748b; font-size: 12px; background: #fff; }
+
+/* ---------- v50 VIS_SRV_V3: anchos de los filtros de Visitas y Desarrollo (Servicio el mas ancho) ---------- */
+.vct-pv [data-pv-agbox] .vctdg.vctdg .vctdg-filters > select[data-vct-dg-filter="estado"] + .vct-custom-select,
+.vct-pv [data-pv-agbox] .vctdg.vctdg .vctdg-filters > select[data-vct-dg-filter="tipo"] + .vct-custom-select { flex: 0 0 132px; width: 132px !important; }
+.vct-pv [data-pv-agbox] .vctdg.vctdg .vctdg-filters > select[data-vct-dg-filter="cons"] + .vct-custom-select { flex: 0 0 180px; width: 180px !important; }
+.vct-pv [data-pv-agbox] .vctdg.vctdg .vctdg-filters > select[data-vct-dg-filter="inst"] + .vct-custom-select { flex: 0 1 360px; width: 360px !important; min-width: 220px; }
+@media (max-width: 768px) {
+    .vct-pv [data-pv-agbox] .vctdg.vctdg .vctdg-filters > select[data-vct-dg-filter] + .vct-custom-select { flex: 1 1 100%; width: 100% !important; min-width: 0; }
+}
+
+/* ---------- v51 DES_PLAN_V1: trabajo de la visita: origen y estado de lo planificado ---------- */
+.vct-pv-agwm .vct-pv-agw-org { display: inline-block; margin-top: 4px; padding: 0 7px; border-radius: 999px; background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; font-size: 10px; font-weight: 700; line-height: 18px; }
+.vct-pv-agwm .vct-pv-agw-st { display: inline-flex; margin-top: 4px; padding: 0 7px; height: 18px; font-size: 10px; }
+.vct-pv [data-pv-agbox] .vctdg.vctdg .vctdg-filters > select[data-vct-dg-filter="plan"] + .vct-custom-select { flex: 0 0 160px; width: 160px !important; }
+@media (max-width: 768px) { .vct-pv [data-pv-agbox] .vctdg.vctdg .vctdg-filters > select[data-vct-dg-filter="plan"] + .vct-custom-select { flex: 1 1 100%; width: 100% !important; } }
+.vct-pv-agwm .vct-pl-tp { display: inline-flex; justify-content: center; align-items: center; border-radius: 999px; font-weight: 700; border: 1px solid; }
+.vct-pv-agwm .vct-pl-tp.is-re { color: #15803D; background: #ECFDF3; border-color: #BBF7D0; }
+.vct-pv-agwm .vct-pl-tp.is-pl { color: #1D4ED8; background: #EFF6FF; border-color: #BFDBFE; }
+
+/* ---------- v52 DES_PLAN_V2: trabajo de la visita: fila del consultor con avatar y estado a la derecha; textos largos recortados ---------- */
+.vct-pv-agwm .vct-pv-agw-tx { min-width: 0; }
+.vct-pv-agwm .vct-pv-agw-ix { display: block; color: #64748b; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vct-pv-agwm .vct-pv-agw-it b.vct-pv-agw-tt { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; word-break: break-word; }
+.vct-pv-agwm .vct-pv-agw-it p.vct-pv-agw-ds { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; white-space: normal; word-break: break-word; }
+.vct-pv-agwm .vct-pv-agw-it em.vct-pv-agw-nx { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vct-pv-agwm .vct-pv-agw-ft { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; min-width: 0; }
+.vct-pv-agwm .vct-pv-agw-who { display: inline-flex; align-items: center; gap: 6px; min-width: 0; color: #475569; font-size: 11.5px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.vct-pv-agwm .vct-pv-agw-who .vctdg-avatar { flex: 0 0 auto; width: 22px; height: 22px; font-size: 9.5px; }
+.vct-pv-agwm .vct-pv-agw-ft .vct-pv-agw-st { flex: 0 0 auto; margin-top: 0; white-space: nowrap; }
+.vct-pv .vct-pl-tp.is-pe, .vct-pv-agwm .vct-pl-tp.is-pe { color: #B45309; background: #FFFBEB; border-color: #FDE68A; }
+.vct-pv-agwm .vct-pv-agw-it.is-pend { background: #FFFBEB; box-shadow: inset 3px 0 0 #F59E0B; }
+.vct-pv-agwm .vct-pv-agw-pend { margin-left: 6px; color: #B45309; background: #FFFBEB; border-color: #FDE68A; }
+
+/* ---------- v53 DES_PLAN_V3: trabajo de la visita: avatar del responsable de la accion (equipo / cliente / otro) ---------- */
+.vct-pv-agwm .vctdg-avatar.is-cl { color: #0369A1; background: #E0F2FE; }
+.vct-pv-agwm .vctdg-avatar.is-x { color: #92400E; background: #FEF3C7; }
+.vct-pv-agwm .vctdg-avatar.is-none { color: #94a3b8; background: #F1F5F9; border: 1px dashed #cbd5e1; }
+
+/* ---------- v54 DES_GRID_V1: grilla Desarrollo de Visitas: item en un renglon, accion en columna, filtros en un renglon ---------- */
+.vct-pv .vct-pv-agd-it { display: flex; align-items: flex-start; gap: 6px; min-width: 0; }
+.vct-pv .vct-pv-agd-it .vct-pl-code { flex: 0 0 auto; }
+html body .vct-360-module .vctdg .vctdg-table .vct-pv-agd-it .vct-360-project-ref { flex: 1 1 auto; min-width: 0; margin-top: 1px !important; }
+html body .vct-360-module .vctdg .vctdg-table .vct-360-project-ref.vct-pv-agd-acc { margin-top: 0 !important; color: #334155 !important; }
+.vct-pv [data-pv-agpane="des"] .vctdg-table td .vctdg-avatar { margin: 0 auto; }
+.vct-pv [data-pv-agpane="des"] .vctdg.vctdg .vctdg-filters { flex-wrap: nowrap; }
+.vct-pv [data-pv-agpane="des"] .vctdg.vctdg .vctdg-filters > .vctdg-search { flex: 0 1 230px; min-width: 160px; max-width: 230px; }
+.vct-pv [data-pv-agbox] [data-pv-agpane="des"] .vctdg.vctdg .vctdg-filters > select[data-vct-dg-filter="tipo"] + .vct-custom-select { flex: 0 0 125px; width: 125px !important; }
+.vct-pv [data-pv-agbox] [data-pv-agpane="des"] .vctdg.vctdg .vctdg-filters > select[data-vct-dg-filter="plan"] + .vct-custom-select { flex: 0 0 150px; width: 150px !important; }
+.vct-pv [data-pv-agbox] [data-pv-agpane="des"] .vctdg.vctdg .vctdg-filters > select[data-vct-dg-filter="cons"] + .vct-custom-select { flex: 0 0 170px; width: 170px !important; }
+.vct-pv [data-pv-agbox] [data-pv-agpane="des"] .vctdg.vctdg .vctdg-filters > select[data-vct-dg-filter="servicio"] + .vct-custom-select { flex: 0 0 150px; width: 150px !important; }
+.vct-pv [data-pv-agbox] [data-pv-agpane="des"] .vctdg.vctdg .vctdg-filters > select[data-vct-dg-filter="inst"] + .vct-custom-select { flex: 1 1 200px; width: auto !important; min-width: 160px; max-width: 300px; }
+@media (max-width: 1100px) { .vct-pv [data-pv-agpane="des"] .vctdg.vctdg .vctdg-filters { flex-wrap: wrap; } }
+@media (max-width: 768px) {
+    .vct-pv [data-pv-agpane="des"] .vctdg.vctdg .vctdg-filters > .vctdg-search,
+    .vct-pv [data-pv-agbox] [data-pv-agpane="des"] .vctdg.vctdg .vctdg-filters > select[data-vct-dg-filter] + .vct-custom-select { flex: 1 1 100%; width: 100% !important; max-width: none; }
+}

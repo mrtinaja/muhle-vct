@@ -1,4 +1,10 @@
-/* vct-proyecto-v360.js - v38 PL_DES_V6 (estado de la accion: cumplida exige desarrollo realizado; cancelada solo sin desarrollo; aviso dentro del modal)
+/* vct-proyecto-v360.js - v44 DES_PLAN_V2 (planificar: primero pasar a realizado o eliminar lo planificado para visitas de hoy o anteriores)
+   v43 (desarrollo: aviso de adelantada con la fecha de la visita y la del inicio de la accion)
+   v42 VIS_SRV_V3 (Desarrollo: sin aviso para auditorias / capacitaciones; filtro Consultor solo si hay opciones)
+   v41 VIS_SRV_V2 (Visitas: los chips y el filtro Servicio valen para Lista y Desarrollo; indicadores de Desarrollo por servicio)
+   v40 VIS_SRV_V1 (Visitas: chips por tipo de servicio, filtro Servicio con su resumen, columna Desarrollos, vista Desarrollo)
+   v39 PL_DES_V7 (accion: estado en chips (automatico Pendiente / En proceso + En espera, Cumplida, Cancelada), resultado al lado, responsable a todo el ancho y sin analista; subitem desde el arbol)
+   v38 PL_DES_V6 (estado de la accion: cumplida exige desarrollo realizado; cancelada solo sin desarrollo; aviso dentro del modal)
    v37 PL_DES_V5 (opcion B: desarrollo realizado antes del inicio = accion adelantada; planificado dentro del rango de la accion)
    v36 PL_DES_V4 (accion del plan: fechas fuera del rango del item se avisan dentro del modal)
    v35 PL_DES_V3 (accion: Detalle -> Descripcion; desarrollo: item / subitem de la accion, no editables)
@@ -1344,6 +1350,8 @@
         setTimeout(function () { acInit(r); }, 300);
         /* agenda: filas de grupo por servicio (PV_AGENDA_V1) */
         setTimeout(function () { r.querySelectorAll('[data-vct-dg-id="pv_agenda"]').forEach(agGroups); }, 300);
+        /* visitas: chips por tipo de servicio y filtro Servicio (VIS_SRV_V1) */
+        setTimeout(function () { agChipsInit(r); }, 350);
         /* plan: reabre el desarrollo de la accion que se estaba cargando (PL_DES_V1) */
         setTimeout(function () { desRestore(r); }, 700);
         /* v34: error del servidor al grabar: ademas del aviso de arriba, toast (no pasa desapercibido) */
@@ -1690,6 +1698,9 @@
         if (!tb) return;
         tb.querySelectorAll("tr.vct-pv-agg-g").forEach(function (x) { x.parentNode.removeChild(x); });
         if (host.querySelector("th.is-asc, th.is-desc, th[aria-sort='ascending'], th[aria-sort='descending']")) return;
+        /* v40: con un servicio elegido no hacen falta las filas de grupo (el resumen esta arriba) */
+        var fInst = host.querySelector('select[data-vct-dg-filter="inst"]');
+        if (fInst && fInst.value) return;
         var G = {};
         (host.getAttribute("data-pv-agmeta") || "").split(";").forEach(function (x) {
             var p = x.split("|");
@@ -1950,7 +1961,71 @@
             if (rg[0]) x.setAttribute("min", rg[0]); else x.removeAttribute("min");
             if (rg[1]) x.setAttribute("max", rg[1]); else x.removeAttribute("max");
         });
+        /* v39: estado (chips) y resultado debajo de las fechas; responsable a todo el ancho */
+        var fEst = m.querySelector('[data-vct-pv-f="est"]'), fRes = m.querySelector('[data-vct-pv-f="res"]'), fResp = m.querySelector('[data-vct-pv-f="resp"]');
+        var cEst = fEst ? fEst.closest(".vct-field") : null, cRes = fRes ? fRes.closest(".vct-field") : null;
+        var cResp = fResp ? fResp.closest(".vct-field") : null, cOtro = m.querySelector("[data-vct-pv-otro]");
+        var hRow = h ? h.closest(".vct-field") : null;
+        if (cEst && cRes && hRow && !m.hasAttribute("data-pv-pa-lay")) {
+            m.setAttribute("data-pv-pa-lay", "1");
+            hRow.parentNode.insertBefore(cEst, hRow.nextSibling);
+            cEst.parentNode.insertBefore(cRes, cEst.nextSibling);
+            cEst.classList.remove("vct-col-4"); cEst.classList.add("vct-col-8", "has-chips");
+            cEst.insertAdjacentHTML("beforeend", '<div class="vct-pv-pa-est" data-pv-pa-est></div><div class="vct-help">Pendiente / En proceso los define el desarrollo realizado. Eleg&iacute; En espera, Cumplida o Cancelada solo cuando corresponda.</div>');
+        }
+        [cResp, cOtro].forEach(function (c) { if (c) { c.classList.remove("vct-col-6"); c.classList.add("vct-col-12"); } });
+        /* v39: el analista no es responsable de las acciones del plan (si ya lo era, se mantiene visible) */
+        if (fResp) {
+            var cur = fResp.value;
+            Array.prototype.forEach.call(fResp.options, function (o) {
+                var off = o.getAttribute("data-rol") === "ANALISTA" && o.value !== cur;
+                o.hidden = off; o.disabled = off;
+            });
+            var w = fResp.parentNode ? fResp.parentNode.querySelector(".vct-form-select") : null, menu = w ? w.__vctPortalMenu : null;
+            if (menu) menu.querySelectorAll(".vct-form-select-option").forEach(function (d) {
+                var v = d.getAttribute("data-value"), o = null;
+                Array.prototype.forEach.call(fResp.options, function (x) { if (x.value === v) o = x; });
+                if (o && o.disabled) d.style.setProperty("display", "none", "important"); else d.style.removeProperty("display");
+            });
+        }
+        paEst(m);
     }
+    /* v39: estado de la accion en chips: el automatico (Pendiente / En proceso, segun el desarrollo realizado) y los que se eligen */
+    function paEst(m) {
+        var sel = m.querySelector('[data-vct-pv-f="est"]'), box = m.querySelector("[data-pv-pa-est]");
+        if (!sel || !box) return;
+        var nd = parseInt(m.getAttribute("data-pv-nd") || "0", 10) || 0, autoCod = nd > 0 ? "EN_PROCESO" : "PENDIENTE";
+        var opts = Array.prototype.filter.call(sel.options, function (o) { return !!o.value; });
+        var auto = opts.filter(function (o) { return o.getAttribute("data-cod") === autoCod; })[0] || null;
+        var man = opts.filter(function (o) { var c = o.getAttribute("data-cod") || ""; return c !== "PENDIENTE" && c !== "EN_PROCESO"; });
+        var cur = sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex] : null, curCod = cur ? cur.getAttribute("data-cod") || "" : "";
+        var isAuto = !curCod || curCod === "PENDIENTE" || curCod === "EN_PROCESO";
+        if (isAuto && auto && sel.value !== auto.value) { sel.value = auto.value; cur = auto; }
+        var esc = function (x) { return String(x || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); };
+        box.innerHTML = (auto ? '<button type="button" class="vct-pv-pa-chip is-auto' + (isAuto ? " is-on" : "") + '" data-pv-pa-est-v="' + esc(auto.value) + '" title="Autom&aacute;tico: lo define el desarrollo realizado">' + esc(auto.text) + '<small>auto</small>' + "</button>" : "")
+            + man.map(function (o) {
+                var c = o.getAttribute("data-cod") || "", k = c === "CUMPLIDA" ? "is-ok" : c === "EN_ESPERA" ? "is-wait" : "is-canc";
+                return '<button type="button" class="vct-pv-pa-chip ' + k + (cur && o.value === cur.value && !isAuto ? " is-on" : "") + '" data-pv-pa-est-v="' + esc(o.value) + '">' + esc(o.text) + "</button>";
+            }).join("");
+        var cRes = m.querySelector('[data-vct-pv-f="res"]');
+        cRes = cRes ? cRes.closest(".vct-field") : null;
+        var fin = !!(cur && cur.getAttribute("data-final") === "1");
+        if (cRes) cRes.hidden = !(m.getAttribute("data-vct-pv-mode") === "edit" && fin);
+    }
+    document.addEventListener("click", function (e) {
+        var b = e.target && e.target.closest ? e.target.closest("[data-pv-pa-est-v]") : null;
+        if (!b) return;
+        e.preventDefault();
+        var m = b.closest("[data-vct-pv-modal]"), sel = m ? m.querySelector('[data-vct-pv-f="est"]') : null;
+        if (!sel) return;
+        var v = b.getAttribute("data-pv-pa-est-v");
+        if (b.classList.contains("is-on") && !b.classList.contains("is-auto")) {
+            var a = m.querySelector(".vct-pv-pa-chip.is-auto");
+            v = a ? a.getAttribute("data-pv-pa-est-v") : v;
+        }
+        setVal(sel, v);
+        paEst(m);
+    });
 
     /* -- desarrollo de la accion: registros desplegables en el detalle del item -- */
     var REGS_KEY = "vct.pv.pl.regs";
@@ -1989,7 +2064,8 @@
         var tipo = edit ? (btn.getAttribute("data-f-tipo") || "R") : "R";
         des = { m: m, id: edit ? (btn.getAttribute("data-pl-des-edit") || "") : "", acc: acc || "", tipo: tipo,
                 vc: edit ? (btn.getAttribute("data-f-vc") || "") : "", vcOrig: edit ? (btn.getAttribute("data-f-vc") || "") : "",
-                hOrig: edit && tipo === "R" ? (parseFloat(btn.getAttribute("data-f-hrs")) || 0) : 0 };
+                hOrig: edit && tipo === "R" ? (parseFloat(btn.getAttribute("data-f-hrs")) || 0) : 0,
+                tOrig: edit ? tipo : "" };
         /* v37: rango de la accion (inicio / vence) para el planificado y el aviso de adelantada */
         var eb = aw ? aw.querySelector('[data-vct-pv-edit="pa"]') : null;
         des.ai = eb ? eb.getAttribute("data-f-ini") || "" : "";
@@ -2024,14 +2100,24 @@
         var det = aw ? aw.closest("[data-pl-det]") : null, r = pvRoot(aw || m);
         var tx = function (d) { var h = d ? d.querySelector(".vct-plt-det-tt h4") : null; return h ? h.textContent.replace(/\s+/g, " ").trim() : ""; };
         var id = det ? det.getAttribute("data-pl-det") : "", item = tx(det), sub = "";
-        var sl = id && r ? r.querySelector('.vct-plt-subl[data-pl-sel="' + id + '"]') : null;
-        var pd = sl ? sl.closest("[data-pl-det]") : null;
+        /* v39: el subitem trae el id de su item (data-pl-padre); si no, se busca en la lista vieja */
+        var pid = det ? det.getAttribute("data-pl-padre") || "" : "";
+        var pd = pid && r ? r.querySelector('[data-pl-det="' + pid + '"]') : null;
+        if (!pd) { var sl = id && r ? r.querySelector('.vct-plt-subl[data-pl-sel="' + id + '"]') : null; pd = sl ? sl.closest("[data-pl-det]") : null; }
         if (pd && pd !== det) { sub = item; item = tx(pd); }
         var esc = function (x) { return String(x || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;"); };
         var fld = function (l, v, cls) { return '<div class="' + cls + '"><label class="vct-label">' + l + '</label><input type="text" class="vct-input" readonly value="' + esc(v) + '"></div>'; };
         box.innerHTML = sub ? '<div class="vct-pv-des-it2">' + fld("&Iacute;tem", item, "") + fld("Sub&iacute;tem", sub, "") + '</div>'
                             : fld("&Iacute;tem", item, "");
         box.hidden = !item;
+    }
+    /* v44 DES_PLAN_V2: planificado de visitas de hoy o anteriores que sigue sin pasar a realizado (el que se edita no cuenta si ya era planificado) */
+    function desPend() {
+        if (!des) return [];
+        var own = des.tOrig === "P" ? des.id : "";
+        return String(des.m.getAttribute("data-pv-des-pend") || "").split(",").filter(Boolean).map(function (x) {
+            var p = x.split(":"); return { id: p[0], d: p[1] || "" };
+        }).filter(function (x) { return x.id !== own; });
     }
     function desRender() {
         if (!des) return;
@@ -2040,6 +2126,11 @@
         var th = m.querySelector("[data-pv-des-thelp]");
         if (th) th.innerHTML = R ? "Lo que se trabaj&oacute; en una visita confirmada de hoy o anterior, con sus horas."
                                  : "Lo que se va a trabajar en una pr&oacute;xima visita (sin horas).";
+        var pend = R ? [] : desPend();
+        if (th && pend.length)
+            th.innerHTML += '<br><span class="vct-pv-des-adel">Hay ' + pend.length + " desarrollo" + (pend.length === 1 ? "" : "s") + " planificado" + (pend.length === 1 ? "" : "s")
+                + " para visitas de hoy o anteriores (" + pend.map(function (x) { return fmtD(x.d).slice(0, 5); }).filter(function (d, i, a) { return a.indexOf(d) === i; }).join(", ")
+                + "): pasalo" + (pend.length === 1 ? "" : "s") + " a realizado o eliminalo" + (pend.length === 1 ? "" : "s") + " antes de planificar otro.</span>";
         var list = desVis(m).filter(function (v) {
             if (R) return v.est === "C" && v.d1 <= hoy;
             return v.d1 > hoy && (!des.ai || v.d1 >= des.ai) && (!des.av || v.d1 <= des.av);   /* v37: planificado dentro del rango de la accion */
@@ -2083,7 +2174,7 @@
         if (hh) hh.innerHTML = sel ? "M&aacute;ximo " + fmtH(sel.disp) + " h en esta visita" : "Eleg&iacute; la visita";
         /* v37: trabajo antes del inicio planificado: se permite y la accion queda marcada como adelantada */
         if (hh && sel && R && des.ai && sel.v.d1 < des.ai)
-            hh.innerHTML += '<br><span class="vct-pv-des-adel">La acci&oacute;n empieza el ' + fmtD(des.ai) + ": quedar&aacute; marcada como adelantada.</span>";
+            hh.innerHTML += '<br><span class="vct-pv-des-adel">La visita (' + fmtD(sel.v.d1) + ") es anterior al inicio planificado de la acci&oacute;n (" + fmtD(des.ai) + "): la acci&oacute;n quedar&aacute; marcada como &laquo;Adelantada&raquo;.</span>";
         var dl = m.querySelector("[data-pv-des-dlbl]"), dr = m.querySelector("[data-pv-des-dreq]");
         if (dl) dl.innerHTML = R ? "Desarrollo &middot; qu&eacute; se hizo" : "Detalle &middot; qu&eacute; se va a trabajar";
         if (dr) dr.hidden = !R;
@@ -2094,6 +2185,7 @@
         var v = function (k) { var f = desF(k); return f ? String(f.value || "").trim() : ""; };
         var hrs = v("hrs").replace(",", "."), tit = v("tit"), tx = v("des"), prox = v("prox");
         ["hrs", "tit", "des"].forEach(function (k) { var f = desF(k); if (f) f.classList.remove("is-invalid"); });
+        if (!R && desPend().length) errs.push("Hay desarrollos planificados para visitas de hoy o anteriores: pasalos a realizado o eliminalos antes de planificar otros.");
         if (!des.vc) errs.push("Visita es obligatoria: eleg&iacute; una visita.");
         if (R) {
             var n = parseFloat(hrs);
@@ -2466,6 +2558,139 @@
     }
     document.addEventListener("change", pvFix);
     document.addEventListener("input", pvFix);
+    /* ================= VIS_SRV_V1 (v40): visitas por servicio ================= */
+    var AGC_KEY = "vct.pv.ag.chip.";
+    function agLista(box) { return box ? box.querySelector('[data-pv-agpane="lista"]') : null; }
+    function agSel(scope, name) { return scope ? scope.querySelector('select[data-vct-dg-filter="' + name + '"]') : null; }
+    function agProj(box) { var r = box ? box.closest("[data-vct-pv]") : null; return r ? r.getAttribute("data-vct-pv-proyecto") || "" : ""; }
+    function agSetSel(s, v) {
+        if (!s) return;
+        s.value = v;
+        try { s.dispatchEvent(new Event("change", { bubbles: true })); } catch (e) { }
+        var w = s.nextElementSibling;
+        if (w && w.classList && w.classList.contains("vct-custom-select") && window.VCT && VCT.Select && typeof VCT.Select.sync === "function") VCT.Select.sync(s, w);
+    }
+    function agInstOpts(s, t) {
+        if (!s) return;
+        var w = s.nextElementSibling;
+        Array.prototype.forEach.call(s.options, function (o) {
+            var off = !!o.value && !!t && o.getAttribute("data-t") !== t;
+            o.hidden = off; o.disabled = off;
+            if (w && w.querySelectorAll) w.querySelectorAll(".vct-custom-select-option").forEach(function (d) {
+                if (d.getAttribute("data-value") === o.value) d.style.display = off ? "none" : "";
+            });
+        });
+    }
+    function agSave(box) {
+        var l = agLista(box), on = box.querySelector("[data-pv-agchip].is-on"), ins = agSel(l, "inst");
+        try { sessionStorage.setItem(AGC_KEY + agProj(box), JSON.stringify({ t: on ? on.getAttribute("data-pv-agchip") : "", i: ins ? ins.value : "" })); } catch (e) { }
+    }
+    function agPanes(box) {
+        return ["lista", "des"].map(function (k) { return box.querySelector('[data-pv-agpane="' + k + '"]'); }).filter(function (x) { return !!x; });
+    }
+    function agChip(box, t, inst, keep) {
+        var l = agLista(box);
+        if (!l) return;
+        box.querySelectorAll("[data-pv-agchip]").forEach(function (b) { b.classList.toggle("is-on", b.getAttribute("data-pv-agchip") === t); });
+        var ins = agSel(l, "inst");
+        if (inst === undefined) {
+            var opts = ins ? Array.prototype.filter.call(ins.options, function (o) { return o.value && (!t || o.getAttribute("data-t") === t); }) : [];
+            inst = t && opts.length === 1 ? opts[0].value : "";   /* un solo servicio del tipo: queda elegido */
+        }
+        /* v41: el tipo y el servicio valen para la Lista y para Desarrollo */
+        agPanes(box).forEach(function (p) {
+            var i2 = agSel(p, "inst");
+            agInstOpts(i2, t);
+            agSetSel(agSel(p, "servicio"), t);
+            agSetSel(i2, inst || "");
+        });
+        agSum(box);
+        agDesStats(box);
+        if (!keep) agSave(box);
+    }
+    /* v41: indicadores de Desarrollo para el tipo / servicio elegido (datos de cada servicio en las opciones del filtro) */
+    function agDesStats(box) {
+        var st = box.querySelector("[data-pv-agdstats]"), ins = agSel(agLista(box), "inst");
+        if (!st || !ins) return;
+        var on = box.querySelector("[data-pv-agchip].is-on"), t = on ? on.getAttribute("data-pv-agchip") || "" : "", iv = ins.value;
+        /* v42: auditorias y capacitaciones no tienen desarrollo: sin indicadores (la grilla queda vacia) */
+        st.hidden = !!(t && t !== "co");
+        if (st.hidden) { st.innerHTML = ""; return; }
+        var hv = 0, dh = 0, nv = 0, nvd = 0, dp = 0, px = "";
+        Array.prototype.forEach.call(ins.options, function (o) {
+            if (!o.value || o.getAttribute("data-t") !== "co" || (iv && o.value !== iv)) return;
+            var n = function (k) { return parseFloat(o.getAttribute("data-" + k) || "0") || 0; };
+            hv += n("ejec"); dh += n("dh"); nv += n("nv"); nvd += n("nvd"); dp += n("dp");
+            var p = o.getAttribute("data-px") || "";
+            if (p && (!px || p < px)) px = p;
+        });
+        var card = function (tone, lab, val, sm, ic) {
+            return '<div class="vct-360-stat" data-vct-tone="' + tone + '"><span class="vct-360-stat-main"><span class="vct-360-stat-label">' + lab + "</span><b>" + val + "</b><small>" + sm + "</small></span>"
+                + '<span class="vct-360-stat-icon"><span data-vct-icon="' + ic + '"></span></span></div>';
+        };
+        var sin = Math.max(0, Math.round((hv - dh) * 10) / 10);
+        st.innerHTML = card("blue", "Horas de visita", fmtH(hv) + " h", nv + " visita(s) &middot; " + nvd + " con desarrollo", "clock-3")
+            + card("mint", "Volcadas en desarrollos", fmtH(dh) + " h", (hv > 0 ? Math.round(dh * 100 / hv) : 0) + " % de las horas de visita", "check")
+            + card("amber", "Sin detallar", fmtH(sin) + " h", "dato de informe", "clipboard-check")
+            + card("violet", "Planificados", String(dp), px ? "pr&oacute;xima visita " + fmtD(px).slice(0, 5) : "sin pr&oacute;xima visita con planificados", "list-checks");
+        icons(st);
+    }
+    function agSum(box) {
+        var l = agLista(box), sum = box.querySelector("[data-pv-agsum]"), ins = agSel(l, "inst");
+        if (!sum) return;
+        var o = ins && ins.value && ins.selectedIndex >= 0 ? ins.options[ins.selectedIndex] : null;
+        if (!o) { sum.hidden = true; sum.innerHTML = ""; return; }
+        var d = function (k) { return o.getAttribute("data-" + k) || ""; }, co = d("t") === "co";
+        var st = function (tone, lab, val, sm, ic) {
+            return '<div class="vct-360-stat" data-vct-tone="' + tone + '"><span class="vct-360-stat-main"><span class="vct-360-stat-label">' + lab + "</span><b>" + val + "</b><small>" + sm + "</small></span>"
+                + '<span class="vct-360-stat-icon"><span data-vct-icon="' + ic + '"></span></span></div>';
+        };
+        var ej = parseFloat(d("ejec")) || 0, dh = parseFloat(d("dh")) || 0, sin = Math.max(0, Math.round((ej - dh) * 10) / 10);
+        var pl = function (n, a, b) { return n + " " + (n === "1" ? a : b); };
+        sum.innerHTML = st("blue", escH(o.text), escH(d("ejec") || "0") + " / " + escH(d("proy") || "0") + " h",
+                           (d("ini") ? escH(d("ini")) + " al " + escH(d("fin")) + " &middot; " : "") + escH(d("prog") || "0") + " h programadas", "briefcase")
+            + st("mint", "Visitas", escH(d("nv") || "0"), pl(d("ne") || "0", "ejecutada", "ejecutadas") + " &middot; " + pl(d("nc") || "0", "confirmada", "confirmadas")
+                 + (d("np") && d("np") !== "0" ? " &middot; " + pl(d("np"), "pendiente", "pendientes") : ""), "calendar")
+            + (co ? st("violet", "Desarrollo", fmtH(dh) + " h", pl(d("dr") || "0", "realizado", "realizados") + " &middot; " + pl(d("dp") || "0", "planificado", "planificados"), "list-checks")
+                  + st("amber", "Sin detallar", fmtH(sin) + " h", "horas ejecutadas sin desarrollo", "clock-3") : "");
+        sum.hidden = false;
+        icons(sum);
+    }
+    function agChipsInit(r) {
+        r.querySelectorAll("[data-pv-agbox]").forEach(function (box) {
+            var l = agLista(box);
+            if (!l || !box.querySelector("[data-pv-agchips]")) return;
+            agPanes(box).forEach(function (p) {
+                var ts = agSel(p, "servicio");
+                if (ts) { ts.style.display = "none"; var w = ts.nextElementSibling; if (w && w.classList && w.classList.contains("vct-custom-select")) w.style.display = "none"; }
+            });
+            /* v42: el filtro Consultor de Desarrollo solo se muestra si hay consultores con desarrollo cargado */
+            var fc = agSel(box.querySelector('[data-pv-agpane="des"]'), "cons");
+            if (fc && fc.options.length <= 1) { fc.style.display = "none"; var wc = fc.nextElementSibling; if (wc && wc.classList && wc.classList.contains("vct-custom-select")) wc.style.display = "none"; }
+            var st = null;
+            try { st = JSON.parse(sessionStorage.getItem(AGC_KEY + agProj(box)) || "null"); } catch (e) { st = null; }
+            if (st && (st.t || st.i)) agChip(box, st.t || "", st.i || "", true);
+            else agDesStats(box);
+        });
+    }
+    document.addEventListener("click", function (e) {
+        var c = e.target && e.target.closest ? e.target.closest("[data-pv-agchip]") : null;
+        if (!c) return;
+        e.preventDefault();
+        var box = c.closest("[data-pv-agbox]");
+        if (box) agChip(box, c.getAttribute("data-pv-agchip") || "");
+    });
+    document.addEventListener("change", function (e) {
+        var s = e.target;
+        if (!s || !s.matches || !s.matches("select[data-pv-aginst]")) return;
+        var box = s.closest("[data-pv-agbox]");
+        if (!box) return;
+        /* v41: el servicio elegido en una vista se copia a la otra */
+        agPanes(box).forEach(function (p) { var o = agSel(p, "inst"); if (o && o !== s && o.value !== s.value) agSetSel(o, s.value); });
+        agSum(box);
+        agDesStats(box);
+        agSave(box);
+    });
     window.__vctPvDes = { rows: xlsRows, csv: readCsv, xlsx: readXlsx };
 
     window.VCTProyectoV360 = { version: 1, open: openModal, close: closeModal };

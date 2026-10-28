@@ -158,6 +158,9 @@
             return new Date(+m[3], +m[2] - 1, +m[1], +(m[4] || 0), +(m[5] || 0), +(m[6] || 0)).getTime();
         if ((m = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?/.exec(t)))
             return new Date(+m[1], +m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0)).getTime();
+        /* yyyymmdd (CONVERT 112) usado en data-vct-sort-value de columnas fecha (ej. Proyectos Inicio/Fin) */
+        if ((m = /^(\d{4})(\d{2})(\d{2})$/.exec(t)))
+            return new Date(+m[1], +m[2] - 1, +m[3]).getTime();
         return null;
     }
     function sortKind(raw) {
@@ -1034,7 +1037,13 @@
                         var n = mutations[i].addedNodes[j];
                         if (n.nodeType === 1 && ((n.matches && n.matches(HOST_SEL)) || (n.querySelector && n.querySelector(HOST_SEL)))) {
                             pending = true;
-                            setTimeout(function () { pending = false; init(document); }, 0);
+                            /* FLASH FIX: microtask (antes del primer paint) en vez de
+                               setTimeout(0), que corria DESPUES de pintar -> la tabla cruda
+                               (todas las filas, sin toolbar/paginado) flasheaba y recien
+                               ahi se reestructuraba. init() solo manipula el DOM (no lee
+                               layout), asi que correr antes del paint es seguro. */
+                            if (typeof Promise !== "undefined") Promise.resolve().then(function () { pending = false; init(document); });
+                            else setTimeout(function () { pending = false; init(document); }, 0);
                             return;
                         }
                     }
@@ -1421,7 +1430,7 @@
    ============================================================================ */
 (function (window, document) {
     "use strict";
-    if (window.VCTColStd && window.VCTColStd.version >= 1) return;
+    if (window.VCTColStd && window.VCTColStd.version >= 2) return;
 
     /* clave -> ancho (null = flexible) y alineacion */
     var CAT = {
@@ -1552,11 +1561,19 @@
         } catch (err) { if (window.console) console.error("[VCTColStd]", err); }
     }
 
+    /* FLASH FIX (v2): se aplica en microtask -> ANTES del primer paint del contenido
+       recien inyectado. Antes usaba setTimeout(...,60), que corria DESPUES de pintar y
+       hacia saltar el ancho de las columnas (~+80ms) = flash en cada tabla 360.
+       apply() no lee layout (solo escribe anchos del catalogo), asi que correr antes
+       del paint es seguro; la guarda de apply() hace que las tablas ya procesadas no
+       se vuelvan a tocar, por lo que el sweep sincronico es barato. */
     var pending = false;
+    function flush() { pending = false; sweep(); }
     function schedule() {
         if (pending) return;
         pending = true;
-        setTimeout(function () { pending = false; sweep(); }, 60);
+        if (typeof Promise !== "undefined") Promise.resolve().then(flush);
+        else setTimeout(flush, 0);
     }
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", sweep); else sweep();
     if (window.MutationObserver) new MutationObserver(schedule).observe(document.documentElement, { childList: true, subtree: true });
@@ -1566,5 +1583,5 @@
         schedule();
     });
 
-    window.VCTColStd = { version: 1, apply: apply, sweep: sweep, catalog: CAT };
+    window.VCTColStd = { version: 2, apply: apply, sweep: sweep, catalog: CAT };
 })(window, document);

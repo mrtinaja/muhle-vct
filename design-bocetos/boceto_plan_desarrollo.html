@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Boceto · Plan estratégico: desarrollo de acciones y carga del plan</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--b:#66062D;--ink:#333233;--mut:#64748b;--line:#e8ebf0;--bg:#f4f5f7;--font:"Gotham","Montserrat","Segoe UI",Arial,sans-serif;
+ --ok:#15803D;--okb:#ECFDF3;--okl:#BBF7D0;--pe:#A16207;--peb:#FEF6E7;--pel:#FDE3A7;--in:#1D4ED8;--inb:#EFF6FF;--inl:#BFDBFE;--er:#B91C1C;--erb:#FEF2F2;--erl:#FECACA}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:13px/1.45 var(--font);color:var(--ink);padding:20px}
+h1{font-size:18px;color:var(--b);margin:0 0 4px}.note{color:var(--mut);font-size:12px;margin:0 0 14px;max-width:1150px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}.tabs button{font:600 12.5px var(--font);border:1px solid #e2e8f0;background:#fff;color:var(--mut);border-radius:999px;padding:7px 14px;cursor:pointer}.tabs button.on{background:var(--b);border-color:var(--b);color:#fff}
+.pane{display:none}.pane.on{display:block}
+.ov{background:rgba(15,23,42,.38);border-radius:18px;padding:22px}
+.dlg{background:#fff;border-radius:16px;box-shadow:0 24px 60px rgba(15,23,42,.25);max-width:1180px;margin:0 auto;overflow:hidden}
+.m-hd{display:flex;align-items:center;gap:14px;padding:16px 18px;border-bottom:1px solid var(--line);background:linear-gradient(90deg,#FBF1F5,#fff 70%)}
+.m-ic{width:42px;height:42px;border-radius:12px;background:#F3E3EA;color:var(--b);display:grid;place-items:center;flex:0 0 auto}
+.m-hd b{display:block;font-size:17px;color:#1e293b}.m-hd small{color:var(--mut);font-size:12px}
+.m-x{margin-left:auto;width:34px;height:34px;border-radius:9px;border:1px solid var(--line);display:grid;place-items:center;color:#be123c;background:#fff;flex:0 0 auto}
+.m-bd{padding:16px 18px;display:grid;gap:14px}
+.m-sec{display:flex;align-items:center;gap:8px;color:var(--b);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}.m-sec::after{content:"";flex:1;height:1px;background:#e2e8f0}
+.g{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}.c2{grid-column:span 2}.c3{grid-column:span 3}.c4{grid-column:span 4}.c6{grid-column:span 6}.c8{grid-column:span 8}.c12{grid-column:span 12}
+.f label{display:block;font-size:11.5px;font-weight:600;color:#475569;margin-bottom:4px}.f label em{color:#DC2626;font-style:normal}
+.in{height:38px;border:1px solid #dfe3ea;border-radius:9px;padding:0 11px;display:flex;align-items:center;gap:8px;background:#fff;font-size:12.5px;color:var(--ink);width:100%}
+.in.ro{background:#f8fafc;color:#475569}.in.ta{height:70px;align-items:flex-start;padding-top:9px}.in.bad{border-color:#FCA5A5;box-shadow:0 0 0 3px #FEE2E2}
+.in .cal{margin-left:auto;color:#94a3b8}
+.help{font-size:11px;color:var(--mut);margin-top:4px}.help.err{color:var(--er);font-weight:600}
+.seg{display:inline-flex;border:1px solid #dfe3ea;border-radius:10px;padding:3px;gap:3px;background:#fff;flex-wrap:wrap}
+.seg span{padding:7px 13px;border-radius:8px;font-weight:700;font-size:12px;color:var(--mut);cursor:pointer;border:1px solid transparent}
+.seg span.on{background:var(--b);color:#fff}
+.seg.est span.on.p{background:var(--peb);color:var(--pe);border-color:var(--pel)}
+.seg.est span.on.e{background:var(--inb);color:var(--in);border-color:var(--inl)}
+.seg.est span.on.c{background:var(--okb);color:var(--ok);border-color:var(--okl)}
+.bdg{display:inline-flex;align-items:center;height:22px;font-size:10.5px;font-weight:700;border-radius:999px;padding:0 9px;border:1px solid;white-space:nowrap}
+.bdg.re{background:var(--okb);color:var(--ok);border-color:var(--okl)}.bdg.pl{background:var(--inb);color:var(--in);border-color:var(--inl)}
+.bdg.pe{background:var(--peb);color:var(--pe);border-color:var(--pel)}.bdg.er{background:var(--erb);color:var(--er);border-color:var(--erl)}.bdg.gr{background:#f8fafc;color:#475569;border-color:#e2e8f0}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.kpi{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fcfcfd}.kpi small{display:block;font-size:11px;color:var(--mut);font-weight:600}.kpi b{font-size:18px;color:#1e293b}.kpi i{font-style:normal;font-size:11px;color:var(--mut);margin-left:4px}
+/* registros */
+.reg{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.reg-r{display:grid;grid-template-columns:96px 108px minmax(0,1fr) 70px 70px;gap:12px;align-items:start;padding:11px 14px;border-bottom:1px solid #f1f5f9;font-size:12.5px}
+.reg-r:last-child{border-bottom:0}.reg-r.h{background:#fafbfc;font-size:10.5px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:8px 14px;align-items:center}
+.reg-r .dt b{display:block}.reg-r .dt small{color:var(--mut);font-size:11px}
+.reg-r .tx b{display:block;font-size:12px;color:#1e293b;margin-bottom:2px}.reg-r .tx p{margin:0;color:#475569}.reg-r .tx .nx{margin-top:5px;font-size:11.5px;color:var(--in)}
+.reg-r .hs{font-weight:700;text-align:right}.acts{display:flex;gap:6px;justify-content:flex-end}
+.ib{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);display:grid;place-items:center;color:var(--mut);background:#fff;font-size:12px}
+.ib.del{color:#be123c}
+/* selector de visitas */
+.vis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.vbox{border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;background:#fff;cursor:pointer;display:grid;gap:6px}
+.vbox.on{border-color:var(--b);background:#FBF1F5;box-shadow:0 0 0 1px var(--b) inset}
+.vbox.dis{opacity:.5;cursor:not-allowed;border-style:dashed}
+.vbox .t{display:flex;justify-content:space-between;align-items:center;gap:8px}.vbox .t b{font-size:13px}
+.vbox small{color:var(--mut);font-size:11px}
+.bar{height:7px;border-radius:99px;background:#f1f5f9;overflow:hidden;display:flex}.bar i{display:block;height:100%}
+.bar .u{background:#94a3b8}.bar .n{background:var(--b)}.bar .x{background:#DC2626}
+.hl{display:flex;justify-content:space-between;font-size:11px;color:var(--mut)}.hl b{color:#1e293b}
+.alert{border-radius:10px;padding:10px 12px;font-size:12px;display:flex;gap:8px;align-items:flex-start}
+.alert.er{background:var(--erb);color:var(--er);border:1px solid var(--erl)}.alert.in{background:var(--inb);color:#1e3a8a;border:1px solid var(--inl)}.alert.ok{background:var(--okb);color:#14532d;border:1px solid var(--okl)}
+.ft{display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:12px 18px;border-top:1px solid var(--line);background:#fafbfc}.ft .l{margin-right:auto;font-size:11.5px;color:var(--mut)}
+.btn{height:38px;padding:0 18px;border-radius:10px;font:700 12.5px var(--font);border:1px solid #dfe3ea;background:#fff;color:var(--b);display:inline-flex;align-items:center;gap:8px;cursor:pointer}.btn.p{background:var(--b);border-color:var(--b);color:#fff}.btn.dis{opacity:.45;cursor:not-allowed}.btn.dg{color:#be123c;border-color:#fecdd3}
+.rule{border:1px dashed #D9BCCB;border-radius:12px;padding:12px 14px;background:#fff;font-size:12px;color:#475569}.rule b{color:var(--b)}.rule ul{margin:6px 0 0;padding-left:18px}
+.lay{display:grid;grid-template-columns:minmax(0,1fr) 320px}
+.side{border-left:1px solid var(--line);padding:16px;background:#fcfcfd;display:flex;flex-direction:column;gap:12px}
+.side h4{margin:0;font-size:11.5px;color:var(--b);text-transform:uppercase;letter-spacing:.05em}
+.kv{display:grid;grid-template-columns:96px 1fr;gap:5px 8px;font-size:12px}.kv span{color:var(--mut)}
+/* agenda: detalle de visita */
+.vd{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+.col{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.col-h{display:flex;align-items:center;gap:8px;padding:10px 14px;background:#fafbfc;border-bottom:1px solid var(--line);font-size:12px;font-weight:700;color:#1e293b}.col-h .bdg{margin-left:auto}
+.it{padding:10px 14px;border-bottom:1px solid #f1f5f9;display:grid;grid-template-columns:minmax(0,1fr) 54px;gap:10px}.it:last-child{border-bottom:0}
+.it .cd{font-size:10.5px;font-weight:700;color:var(--b)}.it b{display:block;font-size:12.5px}.it p{margin:2px 0 0;font-size:12px;color:#475569}.it .hs{font-weight:700;text-align:right}
+.it .who{font-size:11px;color:var(--mut);margin-top:3px}
+.cons-h{display:grid;grid-template-columns:minmax(0,1fr) 90px 90px 90px minmax(0,1.2fr);gap:10px;align-items:center;font-size:12px;padding:8px 14px;border-bottom:1px solid #f1f5f9}
+.cons-h.h{font-size:10.5px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.04em;background:#fafbfc}
+/* carga del plan */
+.opts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.obox{border:1px solid #e2e8f0;border-radius:14px;padding:14px;background:#fff;cursor:pointer;display:flex;gap:12px;align-items:flex-start}
+.obox.on{border-color:var(--b);background:#FBF1F5;box-shadow:0 0 0 1px var(--b) inset}
+.obox .ico{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:#F3E3EA;color:var(--b);flex:0 0 auto}
+.obox b{display:block;font-size:13.5px}.obox small{display:block;font-size:11.5px;color:var(--mut);margin-top:2px}
+.drop{border:1.5px dashed #D9BCCB;border-radius:14px;padding:18px;display:flex;align-items:center;gap:14px;background:#FFFBFC}
+.drop b{display:block;font-size:13px}.drop small{color:var(--mut);font-size:11.5px}.drop .btn{margin-left:auto}
+.file{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:#fff;font-size:12.5px}
+.file .x{margin-left:auto;color:#be123c;font-weight:700;cursor:pointer}
+.prev{border:1px solid var(--line);border-radius:12px;overflow:auto;max-height:430px}
+table{border-collapse:collapse;width:100%;min-width:900px}
+th{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut);text-align:left;padding:9px 10px;background:#fafbfc;border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0}
+td{padding:8px 10px;border-bottom:1px solid #f1f5f9;font-size:12.5px;vertical-align:middle}
+tr.cap td{background:#FBF5F8;font-weight:700;color:var(--b)}
+tr.sub td.tt{padding-left:34px;color:#475569}tr.itm td.tt{padding-left:20px}
+tr.bad td{background:#FFF7F7}
+td.mono{font-variant-numeric:tabular-nums;white-space:nowrap}
+.cnt{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tpl{display:grid;grid-template-columns:90px minmax(0,1fr) 100px 100px;border:1px solid #cbd5e1;border-radius:8px;overflow:hidden;font-size:11.5px;max-width:560px}
+.tpl div{padding:5px 8px;border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0}.tpl .h{background:#E8F1EA;font-weight:700;color:#14532d}
+@media(max-width:1000px){.lay{grid-template-columns:1fr}.side{border-left:0;border-top:1px solid var(--line)}.vis,.opts,.vd,.kpis{grid-template-columns:1fr}.g>*{grid-column:span 12}.reg-r{grid-template-columns:1fr}}
+</style></head><body>
+<h1>Plan estratégico · desarrollo de acciones y carga del plan</h1>
+<p class="note">Boceto con los criterios del 27/10. Las horas ejecutadas, programadas y proyectadas siguen saliendo de las visitas; las horas de los desarrollos solo se controlan contra la visita elegida y quedan como dato de informe. Los datos son de ejemplo.</p>
+<div class="tabs">
+ <button class="on" data-t="a">A · Acción del plan: desarrollo</button>
+ <button data-t="b">B · Agenda: qué se trabajó en la visita</button>
+ <button data-t="c">C · Carga del plan (base / Excel / en blanco)</button>
+</div>
+
+<!-- ======================= A ======================= -->
+<section class="pane on" id="p-a"><div class="ov"><div class="dlg">
+ <div class="m-hd">
+  <div class="m-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+  <div><b>4.1 · Comprensión de la organización y su contexto</b><small>Proyecto 1348 · Plan estratégico · Capítulo 4 Contexto de la organización · Ítem vigente del 06/10/2026 al 30/10/2026</small></div>
+  <div class="m-x">✕</div>
+ </div>
+ <div class="lay"><div class="m-bd">
+  <div class="m-sec">Datos de la acción</div>
+  <div class="g">
+   <div class="f c6"><label>Título <em>*</em></label><div class="in">Relevar cuestiones internas y externas (FODA)</div></div>
+   <div class="f c3"><label>Inicio <em>*</em></label><div class="in">08/10/2026<span class="cal">▦</span></div></div>
+   <div class="f c3"><label>Fin <em>*</em></label><div class="in">23/10/2026<span class="cal">▦</span></div><div class="help">Dentro del ítem: 06/10 al 30/10</div></div>
+   <div class="f c12"><label>Estado (se puede cambiar en cualquier momento)</label>
+    <div class="seg est"><span class="p">Pendiente</span><span class="e on">En proceso</span><span>En espera</span><span class="c">Cumplida</span><span>Cancelada</span></div>
+    <div class="help">Reemplaza el tilde de cumplida. La acción nace Pendiente.</div></div>
+  </div>
+
+  <div class="m-sec">Desarrollo de la acción <span class="bdg gr" style="margin-left:4px">3 registros</span></div>
+  <div class="reg">
+   <div class="reg-r h"><div>Visita</div><div>Tipo</div><div>Desarrollo</div><div style="text-align:right">Horas</div><div></div></div>
+   <div class="reg-r"><div class="dt"><b>08/10</b><small>Consultoría · 8 h</small></div><div><span class="bdg re">Realizado</span><div class="help">Consultor A</div></div>
+    <div class="tx"><b>Reunión con la dirección</b><p>Se relevaron cuestiones internas: estructura, recursos y procesos clave. Se armó el borrador de FODA.</p><div class="nx">Próximo: validar amenazas con el área comercial.</div></div><div class="hs">3 h</div><div class="acts"><span class="ib">✎</span><span class="ib del">🗑</span></div></div>
+   <div class="reg-r"><div class="dt"><b>15/10</b><small>Consultoría · 6 h</small></div><div><span class="bdg re">Realizado</span><div class="help">Consultor B</div></div>
+    <div class="tx"><b>Validación con comercial</b><p>Se completaron amenazas y oportunidades. Queda pendiente la priorización.</p></div><div class="hs">2 h</div><div class="acts"><span class="ib">✎</span><span class="ib del">🗑</span></div></div>
+   <div class="reg-r"><div class="dt"><b>29/10</b><small>Consultoría · 8 h</small></div><div><span class="bdg pl">Planificado</span><div class="help">Consultor A</div></div>
+    <div class="tx"><b>Priorizar cuestiones y cerrar matriz</b><p>Para trabajar en la próxima visita.</p></div><div class="hs">—</div><div class="acts"><span class="ib">✎</span><span class="ib del">🗑</span></div></div>
+  </div>
+
+  <div class="m-sec">Nuevo desarrollo</div>
+  <div class="g">
+   <div class="f c6"><label>Tipo</label><div class="seg" id="tipo"><span class="on" data-v="re">Realizado · visita confirmada</span><span data-v="pl">Planificado · próxima visita</span></div></div>
+   <div class="f c6"><label>Consultor</label><div class="in ro">Consultor A (usuario logueado)</div><div class="help">Cualquier consultor del equipo del proyecto puede cargar.</div></div>
+  </div>
+  <div>
+   <div class="f"><label>Visita <em>*</em> <span style="font-weight:500;color:var(--mut)" id="vlbl">· visitas confirmadas del consultor, hasta hoy</span></label></div>
+   <div class="vis" id="vis-re">
+    <div class="vbox"><div class="t"><b>08/10 · mié</b><span class="bdg re">Confirmada</span></div><small>Consultoría · ISO 9001</small>
+     <div class="bar"><i class="u" style="width:100%"></i></div><div class="hl"><span>Cargadas <b>8 h</b> de 8 h</span><span>Disponible <b>0 h</b></span></div></div>
+    <div class="vbox on"><div class="t"><b>22/10 · jue</b><span class="bdg re">Confirmada</span></div><small>Consultoría · ISO 9001 · remoto</small>
+     <div class="bar"><i class="u" style="width:50%"></i><i class="n" style="width:25%"></i></div><div class="hl"><span>Cargadas <b>4 h</b> + 2 h nuevas</span><span>Disponible <b>2 h</b></span></div></div>
+    <div class="vbox dis"><div class="t"><b>27/10 · mar</b><span class="bdg pe">Pendiente</span></div><small>Consultoría · no confirmada</small>
+     <div class="bar"></div><div class="hl"><span>Solo visitas confirmadas</span></div></div>
+   </div>
+   <div class="vis" id="vis-pl" style="display:none">
+    <div class="vbox on"><div class="t"><b>29/10 · jue</b><span class="bdg re">Confirmada</span></div><small>Consultoría · ISO 9001</small><div class="hl"><span>Planificados: <b>1</b></span><span>8 h de visita</span></div></div>
+    <div class="vbox"><div class="t"><b>05/11 · jue</b><span class="bdg pe">Pendiente</span></div><small>Consultoría · ISO 9001</small><div class="hl"><span>Planificados: <b>0</b></span><span>8 h de visita</span></div></div>
+    <div class="vbox"><div class="t"><b>12/11 · jue</b><span class="bdg pe">Pendiente</span></div><small>Auditoría · ISO 9001</small><div class="hl"><span>Planificados: <b>0</b></span><span>6 h de visita</span></div></div>
+   </div>
+  </div>
+  <div class="g">
+   <div class="f c3" id="fh"><label>Horas <em>*</em></label><div class="in">2</div><div class="help">Máximo 2 h en esta visita</div></div>
+   <div class="f c9" style="grid-column:span 9"><label>Título breve <em>*</em></label><div class="in">Taller de riesgos y oportunidades</div></div>
+   <div class="f c12"><label>Desarrollo <em>*</em> <span style="font-weight:500;color:var(--mut)">· qué se hizo</span></label><div class="in ta">Se trabajó con el equipo de calidad la matriz de riesgos vinculada al FODA...</div></div>
+   <div class="f c12" id="fnx"><label>Próximo paso <span style="font-weight:500;color:var(--mut)">· opcional, se muestra en la próxima visita</span></label><div class="in">Presentar la matriz a la dirección</div></div>
+  </div>
+  <div class="alert er"><b>Ejemplo de bloqueo:</b>&nbsp;si se cargan 3 h en la visita del 22/10 → "La visita del 22/10 tiene 8 h; ya hay 4 h cargadas. Disponible: 2 h."</div>
+ </div>
+ <aside class="side">
+  <h4>Resumen de la acción</h4>
+  <div class="kv"><span>Ítem</span><b>4.1</b><span>Rango ítem</span><b>06/10 – 30/10</b><span>Acción</span><b>08/10 – 23/10</b><span>Estado</span><b><span class="bdg" style="background:var(--inb);color:var(--in);border-color:var(--inl)">En proceso</span></b></div>
+  <h4>Horas de desarrollo</h4>
+  <div class="kv"><span>Realizadas</span><b>5 h en 2 visitas</b><span>Planificados</span><b>1 (29/10)</b></div>
+  <div class="rule"><b>Las horas de desarrollo no son horas ejecutadas.</b> Las ejecutadas del proyecto siguen saliendo de las visitas confirmadas. Las horas de visita que no se vuelcan en desarrollos quedan como dato de informe.</div>
+  <div class="rule"><b>Reglas</b><ul><li>Sin visitas cargadas por el analista no se puede cargar desarrollo.</li><li>Realizado: visita confirmada de hoy o anterior.</li><li>Planificado: visita futura (pendiente o confirmada), sin horas.</li><li>Editar y eliminar: cualquier consultor del proyecto.</li></ul></div>
+ </aside></div>
+ <div class="ft"><span class="l">Historial: cada cambio de estado y desarrollo queda en el historial de la acción.</span><span class="btn">Cancelar</span><span class="btn p">Guardar desarrollo</span></div>
+</div></div></section>
+
+<!-- ======================= B ======================= -->
+<section class="pane" id="p-b"><div class="ov"><div class="dlg">
+ <div class="m-hd">
+  <div class="m-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+  <div><b>Visita del jueves 22/10/2026</b><small>Proyecto 1348 · Consultoría ISO 9001 · Confirmada · remoto</small></div>
+  <div class="m-x">✕</div>
+ </div>
+ <div class="m-bd">
+  <div class="kpis">
+   <div class="kpi"><small>Horas de la visita</small><b>14 h</b><i>2 consultores</i></div>
+   <div class="kpi"><small>Volcadas en desarrollos</small><b>10 h</b><i>71 %</i></div>
+   <div class="kpi"><small>Sin detallar (informe)</small><b>4 h</b></div>
+   <div class="kpi"><small>Transcurrido desde 1ª visita</small><b>16 días</b><i>desde 06/10</i></div>
+  </div>
+  <div class="m-sec">Por consultor</div>
+  <div class="reg">
+   <div class="cons-h h"><div>Consultor</div><div>Visita</div><div>Detallado</div><div>Sin detallar</div><div>Uso</div></div>
+   <div class="cons-h"><div><b>Consultor A</b> <span class="bdg gr">Líder</span></div><div>8 h</div><div>6 h</div><div>2 h</div><div class="bar"><i class="u" style="width:75%"></i></div></div>
+   <div class="cons-h"><div><b>Consultor B</b></div><div>6 h</div><div>4 h</div><div>2 h</div><div class="bar"><i class="u" style="width:67%"></i></div></div>
+  </div>
+  <div class="vd">
+   <div class="col"><div class="col-h">✔ Trabajado en esta visita <span class="bdg re">4 desarrollos · 10 h</span></div>
+    <div class="it"><div><span class="cd">4.1 · Comprensión de la organización</span><b>Taller de riesgos y oportunidades</b><p>Matriz de riesgos vinculada al FODA con el equipo de calidad.</p><div class="who">Consultor A · Próximo: presentar la matriz a la dirección</div></div><div class="hs">2 h</div></div>
+    <div class="it"><div><span class="cd">4.1 · Comprensión de la organización</span><b>Revisión del FODA</b><p>Ajustes sobre cuestiones internas.</p><div class="who">Consultor A</div></div><div class="hs">2 h</div></div>
+    <div class="it"><div><span class="cd">4.2 · Partes interesadas</span><b>Mapa de partes interesadas</b><p>Listado inicial y requisitos pertinentes.</p><div class="who">Consultor A</div></div><div class="hs">2 h</div></div>
+    <div class="it"><div><span class="cd">5.2.1 · Establecimiento de la política</span><b>Borrador de política de calidad</b><p>Primera versión para revisión de la dirección.</p><div class="who">Consultor B</div></div><div class="hs">4 h</div></div>
+   </div>
+   <div class="col"><div class="col-h">➜ Para trabajar en la próxima visita (29/10) <span class="bdg pl">3 planificados</span></div>
+    <div class="it"><div><span class="cd">4.1 · Comprensión de la organización</span><b>Priorizar cuestiones y cerrar matriz</b><div class="who">Consultor A · planificado</div></div><div class="hs">—</div></div>
+    <div class="it"><div><span class="cd">4.1 · Comprensión de la organización</span><b>Presentar la matriz a la dirección</b><div class="who">Consultor A · próximo paso del 22/10</div></div><div class="hs">—</div></div>
+    <div class="it"><div><span class="cd">5.2.1 · Establecimiento de la política</span><b>Aprobar política y comunicarla</b><div class="who">Consultor B · planificado</div></div><div class="hs">—</div></div>
+   </div>
+  </div>
+  <div class="alert in">Esta vista se abre desde la visita en la Agenda (lista o calendario). Exportable a Excel / PDF con los botones de siempre. La vista del perfil cliente se define después.</div>
+ </div>
+ <div class="ft"><span class="btn">Exportar</span><span class="btn">Cerrar</span><span class="btn p">+ Cargar desarrollo</span></div>
+</div></div></section>
+
+<!-- ======================= C ======================= -->
+<section class="pane" id="p-c"><div class="ov"><div class="dlg">
+ <div class="m-hd">
+  <div class="m-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg></div>
+  <div><b>Cargar plan estratégico</b><small>Proyecto 1348 · Consultoría ISO 9001 · Proyecto del 01/10/2026 al 31/03/2027</small></div>
+  <div class="m-x">✕</div>
+ </div>
+ <div class="m-bd">
+  <div class="m-sec">¿Cómo querés cargar el plan?</div>
+  <div class="opts" id="opts">
+   <div class="obox" data-o="base"><div class="ico">▤</div><div><b>Plan base</b><small>Copia el plan parametrizado de la norma (capítulos, ítems y subítems). Fechas a cargar después.</small></div></div>
+   <div class="obox on" data-o="xls"><div class="ico">⇪</div><div><b>Subir Excel</b><small>Capítulos, ítems y subítems con fecha desde y hasta. Reemplaza la parametría.</small></div></div>
+   <div class="obox" data-o="bl"><div class="ico">＋</div><div><b>Plan en blanco</b><small>Sin ítems: se cargan a mano.</small></div></div>
+  </div>
+
+  <div id="o-xls">
+   <div class="m-sec" style="margin-bottom:10px">Archivo</div>
+   <div class="drop"><div class="m-ic">⇪</div><div><b>Arrastrá el archivo o elegilo</b><small>.xlsx o .csv · se lee la primera hoja · columnas: Código, Título, Fecha desde, Fecha hasta. El resto se ignora y el archivo no se guarda.</small></div><span class="btn">Descargar plantilla</span><span class="btn p">Elegir archivo</span></div>
+   <div style="margin-top:10px" class="tpl"><div class="h">Código</div><div class="h">Título</div><div class="h">Fecha desde</div><div class="h">Fecha hasta</div>
+    <div>4</div><div>Contexto de la organización</div><div></div><div></div>
+    <div>4.1</div><div>Comprensión de la organización</div><div>06/10/2026</div><div>30/10/2026</div>
+    <div>4.1.1</div><div>Cuestiones internas</div><div>06/10/2026</div><div>16/10/2026</div></div>
+   <div class="help">Plantilla: el nivel y el padre salen del código (4 capítulo · 4.1 ítem · 4.1.1 subítem). Fechas del capítulo opcionales: si faltan, se toman del primer y último ítem.</div>
+
+   <div class="m-sec" style="margin:14px 0 10px">Vista previa</div>
+   <div class="file">📄 <b>plan_1348_iso9001.xlsx</b><span style="color:var(--mut)">· hoja "Plan" · 47 filas leídas · 3 columnas ignoradas</span><span class="x">Quitar</span></div>
+   <div class="cnt" style="margin:10px 0"><span class="bdg gr">8 capítulos</span><span class="bdg gr">28 ítems</span><span class="bdg gr">11 subítems</span><span class="bdg re">45 correctas</span><span class="bdg er">2 con error</span></div>
+   <div class="prev"><table>
+    <thead><tr><th>Fila</th><th>Nivel</th><th>Código</th><th>Título</th><th>Desde</th><th>Hasta</th><th>Validación</th></tr></thead>
+    <tbody>
+     <tr class="cap"><td>2</td><td><span class="bdg gr">Capítulo</span></td><td>4</td><td class="tt">Contexto de la organización</td><td class="mono">06/10/2026</td><td class="mono">27/11/2026</td><td><span class="bdg re">OK · calculadas</span></td></tr>
+     <tr class="itm"><td>3</td><td><span class="bdg gr">Ítem</span></td><td>4.1</td><td class="tt">Comprensión de la organización y su contexto</td><td class="mono">06/10/2026</td><td class="mono">30/10/2026</td><td><span class="bdg re">OK</span></td></tr>
+     <tr class="sub"><td>4</td><td><span class="bdg gr">Subítem</span></td><td>4.1.1</td><td class="tt">Cuestiones internas</td><td class="mono">06/10/2026</td><td class="mono">16/10/2026</td><td><span class="bdg re">OK</span></td></tr>
+     <tr class="sub bad"><td>5</td><td><span class="bdg gr">Subítem</span></td><td>4.1.2</td><td class="tt">Cuestiones externas</td><td class="mono">19/10/2026</td><td class="mono">06/11/2026</td><td><span class="bdg er">Fin fuera del ítem 4.1 (30/10)</span></td></tr>
+     <tr class="itm"><td>6</td><td><span class="bdg gr">Ítem</span></td><td>4.2</td><td class="tt">Necesidades y expectativas de las partes interesadas</td><td class="mono">13/10/2026</td><td class="mono">06/11/2026</td><td><span class="bdg re">OK</span></td></tr>
+     <tr class="itm bad"><td>7</td><td><span class="bdg gr">Ítem</span></td><td>4.2</td><td class="tt">Partes interesadas (repetido)</td><td class="mono">13/10/2026</td><td class="mono">06/11/2026</td><td><span class="bdg er">Código repetido (fila 6)</span></td></tr>
+     <tr class="itm"><td>8</td><td><span class="bdg gr">Ítem</span></td><td>4.3</td><td class="tt">Alcance del sistema de gestión de la calidad</td><td class="mono">02/11/2026</td><td class="mono">13/11/2026</td><td><span class="bdg re">OK</span></td></tr>
+     <tr class="cap"><td>12</td><td><span class="bdg gr">Capítulo</span></td><td>5</td><td class="tt">Liderazgo</td><td class="mono">—</td><td class="mono">—</td><td><span class="bdg re">OK · calculadas</span></td></tr>
+    </tbody></table></div>
+   <div class="alert er" style="margin-top:10px">Hay 2 filas con error. Corregí el Excel y volvé a subirlo: no se graba nada hasta que todas las filas estén OK.</div>
+  </div>
+
+  <div class="rule"><b>Eliminar y volver a cargar el plan</b><ul>
+   <li>Mientras la acción "Carga del plan" no esté cumplida (antes de "Finalizar carga") y ninguna acción tenga desarrollos: botón <b>Eliminar plan</b> disponible, se puede recargar con cualquiera de las tres opciones.</li>
+   <li>Después de "Finalizar carga": no se puede eliminar.</li>
+   <li>Validaciones del Excel: códigos únicos, título obligatorio, desde ≤ hasta, subítem dentro del ítem, ítem dentro del capítulo, todo dentro de las fechas del proyecto.</li></ul></div>
+ </div>
+ <div class="ft"><span class="btn dg">Eliminar plan actual</span><span class="l">Disponible solo antes de "Finalizar carga"</span><span class="btn">Cancelar</span><span class="btn p dis">Grabar plan (47 filas)</span></div>
+</div></div></section>
+
+<script>
+document.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){
+ document.querySelectorAll('.tabs button').forEach(function(x){x.classList.toggle('on',x===b)});
+ document.querySelectorAll('.pane').forEach(function(p){p.classList.toggle('on',p.id==='p-'+b.dataset.t)});}});
+document.querySelectorAll('#tipo span').forEach(function(s){s.onclick=function(){
+ document.querySelectorAll('#tipo span').forEach(function(x){x.classList.toggle('on',x===s)});
+ var pl=s.dataset.v==='pl';document.getElementById('vis-re').style.display=pl?'none':'';document.getElementById('vis-pl').style.display=pl?'':'none';
+ document.getElementById('fh').style.display=pl?'none':'';
+ document.getElementById('vlbl').textContent=pl?'· visitas futuras del consultor (pendientes o confirmadas)':'· visitas confirmadas del consultor, hasta hoy';}});
+document.querySelectorAll('.vis').forEach(function(v){v.querySelectorAll('.vbox:not(.dis)').forEach(function(b){b.onclick=function(){
+ v.querySelectorAll('.vbox').forEach(function(x){x.classList.toggle('on',x===b)});}})});
+document.querySelectorAll('.seg.est span').forEach(function(s){s.onclick=function(){s.parentNode.querySelectorAll('span').forEach(function(x){x.classList.toggle('on',x===s)})}});
+document.querySelectorAll('#opts .obox').forEach(function(o){o.onclick=function(){
+ document.querySelectorAll('#opts .obox').forEach(function(x){x.classList.toggle('on',x===o)});
+ document.getElementById('o-xls').style.display=o.dataset.o==='xls'?'':'none';}});
+(function(){var h=(location.hash||'').replace('#','');var b=document.querySelector('.tabs button[data-t="'+h+'"]');if(b)b.click();})();
+</script>
+</body></html>

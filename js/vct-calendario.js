@@ -8,6 +8,25 @@
    (Paso siguiente del bloque: unificar los dos render en un solo motor + look GCal.)
    ============================================================================ */
 
+/* FASE2_C: dedupe de <link vct-calendario.css>. La SPA inyecta el CSS en <head> y
+   no limpia los <link> de navegaciones/versiones anteriores, con lo que quedan dos
+   (ej. ?v=42 en head + ?v=44 en el step), ensuciando la cascada. Se conserva SOLO
+   el ultimo (el del step actual) y se quitan los anteriores. Re-corre en cada carga
+   de contenido AJAX. Solo toca <link> de este CSS; no afecta datos ni otros assets. */
+(function(){
+    "use strict";
+    function dedupeCalCss(){
+        try{
+            var ls=[].slice.call(document.querySelectorAll('link[href*="vct-calendario.css"]'));
+            for(var i=0;i<ls.length-1;i++){ if(ls[i].parentNode) ls[i].parentNode.removeChild(ls[i]); }
+        }catch(e){}
+    }
+    dedupeCalCss();
+    if(document.addEventListener){
+        document.addEventListener("vct:content-loaded", function(){ setTimeout(dedupeCalCss,0); });
+    }
+})();
+
 /* ===================== [FERIADOS] ex vct-Agenda.js ===================== */
 /* vct-agenda.js - v9
    Calendario full-width con vistas Mes / Semana / Dia, 100% cliente
@@ -77,7 +96,7 @@
                     var pr=parts[si].split('|'),code=(pr.shift()||'').trim().toUpperCase(),nm=(pr.join('|')||code).trim();
                     if(!code)continue;
                     var ico=code==='AU'?'clipboard-check':code==='CA'?'users':'briefcase';
-                    chips+='<span class="vct-cal-tip-service"><span class="vct-cal-tip-svc is-'+escapeAttr(code.toLowerCase())+'" aria-label="'+escapeAttr(nm)+'">'+SVG[ico]+'</span><span>'+escapeHtml(nm)+'</span></span>';
+                    chips+='<span class="vct-cal-tip-svc is-'+escapeAttr(code.toLowerCase())+'" role="img" aria-label="'+escapeAttr(nm)+'">'+SVG[ico]+'</span>';
                 }
                 if(chips)m+='<div class="vct-cal-tip-row vct-cal-tip-services">'+chips+'</div>';
             }
@@ -304,7 +323,7 @@
                         /* HOY_V41: Acciones marca hoy tambien en lectura; conserva los permisos y la V360 de proyecto. */
                         var cls="vct-agenda-cell"+(isWeekend?" vct-agenda-cell-weekend":"")+((isToday && (!hasActivities || root.classList.contains("vct-acc-cal-unified")))?" vct-agenda-cell-today":"")+holidayClass(fer)+((canEdit && !isPastDay)?"":" vct-agenda-cell-nocreate")+(isPastDay?" vct-agenda-cell-past":"");
 
-                        html+='<td class="'+cls+'" data-vct-agenda-day="'+key+'"'+(fer && fer.texto ? ' title="'+escapeAttr(fer.texto)+'"' : '')+'>';
+                        html+='<td class="'+cls+'" data-vct-agenda-day="'+key+'"'+(fer && fer.texto ? ' data-tt="1" data-tt-x="'+escapeAttr(fer.texto)+'"' : '')+'>';
                         html+='<span class="vct-agenda-daynum">'+dayNum+'</span>';
                         if(fer && fer.texto){
                             html+='<span class="vct-agenda-holiday-label">'+escapeHtml(fer.texto)+'</span>';
@@ -836,6 +855,23 @@
 
         if (!paneEl) return; /* sin consultor elegido: solo queda el prompt */
 
+        /* AUDIT_HERO: sin consultor (solo standalone; el V360 tiene consultor fijo)
+           no se arma calendario: se oculta KPIs + leyenda y se muestra el hero
+           "Elegi un consultor". El selector de consultor del toolbar queda visible. */
+        if (!consId && !root.classList.contains("vct-agc-v360")) {
+            if (statsEl) statsEl.style.setProperty("display", "none", "important"); /* los KPIs tienen display:grid !important */
+            var _leg = root.querySelector(".vct-agc-legend, .vct-agenda-legend");
+            if (_leg) _leg.style.setProperty("display", "none", "important");
+            paneEl.innerHTML =
+                '<div class="vct-agc-hero">'
+              + '<div class="vct-agc-hero-icon"><span data-vct-icon="users"></span></div>'
+              + '<h3 class="vct-agc-hero-title">Eleg&iacute; un consultor</h3>'
+              + '<p class="vct-agc-hero-text">Seleccion&aacute; un consultor arriba para ver su disponibilidad por d&iacute;a: disponible, asignado, licencia, ocupado y feriados.</p>'
+              + '</div>';
+            if (window.VCT && VCT.Icon && typeof VCT.Icon.init === "function") VCT.Icon.init(paneEl);
+            return;
+        }
+
         var state = { cursor: new Date(today), view: "month", selDay: null };   /* todos los calendarios inician en Mes */
 
         /* dia sin registro = NO_CARGADO (blanco), tambien los fines de semana */
@@ -1054,7 +1090,7 @@
                         var isToday=sameDay(cd,today), isPastCell=(cd<today && !isToday);
                         var isWknd=(cd.getDay()===0||cd.getDay()===6);
                         var cls="vct-agenda-cell "+clsOf(r.e)+(isToday?" vct-agenda-cell-today":"")+(isWknd?" is-wknd":"")+(isPastCell?" is-past":"");
-                        html+='<td class="'+cls+'" data-vct-agc-day="'+k+'"'+(r.n?' title="'+escAttr(r.n)+'"':'')+'>';
+                        html+='<td class="'+cls+'" data-vct-agc-day="'+k+'">';
                         html+='<span class="vct-agenda-daynum">'+dayNum+'</span>';
                         html+=stripHtml(r);
                         html+=cellBadge(r);

@@ -1371,3 +1371,44 @@ html body .vct-360-module .vctdg .vctdg-table .vct-360-project-name[title]{curso
     box-shadow:none !important;
     overflow:visible !important;
 }
+/* ============================================================================
+   ANTI-FLASH (v51) - ocultar la grilla cruda hasta que el motor la arma.
+   ----------------------------------------------------------------------------
+   PROBLEMA: la SPA inyecta el HTML del SP y el browser pinta la tabla BASICA
+   (todas las filas, sin toolbar, sin paginado, sin iconos). Milisegundos
+   despues el motor (vct-datagrid.js) la reestructura -> reshape visible =
+   "flash" en cada solapa (peor en Proyectos, que trae mas datos).
+   FIX: mientras el host no tenga data-vct-dg-ready="1", se oculta su contenido
+   y se muestra un placeholder con spinner. Cuando el motor termina (pone
+   ready=1, sincronico -> el browser pinta la grilla ya armada), se revela de
+   una. El usuario nunca ve la tabla cruda ni el salto.
+   El spinner aparece recien a los 250ms (fade-in diferido) -> en grillas
+   rapidas no se ve nada, solo un parpadeo minimo de espacio reservado.
+   Seguro: la regla vive en vct-datagrid.css (va en el head, render-blocking),
+   asi esta activa ANTES de que se inyecte la pantalla.
+   ============================================================================ */
+[data-vct-dg]:not([data-vct-dg-ready="1"]){
+    position:relative;
+    min-height:180px;
+    max-height:180px;
+    overflow:hidden;
+}
+[data-vct-dg]:not([data-vct-dg-ready="1"]) > *{
+    visibility:hidden !important;
+}
+[data-vct-dg]:not([data-vct-dg-ready="1"])::after{
+    content:"";
+    position:absolute;
+    top:28px;
+    left:50%;
+    width:24px;
+    height:24px;
+    margin-left:-12px;
+    border:2px solid #e3e6ec;
+    border-top-color:#66062D;
+    border-radius:50%;
+    opacity:0;
+    animation:vctdg-prespin .6s linear infinite, vctdg-prefade .01s linear .25s forwards;
+}
+@keyframes vctdg-prespin{ to{ transform:rotate(360deg); } }
+@keyframes vctdg-prefade{ to{ opacity:1; } }

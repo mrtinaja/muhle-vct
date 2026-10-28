@@ -1,4 +1,10 @@
-/* vct-proyecto-v360.js - v32 PV_AGENDA_V1 (permiso del plan, calendario pendiente / confirmada, modal del boceto)
+/* vct-proyecto-v360.js - v38 PL_DES_V6 (estado de la accion: cumplida exige desarrollo realizado; cancelada solo sin desarrollo; aviso dentro del modal)
+   v37 PL_DES_V5 (opcion B: desarrollo realizado antes del inicio = accion adelantada; planificado dentro del rango de la accion)
+   v36 PL_DES_V4 (accion del plan: fechas fuera del rango del item se avisan dentro del modal)
+   v35 PL_DES_V3 (accion: Detalle -> Descripcion; desarrollo: item / subitem de la accion, no editables)
+   v34 PL_DES_V2 (accion del plan: responsable alineado, aviso que se limpia al completar, errores del servidor en toast)
+   v33 PL_DES_V1 (desarrollo de acciones del plan, plan desde Excel, eliminar plan, trabajo de la visita)
+   v32 PV_AGENDA_V1 (permiso del plan, calendario pendiente / confirmada, modal del boceto)
    v31 PV_AGENDA_V1 (pestania Agenda: lista por servicio / calendario, modal Nueva visita)
    v29 PV_ASIG_V2 (asignar: lider al primero, + email del consultor, CC, confirmacion)
    v22 (plan estrategico en arbol con detalle 50/50; responsable otro)
@@ -575,6 +581,7 @@
         syncMail(m);
         plTipif(m);
         paResp(m);
+        if (key === "pa") paPrep(m, btn, !!edit);   /* PL_DES_V1 */
         svSel(m, !!edit);
         /* item del plan: un sub-item no tiene fechas propias */
         var padre = m.querySelector('[data-vct-pv-f="padre"]');
@@ -615,6 +622,26 @@
         if (m.getAttribute("data-vct-pv-modal") === "in" && campos.TEXTO13 !== "1") { campos.TEXTO14 = ""; campos.TEXTO15 = ""; }
         if (m.getAttribute("data-vct-pv-modal") === "de" && m.getAttribute("data-vct-pv-mode") === "new" && !campos.TEXTO11 && !campos.TEXTO12)
             errs.push("Dato es obligatorio: elija uno de la minuta o escr\u00edbalo.");
+        /* v36: accion del plan: inicio / vence dentro del rango del item (mismo control que el servidor, pero dentro del modal) */
+        if (m.getAttribute("data-vct-pv-modal") === "pa") {
+            var fI = m.querySelector('[data-vct-pv-f="ini"]'), fV = m.querySelector('[data-vct-pv-f="vence"]');
+            var vi = fI ? String(fI.value || "") : "", vv = fV ? String(fV.value || "") : "";
+            var mn = fI ? fI.getAttribute("min") || "" : "", mx = fI ? fI.getAttribute("max") || "" : "";
+            var bad = function (f, msg) { errs.push(msg); if (f) f.classList.add("is-invalid"); };
+            if (vi && mn && vi < mn) bad(fI, "La acci&oacute;n no puede empezar antes del inicio del &iacute;tem (" + fmtD(mn) + ").");
+            if (vv && mx && vv > mx) bad(fV, "La acci&oacute;n no puede vencer despu&eacute;s del fin del &iacute;tem (" + fmtD(mx) + ").");
+            if (vi && vv && vv < vi) bad(fV, "Vence no puede ser anterior a la fecha de inicio.");
+            /* v38: cumplida solo con desarrollo realizado; cerrada sin cumplir (cancelada) solo sin desarrollo realizado */
+            var fE = m.querySelector('[data-vct-pv-f="est"]'), oE = fE && fE.selectedIndex >= 0 ? fE.options[fE.selectedIndex] : null;
+            if (oE && m.getAttribute("data-vct-pv-mode") === "edit") {
+                var cod = oE.getAttribute("data-cod") || "", fin = oE.getAttribute("data-final") === "1";
+                var nd = parseInt(m.getAttribute("data-pv-nd") || "0", 10) || 0, est0 = m.getAttribute("data-pv-est0") || "";
+                if (cod === "CUMPLIDA" && nd === 0 && est0 !== fE.value)
+                    bad(fE, "Para cumplir la acci&oacute;n carg&aacute; primero su desarrollo realizado.");
+                if (fin && cod !== "CUMPLIDA" && nd > 0)
+                    bad(fE, "La acci&oacute;n tiene " + (m.getAttribute("data-pv-hs") || "") + " h de desarrollo realizado: no se puede cancelar. Elimin&aacute; primero su desarrollo.");
+            }
+        }
         if (errs.length) { showError(m, errs); return; }
         showError(m, null);
         var cmdM = m.getAttribute("data-vct-pv-cmd") || "";
@@ -1317,6 +1344,11 @@
         setTimeout(function () { acInit(r); }, 300);
         /* agenda: filas de grupo por servicio (PV_AGENDA_V1) */
         setTimeout(function () { r.querySelectorAll('[data-vct-dg-id="pv_agenda"]').forEach(agGroups); }, 300);
+        /* plan: reabre el desarrollo de la accion que se estaba cargando (PL_DES_V1) */
+        setTimeout(function () { desRestore(r); }, 700);
+        /* v34: error del servidor al grabar: ademas del aviso de arriba, toast (no pasa desapercibido) */
+        var ale = r.querySelector("[data-vct-pv-alert].is-error");
+        if (ale && window.VCT && VCT.Toast && typeof VCT.Toast.show === "function") setTimeout(function () { VCT.Toast.show(ale.textContent.trim(), "error"); }, 400);
         var al = r.querySelector("[data-vct-pv-alert].is-ok");
         if (al) setTimeout(function () { al.classList.add("is-hiding"); setTimeout(function () { if (al.parentNode) al.parentNode.removeChild(al); }, 400); }, 9000);
     }
@@ -1869,6 +1901,572 @@
         if (t.matches("[data-pv-ag-em]") && ag) ag.emails[t.getAttribute("data-pv-ag-em")] = t.value;
         if (t.matches('[data-pv-ag-f="cc"]') && ag) agGen(t.closest('[data-vct-pv-modal="ag"]'), agSel(t.closest('[data-vct-pv-modal="ag"]')));
     });
+
+    /* ================= PL_DES_V1 (v33): desarrollo de las acciones del plan, plan desde Excel, trabajo de la visita ================= */
+    function fmtH(n) { n = Math.round((+n || 0) * 10) / 10; return String(n); }
+    function fmtD(iso) { var x = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ""); return x ? x[3] + "/" + x[2] + "/" + x[1] : ""; }
+    function pvRoot(el) { return (el && el.closest && el.closest("[data-vct-pv]")) || root(); }
+    function pvModal(el, key) { var r = pvRoot(el); return r ? r.querySelector('[data-vct-pv-modal="' + key + '"]') : null; }
+    function mOpen(m) { m.classList.add("is-open"); document.body.classList.add("vct-modal-open"); icons(m); }
+
+    /* -- accion del plan: inicio obligatorio, nace Pendiente (estado y resultado solo al editar), rango del item -- */
+    function paPrep(m, btn, edit) {
+        /* v38: desarrollo realizado de la accion y su estado al abrir (para validar el cambio de estado) */
+        m.setAttribute("data-pv-nd", edit ? (btn.getAttribute("data-f-nd") || "0") : "0");
+        m.setAttribute("data-pv-hs", edit ? (btn.getAttribute("data-f-hs") || "0") : "0");
+        m.setAttribute("data-pv-est0", edit ? (btn.getAttribute("data-f-est") || "") : "");
+        /* v35: el campo de texto libre de la accion es su descripcion */
+        var ob = m.querySelector('[data-vct-pv-f="obs"]'), obf = ob ? ob.closest(".vct-field") : null, obl = obf ? obf.querySelector(".vct-label") : null;
+        if (obl) obl.innerHTML = "Descripci&oacute;n";
+        var ini = m.querySelector('[data-vct-pv-f="ini"]'), vence = m.querySelector('[data-vct-pv-f="vence"]');
+        if (ini) {
+            ini.setAttribute("data-req", "Fecha inicio");
+            var fi = ini.closest(".vct-field"), lb = fi ? fi.querySelector(".vct-label") : null;
+            if (lb && !lb.querySelector(".vct-req")) lb.insertAdjacentHTML("beforeend", ' <span class="vct-req">*</span>');
+        }
+        ["[data-vct-pv-estado]", "[data-vct-pv-resultado]"].forEach(function (q) {
+            var x = m.querySelector(q), f = x ? x.closest(".vct-field") : null;
+            if (f) f.hidden = !edit;
+        });
+        var rg = String(btn.getAttribute("data-rng") || "").split("|");
+        var h = m.querySelector("[data-pv-pa-rng]");
+        var fv = vence ? vence.closest(".vct-field") : null;
+        if (!h && fv) {
+            fv.insertAdjacentHTML("afterend", '<div class="vct-field vct-col-12"><div class="vct-help vct-pv-pa-rng" data-pv-pa-rng></div></div>');
+            h = m.querySelector("[data-pv-pa-rng]");
+        }
+        if (h) {
+            var t = (rg[0] || rg[1]) ? "Inicio y vence dentro del &iacute;tem: " + (fmtD(rg[0]) || "-") + " al " + (fmtD(rg[1]) || "-") + ". " : "";
+            if (!edit) t += "La acci&oacute;n nace Pendiente; el estado se cambia despu&eacute;s con Editar, en cualquier momento.";
+            h.innerHTML = t;
+            h.parentNode.hidden = !t;
+        }
+        /* v34: la celda vacia de relleno desacomodaba Responsable (quedaba al medio) */
+        Array.prototype.forEach.call(m.querySelectorAll(".vct-form-grid > .vct-field"), function (c) {
+            if (!c.children.length && !c.textContent.trim()) c.hidden = true;
+        });
+        [ini, vence].forEach(function (x) {
+            if (!x) return;
+            if (rg[0]) x.setAttribute("min", rg[0]); else x.removeAttribute("min");
+            if (rg[1]) x.setAttribute("max", rg[1]); else x.removeAttribute("max");
+        });
+    }
+
+    /* -- desarrollo de la accion: registros desplegables en el detalle del item -- */
+    var REGS_KEY = "vct.pv.pl.regs";
+    function awToggle(aw, open) {
+        var regs = aw ? aw.querySelector("[data-pl-regs]") : null;
+        if (!regs) return;
+        var o = typeof open === "boolean" ? open : !aw.classList.contains("is-open");
+        aw.classList.toggle("is-open", o);
+        regs.hidden = !o;
+        if (o) icons(regs);
+    }
+    function desRestore(r) {
+        var k = "";
+        try { k = sessionStorage.getItem(REGS_KEY) || ""; sessionStorage.removeItem(REGS_KEY); } catch (e) { }
+        if (!k || !r) return;
+        var aw = r.querySelector('[data-pl-aw="' + k + '"]');
+        if (aw) awToggle(aw, true);
+    }
+
+    /* -- modal de desarrollo (realizado / planificado) -- */
+    var des = null;
+    function desVis(m) {
+        return String(m.getAttribute("data-pv-des-vis") || "").split(";").filter(Boolean).map(function (s) {
+            var p = s.split("|");
+            return { vc: p[0], d1: p[1] || "", d2: p[2] || "", est: p[3] || "P", srv: p[4] || "", ini: p[5] || "", nom: p[6] || "",
+                     h: parseFloat(p[7]) || 0, u: parseFloat(p[8]) || 0, mio: p[9] === "1" };
+        });
+    }
+    function desF(k) { return des && des.m ? des.m.querySelector('[data-pv-des-f="' + k + '"]') : null; }
+    function desOpen(btn, edit) {
+        var m = pvModal(btn, "des");
+        if (!m) return;
+        var acc = edit ? btn.getAttribute("data-acc") : btn.getAttribute("data-pl-des-new");
+        var aw = pvRoot(btn).querySelector('[data-pl-aw="' + acc + '"]');
+        var tt = aw ? aw.querySelector(".vct-plt-acc-t b") : null;
+        var tipo = edit ? (btn.getAttribute("data-f-tipo") || "R") : "R";
+        des = { m: m, id: edit ? (btn.getAttribute("data-pl-des-edit") || "") : "", acc: acc || "", tipo: tipo,
+                vc: edit ? (btn.getAttribute("data-f-vc") || "") : "", vcOrig: edit ? (btn.getAttribute("data-f-vc") || "") : "",
+                hOrig: edit && tipo === "R" ? (parseFloat(btn.getAttribute("data-f-hrs")) || 0) : 0 };
+        /* v37: rango de la accion (inicio / vence) para el planificado y el aviso de adelantada */
+        var eb = aw ? aw.querySelector('[data-vct-pv-edit="pa"]') : null;
+        des.ai = eb ? eb.getAttribute("data-f-ini") || "" : "";
+        des.av = eb ? eb.getAttribute("data-f-vence") || "" : "";
+        var a = m.querySelector("[data-pv-des-acc]");
+        if (a) a.value = tt ? tt.textContent : "";
+        desItem(m, aw, a);
+        var ti = m.querySelector("[data-pv-des-mtitle]");
+        if (ti) ti.innerHTML = edit ? "Editar desarrollo" : "Nuevo desarrollo";
+        [["hrs", "data-f-hrs"], ["tit", "data-f-tit"], ["des", "data-f-des"], ["prox", "data-f-prox"]].forEach(function (x) {
+            var f = desF(x[0]);
+            if (f) { f.value = edit ? (btn.getAttribute(x[1]) || "") : ""; f.classList.remove("is-invalid"); }
+        });
+        showError(m, null);
+        var sv = m.querySelector("[data-pv-des-save]");
+        if (sv) sv.disabled = false;
+        desRender();
+        mOpen(m);
+        try { sessionStorage.setItem(REGS_KEY, des.acc); } catch (e) { }
+    }
+    /* v35: item (y subitem) de la accion, no editables, antes de la descripcion */
+    function desItem(m, aw, a) {
+        var af = a ? a.closest(".vct-field") : null;
+        if (!af) return;
+        var lb = af.querySelector(".vct-label");
+        if (lb) lb.innerHTML = "Descripci&oacute;n de la acci&oacute;n";
+        var box = m.querySelector("[data-pv-des-it]");
+        if (!box) {
+            af.insertAdjacentHTML("beforebegin", '<div class="vct-field vct-col-12 vct-pv-des-it" data-pv-des-it></div>');
+            box = m.querySelector("[data-pv-des-it]");
+        }
+        var det = aw ? aw.closest("[data-pl-det]") : null, r = pvRoot(aw || m);
+        var tx = function (d) { var h = d ? d.querySelector(".vct-plt-det-tt h4") : null; return h ? h.textContent.replace(/\s+/g, " ").trim() : ""; };
+        var id = det ? det.getAttribute("data-pl-det") : "", item = tx(det), sub = "";
+        var sl = id && r ? r.querySelector('.vct-plt-subl[data-pl-sel="' + id + '"]') : null;
+        var pd = sl ? sl.closest("[data-pl-det]") : null;
+        if (pd && pd !== det) { sub = item; item = tx(pd); }
+        var esc = function (x) { return String(x || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;"); };
+        var fld = function (l, v, cls) { return '<div class="' + cls + '"><label class="vct-label">' + l + '</label><input type="text" class="vct-input" readonly value="' + esc(v) + '"></div>'; };
+        box.innerHTML = sub ? '<div class="vct-pv-des-it2">' + fld("&Iacute;tem", item, "") + fld("Sub&iacute;tem", sub, "") + '</div>'
+                            : fld("&Iacute;tem", item, "");
+        box.hidden = !item;
+    }
+    function desRender() {
+        if (!des) return;
+        var m = des.m, hoy = m.getAttribute("data-pv-des-hoy") || "", R = des.tipo === "R";
+        m.querySelectorAll("[data-pv-des-tipo] [data-v]").forEach(function (b) { b.classList.toggle("is-on", b.getAttribute("data-v") === des.tipo); });
+        var th = m.querySelector("[data-pv-des-thelp]");
+        if (th) th.innerHTML = R ? "Lo que se trabaj&oacute; en una visita confirmada de hoy o anterior, con sus horas."
+                                 : "Lo que se va a trabajar en una pr&oacute;xima visita (sin horas).";
+        var list = desVis(m).filter(function (v) {
+            if (R) return v.est === "C" && v.d1 <= hoy;
+            return v.d1 > hoy && (!des.ai || v.d1 >= des.ai) && (!des.av || v.d1 <= des.av);   /* v37: planificado dentro del rango de la accion */
+        });
+        list.sort(function (a, b) {
+            if (a.mio !== b.mio) return a.mio ? -1 : 1;
+            return R ? (a.d1 < b.d1 ? 1 : a.d1 > b.d1 ? -1 : 0) : (a.d1 < b.d1 ? -1 : a.d1 > b.d1 ? 1 : 0);
+        });
+        if (des.vc && !list.some(function (v) { return v.vc === des.vc; })) des.vc = "";
+        var sel = null;
+        var box = m.querySelector("[data-pv-des-cards]");
+        if (box) {
+            if (!list.length) {
+                box.innerHTML = '<div class="vct-360-empty">' + (R ? "No hay visitas confirmadas de hoy o anteriores en la agenda del proyecto."
+                                                                    : "No hay visitas futuras" + ((des.ai || des.av) ? " dentro del rango de la acci&oacute;n (" + (fmtD(des.ai) || "-") + " al " + (fmtD(des.av) || "-") + ")" : "") + " en la agenda del proyecto.")
+                              + " Las visitas se cargan en la pesta&ntilde;a Agenda.</div>";
+            } else {
+                box.innerHTML = list.map(function (v) {
+                    var usadas = Math.max(0, v.u - (v.vc === des.vcOrig ? des.hOrig : 0));
+                    var disp = Math.max(0, Math.round((v.h - usadas) * 10) / 10);
+                    var on = v.vc === des.vc, lleno = R && disp <= 0 && !on;
+                    if (on) sel = { v: v, disp: disp };
+                    var pct = v.h > 0 ? Math.min(100, Math.round(usadas * 100 / v.h)) : 0;
+                    return '<button type="button" class="vct-pv-des-v' + (on ? " is-on" : "") + (lleno ? " is-full" : "") + '" data-pv-des-vc="' + escH(v.vc) + '" data-disp="' + disp + '"' + (lleno ? " disabled" : "") + ">"
+                         + '<span class="vct-pv-des-vt"><b>' + fmtD(v.d1) + (v.d2 > v.d1 ? " al " + fmtD(v.d2).slice(0, 5) : "") + "</b>"
+                         + '<span class="vct-360-badge ' + (v.est === "C" ? 'is-active">Confirmada' : 'is-planned">Pendiente') + "</span></span>"
+                         + "<small>" + escH(v.srv) + "</small>"
+                         + '<span class="vct-pv-des-vn"><span class="vctdg-avatar is-c" title="' + escH(v.nom) + '">' + escH(v.ini) + "</span><span>" + escH(v.nom) + "</span></span>"
+                         + (R ? '<span class="vct-pv-bar"><span class="is-plan" style="width:' + pct + '%"></span></span>'
+                              + '<span class="vct-pv-des-vh"><span>Cargadas <b>' + fmtH(usadas) + " h</b> de " + fmtH(v.h) + ' h</span><span>Disponible <b>' + fmtH(disp) + " h</b></span></span>"
+                            : '<span class="vct-pv-des-vh"><span>' + fmtH(v.h) + " h de visita</span></span>")
+                         + "</button>";
+                }).join("");
+                icons(box);
+            }
+        }
+        var hw = m.querySelector("[data-pv-des-hw]"), tw = m.querySelector("[data-pv-des-tw]");
+        if (hw) hw.hidden = !R;
+        if (tw) { tw.classList.toggle("vct-col-9", R); tw.classList.toggle("vct-col-12", !R); }
+        var hh = m.querySelector("[data-pv-des-hhelp]");
+        if (hh) hh.innerHTML = sel ? "M&aacute;ximo " + fmtH(sel.disp) + " h en esta visita" : "Eleg&iacute; la visita";
+        /* v37: trabajo antes del inicio planificado: se permite y la accion queda marcada como adelantada */
+        if (hh && sel && R && des.ai && sel.v.d1 < des.ai)
+            hh.innerHTML += '<br><span class="vct-pv-des-adel">La acci&oacute;n empieza el ' + fmtD(des.ai) + ": quedar&aacute; marcada como adelantada.</span>";
+        var dl = m.querySelector("[data-pv-des-dlbl]"), dr = m.querySelector("[data-pv-des-dreq]");
+        if (dl) dl.innerHTML = R ? "Desarrollo &middot; qu&eacute; se hizo" : "Detalle &middot; qu&eacute; se va a trabajar";
+        if (dr) dr.hidden = !R;
+    }
+    function desSave(btn) {
+        if (!des) return;
+        var m = des.m, errs = [], R = des.tipo === "R";
+        var v = function (k) { var f = desF(k); return f ? String(f.value || "").trim() : ""; };
+        var hrs = v("hrs").replace(",", "."), tit = v("tit"), tx = v("des"), prox = v("prox");
+        ["hrs", "tit", "des"].forEach(function (k) { var f = desF(k); if (f) f.classList.remove("is-invalid"); });
+        if (!des.vc) errs.push("Visita es obligatoria: eleg&iacute; una visita.");
+        if (R) {
+            var n = parseFloat(hrs);
+            if (!(n > 0)) { errs.push("Horas es obligatorio y debe ser mayor a cero."); desF("hrs").classList.add("is-invalid"); }
+            else {
+                var card = des.vc ? m.querySelector('[data-pv-des-vc="' + des.vc + '"]') : null;
+                var disp = card ? parseFloat(card.getAttribute("data-disp")) || 0 : null;
+                if (disp !== null && n > disp + 0.001) { errs.push("Horas: en esa visita quedan " + fmtH(disp) + " h disponibles."); desF("hrs").classList.add("is-invalid"); }
+            }
+            if (!tx) { errs.push("Desarrollo es obligatorio."); desF("des").classList.add("is-invalid"); }
+        }
+        if (!tit) { errs.push("T&iacute;tulo breve es obligatorio."); desF("tit").classList.add("is-invalid"); }
+        if (errs.length) { showError(m, errs); return; }
+        showError(m, null);
+        enviar(btn, "PV_PL_DES_GUARDAR", des.id || "0", {
+            TEXTO11: des.acc, TEXTO12: des.tipo, TEXTO13: des.vc, TEXTO14: R ? hrs : "",
+            TEXTO15: tit.slice(0, 300), TEXTO16: tx.slice(0, 4000), TEXTO17: prox.slice(0, 1000)
+        }, "plan");
+    }
+
+    /* -- plan desde Excel (.xlsx sin librerias; .csv) -- */
+    var xls = null;
+    function xlsOpen(btn) {
+        var m = pvModal(btn, "xls");
+        if (!m) return;
+        xls = { m: m, rows: null, ok: false };
+        var pv = m.querySelector("[data-pv-xls-prev]");
+        if (pv) pv.innerHTML = "";
+        var fi = m.querySelector("[data-pv-xls-file]");
+        if (fi) fi.value = "";
+        xlsBtn();
+        showError(m, null);
+        mOpen(m);
+    }
+    function xlsBtn() {
+        if (!xls) return;
+        var b = xls.m.querySelector("[data-pv-xls-save]"), l = xls.m.querySelector("[data-pv-xls-savelbl]");
+        var n = xls.rows ? xls.rows.length : 0;
+        if (b) b.disabled = !(xls.ok && n);
+        if (l) l.textContent = n ? "Grabar plan (" + n + " filas)" : "Grabar plan";
+    }
+    function u16(b, o) { return b[o] | (b[o + 1] << 8); }
+    function u32(b, o) { return (b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24)) >>> 0; }
+    function inflate(data) {
+        if (typeof DecompressionStream === "undefined") return Promise.reject(new Error("sin DecompressionStream"));
+        var ds = new DecompressionStream("deflate-raw");
+        var out = new Blob([data]).stream().pipeThrough(ds);
+        return new Response(out).arrayBuffer().then(function (ab) { return new Uint8Array(ab); });
+    }
+    function utf8(u) { try { return new TextDecoder("utf-8").decode(u); } catch (e) { var s = ""; for (var i = 0; i < u.length; i++) s += String.fromCharCode(u[i]); return s; } }
+    /* lector de ZIP minimo: directorio central + deflate nativo del navegador */
+    function zipFiles(buf) {
+        var b = new Uint8Array(buf), eocd = -1;
+        for (var i = b.length - 22; i >= Math.max(0, b.length - 66000); i--) if (u32(b, i) === 0x06054b50) { eocd = i; break; }
+        if (eocd < 0) return Promise.reject(new Error("no es un .xlsx válido"));
+        var n = u16(b, eocd + 10), off = u32(b, eocd + 16), files = {};
+        for (var k = 0; k < n; k++) {
+            if (u32(b, off) !== 0x02014b50) break;
+            var meth = u16(b, off + 10), csize = u32(b, off + 20), nl = u16(b, off + 28), el = u16(b, off + 30), cl = u16(b, off + 32), lo = u32(b, off + 42);
+            var name = utf8(b.subarray(off + 46, off + 46 + nl));
+            var ds = lo + 30 + u16(b, lo + 26) + u16(b, lo + 28);
+            files[name] = { m: meth, d: b.subarray(ds, ds + csize) };
+            off += 46 + nl + el + cl;
+        }
+        return Promise.resolve({
+            get: function (nm) {
+                var f = files[nm];
+                if (!f) return Promise.resolve(null);
+                if (f.m === 0) return Promise.resolve(utf8(f.d));
+                if (f.m === 8) return inflate(f.d).then(utf8);
+                return Promise.reject(new Error("compresión no soportada"));
+            }
+        });
+    }
+    function xmlTxt(s) {
+        return String(s || "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+            .replace(/&#(\d+);/g, function (a, d) { return String.fromCharCode(+d); })
+            .replace(/&#x([0-9a-f]+);/gi, function (a, h) { return String.fromCharCode(parseInt(h, 16)); }).replace(/&amp;/g, "&");
+    }
+    function tTexts(x) { var r = [], re = /<(?:\w+:)?t(?:\s[^>]*)?>([\s\S]*?)<\/(?:\w+:)?t>/g, mm; while ((mm = re.exec(x))) r.push(xmlTxt(mm[1])); return r.join(""); }
+    function colIdx(ref) { var l = String(ref || "").replace(/[0-9]/g, "").toUpperCase(), n = 0; for (var i = 0; i < l.length; i++) n = n * 26 + (l.charCodeAt(i) - 64); return n - 1; }
+    function readXlsx(buf) {
+        return zipFiles(buf).then(function (z) {
+            return Promise.all([z.get("xl/workbook.xml"), z.get("xl/_rels/workbook.xml.rels"), z.get("xl/sharedStrings.xml")]).then(function (r) {
+                var path = "xl/worksheets/sheet1.xml";
+                var sh = /<(?:\w+:)?sheet\b[^>]*\br:id="([^"]+)"/.exec(r[0] || "");
+                if (sh && r[1]) {
+                    var rel = new RegExp('<Relationship\\b[^>]*Id="' + sh[1] + '"[^>]*>').exec(r[1]);
+                    var tg = rel ? /Target="([^"]+)"/.exec(rel[0]) : null;
+                    if (tg) path = tg[1].charAt(0) === "/" ? tg[1].slice(1) : "xl/" + tg[1].replace(/^\.\//, "");
+                }
+                var ss = [], re = /<(?:\w+:)?si>([\s\S]*?)<\/(?:\w+:)?si>/g, mm;
+                while ((mm = re.exec(r[2] || ""))) ss.push(tTexts(mm[1]));
+                return z.get(path).then(function (xml) {
+                    if (!xml) throw new Error("no se encontró la primera hoja");
+                    var rows = [], rr = /<(?:\w+:)?row\b([^>]*)>([\s\S]*?)<\/(?:\w+:)?row>/g, rm;
+                    xml = xml.replace(/<(?:\w+:)?row\b[^>]*\/>/g, "");
+                    while ((rm = rr.exec(xml))) {
+                        var row = [], cr = /<(?:\w+:)?c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/(?:\w+:)?c>)/g, cm, pos = 0;
+                        while ((cm = cr.exec(rm[2]))) {
+                            var at = cm[1] || "", body = cm[2] || "";
+                            var ref = /\br="([A-Z]+)\d*"/.exec(at), t = /\bt="([^"]+)"/.exec(at);
+                            var ci = ref ? colIdx(ref[1]) : pos;
+                            pos = ci + 1;
+                            var vv = /<(?:\w+:)?v>([\s\S]*?)<\/(?:\w+:)?v>/.exec(body), val = "";
+                            if (t && t[1] === "s") val = vv ? (ss[parseInt(vv[1], 10)] || "") : "";
+                            else if (t && t[1] === "inlineStr") val = tTexts(body);
+                            else val = vv ? xmlTxt(vv[1]) : "";
+                            row[ci] = { v: val, n: !t || t[1] === "n" };
+                        }
+                        var rn = /\br="(\d+)"/.exec(rm[1]), ix = rn ? parseInt(rn[1], 10) - 1 : rows.length;
+                        while (rows.length < ix) rows.push([]);
+                        rows[ix] = row;
+                    }
+                    return rows;
+                });
+            });
+        });
+    }
+    function readCsv(text) {
+        text = String(text || "").replace(/^﻿/, "");
+        var first = text.split(/\r?\n/)[0] || "";
+        var sep = (first.match(/;/g) || []).length >= (first.match(/,/g) || []).length ? ";" : ",";
+        if ((first.match(/\t/g) || []).length > (first.match(new RegExp(sep === ";" ? ";" : ",", "g")) || []).length) sep = "\t";
+        var rows = [], row = [], cur = "", q = false;
+        for (var i = 0; i < text.length; i++) {
+            var ch = text.charAt(i);
+            if (q) {
+                if (ch === '"' && text.charAt(i + 1) === '"') { cur += '"'; i++; }
+                else if (ch === '"') q = false;
+                else cur += ch;
+            } else if (ch === '"') q = true;
+            else if (ch === sep) { row.push({ v: cur, n: false }); cur = ""; }
+            else if (ch === "\n") { row.push({ v: cur.replace(/\r$/, ""), n: false }); rows.push(row); row = []; cur = ""; }
+            else cur += ch;
+        }
+        if (cur !== "" || row.length) { row.push({ v: cur.replace(/\r$/, ""), n: false }); rows.push(row); }
+        return rows;
+    }
+    function norm(s) { return String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]/g, ""); }
+    function cellDate(c) {
+        if (!c) return "";
+        var s = String(c.v == null ? "" : c.v).trim();
+        if (!s) return "";
+        if (/^\d+(\.\d+)?$/.test(s) && +s > 20000 && +s < 80000) {
+            var d = new Date(Date.UTC(1899, 11, 30) + Math.floor(+s) * 86400000);
+            return d.getUTCFullYear() + "-" + pad(d.getUTCMonth() + 1) + "-" + pad(d.getUTCDate());
+        }
+        var x = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(s);
+        if (x) return x[1] + "-" + pad(+x[2]) + "-" + pad(+x[3]);
+        x = /^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})$/.exec(s);
+        if (x) { var y = +x[3]; if (y < 100) y += 2000; return y + "-" + pad(+x[2]) + "-" + pad(+x[1]); }
+        return "?" + s;
+    }
+    function okISO(s) {
+        var x = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || "");
+        if (!x) return false;
+        var d = new Date(+x[1], +x[2] - 1, +x[3]);
+        return d.getFullYear() === +x[1] && d.getMonth() === +x[2] - 1 && d.getDate() === +x[3];
+    }
+    /* filas de la hoja -> filas del plan (codigo, titulo, desde, hasta) con su validacion */
+    function xlsRows(raw, ini, fin) {
+        var hi = -1, map = null;
+        for (var i = 0; i < Math.min(raw.length, 25) && hi < 0; i++) {
+            var mp = {};
+            (raw[i] || []).forEach(function (c, j) {
+                var k = norm(c && c.v);
+                if (!k) return;
+                if (mp.cod == null && /^(codigo|cod|numero|nro|item)$/.test(k)) mp.cod = j;
+                else if (mp.tit == null && /^(titulo|descripcion|nombre|requisito)/.test(k)) mp.tit = j;
+                else if (mp.d1 == null && /(desde|inicio)/.test(k)) mp.d1 = j;
+                else if (mp.d2 == null && /(hasta|fin|vence|vencimiento)/.test(k)) mp.d2 = j;
+            });
+            if (mp.cod != null && mp.tit != null) { hi = i; map = mp; }
+        }
+        if (hi < 0) return { err: "No se encontr&oacute; la fila de t&iacute;tulos: el archivo tiene que tener las columnas C&oacute;digo y T&iacute;tulo (y Fecha desde / Fecha hasta)." };
+        var out = [], seen = {};
+        for (var r = hi + 1; r < raw.length; r++) {
+            var row = raw[r] || [];
+            var g = function (j) { var c = j == null ? null : row[j]; return c ? String(c.v == null ? "" : c.v).trim() : ""; };
+            var cod = g(map.cod).replace(/\s+/g, "").replace(/\.$/, ""), tit = g(map.tit).replace(/[\t\r\n]+/g, " ");
+            if (!cod && !tit) continue;
+            var d1 = map.d1 == null ? "" : cellDate(row[map.d1]), d2 = map.d2 == null ? "" : cellDate(row[map.d2]);
+            var niv = cod ? cod.split(".").length : 0, pad_ = cod.indexOf(".") >= 0 ? cod.slice(0, cod.lastIndexOf(".")) : "";
+            out.push({ fila: r + 1, cod: cod, tit: tit, d1: d1, d2: d2, niv: niv, pad: pad_, err: "" });
+        }
+        out.forEach(function (x) { seen[x.cod] = (seen[x.cod] || 0) + 1; });
+        var byCod = {};
+        out.forEach(function (x) { if (!byCod[x.cod]) byCod[x.cod] = x; });
+        out.forEach(function (x) {
+            var e = "";
+            if (!/^\d+(\.\d+){0,2}$/.test(x.cod)) e = "C&oacute;digo no v&aacute;lido (4, 4.1 o 4.1.1)";
+            else if (!x.tit) e = "Falta el t&iacute;tulo";
+            else if (seen[x.cod] > 1) e = "C&oacute;digo repetido";
+            else if (x.niv === 3 && !(byCod[x.pad] && byCod[x.pad].niv === 2)) e = "Falta su &iacute;tem " + escH(x.pad);
+            else if (x.niv > 1) {
+                if (x.d1 && !okISO(x.d1)) e = "Fecha desde no v&aacute;lida";
+                else if (x.d2 && !okISO(x.d2)) e = "Fecha hasta no v&aacute;lida";
+                else if (x.d1 && x.d2 && x.d2 < x.d1) e = "Hasta anterior a desde";
+                else if ((ini && x.d1 && x.d1 < ini) || (fin && x.d2 && x.d2 > fin)) e = "Fuera del proyecto (" + fmtD(ini) + " al " + fmtD(fin) + ")";
+                else if (x.niv === 3) {
+                    var p = byCod[x.pad];
+                    if (p && ((x.d1 && p.d1 && x.d1 < p.d1) || (x.d2 && p.d2 && x.d2 > p.d2))) e = "Fuera del &iacute;tem " + escH(p.cod) + " (" + fmtD(p.d1) + " al " + fmtD(p.d2) + ")";
+                }
+            }
+            x.err = e;
+        });
+        /* capitulo: fechas calculadas con sus items */
+        out.forEach(function (x) {
+            if (x.niv !== 1) return;
+            var its = out.filter(function (y) { return y.niv === 2 && y.pad === x.cod; });
+            var a = its.map(function (y) { return y.d1; }).filter(okISO).sort(), b = its.map(function (y) { return y.d2; }).filter(okISO).sort();
+            x.c1 = a[0] || ""; x.c2 = b[b.length - 1] || "";
+        });
+        return { rows: out };
+    }
+    function xlsShow(res, fname) {
+        var m = xls.m, pv = m.querySelector("[data-pv-xls-prev]");
+        xls.rows = null; xls.ok = false;
+        if (res.err) { pv.innerHTML = ""; showError(m, [res.err]); xlsBtn(); return; }
+        var rows = res.rows, nerr = rows.filter(function (x) { return x.err; }).length;
+        var cnt = function (n) { return rows.filter(function (x) { return x.niv === n; }).length; };
+        if (!rows.length) { pv.innerHTML = ""; showError(m, ["El archivo no tiene filas para cargar."]); xlsBtn(); return; }
+        showError(m, null);
+        var nivL = ["", "Cap&iacute;tulo", "&Iacute;tem", "Sub&iacute;tem"];
+        pv.innerHTML = '<div class="vct-pv-xls-file"><span data-vct-icon="file-text"></span><b>' + escH(fname) + "</b><span>" + rows.length + " filas le&iacute;das</span></div>"
+            + '<div class="vct-pv-xls-cnt"><span class="vct-360-badge is-neutral">' + cnt(1) + " cap&iacute;tulos</span>"
+            + '<span class="vct-360-badge is-neutral">' + cnt(2) + " &iacute;tems</span>"
+            + '<span class="vct-360-badge is-neutral">' + cnt(3) + " sub&iacute;tems</span>"
+            + '<span class="vct-360-badge is-active">' + (rows.length - nerr) + " correctas</span>"
+            + (nerr ? '<span class="vct-360-badge is-cancel">' + nerr + " con error</span>" : "") + "</div>"
+            + '<div class="vct-pv-xls-prev"><table><thead><tr><th>Fila</th><th>Nivel</th><th>C&oacute;digo</th><th>T&iacute;tulo</th><th>Desde</th><th>Hasta</th><th>Validaci&oacute;n</th></tr></thead><tbody>'
+            + rows.map(function (x) {
+                var d1 = x.niv === 1 ? x.c1 : x.d1, d2 = x.niv === 1 ? x.c2 : x.d2;
+                var sd = function (d) { return d ? (d.charAt(0) === "?" ? escH(d.slice(1)) : fmtD(d)) : "&ndash;"; };
+                return '<tr class="is-n' + (x.niv || 0) + (x.err ? " is-bad" : "") + '"><td>' + x.fila + "</td><td>" + (nivL[x.niv] || "-") + "</td><td>" + escH(x.cod) + '</td><td class="tt">' + escH(x.tit) + "</td>"
+                     + "<td>" + sd(d1) + "</td><td>" + sd(d2) + "</td>"
+                     + "<td>" + (x.err ? '<span class="vct-360-badge is-cancel">' + x.err + "</span>" : '<span class="vct-360-badge is-active">OK' + (x.niv === 1 ? " &middot; calculadas" : "") + "</span>") + "</td></tr>";
+            }).join("") + "</tbody></table></div>"
+            + (nerr ? '<div class="vct-pv-xls-msg is-err">Hay ' + nerr + " fila(s) con error: correg&iacute; el archivo y volv&eacute; a subirlo. No se graba nada hasta que todas est&eacute;n OK.</div>"
+                    : '<div class="vct-pv-xls-msg is-ok">Todo correcto: al grabar se crea el plan con estas filas y la acci&oacute;n Carga del plan pasa a En proceso.</div>');
+        icons(pv);
+        xls.rows = rows; xls.ok = !nerr;
+        xlsBtn();
+    }
+    function xlsRead(m, file) {
+        if (!xls || xls.m !== m) xls = { m: m, rows: null, ok: false };
+        var ini = m.getAttribute("data-pv-xls-ini") || "", fin = m.getAttribute("data-pv-xls-fin") || "";
+        var name = file.name || "archivo", csv = /\.(csv|txt)$/i.test(name);
+        var rd = new FileReader();
+        rd.onload = function () {
+            var p = csv ? Promise.resolve(readCsv(rd.result)) : readXlsx(rd.result);
+            p.then(function (raw) { xlsShow(xlsRows(raw, ini, fin), name); })
+             .catch(function (e) { xls.rows = null; xls.ok = false; xlsBtn(); showError(m, ["No se pudo leer el archivo: " + escH(e && e.message ? e.message : e) + ". Guardalo como .xlsx o .csv y prob&aacute; de nuevo."]); });
+        };
+        rd.onerror = function () { showError(m, ["No se pudo leer el archivo."]); };
+        if (csv) rd.readAsText(file); else rd.readAsArrayBuffer(file);
+    }
+    function xlsTpl(btn) {
+        var m = btn.closest("[data-vct-pv-modal]"), ini = m.getAttribute("data-pv-xls-ini") || "", cod = m.getAttribute("data-pv-xls-cod") || "";
+        var d0 = parseISO(ini) || new Date(), f = function (n) { var d = new Date(d0.getFullYear(), d0.getMonth(), d0.getDate() + n); return pad(d.getDate()) + "/" + pad(d.getMonth() + 1) + "/" + d.getFullYear(); };
+        var rows = [["4", "Contexto de la organización", "", ""],
+                    ["4.1", "Comprensión de la organización y de su contexto", f(0), f(28)],
+                    ["4.1.1", "Cuestiones internas y externas", f(0), f(14)],
+                    ["4.2", "Necesidades y expectativas de las partes interesadas", f(7), f(35)],
+                    ["5", "Liderazgo", "", ""],
+                    ["5.1", "Liderazgo y compromiso", f(21), f(49)]];
+        var cols = [{ title: "Código", type: "text", width: 10 }, { title: "Título", type: "text", width: 60 }, { title: "Fecha desde", width: 14 }, { title: "Fecha hasta", width: 14 }];
+        var fn = "plantilla_plan_" + cod.replace(/[^\w\-]/g, "");
+        if (window.VCTExport && typeof window.VCTExport.excel === "function") {
+            window.VCTExport.excel({ title: "Plan estratégico - plantilla", subtitle: "Proyecto (" + cod + "): complete Código, Título, Fecha desde y Fecha hasta", filename: fn, columns: cols, rows: rows, logo: false });
+            return;
+        }
+        var csv = "﻿Código;Título;Fecha desde;Fecha hasta\r\n" + rows.map(function (r) { return r.map(function (c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(";"); }).join("\r\n") + "\r\n";
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+        a.download = fn + ".csv";
+        document.body.appendChild(a); a.click();
+        setTimeout(function () { URL.revokeObjectURL(a.href); a.parentNode.removeChild(a); }, 1000);
+    }
+    function xlsSave(btn) {
+        if (!xls || !xls.ok || !xls.rows || !xls.rows.length) return;
+        var lines = xls.rows.map(function (x) {
+            var cl = function (s) { return String(s || "").replace(/[\t\r\n]+/g, " ").trim(); };
+            return cl(x.cod) + "\t" + cl(x.tit).slice(0, 400) + "\t" + (x.niv > 1 ? x.d1 : "") + "\t" + (x.niv > 1 ? x.d2 : "") + "\n";
+        });
+        var chunks = [], cur = "";
+        lines.forEach(function (l) { if (cur.length + l.length > 3900) { chunks.push(cur); cur = ""; } cur += l; });
+        if (cur) chunks.push(cur);
+        if (chunks.length > 12) { showError(xls.m, ["El plan es demasiado grande para cargarlo de una vez (m&aacute;s de ~400 filas)."]); return; }
+        var campos = {};
+        for (var i = 0; i < 12; i++) campos["TEXTO" + (11 + i)] = chunks[i] || "";
+        enviar(btn, "PV_PL_IMPORTAR", "0", campos, "plan");
+    }
+
+    /* -- agenda: trabajo de la visita (lista: menu; calendario: clic en la visita) -- */
+    function agwOpen(el, id) {
+        var m = pvModal(el, "agw");
+        if (!m) return;
+        var sec = null;
+        m.querySelectorAll("[data-pv-agw]").forEach(function (s) { var on = s.getAttribute("data-pv-agw") === String(id); s.hidden = !on; if (on) sec = s; });
+        if (!sec) return;
+        var t = m.querySelector("[data-pv-agw-title]"), sb = m.querySelector("[data-pv-agw-sub]");
+        if (t) t.textContent = sec.getAttribute("data-tit") || "Trabajo de la visita";
+        if (sb) sb.textContent = sec.getAttribute("data-sub") || "";
+        mOpen(m);
+    }
+    document.addEventListener("click", function (e) {
+        var ev = e.target && e.target.closest ? e.target.closest(".vct-agenda-event[data-tt-x]") : null;
+        if (!ev || !ev.closest("[data-pv-agcal]")) return;
+        var m = pvModal(ev, "agw");
+        if (!m) return;
+        var x = ev.getAttribute("data-tt-x"), f = ev.getAttribute("data-tt-f") || "", hit = null;
+        m.querySelectorAll("[data-pv-agw]").forEach(function (s) {
+            if (!hit && s.getAttribute("data-x") === x && (!f || (s.getAttribute("data-d1") <= f && f <= s.getAttribute("data-d2")))) hit = s;
+        });
+        if (!hit) return;
+        e.preventDefault();
+        e.stopPropagation();
+        agwOpen(ev, hit.getAttribute("data-pv-agw"));
+    }, true);
+
+    document.addEventListener("click", function (e) {
+        var t = e.target && e.target.closest ? e.target : null;
+        if (!t) return;
+        var x = t.closest("[data-pl-dtg],.vct-pl-dchip");
+        if (x && x.closest("[data-pl-aw]")) { e.preventDefault(); awToggle(x.closest("[data-pl-aw]")); return; }
+        if ((x = t.closest("[data-pl-des-new]"))) { e.preventDefault(); desOpen(x, false); return; }
+        if ((x = t.closest("[data-pl-des-edit]"))) { e.preventDefault(); desOpen(x, true); return; }
+        if ((x = t.closest("[data-pv-des-tipo] [data-v]"))) { e.preventDefault(); if (des) { des.tipo = x.getAttribute("data-v"); desRender(); } return; }
+        if ((x = t.closest("[data-pv-des-vc]"))) { e.preventDefault(); if (des && !x.disabled) { des.vc = x.getAttribute("data-pv-des-vc"); desRender(); } return; }
+        if ((x = t.closest("[data-pv-des-save]"))) { e.preventDefault(); desSave(x); return; }
+        if ((x = t.closest("[data-pl-xls-open]"))) { e.preventDefault(); xlsOpen(x); return; }
+        if ((x = t.closest("[data-pv-xls-pick]"))) { e.preventDefault(); var fi = x.closest("[data-vct-pv-modal]").querySelector("[data-pv-xls-file]"); if (fi) { fi.value = ""; fi.click(); } return; }
+        if ((x = t.closest("[data-pv-xls-tpl]"))) { e.preventDefault(); xlsTpl(x); return; }
+        if ((x = t.closest("[data-pv-xls-save]"))) { e.preventDefault(); if (!x.disabled) xlsSave(x); return; }
+        if ((x = t.closest("[data-pv-agw-open]"))) { e.preventDefault(); agwOpen(x, x.getAttribute("data-pv-agw-open")); return; }
+    });
+    document.addEventListener("change", function (e) {
+        var t = e.target;
+        if (t && t.matches && t.matches("[data-pv-xls-file]") && t.files && t.files[0]) xlsRead(t.closest("[data-vct-pv-modal]"), t.files[0]);
+    });
+    document.addEventListener("dragover", function (e) {
+        var d = e.target && e.target.closest ? e.target.closest("[data-pv-xls-drop]") : null;
+        if (!d) return;
+        e.preventDefault();
+        d.classList.add("is-over");
+    });
+    document.addEventListener("dragleave", function (e) {
+        var d = e.target && e.target.closest ? e.target.closest("[data-pv-xls-drop]") : null;
+        if (d) d.classList.remove("is-over");
+    });
+    document.addEventListener("drop", function (e) {
+        var d = e.target && e.target.closest ? e.target.closest("[data-pv-xls-drop]") : null;
+        if (!d) return;
+        e.preventDefault();
+        d.classList.remove("is-over");
+        var f = e.dataTransfer && e.dataTransfer.files ? e.dataTransfer.files[0] : null;
+        if (f) xlsRead(d.closest("[data-vct-pv-modal]"), f);
+    });
+    /* v34: al completar un campo marcado se le quita la marca; sin marcas, se oculta el aviso */
+    function pvFix(e) {
+        var f = e.target && e.target.closest ? e.target.closest("[data-vct-pv-modal] [data-vct-pv-f].is-invalid") : null;
+        if (!f) return;
+        var v = f.type === "checkbox" ? f.checked : String(f.value || "").trim();
+        if (!v) return;
+        f.classList.remove("is-invalid");
+        var m = f.closest("[data-vct-pv-modal]");
+        if (m && !m.querySelector("[data-vct-pv-f].is-invalid")) showError(m, null);
+    }
+    document.addEventListener("change", pvFix);
+    document.addEventListener("input", pvFix);
+    window.__vctPvDes = { rows: xlsRows, csv: readCsv, xlsx: readXlsx };
 
     window.VCTProyectoV360 = { version: 1, open: openModal, close: closeModal };
 })(window, document);

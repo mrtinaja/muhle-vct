@@ -1,4 +1,5 @@
-/* vct-notif.js - v2 (decodifica acentos escritos como entidades en titulo / subtitulo del header)
+/* vct-notif.js - v3 NOTIF_ACC_V1 (Visita sin registrar / Horas excedidas: van a la V360 del proyecto)
+   v2 (decodifica acentos escritos como entidades en titulo / subtitulo del header)
    ============================================================================
    Campanita de notificaciones en el header de todas las pantallas.
    - dbo.VCT_GET_HEADER trae la campanita (dbo.VCT_NOTIF_RENDER) dentro de
@@ -80,6 +81,29 @@
         menu.click();
     }
 
+    /* v3: abre la V360 del proyecto (mismo camino que el Inicio: cliente en IDSELEC01, proyecto en IDSELEC02)
+       en la pestania que indica data-vct-notif-v360 (agenda = Visitas) */
+    function goProyecto(link) {
+        var VCT = window.VCT;
+        var proy = link.getAttribute("data-vct-notif-proy"), cli = link.getAttribute("data-vct-notif-cli") || "";
+        var guid = link.getAttribute("data-vct-notif-guid"), tab = link.getAttribute("data-vct-notif-v360") || "";
+        if (!proy || !guid || !VCT || !VCT.Buffer || !VCT.Action) { goAcciones(link.getAttribute("data-vct-notif-tab")); return; }
+        if (tab && VCT.Tabs && typeof VCT.Tabs.rememberInternalTab === "function") VCT.Tabs.rememberInternalTab(tab);
+        Promise.resolve(VCT.Buffer.store("IDSELEC01", cli === "0" ? "" : cli)).then(function () {
+            return new Promise(function (r) { setTimeout(r, 250); });
+        }).then(function () {
+            var b = document.createElement("button");
+            b.type = "button";
+            b.hidden = true;
+            b.setAttribute("data-vct-command", "grid-action");
+            b.setAttribute("data-vct-store", "IDSELEC02");
+            b.setAttribute("data-vct-value", proy);
+            b.setAttribute("data-vct-guid", guid);
+            (document.querySelector("[data-vct-form-id]") || document.body).appendChild(b);
+            VCT.Action.execute(b);
+        });
+    }
+
     document.addEventListener("keydown", function (e) { if (e.key === "Escape") panel(false); });
 
     document.addEventListener("click", function (e) {
@@ -90,7 +114,8 @@
         if (link) {
             e.preventDefault();
             panel(false);
-            goAcciones(link.getAttribute("data-vct-notif-tab"));
+            if (link.getAttribute("data-vct-notif-proy")) goProyecto(link);
+            else goAcciones(link.getAttribute("data-vct-notif-tab"));
             return;
         }
         if (!t.closest("[data-vct-notif-panel]")) panel(false);
@@ -109,5 +134,5 @@
         }).observe(document.documentElement, { childList: true, subtree: true });
     }
 
-    window.VCTNotif = { version: 1, place: place, go: goAcciones };
+    window.VCTNotif = { version: 3, place: place, go: goAcciones, proyecto: goProyecto };
 })(window, document);

@@ -1,0 +1,51 @@
+:OUT C:\Users\EstebanDemarco\Desktop\Vocaturo\muhle-vct\_diag\DIAG_VISITA_AGD.txt
+/* ============================================================================
+   DIAG_VISITA_AGD (28/10/2026)  solo lectura
+   Por que la visita no tomo "Cargar disponible": parches aplicados, agenda de los
+   dos consultores (Agustin / Alvarez) alrededor del 30/10 y lo que devuelve la funcion.
+   SSMS: Query > SQLCMD Mode, F5.
+   ============================================================================ */
+USE [MuhlePROD];
+SET NOCOUNT ON;
+
+PRINT '== 1. parches aplicados ==';
+SELECT O.NAME,
+       CASE WHEN CHARINDEX('VIS_HD_V1',  M.definition) > 0 THEN 'SI' ELSE 'no' END AS VIS_HD_V1,
+       CASE WHEN CHARINDEX('VIS_EQ_V1',  M.definition) > 0 THEN 'SI' ELSE 'no' END AS VIS_EQ_V1,
+       CASE WHEN CHARINDEX('VIS_AGD_V1', M.definition) > 0 THEN 'SI' ELSE 'no' END AS VIS_AGD_V1,
+       CASE WHEN CHARINDEX('js?v=47',    M.definition) > 0 THEN 'v47'
+            WHEN CHARINDEX('js?v=46',    M.definition) > 0 THEN 'v46' ELSE '' END AS JS,
+       CONVERT(VARCHAR(19), O.MODIFY_DATE, 120) AS MODIFICADO
+FROM sys.objects O JOIN sys.sql_modules M ON M.object_id = O.object_id
+WHERE O.NAME IN ('VCT_MAIN_PROYECTO_V360','VCT_FN_AGENDA_CONSULTOR_RANGO','VCT_MAIN_AGENDA_CONSULTOR');
+SELECT CASE WHEN OBJECT_ID('dbo.VCT_PROYECTOS_VISITAS_CONSULTORES_DIAS','U') IS NULL THEN 'NO existe' ELSE 'existe' END AS TABLA_DIAS;
+
+PRINT '== 2. consultores ==';
+SELECT C.ID, C.APELLIDOS, C.NOMBRES FROM dbo.VCT_CONSULTORES C WITH(NOLOCK)
+WHERE (C.APELLIDOS LIKE 'Agustin%' AND C.NOMBRES LIKE 'Norberto%') OR (C.APELLIDOS LIKE 'Alvarez%' AND C.NOMBRES LIKE 'Paula%');
+
+PRINT '== 3. agenda cargada (VCT_PRM_AGENDA_CONSULTOR) 28/10 a 06/11 ==';
+SELECT A.ID, A.ID_CONSULTOR, CONVERT(VARCHAR(10), A.FECHA, 120) AS FECHA, ISNULL(A.TIPO,'(NULL)') AS TIPO, A.DISPONIBLE, A.HORAS_CAPACIDAD,
+       ISNULL(A.MOTIVO,'') AS MOTIVO, ISNULL(CONVERT(VARCHAR(200), A.DESCRIPCION),'') AS DESCRIPCION, A.USUARIO_ALTA, CONVERT(VARCHAR(19), A.FECHA_ALTA, 120) AS ALTA
+FROM dbo.VCT_PRM_AGENDA_CONSULTOR A WITH(NOLOCK)
+JOIN dbo.VCT_CONSULTORES C WITH(NOLOCK) ON C.ID = A.ID_CONSULTOR
+WHERE ((C.APELLIDOS LIKE 'Agustin%' AND C.NOMBRES LIKE 'Norberto%') OR (C.APELLIDOS LIKE 'Alvarez%' AND C.NOMBRES LIKE 'Paula%'))
+  AND A.FECHA BETWEEN '20261028' AND '20261106'
+ORDER BY A.ID_CONSULTOR, A.FECHA;
+
+PRINT '== 4. agenda calculada (VCT_FN_AGENDA_CONSULTOR_RANGO) 28/10 a 06/11 ==';
+SELECT C.ID AS ID_CONSULTOR, CONVERT(VARCHAR(10), R.FECHA, 120) AS FECHA, R.ESTADO, R.TIPO, R.HORAS
+FROM dbo.VCT_CONSULTORES C WITH(NOLOCK)
+CROSS APPLY dbo.VCT_FN_AGENDA_CONSULTOR_RANGO(C.ID, '20261028', '20261106') R
+WHERE (C.APELLIDOS LIKE 'Agustin%' AND C.NOMBRES LIKE 'Norberto%') OR (C.APELLIDOS LIKE 'Alvarez%' AND C.NOMBRES LIKE 'Paula%')
+ORDER BY C.ID, R.FECHA;
+
+PRINT '== 5. calendario 28/10 a 06/11 ==';
+SELECT CONVERT(VARCHAR(10), Fecha, 120) AS FECHA, IsHoliday, HolidayText FROM dbo.Calendar WITH(NOLOCK) WHERE Fecha BETWEEN '20261028' AND '20261106' ORDER BY Fecha;
+
+PRINT '== 6. perfiles con EDIT en AGENDA_CONSULTOR (permiso de Cargar disponible) ==';
+SELECT DISTINCT G.Id AS PERFIL
+FROM dbo.Groups G
+CROSS APPLY dbo.VCT_MAIN_GET_ACTIONS(G.Id, 'AGENDA_CONSULTOR') A
+WHERE UPPER(ISNULL(A.ACTION_TYPE,'')) = 'EDIT';
+PRINT '== fin ==';

@@ -1,4 +1,9 @@
-/* vct-proyecto-v360.js - v44 DES_PLAN_V2 (planificar: primero pasar a realizado o eliminar lo planificado para visitas de hoy o anteriores)
+/* vct-proyecto-v360.js - v49 VIS_UNA_V1 (una sola visita con todos sus consultores; al editar se pueden sumar consultores)
+   v48 VIS_AGD_V2 (horas por dia y dias a cargar disponibles viajan en TEXTO15 'totales#por dia#cargar': el formulario no tiene TEXTO23/24)
+   v47 VIS_AGD_V1 (visita: estado + descripcion de la agenda; potencial con horas no frena; cargar disponible en dias sin agenda)
+   v46 VIS_HD_V1 (visita: horas manuales por consultor y por dia; total = suma; leyenda compacta)
+   v45 (fix: alta / edicion de visitas; agSel de los filtros pisaba al de los consultores -> agDgSel)
+   v44 DES_PLAN_V2 (planificar: primero pasar a realizado o eliminar lo planificado para visitas de hoy o anteriores)
    v43 (desarrollo: aviso de adelantada con la fecha de la visita y la del inicio de la accion)
    v42 VIS_SRV_V3 (Desarrollo: sin aviso para auditorias / capacitaciones; filtro Consultor solo si hay opciones)
    v41 VIS_SRV_V2 (Visitas: los chips y el filtro Servicio valen para Lista y Desarrollo; indicadores de Desarrollo por servicio)
@@ -1377,10 +1382,10 @@
        agenda de 7 dias desde la fecha desde, horas (8 h por dia), estado, observaciones y mail. Graba PV_AG_GUARDAR. */
     var AG_LBL = {
         D: ["d", "D"], A: ["d", "D"], AX: ["a", "Asig"], ND: ["o", "ND"], OC: ["o", "Oc"], PO: ["p", "Pot"], OR: ["g", "Org"],
-        OB: ["b", "Obs"], LI: ["l", "Lic"], FE: ["f", "Fer"], NC: ["n", "—"], X: ["n", "?"]
+        PO0: ["p", "Pot"], OB: ["b", "Obs"], LI: ["l", "Lic"], FE: ["f", "Fer"], NC: ["n", "—"], X: ["n", "?"]
     };
     var AG_TXT = {
-        AX: "asignado a otro proyecto", ND: "no disponible", OC: "ocupado", PO: "potencial", OR: "organismo", OB: "observación",
+        PO0: "potencial sin horas", AX: "asignado a otro proyecto", ND: "no disponible", OC: "ocupado", PO: "potencial", OR: "organismo", OB: "observación",
         LI: "licencia", FE: "feriado", NC: "agenda sin cargar"
     };
     var AG_DN = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
@@ -1409,28 +1414,60 @@
             if (p.length === 3) o[p[0]] = { c: p[1], h: agNum(p[2]) };
         });
         tr.__ag = o;
+        /* v47: descripcion de la agenda por dia "dia:texto|..." */
+        var ds = {};
+        (tr.getAttribute("data-agd") || "").split("|").forEach(function (x) {
+            var q = x.indexOf(":");
+            if (q > 0) ds[x.slice(0, q)] = x.slice(q + 1);
+        });
+        tr.__agd = ds;
         return o;
     }
+    /* v47: dias sin agenda que se cargan disponibles al guardar (solo con permiso de editar la agenda) */
+    function agCanAg(m) { return !!(m && m.getAttribute("data-pv-ag-canag") === "1"); }
+    function agCarga(tr, d) { var c = ag && ag.carga ? ag.carga[tr.getAttribute("data-pv-agc")] : null; return !!(c && c[agIso(d)]); }
+    function agOkC(c) { return c === "D" || c === "A" || c === "PO"; }
+    function agMot(x) { return (AG_TXT[x.c] || x.c) + (x.ds ? " · " + x.ds : ""); }
     function agDia(m, tr, d) {
         var hoy = parseISO(m.getAttribute("data-pv-ag-hoy")), i = agDiff(hoy, d);
         var nd = parseInt(m.getAttribute("data-pv-ag-nd"), 10) || 0;
         var x = i >= 0 && i < nd ? agAgenda(tr)[String(i)] : null;
-        var r = x ? { c: x.c, h: x.h } : { c: "X", h: 0 };
+        var r = x ? { c: x.c, h: x.h, ds: (tr.__agd || {})[String(i)] || "" } : { c: "X", h: 0, ds: "" };
+        if (r.c === "PO" && !(r.h > 0)) r.c = "PO0";   /* v47: potencial sin horas cargadas: frena */
+        if (r.c === "NC" && agCarga(tr, d)) r = { c: "D", h: 8, ds: "", carga: true };
         /* edicion: lo que ya ocupaba esta misma visita vuelve a estar libre */
-        var own = ag && ag.own ? ag.own[tr.getAttribute("data-pv-agc")] : 0;
+        var cid = tr.getAttribute("data-pv-agc"), own = ag && ag.own ? ag.own[cid] : 0;
+        /* v46: lo que ocupaba ese dia (horas por dia de la visita) */
+        if (ag && ag.ownD && ag.ownD[cid]) own = ag.ownD[cid][agIso(d)] || 0;
         if (own && r.c === "A" && ag.oDesde && d >= ag.oDesde && d <= ag.oHasta) r.h += own;
         return r;
+    }
+    /* v46: horas por dia del consultor en la visita (manuales) */
+    function agDH(tr) {
+        var id = tr.getAttribute("data-pv-agc");
+        ag.dh = ag.dh || {};
+        return ag.dh[id] || (ag.dh[id] = {});
+    }
+    function agDayH(tr, d) { return agNum(agDH(tr)[agIso(d)]); }
+    function agTot(tr) {
+        var t = 0, dias = agDias();
+        for (var i = 0; i < dias; i++) t += agDayH(tr, agAdd(ag.desde, i));
+        return Math.round(t * 100) / 100;
+    }
+    function agDayBad(m, tr, d) {
+        var need = agDayH(tr, d);
+        if (!(need > 0)) return "";
+        var x = agDia(m, tr, d);
+        if (x.c === "X") return need > 8 ? "más de 8 h" : "";
+        if (agOkC(x.c) && x.h + 0.05 >= need) return "";
+        return agOkC(x.c) ? (x.h > 0 ? "le quedan " + agH(x.h) + " h" : "asignado a otro proyecto") + (x.c === "PO" && x.ds ? " · " + x.ds : "") : agMot(x);
     }
     function agFalta(m, tr) {
         var dias = agDias();
         if (!dias) return "";
-        var inp = tr.querySelector("[data-pv-agc-h]"), need = agNum(inp && inp.value) / dias;
         for (var i = 0; i < dias; i++) {
-            var d = agAdd(ag.desde, i), x = agDia(m, tr, d);
-            if (x.c === "X") continue;   /* fuera de la ventana: lo valida el servidor al guardar */
-            if ((x.c === "D" || x.c === "A") && x.h + 0.05 >= need) continue;
-            return AG_DN[d.getDay()] + " " + pad(d.getDate()) + "/" + pad(d.getMonth() + 1) + ": " +
-                (x.c === "D" || x.c === "A" ? (x.h > 0 ? "le quedan " + agH(x.h) + " h" : "asignado a otro proyecto") : AG_TXT[x.c] || x.c);
+            var d = agAdd(ag.desde, i), why = agDayBad(m, tr, d);
+            if (why) return AG_DN[d.getDay()] + " " + pad(d.getDate()) + "/" + pad(d.getMonth() + 1) + ": " + why;
         }
         return "";
     }
@@ -1453,7 +1490,7 @@
         var m = agM(btn);
         if (!m) return;
         var hoy = parseISO(m.getAttribute("data-pv-ag-hoy"));
-        ag = { busy: true, id: "", t: "", ps: "", srv: "", ini: null, fin: null, est: "P", nor: {}, own: {}, otros: false, desde: null, hasta: null, max: 0, emails: {} };
+        ag = { busy: true, id: "", t: "", ps: "", srv: "", ini: null, fin: null, est: "P", nor: {}, own: {}, otros: false, desde: null, hasta: null, max: 0, emails: {}, dh: {}, ownD: null, carga: {} };
         m.querySelectorAll("[data-pv-ag-nor]").forEach(function (c) { ag.nor[c.getAttribute("data-pv-ag-nor")] = true; });
         agRows(m).forEach(function (tr) {
             tr.classList.remove("is-selected");
@@ -1489,6 +1526,18 @@
                 var h = tr.querySelector("[data-pv-agc-h]");
                 if (h) { h.disabled = false; h.value = agH(agNum(p[1])).replace(",", "."); h.setAttribute("data-user", "1"); }
                 if (tr.hasAttribute("data-otro")) ag.otros = true;
+                /* v46: horas por dia guardadas ("id:aaaa-mm-dd=h|...;"); sin detalle (visitas anteriores): el total parejo por dia */
+                var dd = {}, hay = false;
+                (ed.getAttribute("data-dh") || "").split(";").forEach(function (z) {
+                    var q = z.split(":");
+                    if (q[0] !== p[0] || q.length < 2) return;
+                    q[1].split("|").forEach(function (w) { var kv = w.split("="); if (kv.length === 2) { dd[kv[0]] = String(agNum(kv[1])); hay = true; } });
+                });
+                if (!hay) for (var j = 0; j < dias; j++) dd[agIso(agAdd(ag.desde, j))] = String(Math.round(agNum(p[1]) / dias * 100) / 100);
+                ag.dh[p[0]] = dd;
+                ag.ownD = ag.ownD || {};
+                ag.ownD[p[0]] = {};
+                Object.keys(dd).forEach(function (k) { ag.ownD[p[0]][k] = agNum(dd[k]); });
             });
             var map = { det: "data-det", log: "data-log", calif: "data-calif" };
             Object.keys(map).forEach(function (k) { var x = agF(m, k); if (x) x.value = ed.getAttribute(map[k]) || ""; });
@@ -1538,24 +1587,27 @@
         ag.ini = parseISO(o.getAttribute("data-ini")); ag.fin = parseISO(o.getAttribute("data-fin"));
     }
     /* horas por defecto: dias x 8 (salvo las que el usuario cambio a mano) */
+    /* v46: la columna Horas es el total (suma de las horas por dia, que se cargan a mano); fuera del rango se descartan */
     function agHoras(m, reset) {
-        var max = agDias() * 8;
+        var dias = agDias(), keep = {};
+        for (var i = 0; i < dias; i++) keep[agIso(agAdd(ag.desde, i))] = 1;
         agRows(m).forEach(function (tr) {
             var h = tr.querySelector("[data-pv-agc-h]");
+            var dh = agDH(tr);
+            Object.keys(dh).forEach(function (k) { if (!keep[k]) delete dh[k]; });
             if (!h) return;
             var on = tr.classList.contains("is-selected");
+            h.readOnly = true;
+            h.tabIndex = -1;
             h.disabled = !on;
-            h.max = max ? String(max) : "";
-            if (!on) { h.value = ""; h.removeAttribute("data-user"); return; }
-            if (reset || !h.hasAttribute("data-user") || !h.value) { h.value = max ? String(max) : ""; if (reset) h.removeAttribute("data-user"); }
-            else if (max && agNum(h.value) > max) h.value = String(max);
+            h.value = on ? (agTot(tr) ? agH(agTot(tr)).replace(",", ".") : "") : "";
         });
     }
     function agRender(m) {
         if (!ag) return;
         var dias = agDias(), hoy = parseISO(m.getAttribute("data-pv-ag-hoy"));
         var di = m.querySelector("[data-pv-ag-dias]");
-        if (di) di.value = dias ? dias + " día(s) · hasta " + dias * 8 + " h c/u" : "-";
+        if (di) di.value = dias ? dias + " día(s) · hasta 8 h por día" : "-";
         var res = m.querySelector("[data-pv-ag-res]");
         if (res) res.value = ag.est === "C" ? "Visita confirmada" : "Visita programada";
         m.querySelectorAll("[data-pv-ag-est] [data-v]").forEach(function (b) { b.classList.toggle("is-on", b.getAttribute("data-v") === ag.est); });
@@ -1593,11 +1645,13 @@
             if (cell) cell.innerHTML = '<div class="vct-pv-ag-days">' + win.map(function (d) {
                 var x = agDia(m, tr, d), lb = AG_LBL[x.c] || AG_LBL.NC, k = lb[0], t = lb[1];
                 if (x.c === "D" || x.c === "A") { if (x.h > 0) t = "D<br>" + agH(x.h) + "h"; else { k = "a"; t = "Asig"; } }
-                return '<span class="is-' + k + (inV(d) ? " is-in" : "") + '" title="' + escH(AG_DN[d.getDay()] + " " + agFmt(d) + ": " + (x.c === "D" || x.c === "A" ? (x.h > 0 ? "disponible, " + agH(x.h) + " h libres" : "asignado") : AG_TXT[x.c] || "sin dato")) + '">' + t + "</span>";
+                else if (x.c === "PO") t = "Pot<br>" + agH(x.h) + "h";
+                return '<span class="is-' + k + (inV(d) ? " is-in" : "") + '" title="' + escH(AG_DN[d.getDay()] + " " + agFmt(d) + ": " + (x.c === "D" || x.c === "A" ? (x.carga ? "disponible 8 h, se carga al guardar" : x.h > 0 ? "disponible, " + agH(x.h) + " h libres" : "asignado") : x.c === "X" ? "sin dato" : agMot(x))) + '">' + t + "</span>";
             }).join("") + "</div>";
             var w = tr.querySelector("[data-pv-agc-warn]"), f = sel ? agFalta(m, tr) : "";
             if (w) { w.hidden = !f; w.textContent = f ? "No disponible · " + f : ""; }
         });
+        agDdRows(m);
         var og = m.querySelector("[data-pv-agc-otros]");
         if (og) {
             og.hidden = nOtros === 0;
@@ -1614,6 +1668,54 @@
         if (hp) { hp.textContent = falta ? "Obligatorio: hay consultores sin calificación en alguna norma de la visita." : (sel2.length && ag.srv ? "Opcional: todos los seleccionados están calificados." : ""); hp.classList.toggle("is-req", falta); }
         agNotif(m, sel2);
         agGen(m, sel2);
+    }
+    /* v46: fila "Horas por dia" debajo de cada consultor marcado (un input por dia de la visita, con sus horas libres) */
+    function agLib(x) {
+        if (x.carga) return "disponible 8 h · se carga al guardar";
+        if (x.c === "PO") return "potencial, " + agH(x.h) + " h · pasa a asignado";
+        if (x.c === "D" || x.c === "A") return x.h > 0 ? "de " + agH(x.h) + " h libres" : "sin horas libres";
+        if (x.c === "X") return "fuera de la agenda cargada";
+        return agMot(x);
+    }
+    function agDdRows(m) {
+        var dias = agDias(), sig = dias ? agIso(ag.desde) + "|" + agIso(ag.hasta) : "";
+        agRows(m).forEach(function (tr) {
+            var sub = tr.nextElementSibling && tr.nextElementSibling.hasAttribute("data-pv-agdd") ? tr.nextElementSibling : null;
+            var on = tr.classList.contains("is-selected") && dias > 0;
+            if (!on) { if (sub) sub.parentNode.removeChild(sub); return; }
+            if (!sub || sub.getAttribute("data-sig") !== sig) {
+                if (!sub) {
+                    sub = document.createElement("tr");
+                    sub.className = "vct-pv-ag-ddr is-selected";
+                    sub.setAttribute("data-pv-agdd", tr.getAttribute("data-pv-agc"));
+                    tr.parentNode.insertBefore(sub, tr.nextSibling);
+                }
+                sub.setAttribute("data-sig", sig);
+                var html = "", dh = agDH(tr);
+                for (var i = 0; i < dias; i++) {
+                    var d = agAdd(ag.desde, i), k = agIso(d);
+                    html += '<label class="vct-pv-ag-dd" data-pv-agd="' + k + '"><span class="vct-pv-ag-dd-d">' + AG_DN[d.getDay()] + " " + pad(d.getDate()) + "/" + pad(d.getMonth() + 1) + "</span>"
+                          + '<input type="number" class="vct-input vct-pv-ag-hrs" min="0" max="8" step="0.5" inputmode="decimal" data-pv-agd-h="' + k + '" value="' + escH(dh[k] || "") + '" aria-label="Horas del ' + agFmt(d) + '">'
+                          + '<span class="vct-pv-ag-dd-l"></span></label>';
+                }
+                var n = tr.children.length;
+                sub.innerHTML = '<td></td><td colspan="' + Math.max(1, n - 1) + '"><div class="vct-pv-ag-dd-row"><span class="vct-pv-ag-dd-t">Horas por d&iacute;a</span>' + html + "</div></td>";
+            }
+            sub.hidden = tr.hidden;
+            agDdState(m, tr, sub);
+        });
+    }
+    function agDdState(m, tr, sub) {
+        sub.querySelectorAll("[data-pv-agd]").forEach(function (lb) {
+            var d = parseISO(lb.getAttribute("data-pv-agd")), x = agDia(m, tr, d), bad = agDayBad(m, tr, d);
+            lb.classList.toggle("is-bad", !!bad);
+            lb.classList.toggle("is-zero", !(agDayH(tr, d) > 0));
+            var l = lb.querySelector(".vct-pv-ag-dd-l"), k = lb.getAttribute("data-pv-agd"), cid = tr.getAttribute("data-pv-agc");
+            if (l) l.innerHTML = escH(agLib(x))
+                + (x.carga ? ' <button type="button" class="vct-pv-ag-dd-btn is-x" data-pv-agd-carga="' + cid + "|" + k + '" title="No cargar la disponibilidad">&times;</button>'
+                   : x.c === "NC" && agCanAg(m) ? ' <button type="button" class="vct-pv-ag-dd-btn" data-pv-agd-carga="' + cid + "|" + k + '" title="Carga el d&iacute;a como disponible (8 h) en la agenda del consultor al guardar la visita">Cargar disponible</button>' : "");
+            lb.title = bad ? "No alcanza: " + bad : "";
+        });
     }
     /* "Se notifica a": consultores marcados con su email (o para cargarlo) */
     function agNotif(m, sel) {
@@ -1643,7 +1745,7 @@
         var fe = ag.desde ? agFmt(ag.desde) + (ag.hasta && ag.hasta > ag.desde ? " al " + agFmt(ag.hasta) : "") : "sin fecha";
         var bd = ag.est === "C" ? '<span class="vct-360-badge is-active">Confirmada</span>' : '<span class="vct-360-badge is-planned">Pendiente</span>';
         var mail = agF(m, "mail");
-        g.innerHTML = '<div>' + bd + " " + (ag.id ? "Se actualiza la visita" : sel.length + " visita(s) en la agenda del proyecto (una por consultor)") + " · " + fe + " · " + agH(tot) + " h programadas</div>" +
+        g.innerHTML = '<div>' + bd + " " + (ag.id ? "Se actualiza la visita" : "1 visita en la agenda del proyecto con " + sel.length + " consultor(es)") + " · " + fe + " · " + agH(tot) + " h programadas</div>" +
             '<div>' + bd + " Horas asignadas en la agenda de cada consultor en esos días</div>" +
             (mail && mail.checked ? '<div><span class="vct-360-badge is-active">Mail</span> «Visita programada» a los consultores' + ((agF(m, "cc") || {}).value ? " (con copia)" : "") + "</div>" : "");
     }
@@ -1663,14 +1765,24 @@
         var nor = Object.keys(ag.nor).filter(function (n) { return ag.nor[n]; });
         if (!nor.length) errs.push("Norma es obligatoria: deje al menos una.");
         if (!sel.length) errs.push("Consultor es obligatorio: marque al menos uno.");
-        var lista = [], nuevos = [], mail = agF(m, "mail"), conMail = !!(mail && mail.checked);
+        var lista = [], listaD = [], listaC = [], nuevos = [], mail = agF(m, "mail"), conMail = !!(mail && mail.checked);
         sel.forEach(function (tr) {
             var nm = tr.querySelector(".vct-360-project-name"), n = escH(nm ? nm.textContent : "El consultor");
-            var h = tr.querySelector("[data-pv-agc-h]"), v = agNum(h && h.value);
-            if (!(v > 0) || (dias && v > dias * 8)) errs.push("Horas de " + n + ": mayor a 0 y hasta " + (dias * 8 || 8) + " (8 h por día).");
+            /* v46: horas por dia, manuales: al menos un dia con horas; ninguno mas de lo libre (ni mas de 8) */
+            var v = agTot(tr), det = [];
+            for (var j = 0; j < dias; j++) {
+                var dj = agAdd(ag.desde, j), hj = agDayH(tr, dj);
+                if (hj < 0 || hj > 8) errs.push("Horas de " + n + " el " + agFmt(dj) + ": entre 0 y 8.");
+                if (hj > 0) det.push(agIso(dj) + "=" + hj);
+            }
+            if (!(v > 0)) errs.push("Horas de " + n + ": cargá las horas de al menos un día de la visita.");
             var f = agFalta(m, tr);
             if (f) errs.push(n + " no está disponible (" + escH(f) + ").");
             lista.push(tr.getAttribute("data-pv-agc") + ":" + v);
+            var cg = [];
+            for (var j2 = 0; j2 < dias; j2++) { var dk = agAdd(ag.desde, j2); if (agCarga(tr, dk)) cg.push(agIso(dk)); }
+            if (cg.length) listaC.push(tr.getAttribute("data-pv-agc") + ":" + cg.join("|"));
+            listaD.push(tr.getAttribute("data-pv-agc") + ":" + det.join("|"));
             if (conMail && !tr.getAttribute("data-email")) {
                 var i = m.querySelector('[data-pv-ag-em="' + tr.getAttribute("data-pv-agc") + '"]'), em = i ? i.value.trim() : "";
                 if (!em) errs.push(n + " no tiene email: agréguelo con el botón + o destilde Enviar mail.");
@@ -1683,11 +1795,14 @@
         var cc = conMail ? (agF(m, "cc") || {}).value || "" : "";
         cc = cc.replace(/,/g, ";").trim();
         if (cc) cc.split(";").forEach(function (x) { x = x.trim(); if (x && !MAIL_RE.test(x)) errs.push("Con copia a: &quot;" + escH(x) + "&quot; no es una dirección válida."); });
+        /* v48: totales # horas por dia # dias a cargar disponibles, todo en TEXTO15 (el formulario no tiene TEXTO23 / TEXTO24) */
+        var t15 = lista.join(";") + "#" + listaD.join(";") + "#" + listaC.join(";");
+        if (t15.length > 3900) errs.push("Son demasiados días y consultores para grabar en una sola visita: acorte las fechas o divida la visita.");
         if (errs.length) { showError(m, errs); return; }
         showError(m, null);
         var v = function (k) { var x = agF(m, k); return x ? String(x.value || "").trim() : ""; };
         enviar(btn, "PV_AG_GUARDAR", ag.id || "0", {
-            TEXTO11: agIso(ag.desde), TEXTO12: agIso(ag.hasta), TEXTO13: ag.ps, TEXTO14: nor.join(","), TEXTO15: lista.join(";"),
+            TEXTO11: agIso(ag.desde), TEXTO12: agIso(ag.hasta), TEXTO13: ag.ps, TEXTO14: nor.join(","), TEXTO15: t15,
             TEXTO16: ag.est, TEXTO17: v("det"), TEXTO18: v("log"), TEXTO19: v("calif"), TEXTO20: conMail ? "1" : "0", TEXTO21: cc, TEXTO22: nuevos.join(";")
         }, "agenda");
     }
@@ -1863,6 +1978,15 @@
         if (st) { e.preventDefault(); agServ(m, st.getAttribute("data-pv-ag-svt"), ""); agRender(m); return; }
         var nr = t.closest("[data-pv-ag-nor]");
         if (nr) { e.preventDefault(); var k2 = nr.getAttribute("data-pv-ag-nor"); ag.nor[k2] = !ag.nor[k2]; agRender(m); return; }
+        var cgb = t.closest("[data-pv-agd-carga]");
+        if (cgb && ag) {
+            e.preventDefault();
+            var pc = cgb.getAttribute("data-pv-agd-carga").split("|");
+            ag.carga[pc[0]] = ag.carga[pc[0]] || {};
+            if (ag.carga[pc[0]][pc[1]]) delete ag.carga[pc[0]][pc[1]]; else ag.carga[pc[0]][pc[1]] = 1;
+            agRender(m);
+            return;
+        }
         var ea = t.closest("[data-pv-ag-emadd]");
         if (ea) {
             e.preventDefault();
@@ -1877,10 +2001,6 @@
         var tr = t.closest("tr[data-pv-agc]");
         if (tr && !t.closest("input")) {
             e.preventDefault();
-            if (!tr.classList.contains("is-selected") && ag.id && agSel(m).length >= ag.max) {
-                agToast("Al editar, la visita conserva su cantidad de consultores. Para sumar otro consultor use Agregar.");
-                return;
-            }
             tr.classList.toggle("is-selected");
             agHoras(m, false);
             agRender(m);
@@ -1898,18 +2018,27 @@
         if (t.matches('[data-pv-ag-f="hasta"]')) { ag.hasta = parseISO(t.value); agHoras(m, true); agRender(m); return; }
         if (t.matches("[data-pv-ag-ps]")) { agInst(m, t); agRender(m); return; }
         if (t.matches('[data-pv-ag-f="mail"]')) { agRender(m); return; }
-        if (t.matches("[data-pv-agc-h]")) {
-            var max = agDias() * 8, v = agNum(t.value);
-            if (max && v > max) t.value = String(max);
-            t.setAttribute("data-user", "1");
-            agRender(m);
-        }
+        if (t.matches("[data-pv-agc-h]")) { agHoras(m, false); agRender(m); }
     });
     document.addEventListener("input", function (e) {
         var t = e.target;
         if (!t || !t.matches) return;
         if (t.matches("[data-pv-ag-buscar]")) { agRender(t.closest('[data-vct-pv-modal="ag"]')); return; }
         if (t.matches("[data-pv-ag-em]") && ag) ag.emails[t.getAttribute("data-pv-ag-em")] = t.value;
+        if (t.matches("[data-pv-agd-h]") && ag) {
+            var mm = t.closest('[data-vct-pv-modal="ag"]'), sub = t.closest("tr[data-pv-agdd]");
+            var tr = mm && sub ? mm.querySelector('tr[data-pv-agc="' + sub.getAttribute("data-pv-agdd") + '"]') : null;
+            if (!tr) return;
+            var v = String(t.value || "").replace(",", ".");
+            if (agNum(v) > 24) { v = "24"; t.value = v; }
+            agDH(tr)[t.getAttribute("data-pv-agd-h")] = v;
+            agHoras(mm, false);
+            agDdState(mm, tr, sub);
+            var w = tr.querySelector("[data-pv-agc-warn]"), f = agFalta(mm, tr);
+            if (w) { w.hidden = !f; w.textContent = f ? "No disponible · " + f : ""; }
+            agNotif(mm, agSel(mm));
+            agGen(mm, agSel(mm));
+        }
         if (t.matches('[data-pv-ag-f="cc"]') && ag) agGen(t.closest('[data-vct-pv-modal="ag"]'), agSel(t.closest('[data-vct-pv-modal="ag"]')));
     });
 
@@ -2561,7 +2690,7 @@
     /* ================= VIS_SRV_V1 (v40): visitas por servicio ================= */
     var AGC_KEY = "vct.pv.ag.chip.";
     function agLista(box) { return box ? box.querySelector('[data-pv-agpane="lista"]') : null; }
-    function agSel(scope, name) { return scope ? scope.querySelector('select[data-vct-dg-filter="' + name + '"]') : null; }
+    function agDgSel(scope, name) { return scope ? scope.querySelector('select[data-vct-dg-filter="' + name + '"]') : null; }
     function agProj(box) { var r = box ? box.closest("[data-vct-pv]") : null; return r ? r.getAttribute("data-vct-pv-proyecto") || "" : ""; }
     function agSetSel(s, v) {
         if (!s) return;
@@ -2582,7 +2711,7 @@
         });
     }
     function agSave(box) {
-        var l = agLista(box), on = box.querySelector("[data-pv-agchip].is-on"), ins = agSel(l, "inst");
+        var l = agLista(box), on = box.querySelector("[data-pv-agchip].is-on"), ins = agDgSel(l, "inst");
         try { sessionStorage.setItem(AGC_KEY + agProj(box), JSON.stringify({ t: on ? on.getAttribute("data-pv-agchip") : "", i: ins ? ins.value : "" })); } catch (e) { }
     }
     function agPanes(box) {
@@ -2592,16 +2721,16 @@
         var l = agLista(box);
         if (!l) return;
         box.querySelectorAll("[data-pv-agchip]").forEach(function (b) { b.classList.toggle("is-on", b.getAttribute("data-pv-agchip") === t); });
-        var ins = agSel(l, "inst");
+        var ins = agDgSel(l, "inst");
         if (inst === undefined) {
             var opts = ins ? Array.prototype.filter.call(ins.options, function (o) { return o.value && (!t || o.getAttribute("data-t") === t); }) : [];
             inst = t && opts.length === 1 ? opts[0].value : "";   /* un solo servicio del tipo: queda elegido */
         }
         /* v41: el tipo y el servicio valen para la Lista y para Desarrollo */
         agPanes(box).forEach(function (p) {
-            var i2 = agSel(p, "inst");
+            var i2 = agDgSel(p, "inst");
             agInstOpts(i2, t);
-            agSetSel(agSel(p, "servicio"), t);
+            agSetSel(agDgSel(p, "servicio"), t);
             agSetSel(i2, inst || "");
         });
         agSum(box);
@@ -2610,7 +2739,7 @@
     }
     /* v41: indicadores de Desarrollo para el tipo / servicio elegido (datos de cada servicio en las opciones del filtro) */
     function agDesStats(box) {
-        var st = box.querySelector("[data-pv-agdstats]"), ins = agSel(agLista(box), "inst");
+        var st = box.querySelector("[data-pv-agdstats]"), ins = agDgSel(agLista(box), "inst");
         if (!st || !ins) return;
         var on = box.querySelector("[data-pv-agchip].is-on"), t = on ? on.getAttribute("data-pv-agchip") || "" : "", iv = ins.value;
         /* v42: auditorias y capacitaciones no tienen desarrollo: sin indicadores (la grilla queda vacia) */
@@ -2636,7 +2765,7 @@
         icons(st);
     }
     function agSum(box) {
-        var l = agLista(box), sum = box.querySelector("[data-pv-agsum]"), ins = agSel(l, "inst");
+        var l = agLista(box), sum = box.querySelector("[data-pv-agsum]"), ins = agDgSel(l, "inst");
         if (!sum) return;
         var o = ins && ins.value && ins.selectedIndex >= 0 ? ins.options[ins.selectedIndex] : null;
         if (!o) { sum.hidden = true; sum.innerHTML = ""; return; }
@@ -2661,11 +2790,11 @@
             var l = agLista(box);
             if (!l || !box.querySelector("[data-pv-agchips]")) return;
             agPanes(box).forEach(function (p) {
-                var ts = agSel(p, "servicio");
+                var ts = agDgSel(p, "servicio");
                 if (ts) { ts.style.display = "none"; var w = ts.nextElementSibling; if (w && w.classList && w.classList.contains("vct-custom-select")) w.style.display = "none"; }
             });
             /* v42: el filtro Consultor de Desarrollo solo se muestra si hay consultores con desarrollo cargado */
-            var fc = agSel(box.querySelector('[data-pv-agpane="des"]'), "cons");
+            var fc = agDgSel(box.querySelector('[data-pv-agpane="des"]'), "cons");
             if (fc && fc.options.length <= 1) { fc.style.display = "none"; var wc = fc.nextElementSibling; if (wc && wc.classList && wc.classList.contains("vct-custom-select")) wc.style.display = "none"; }
             var st = null;
             try { st = JSON.parse(sessionStorage.getItem(AGC_KEY + agProj(box)) || "null"); } catch (e) { st = null; }
@@ -2686,7 +2815,7 @@
         var box = s.closest("[data-pv-agbox]");
         if (!box) return;
         /* v41: el servicio elegido en una vista se copia a la otra */
-        agPanes(box).forEach(function (p) { var o = agSel(p, "inst"); if (o && o !== s && o.value !== s.value) agSetSel(o, s.value); });
+        agPanes(box).forEach(function (p) { var o = agDgSel(p, "inst"); if (o && o !== s && o.value !== s.value) agSetSel(o, s.value); });
         agSum(box);
         agDesStats(box);
         agSave(box);

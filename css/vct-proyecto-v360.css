@@ -1297,3 +1297,34 @@ html body .vct-360-module .vctdg .vctdg-table .vct-360-project-ref.vct-pv-agd-ac
     .vct-pv [data-pv-agpane="des"] .vctdg.vctdg .vctdg-filters > .vctdg-search,
     .vct-pv [data-pv-agbox] [data-pv-agpane="des"] .vctdg.vctdg .vctdg-filters > select[data-vct-dg-filter] + .vct-custom-select { flex: 1 1 100%; width: 100% !important; max-width: none; }
 }
+
+/* ---------- v55 VIS_HD_V1: Nueva visita: horas por consultor y por dia; leyenda compacta; padding de la card ---------- */
+.vct-pv-agm table.vct-pv-ag-cons tr > td:first-child, .vct-pv-agm table.vct-pv-ag-cons tr > th:first-child { padding-left: 16px; }
+.vct-pv-agm tr.vct-pv-ag-grp td { padding-left: 16px; }
+.vct-pv-agm tr.vct-pv-ag-ddr td { padding-top: 0 !important; border-top: 0 !important; background: inherit; }
+.vct-pv-agm .vct-pv-ag-dd-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 2px 0 10px; }
+.vct-pv-agm .vct-pv-ag-dd-t { font-size: 10.5px; font-weight: 700; color: #66062D; text-transform: uppercase; letter-spacing: .04em; margin-right: 4px; }
+.vct-pv-agm .vct-pv-ag-dd { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; cursor: default; }
+.vct-pv-agm .vct-pv-ag-dd-d { font-size: 11.5px; font-weight: 700; color: #1e293b; white-space: nowrap; }
+.vct-pv-agm .vct-pv-ag-dd-l { font-size: 10.5px; color: #64748b; white-space: nowrap; }
+html body .vct-pv-modal.vct-pv-agm .vct-pv-ag-dd input.vct-input.vct-pv-ag-hrs { width: 58px; height: 28px !important; min-height: 28px !important; }
+.vct-pv-agm .vct-pv-ag-dd.is-zero .vct-pv-ag-dd-d { color: #94a3b8; }
+.vct-pv-agm .vct-pv-ag-dd.is-bad { border-color: #fecaca; background: #fef2f2; }
+.vct-pv-agm .vct-pv-ag-dd.is-bad .vct-pv-ag-dd-l { color: #b91c1c; font-weight: 700; }
+.vct-pv-agm .vct-pv-ag-dd.is-bad input { border-color: #dc2626 !important; color: #b91c1c; }
+html body .vct-pv-modal.vct-pv-agm input.vct-input.vct-pv-ag-hrs[readonly] { background: #f8fafc; color: #1e293b; font-weight: 700; cursor: default; }
+.vct-pv-agm .vct-pv-ag-leg { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; font-size: 11px; color: #64748b; }
+.vct-pv-agm .vct-pv-ag-leg-t { margin-right: 4px; }
+.vct-pv-agm .vct-pv-ag-lg { --c: #cbd5e1; display: inline-flex; align-items: center; height: 20px; padding: 0 7px; border-radius: 999px; font-size: 10px; font-weight: 700; white-space: nowrap;
+    color: color-mix(in srgb, var(--c) 85%, #000); background: color-mix(in srgb, var(--c) 10%, #fff); border: 1px solid color-mix(in srgb, var(--c) 28%, #fff); }
+.vct-pv-agm .vct-pv-ag-lg.is-d { --c: #2563EB; } .vct-pv-agm .vct-pv-ag-lg.is-a { --c: #16A34A; } .vct-pv-agm .vct-pv-ag-lg.is-o { --c: #64748B; }
+.vct-pv-agm .vct-pv-ag-lg.is-p { --c: #EA580C; } .vct-pv-agm .vct-pv-ag-lg.is-g { --c: #0891B2; } .vct-pv-agm .vct-pv-ag-lg.is-l { --c: #DB2777; }
+.vct-pv-agm .vct-pv-ag-lg.is-f { --c: #8B5CF6; } .vct-pv-agm .vct-pv-ag-lg.is-n { background: #fff; border-style: dashed; color: #94a3b8; }
+
+/* ---------- v56 VIS_AGD_V1: Nueva visita: "Cargar disponible" en dias sin agenda ---------- */
+.vct-pv-agm .vct-pv-ag-dd-l { display: inline-flex; align-items: center; gap: 6px; }
+.vct-pv-agm .vct-pv-ag-dd-btn { display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 999px; border: 1px solid #66062D; background: #fff;
+    color: #66062D; font-size: 10px; font-weight: 700; line-height: 1; cursor: pointer; white-space: nowrap; }
+.vct-pv-agm .vct-pv-ag-dd-btn:hover { background: #66062D; color: #fff; }
+.vct-pv-agm .vct-pv-ag-dd-btn.is-x { width: 20px; padding: 0; justify-content: center; border-color: #cbd5e1; color: #64748b; font-size: 13px; }
+.vct-pv-agm .vct-pv-ag-dd-btn.is-x:hover { background: #f1f5f9; color: #1e293b; }

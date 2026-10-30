@@ -1,4 +1,4 @@
-/* vct-tablero.css - v1 DASH_TAB_V1 (Inicio del consultor: Tablero de control). Generado por tools/gen_tablero_css.py desde el boceto v3. */
+/* vct-tablero.css - v9 DASH_TAB_V9 (graficos: nombres sin superponer, anillo de etapas centrado); v8 DASH_TAB_V8 (badge circular sin detallar, fecha chica); v7 DASH_TAB_V7 (Mis proyectos como la grilla Proyectos, servicios apilados, fecha tipo calendario); v6 DASH_TAB_V6 (cards con titulo y plegado propio, indicadores fijos, vista previa en Personalizar); v5 DASH_TAB_V5 (Para hacer al 100%: Acciones | Visitas | Sin detallar, calendario unificado, personalizar en 3 bloques); v4 DASH_TAB_V4 (paginado 20/5/15, alto fijo, ayudas de cada grilla); v3 DASH_TAB_V3 (filtros como las grillas, grillas institucionales, botones y filtros suaves); v2 DASH_TAB_V2 (barra de pestanias, cambio de mes, indicadores en 4 grupos); v1 DASH_TAB_V1 (Inicio del consultor: Tablero de control). Generado por tools/gen_tablero_css.py desde el boceto v3. */
 .vtb-ic{display:inline-flex;width:16px;height:16px;flex:none}
 .vtb-ic svg{width:100%;height:100%}
 .vct-360-stat-icon .vtb-ic{width:18px;height:18px}
@@ -240,3 +240,229 @@
 .vtb-box .vct-360-box-subtitle{font-size:11px !important;color:#64748b !important;font-weight:500 !important;margin-top:2px}
 @media (max-width:1100px){.vtb-stats6.vct-360-stats-row{grid-template-columns:repeat(3,minmax(0,1fr)) !important}.vtb-mini{grid-template-columns:repeat(4,minmax(0,1fr))}.vtb-grid2,.vtb-grid2e,.vtb-edit-wrap{grid-template-columns:1fr}}
 @media (max-width:640px){.vtb-stats6.vct-360-stats-row{grid-template-columns:repeat(2,minmax(0,1fr)) !important}.vtb-mini{grid-template-columns:repeat(2,minmax(0,1fr))}.vtb-cm-wrap{grid-template-columns:1fr}.vtb-tbl{display:block;overflow-x:auto}}
+
+/* ---- v2 DASH_TAB_V2: barra de pestanias (como V360 / Gerencia) con los controles de las grillas ---- */
+.vtb-bar{gap:4px !important}
+.vtb-bar .vct-ini-tab .vtb-ic{width:15px;height:15px}
+.vtb-ctl{display:flex !important;align-items:center;gap:6px;flex:0 1 auto;min-width:0;margin:0 !important;padding:0 !important;background:none !important;border:0 !important;box-shadow:none !important}
+.vct-360-visual-final .vct-360-tabsbar.vtb-bar .vtb-ctl button.vctdg-btn{min-height:30px !important;height:30px !important;padding:0 10px !important;gap:6px !important;color:#25344C !important;background:#fff !important;
+ border:1px solid #D7E0E9 !important;border-radius:7px !important;font-size:12px !important;font-weight:600 !important}
+.vct-360-visual-final .vct-360-tabsbar.vtb-bar .vtb-ctl button.vctdg-btn::after{display:none !important}
+.vct-360-visual-final .vct-360-tabsbar.vtb-bar .vtb-ctl button.vctdg-btn:hover{color:#66062D !important;background:#FBF7F9 !important;border-color:#66062D !important}
+.vct-360-visual-final .vct-360-tabsbar.vtb-bar .vtb-ctl button.vctdg-btn.is-on{color:#fff !important;background:#66062D !important;border-color:#66062D !important}
+.vct-360-visual-final .vct-360-tabsbar.vtb-bar .vtb-ctl button.vtb-ico{width:30px !important;padding:0 !important;justify-content:center !important}
+.vct-360-visual-final .vct-360-tabsbar.vtb-bar .vtb-ctl button[disabled]{opacity:.45 !important;cursor:default !important}
+.vtb-ctl .vctdg-select{height:30px;border-radius:7px;font-size:12px;font-weight:500;padding:0 28px 0 10px;border:1px solid #cbd5e1;background-color:#fff;color:#334155}
+.vtb-ctl .vtb-messel{width:150px;font-weight:600;color:#1e293b}.vtb-ctl .vtb-psel{width:200px}
+.vtb-ctl .vctdg-search{flex:0 1 230px;min-width:150px;max-width:230px}
+.vtb-ctl .vctdg-search input{height:30px;border-radius:7px;font-size:12px;padding:0 10px 0 31px}
+.vtb-ctl .vctdg-search svg{left:10px}
+/* ---- v2: indicadores en 4 grupos ---- */
+.vtb-ga{display:grid;grid-template-columns:1.25fr .95fr 1.15fr 1.3fr;gap:10px;margin-bottom:12px}
+.vtb-g{background:#fff;border-radius:12px;padding:10px 12px;box-shadow:0 1px 3px rgba(15,23,42,.06);display:flex;flex-direction:column;gap:8px;min-width:0}
+.vtb-g-h{display:flex;align-items:center;gap:7px;font-size:11px;color:#64748b;white-space:nowrap}.vtb-g-h>.vtb-ic{color:#66062D}
+.vtb-g-h b{font-size:11px;color:#1e293b;text-transform:uppercase;letter-spacing:.04em}
+.vtb-g-h > span:not(.vtb-ic){margin-left:auto;overflow:hidden;text-overflow:ellipsis}
+.vtb-g-n{display:flex;gap:12px}
+.vtb-n{display:flex;flex-direction:column;line-height:1.1;min-width:0}.vtb-n b{font-size:18px;color:#1e293b;white-space:nowrap}.vtb-n small{font-size:10.5px;color:#64748b;white-space:nowrap}
+.vtb-n.is-ej b{color:#15803D}.vtb-n.is-pr b{color:#2563EB}.vtb-n.is-warn b{color:#B45309}
+.vtb-ubar{display:flex;gap:2px;border-radius:6px;overflow:hidden}
+.vtb-ubar span{display:block;min-width:2px}
+.vtb-u-n{background:#fff;border:1px dashed #cbd5e1;border-radius:4px}
+.vtb-acc{display:flex;align-items:center;gap:12px}
+.vtb-mr{width:56px;height:56px;border-radius:50%;position:relative;flex:none}
+.vtb-mr::after{content:"";position:absolute;inset:7px;background:#fff;border-radius:50%}
+.vtb-mr span{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.vtb-mr b{font-size:14px;color:#1e293b}.vtb-mr small{font-size:8.5px;color:#64748b;margin-top:1px}
+.vtb-accb{display:grid;grid-template-columns:auto auto;gap:5px;justify-content:start;background:none;border:0;padding:0;margin:0}
+.vtb-accb .vct-360-badge{cursor:pointer}
+.vtb-pv{display:flex;align-items:center;gap:12px}
+.vtb-cc2{display:flex;flex-direction:column;align-items:center;gap:2px;flex:none}.vtb-cc2>small{font-size:10px;color:#64748b}
+.vtb-ci-c{position:relative;width:42px;height:42px;border-radius:50%;background:#FBE9EF;color:#66062D;display:flex;align-items:center;justify-content:center;flex:none}
+.vtb-ci-c b{font-size:16px;position:relative;z-index:1}
+.vtb-ci-c > .vtb-ic{position:absolute;top:-4px;right:-4px;width:17px;height:17px;padding:2.5px;background:#fff;color:#66062D;border-radius:50%;box-shadow:0 0 0 1px #E8A9C0;z-index:2}
+.vtb-ci-ring{color:#1e293b}.vtb-ci-ring::after{content:"";position:absolute;inset:5px;background:#fff;border-radius:50%}
+.vtb-dt{width:46px;border-radius:9px;overflow:hidden;border:1px solid #E8A9C0;text-align:center;flex:none;background:#fff}
+.vtb-dt-m{background:#66062D;color:#fff;font-size:9px;font-weight:800;letter-spacing:.06em;padding:2px 0}
+.vtb-dt-d{font-size:18px;font-weight:800;color:#1e293b;line-height:1.1;padding-top:2px}.vtb-dt-w{font-size:9.5px;color:#64748b;padding-bottom:3px}
+.vtb-ci-t{display:flex;flex-direction:column;line-height:1.2;min-width:0}.vtb-ci-t span{font-size:11px;font-weight:700;color:#1e293b}.vtb-ci-t small{font-size:10.5px;color:#64748b}
+.vtb-pxs{display:flex;align-items:center;gap:5px;margin:1px 0;background:none;border:0;padding:0}.vtb-pxs small{font-size:10.5px;color:#334155;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vtb-svi.vctdg-svc{width:16px;height:16px;flex:none}.vtb-svi .vtb-ic{width:9px;height:9px;color:#fff}
+/* desarrollo en el calendario: bordo institucional */
+.vtb-db.is-r{background:#66062D;color:#fff}.vtb-db.is-p{background:#F3E3EA;color:#66062D}
+@media (max-width:1100px){.vtb-ga{grid-template-columns:1fr 1fr}.vtb-bar{flex-wrap:wrap}.vtb-ctl{flex-wrap:wrap}}
+@media (max-width:640px){.vtb-ga{grid-template-columns:1fr}}
+
+/* ---- v3 DASH_TAB_V3: barra solo pestanias + Personalizar; filtros debajo con el estilo de las grillas; grillas institucionales ---- */
+.vct-360-visual-final .vct-360-tabsbar.vtb-bar .vtb-ctl button.vctdg-btn{font-size:10.5px !important}
+.vct-360-visual-final .vct-360-tabsbar.vtb-bar .vtb-ctl button.vctdg-btn.is-on{color:#1f2937 !important;background:#F6EAEF !important;border-color:#E5C9D4 !important}
+.vtb-flt{display:flex !important;align-items:center;flex-wrap:wrap;gap:8px;margin:2px 0 12px;padding:0 !important;background:none !important;border:0 !important;box-shadow:none !important}
+.vtb-mesnav{display:flex;align-items:center;gap:6px;flex:none}
+.vtb-flt .vctdg-btn.vtb-ico{width:30px;padding:0;justify-content:center;color:#475569;background:#fff}
+.vtb-flt .vctdg-btn.vtb-ico:disabled{opacity:.45;cursor:default}
+.vtb-mesin{height:30px;width:150px;padding:0 10px;text-align:center;border:1px solid #cbd5e1;border-radius:7px;background:#fff;color:#334155;
+ font-family:inherit;font-size:10.5px;font-weight:500;cursor:default;outline:0;box-shadow:none}
+.vtb-flt .vctdg-filters{flex:0 1 auto;gap:8px}
+.vctdg.vctdg.vtb-flt .vctdg-filters > .vct-custom-select,.vtb-flt .vctdg-filters > select.vctdg-select{flex:0 0 200px;width:200px !important}
+.vctdg.vctdg.vtb-flt .vct-custom-select-menu{max-width:360px !important}
+.vctdg.vctdg.vtb-flt .vct-custom-select-option{white-space:normal !important}
+.vtb-flt .vctdg-search{order:0;margin-left:auto;flex:0 1 300px;max-width:300px;min-width:200px}
+/* filtros de las grillas (Vencidas, Hoy... / Dia, Semana...): suaves, sin bordo */
+.vtb-tabs{gap:6px;margin:2px 0 12px}
+.vtb-tabs button,.vtb-chips button{height:28px;padding:0 11px;border:1px solid #e2e8f0;border-radius:999px;background:#fff;color:#475569;font-family:inherit;font-size:10.5px;font-weight:600}
+.vtb-tabs button:hover,.vtb-chips button:hover{background:#FBF7F9;border-color:#E5C9D4}
+.vtb-tabs button.is-on,.vtb-chips button.is-on,.vtb-po .vtb-chips button.is-on{background:#F6EAEF;border-color:#E5C9D4;color:#1f2937}
+.vtb-tabs .vct-tab-count{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:17px;padding:0 5px;border-radius:9px;background:#eef2f6;color:#475569;font-size:10px;font-weight:600}
+.vtb-tabs button.is-on .vct-tab-count{background:#fff;color:#475569}
+.vtb-tabs .vct-tab-count.is-alert,.vtb-tabs button.is-on .vct-tab-count.is-alert{background:#fff1f2;color:#be123c}
+/* grillas */
+.vtb .vtb-dg{margin-top:0}
+.vtb .vtb-dg .vctdg-table td{vertical-align:middle}
+html body .vtb .vtb-dg .vctdg-table .vct-360-project-name,html body #mainContainer .vtb .vtb-dg .vctdg-table .vct-360-project-name{
+ display:-webkit-box !important;-webkit-box-orient:vertical !important;-webkit-line-clamp:2 !important;overflow:hidden !important;white-space:normal !important;
+ font-size:10px !important;font-weight:400 !important;line-height:1.35 !important;color:#1f2937 !important}
+html body .vtb .vtb-dg .vctdg-table .vct-360-project-ref,html body #mainContainer .vtb .vtb-dg .vctdg-table .vct-360-project-ref{
+ display:block !important;margin-top:2px;white-space:normal !important;font-size:9px !important;font-weight:400 !important;line-height:1.35 !important;color:#64748b !important}
+.vtb-due-v{color:#B42318;white-space:nowrap}.vtb-due-h{color:#B45309;white-space:nowrap}
+.vtb .vtb-rmc{width:1%;white-space:nowrap;text-align:right}
+.vtb .vtb-rmc .vctdg-btn{height:28px;gap:5px}
+.vtb .vct-row-menu-trigger.vtb-rm{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;color:#475569;background:#fff;border:1px solid #D8E4EF;border-radius:6px;cursor:pointer}
+.vtb .vct-row-menu-trigger.vtb-rm:hover,.vtb .vct-row-menu-trigger.vtb-rm.is-open{color:#66062D;border-color:rgba(102,6,45,.32);background:#FBF7F9}
+.vtb .vtb-dg .vctdg-footer{margin-top:10px}
+.vtb .vtb-exp > td{background:#FBFCFD}
+.vtb .vtb-col > .vtb-box + .vtb-box{margin-top:12px}
+/* indicadores: texto de la derecha completo; proyectos y visitas centrados y repartidos */
+.vtb-g-h > span:not(.vtb-ic){overflow:visible;text-overflow:clip}
+.vtb-pv{justify-content:space-around;gap:8px}
+.vtb-pv .vtb-ci-t{flex:0 1 auto}
+@media (max-width:900px){.vtb-flt .vctdg-search{margin-left:0;flex:1 1 100%;max-width:none}}
+
+/* ---- v4 DASH_TAB_V4: paginado 20 / 5 / 15, alto fijo en las grillas de la derecha, pie del paginado sin superponerse ---- */
+.vtb .vtb-tabhelp{margin:-4px 0 10px;font-size:10.5px;color:#64748b}
+.vtb .vtb-dg .vctdg-table td:first-child{white-space:nowrap}
+.vtb .vtb-fix5 > .vctdg-wrap{height:318px;overflow-y:auto}
+.vtb .vtb-fix15 > .vctdg-wrap{height:858px;overflow-y:auto}
+.vtb .vtb-fix5 .vctdg-table thead th,.vtb .vtb-fix15 .vctdg-table thead th{position:sticky;top:0;z-index:1}
+.vtb .vtb-dg .vctdg-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 12px}
+.vtb .vtb-dg .vctdg-info{white-space:nowrap}
+.vtb .vtb-dg .vctdg-pager{flex-wrap:nowrap;margin-left:auto}
+.vtb .vtb-col .vtb-dg .vctdg-page{min-width:28px;height:28px;padding:0 6px}
+
+/* ---- v5 DASH_TAB_V5: card Para hacer al 100% (Acciones | Visitas | Sin detallar), alto fijo de 10, como la pantalla Acciones ---- */
+.vtb-card{margin-bottom:12px}
+.vtb-card-h{margin:0 0 5px 2px;min-height:22px}
+.vtb-card.is-folded .vtb-card-h{padding:5px 10px;border-radius:10px}
+.vtb-card-kpi .vtb-ga{margin-bottom:0}
+.vtb-phbox{padding:0 !important;overflow:hidden}
+.vtb-ph-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border-bottom:1px solid #EEF2F6}
+.vtb-ph-top .vct-360-box-subtitle{margin:0 !important;font-size:10.5px !important;color:#64748b !important}
+.vtb-modo > button{gap:6px}
+.vtb-mcnt{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:17px;padding:0 6px;border-radius:999px;background:#E2E8F0;color:#475569;font-size:9px;font-weight:700;line-height:1}
+.vtb-modo > button.is-on .vtb-mcnt{background:#F6EAEF;color:#66062D}
+.vtb-phbox .vtb-ph-tabs{margin:0 !important;border-radius:0 !important;border:0 !important;border-bottom:1px solid #EEF2F6 !important;box-shadow:none !important;background:#fff !important;padding:4px 10px !important;flex-wrap:wrap}
+.vtb-phbox .vtb-ph-tabs .vct-ini-tab{display:inline-flex;align-items:center;gap:6px}
+.vtb-phbox .vtb-ph-tabs .vct-ini-tab .vtb-ic{width:15px;height:15px}
+.vtb-phbox .vtb-ph-tabs .vct-acc-cnt{display:inline-flex !important;align-items:center;justify-content:center;flex:none;box-sizing:border-box;min-width:20px;height:17px !important;padding:0 6px !important;margin-left:2px;
+ border-radius:999px !important;font-size:9px !important;font-weight:700 !important;line-height:1 !important;color:#fff !important}
+.vtb-phbox .vtb-ph-tabs .vct-acc-cnt.is-red{background:#B91C1C !important}.vtb-phbox .vtb-ph-tabs .vct-acc-cnt.is-amb{background:#D97706 !important}
+.vtb-phbox .vtb-ph-tabs .vct-acc-cnt.is-bor{background:#CF6F92 !important}.vtb-phbox .vtb-ph-tabs .vct-acc-cnt.is-gry{background:#8E8C8D !important}
+.vtb-phbox .vtb-ph-tabs .vct-acc-cnt.is-zero{background:#E2E8F0 !important;color:#64748b !important}
+.vtb-phbox .vtb-ph-tabs .vct-acc-tab-graf{margin-left:auto}
+.vtb-ph-in{padding:12px 16px 14px}
+.vtb-ph-in > .vct-acc-head{display:flex !important;align-items:center !important;gap:12px;padding:0 0 12px !important;margin:0 0 12px !important;border-bottom:1px solid #EEF2F6}
+.vtb-ph-in > .vct-acc-head .vct-acc-head-txt{flex:1 1 auto;min-width:0}
+.vtb-ph-in > .vct-acc-head p{margin:2px 0 0 !important}
+/* alto fijo de 10 registros: el cuerpo de la grilla scrollea, la cabecera queda fija */
+.vtb-ph-grid .vctdg-wrap{height:560px;overflow-y:auto}
+.vtb-ph-grid .vctdg-table thead th{position:sticky;top:0;z-index:1}
+.vtb-ph-grid .vct-table-action-cell{text-align:center}
+/* calendario unificado */
+.vtb-capas{align-items:center;margin:0 0 10px}.vtb-capas-l{font-size:10.5px;color:#64748b;margin-right:2px}
+.vtb-calleg{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.vtb-calleg .vct-agenda-event{display:inline-flex !important;padding:2px 8px !important;border-radius:6px;font-size:10px}
+.vct-agenda-event.ev-VE{background:#ECFDF3;color:#15803D}.vct-agenda-event.ev-VP{background:#EFF4FF;color:#1D4ED8}.vct-agenda-event.ev-DE{background:#F6EAEF;color:#66062D}
+.vct-cal-c .vct-agenda-cell .vct-agenda-event.ev-VE{--b:#16A34A}.vct-cal-c .vct-agenda-cell .vct-agenda-event.ev-VP{--b:#3B82F6}.vct-cal-c .vct-agenda-cell .vct-agenda-event.ev-DE{--b:#66062D}
+/* personalizar: bloques como cards */
+.vtb-pcard{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #E5E9F0;border-radius:12px;background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.05)}
+.vtb-pcard.is-off{opacity:.55}
+.vtb-pcard-n{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:6px;background:#F6EAEF;color:#66062D;font-size:10.5px;font-weight:700;flex:none}
+.vtb-pcard-t{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.3}.vtb-pcard-t b{font-size:11.5px;color:#1e293b}.vtb-pcard-t small{font-size:10px;color:#64748b}
+.vtb-pcard .vctdg-btn.vtb-ico{width:28px;height:28px;padding:0;justify-content:center}
+.vtb-pcard .vctdg-btn.vtb-ico:disabled{opacity:.4;cursor:default}
+.vtb-edit-wrap{grid-template-columns:minmax(0,1fr) 380px}
+/* botones fuera de una .vctdg (no heredan --dg-ctl-h) */
+.vtb .vctdg-btn{height:30px;padding:0 10px;border-radius:7px;font-size:10.5px;font-weight:600;color:#25344C;border-color:#D7E0E9}
+.vtb .vctdg-btn:hover{color:#66062D;background:#FBF7F9;border-color:#66062D}
+
+/* ---- v6 DASH_TAB_V6: indicadores fijos; Para hacer y Mis proyectos como cards con titulo y plegado propio; vista previa en Personalizar ---- */
+.vtb .vtb-ga{margin-bottom:14px}
+.vtb-cardx{margin-bottom:14px}
+.vtb-phbox .vtb-ph-top{display:flex !important;align-items:center !important;gap:12px;padding:12px 16px !important;margin:0 !important;border-bottom:1px solid #EEF2F6}
+.vtb-ph-tt{flex:1 1 auto;min-width:0}.vtb-ph-tt h3{margin:0}
+.vtb-ph-tt .vct-360-box-subtitle{margin:2px 0 0 !important;font-size:10.5px !important;color:#64748b !important}
+.vtb-fold{display:inline-flex;align-items:center;justify-content:center;flex:none;width:28px;height:28px;padding:0;border:1px solid #D8E4EF;border-radius:7px;background:#fff;color:#475569;cursor:pointer}
+.vtb-fold:hover{color:#66062D;border-color:rgba(102,6,45,.32);background:#FBF7F9}
+.vtb-cardx.is-folded .vtb-ph-top,.vtb-cardx.is-folded > .vct-360-box-head{border-bottom:0 !important;padding-bottom:12px !important;margin-bottom:0 !important}
+.vtb-cardx.is-folded{padding-bottom:0 !important}
+.vtb-box.vtb-cardx > .vct-360-box-head{display:flex !important;align-items:center !important;justify-content:space-between}
+/* personalizar: vista previa esquematica */
+.vtb-wf{background:#fff;border:1px solid #E5E9F0;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.vtb-wf-cap{font-size:11px;font-weight:700;color:#1e293b}
+.vtb-wf-fix{font-size:9.5px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:-4px}
+.vtb-wf-kpi{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.vtb-wf-kpi > div{border:1px dashed #E2E8F0;border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:5px;background:#FAFBFC}
+.vtb-wf-kpi b{font-size:9.5px;color:#64748b;text-transform:uppercase;letter-spacing:.04em}
+.vtb-wf-l{display:inline-block;height:7px;border-radius:4px;background:#E9EDF2;margin-right:6px}
+.vtb-wf-card{border:1px solid #E5E9F0;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:7px;box-shadow:0 1px 3px rgba(15,23,42,.05)}
+.vtb-wf-card.is-off{border-style:dashed;box-shadow:none;opacity:.55}
+.vtb-wf-h{display:flex;align-items:center;gap:8px}.vtb-wf-h b{font-size:11.5px;color:#1e293b}.vtb-wf-h em{font-style:normal;font-size:10px;color:#94a3b8}
+.vtb-wf-h .vct-360-title-icon{width:24px;height:24px}
+.vtb-wf-sel{margin-left:auto;display:inline-flex;gap:3px;padding:2px;border:1px solid #e5e7eb;border-radius:8px;background:#f3f1f3}
+.vtb-wf-sel span{font-size:9.5px;font-weight:600;color:#64748b;padding:2px 8px;border-radius:6px}.vtb-wf-sel span.is-on{background:#fff;color:#66062D}
+.vtb-wf-tabs,.vtb-wf-r{display:flex;align-items:center}
+.vtb-wf-r{padding:6px 0;border-top:1px solid #F1F5F9}
+.vtb-edit-wrap{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px;align-items:start}
+
+/* ---- v7 DASH_TAB_V7: Mis proyectos con el diseno de la grilla Proyectos ---- */
+.vtb-pjbox > .vct-360-box-head{display:flex !important;align-items:center !important;justify-content:space-between;gap:12px}
+.vtb-pj-grid{margin-top:12px}
+.vtb-cli{display:block;font-size:10px;color:#334155;line-height:1.35;overflow-wrap:anywhere}
+.vtb-sub{display:block;margin-top:3px;font-size:9px;color:#64748b;white-space:nowrap}
+.vtb-nw{white-space:nowrap}
+.vtb-accs{display:inline-flex;flex-direction:column;align-items:center;gap:3px}
+.vtb-pj-grid .vtb-bul-b.is-sm{width:100%;max-width:150px}
+/* servicios apilados (iconos superpuestos) con el detalle en el tooltip */
+.vtb-svcs{display:inline-flex;align-items:center;cursor:pointer;padding:2px 4px;border-radius:999px;transition:background .15s ease}
+.vtb-svcs .vctdg-svc{width:24px;height:24px;box-shadow:0 0 0 2px #fff;transition:margin .15s ease}
+.vtb-svcs .vctdg-svc + .vctdg-svc{margin-left:-9px}
+.vtb-svcs .vctdg-svc.is-on{position:relative;z-index:1}
+.vtb-svcs .vctdg-svc .vtb-ic{width:12px;height:12px}
+.vtb-svcs:hover,.vtb-svcs:focus{background:#F6EAEF;outline:none}
+.vtb-svcs:hover .vctdg-svc + .vctdg-svc,.vtb-svcs:focus .vctdg-svc + .vctdg-svc{margin-left:2px}
+/* proxima visita: fecha tipo calendario */
+.vtb-dtile{display:inline-flex;flex-direction:column;align-items:center;width:38px;border:1px solid #E8A9C0;border-radius:8px;overflow:hidden;background:#fff;line-height:1;cursor:default}
+.vtb-dtile-m{width:100%;background:#66062D;color:#fff;font-size:8px;font-weight:800;letter-spacing:.06em;padding:2px 0;text-align:center}
+.vtb-dtile-d{font-size:15px;font-weight:800;color:#1e293b;padding:2px 0 0}.vtb-dtile-w{font-size:8.5px;color:#64748b;padding:1px 0 3px}
+.vtb-pj-grid .vct-table-action-cell{text-align:center}
+.vtb-pj-grid .vtb-li{font-size:10px;color:#334155;margin:2px 0}
+
+/* ---- v8 DASH_TAB_V8: sin detallar como badge circular institucional; fecha de proxima visita mas chica ---- */
+.vtb-sdb{display:inline-flex;align-items:center;justify-content:center;gap:1px;min-width:30px;height:30px;padding:0 5px;border-radius:999px;background:#66062D;color:#fff;
+ font-size:10px;font-weight:700;line-height:1;cursor:help;box-sizing:border-box}
+.vtb-sdb small{font-size:8px;font-weight:600;opacity:.85}
+.vtb-dtile{width:30px;border-radius:6px}
+.vtb-dtile-m{font-size:7px;padding:1px 0}
+.vtb-dtile-d{font-size:12px;padding:1px 0 0}
+.vtb-dtile-w{font-size:7.5px;padding:0 0 2px}
+
+/* ---- v9 DASH_TAB_V9: graficos - nombres sin superponerse a la barra; anillo de etapas mas grande y centrado ---- */
+.vtb-hp,.vtb-bul{grid-template-columns:minmax(0,220px) minmax(0,1fr) 130px}
+.vtb-hp-n{min-width:0;overflow:hidden}
+.vtb-hp-n .vtb-ptag{display:flex;align-items:flex-start;white-space:normal;line-height:1.3;font-size:11px;min-width:0;overflow-wrap:anywhere}
+.vtb-hp-n .vtb-ptag i{flex:none;margin-top:3px}
+.vtb-box:has(.vtb-donut-wrap){display:flex;flex-direction:column}
+.vtb-donut-wrap{flex:1 1 auto;justify-content:center;align-content:center;gap:32px;min-height:240px;padding:12px 0}
+.vtb-donut{width:200px;height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.vtb-donut::after{inset:38px;z-index:0}
+.vtb-donut b,.vtb-donut small{position:relative;top:auto;left:auto;right:auto;z-index:1}
+.vtb-donut b{font-size:30px;line-height:1.1}.vtb-donut small{font-size:11px}
+.vtb-dleg{font-size:12px}
